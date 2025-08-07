@@ -61,10 +61,6 @@ class NativeVirtualAudioPlayer {
     }, 0);
   }
 
-  set currentTime(value: number) {
-    this.seek(value);
-  }
-
   async waitForCreation() {
     while (!this.isCreated) {
       await new Promise(resolve => setTimeout(resolve, 100));
