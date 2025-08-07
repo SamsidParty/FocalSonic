@@ -1,4 +1,3 @@
-import { useEffect, useRef, useCallback, memo } from 'react'
 import { getSongStreamUrl } from '@/api/httpClient'
 import { getProxyURL } from '@/api/podcastClient'
 import { MiniPlayerButton } from '@/app/components/mini-player/button'
@@ -6,20 +5,21 @@ import { RadioInfo } from '@/app/components/player/radio-info'
 import { TrackInfo } from '@/app/components/player/track-info'
 import { podcasts } from '@/service/podcasts'
 import {
+  getVolume,
   usePlayerActions,
   usePlayerIsPlaying,
   usePlayerLoop,
   usePlayerMediaType,
   usePlayerRef,
   usePlayerSonglist,
-  getVolume,
-  useReplayGainState,
   usePlayerStore,
+  useReplayGainState,
 } from '@/store/player.store'
 import { LoopState } from '@/types/playerContext'
 import { hasPiPSupport } from '@/utils/browser'
 import { logger } from '@/utils/logger'
 import { ReplayGainParams } from '@/utils/replayGain'
+import { memo, useCallback, useEffect, useRef } from 'react'
 import { AudioPlayer } from './audio'
 import { PlayerClearQueueButton } from './clear-queue-button'
 import { PlayerControls } from './controls'

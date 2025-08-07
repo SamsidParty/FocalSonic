@@ -5,12 +5,14 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
 	<!-- IgniteView -->
 	<ItemGroup>
 		<PackageReference Include="IgniteView.Desktop" Version="*" />
 		<PackageReference Include="IgniteView.Core" Version="*" />
+		<PackageReference Include="NAudio" Version="2.2.1" />
 	</ItemGroup>
 	<PropertyGroup>
 		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>

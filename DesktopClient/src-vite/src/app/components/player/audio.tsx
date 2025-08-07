@@ -1,13 +1,3 @@
-import {
-  ComponentPropsWithoutRef,
-  RefObject,
-  useMemo,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react'
-import { useTranslation } from 'react-i18next'
-import { toast } from 'react-toastify'
 import { useAudioContext } from '@/app/hooks/use-audio-context'
 import {
   usePlayerActions,
@@ -20,8 +10,19 @@ import {
 import { logger } from '@/utils/logger'
 import { isLinux } from '@/utils/osType'
 import { calculateReplayGain, ReplayGainParams } from '@/utils/replayGain'
+import {
+  ComponentPropsWithoutRef,
+  RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'react-toastify'
+import { NativeAudioPlayer } from './native-audio'
 
-type AudioPlayerProps = ComponentPropsWithoutRef<'audio'> & {
+export type AudioPlayerProps = ComponentPropsWithoutRef<'audio'> & {
   audioRef: RefObject<HTMLAudioElement>
   replayGain?: ReplayGainParams
 }
@@ -38,6 +39,7 @@ export function AudioPlayer({
   const { setPlayingState } = usePlayerActions()
   const { setReplayGainEnabled, setReplayGainError } = useReplayGainActions()
   const { volume } = usePlayerVolume()
+  const useNativeAudio = window.igniteView;
   const isPlaying = usePlayerIsPlaying()
 
   const gainValue = useMemo(() => {
@@ -146,6 +148,16 @@ export function AudioPlayer({
 
     return 'anonymous'
   }, [isSong, replayGainError])
+
+  if (useNativeAudio) {
+    return (
+      <NativeAudioPlayer
+        audioRef={audioRef}
+        onError={handleError}
+        {...props}
+      />
+    )
+  }
 
   return (
     <audio
