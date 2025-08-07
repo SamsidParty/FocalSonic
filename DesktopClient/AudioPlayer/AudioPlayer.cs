@@ -28,7 +28,7 @@ namespace Aonsoku.AudioPlayer
         int AssociatedWindowID;
         SoundPlayer Player;
         AudioEngine AudioEngine;
-        NetworkDataProvider DataProvider;
+        AonsokuDataProvider DataProvider;
         AudioPlaybackDevice Device;
         WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
 
@@ -113,7 +113,7 @@ namespace Aonsoku.AudioPlayer
                             player.DataProvider = null;
                         }
 
-                        player.DataProvider = new NetworkDataProvider(player.AudioEngine, PlaybackFormat, src);
+                        player.DataProvider = new AonsokuDataProvider(player.AudioEngine, PlaybackFormat, src);
                         player.Player = new SoundPlayer(player.AudioEngine, PlaybackFormat, player.DataProvider);
                         player.Device.MasterMixer.AddComponent(player.Player);
 
