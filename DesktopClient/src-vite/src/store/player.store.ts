@@ -1,3 +1,8 @@
+import { subsonic } from '@/service/subsonic'
+import { IPlayerContext, LoopState } from '@/types/playerContext'
+import { ISong } from '@/types/responses/song'
+import { areSongListsEqual } from '@/utils/compareSongLists'
+import { addNextSongList, shuffleSongList } from '@/utils/songListFunctions'
 import { produce } from 'immer'
 import clamp from 'lodash/clamp'
 import merge from 'lodash/merge'
@@ -6,11 +11,6 @@ import { devtools, persist, subscribeWithSelector } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { shallow } from 'zustand/shallow'
 import { createWithEqualityFn } from 'zustand/traditional'
-import { subsonic } from '@/service/subsonic'
-import { IPlayerContext, LoopState } from '@/types/playerContext'
-import { ISong } from '@/types/responses/song'
-import { areSongListsEqual } from '@/utils/compareSongLists'
-import { addNextSongList, shuffleSongList } from '@/utils/songListFunctions'
 
 const blurSettings = {
   min: 20,
@@ -73,14 +73,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
               setAutoFullscreenEnabled: (value) => {
                 set((state) => {
                   state.settings.fullscreen.autoFullscreenEnabled = value
-                })
-              },
-            },
-            lyrics: {
-              preferSyncedLyrics: false,
-              setPreferSyncedLyrics: (value) => {
-                set((state) => {
-                  state.settings.lyrics.preferSyncedLyrics = value
                 })
               },
             },
@@ -803,7 +795,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 state.settings.colors.bigPlayer.blur.settings = blurSettings
                 state.settings.colors.currentSongColorIntensity = 0.65
                 state.settings.fullscreen.autoFullscreenEnabled = false
-                state.settings.lyrics.preferSyncedLyrics = false
                 state.settings.replayGain.values = {
                   enabled: false,
                   type: 'track',

@@ -76,11 +76,6 @@ interface IFullscreen {
   setAutoFullscreenEnabled: (value: boolean) => void
 }
 
-interface ILyrics {
-  preferSyncedLyrics: boolean
-  setPreferSyncedLyrics: (value: boolean) => void
-}
-
 export interface IPrivacySettings {
   lrcLibEnabled: boolean
   setLrcLibEnabled: (value: boolean) => void
@@ -114,7 +109,6 @@ interface IColorsSettings {
 export interface IPlayerSettings {
   volume: IVolumeSettings
   fullscreen: IFullscreen
-  lyrics: ILyrics
   replayGain: IReplayGain
   privacy: IPrivacySettings
   colors: IColorsSettings
