@@ -13,10 +13,11 @@ import { useTranslation } from 'react-i18next'
 import { Lrc } from 'react-lrc'
 
 interface LyricProps {
-  lyrics: ILyric
+  lyrics: ILyric,
+  leftAlign?: boolean
 }
 
-export function LyricsTab() {
+export function LyricsTab({ leftAlign }: { leftAlign?: boolean }) {
   const { currentSong } = usePlayerSonglist()
   const { t } = useTranslation()
 
@@ -40,16 +41,16 @@ export function LyricsTab() {
     return <CenteredMessage>{loadingLyrics}</CenteredMessage>
   } else if (lyrics && lyrics.value) {
     return areLyricsSynced(lyrics) ? (
-      <SyncedLyrics lyrics={lyrics} />
+      <SyncedLyrics leftAlign={leftAlign} lyrics={lyrics} />
     ) : (
-      <UnsyncedLyrics lyrics={lyrics} />
+      <UnsyncedLyrics leftAlign={leftAlign} lyrics={lyrics} />
     )
   } else {
     return <CenteredMessage>{noLyricsFound}</CenteredMessage>
   }
 }
 
-function SyncedLyrics({ lyrics }: LyricProps) {
+function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
   const playerRef = usePlayerRef()
   const [progress, setProgress] = useState(0)
 
@@ -70,21 +71,23 @@ function SyncedLyrics({ lyrics }: LyricProps) {
   }
 
   return (
-    <div className="w-full h-full text-center font-semibold text-2xl 2xl:text-3xl px-2 lrc-box maskImage-big-player-lyrics">
+    <div className="w-full h-full text-center font-semibold text-4xl 2xl:text-3xl px-2 lrc-box maskImage-big-player-lyrics">
       <Lrc
         lrc={lyrics.value!}
         recoverAutoScrollInterval={1500}
         currentMillisecond={progress}
-        id="sync-lyrics-box"
+        id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
         className={clsx('h-full overflow-y-auto', !isSafari && 'scroll-smooth')}
         verticalSpace={true}
         lineRenderer={({ active, line }) => (
           <p
             onClick={() => skipToTime(line.startMillisecond)}
             className={clsx(
-              'drop-shadow-lg my-5 cursor-pointer hover:opacity-100 duration-500',
-              'transition-[opacity,transform] motion-reduce:transition-none',
-              active ? 'opacity-100 scale-125' : 'opacity-50',
+              'drop-shadow-lg my-10 cursor-pointer hover:opacity-100 duration-700',
+              'transition-[opacity,transform] motion-reduce:transition-none ease-long',
+              active ? 'opacity-100 scale-110' : 'opacity-60',
+              leftAlign ? 'text-left' : 'text-center',
+              (leftAlign && active) ? 'translate-x-[7%]' : '',
             )}
           >
             {line.content}

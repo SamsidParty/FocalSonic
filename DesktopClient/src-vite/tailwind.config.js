@@ -74,6 +74,9 @@ module.exports = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      transitionTimingFunction: {
+        'long': 'cubic-bezier(0.16, 1, 0.3, 1)',
+      },
       keyframes: {
         'accordion-down': {
           from: { height: '0' },

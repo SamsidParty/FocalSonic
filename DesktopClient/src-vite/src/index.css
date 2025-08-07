@@ -274,7 +274,11 @@ svg#bars .eq-bar--4 {
   scrollbar-width: none;
 }
 
-#sync-lyrics-box .react-lrc-line {
+#sync-lyrics-box-left .react-lrc-line {
+  @apply ml-[7%] max-w-[70%] text-balance;
+}
+
+#sync-lyrics-box-center .react-lrc-line {
   @apply w-fit m-auto max-w-[80%] text-balance;
 }
 
