@@ -8,43 +8,76 @@ public class SeekableHttpStream : Stream
 {
     private readonly HttpClient _httpClient;
     private readonly string _url;
-    private readonly long _length;
 
-    private const int BufferSize = 50 * 1024 * 1024;  // 50MB buffer
-    private const int DownloadChunkSize = 1024 * 1024; // 1MB per download
+    private long _length;
+    private long _position = 0;
 
+    private readonly object _lock = new object();
+
+    private bool _isSeekableStreaming;
+    private bool _fullyLoaded;
+
+    // Streaming mode
+    private const int BufferSize = 5 * 1024 * 1024;
+    private const int DownloadChunkSize = 256 * 1024;
     private byte[] _buffer = new byte[BufferSize];
     private long _bufferStart = 0;
     private long _bufferEnd = 0;
-    private long _position = 0;
-
-    private readonly object _bufferLock = new object();
-
-    private readonly ManualResetEventSlim _bufferReady = new ManualResetEventSlim(false);
-    private readonly AutoResetEvent _seekSignal = new AutoResetEvent(false);
+    private ManualResetEventSlim _bufferReady = new ManualResetEventSlim(false);
+    private AutoResetEvent _seekSignal = new AutoResetEvent(false);
     private Thread _downloaderThread;
     private bool _stopRequested = false;
+
+    // Fully-loaded mode
+    private byte[] _fullData;
 
     public SeekableHttpStream(string url)
     {
         _url = url ?? throw new ArgumentNullException(nameof(url));
         _httpClient = new HttpClient();
 
-        var headRequest = new HttpRequestMessage(HttpMethod.Head, _url);
-        var headResponse = _httpClient.Send(headRequest);
+        try
+        {
+            var headRequest = new HttpRequestMessage(HttpMethod.Head, _url);
+            var headResponse = _httpClient.Send(headRequest);
 
-        if (!headResponse.IsSuccessStatusCode)
-            throw new IOException($"Failed to access URL: {_url} (Status: {headResponse.StatusCode})");
+            if (!headResponse.IsSuccessStatusCode)
+                throw new IOException($"HEAD request failed: {headResponse.StatusCode}");
 
-        if (!headResponse.Content.Headers.ContentLength.HasValue)
-            throw new NotSupportedException("Server did not provide a Content-Length header.");
+            bool hasLength = headResponse.Content.Headers.ContentLength.HasValue;
+            bool hasRange = headResponse.Headers.AcceptRanges.Contains("bytes", StringComparer.OrdinalIgnoreCase);
 
-        _length = headResponse.Content.Headers.ContentLength.Value;
+            if (hasLength && hasRange)
+            {
+                _length = headResponse.Content.Headers.ContentLength.Value;
+                _isSeekableStreaming = true;
+                StartDownloader();
+            }
+            else
+            {
+                // Fall back to full download
+                LoadEntireFile();
+            }
+        }
+        catch
+        {
+            // If HEAD fails, try to GET full file
+            LoadEntireFile();
+        }
+    }
 
-        if (!headResponse.Headers.AcceptRanges.Contains("bytes", StringComparer.OrdinalIgnoreCase))
-            throw new NotSupportedException("Server does not support range requests.");
+    private void LoadEntireFile()
+    {
+        var response = _httpClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead).Result;
+        if (!response.IsSuccessStatusCode)
+            throw new IOException($"Failed to download file: {response.StatusCode}");
 
-        StartDownloader();
+        using var stream = response.Content.ReadAsStream();
+        using var ms = new MemoryStream();
+        stream.CopyTo(ms);
+        _fullData = ms.ToArray();
+        _length = _fullData.Length;
+        _fullyLoaded = true;
     }
 
     private void StartDownloader()
@@ -55,7 +88,7 @@ public class SeekableHttpStream : Stream
             {
                 long downloadFrom;
 
-                lock (_bufferLock)
+                lock (_lock)
                 {
                     downloadFrom = _position;
                     _bufferStart = downloadFrom;
@@ -75,8 +108,7 @@ public class SeekableHttpStream : Stream
                     request.Headers.Range = new RangeHeaderValue(rangeStart, rangeEnd);
 
                     using var response = _httpClient.Send(request);
-                    if (!response.IsSuccessStatusCode)
-                        break;
+                    if (!response.IsSuccessStatusCode) break;
 
                     using var responseStream = response.Content.ReadAsStream();
                     int chunkSize = (int)(rangeEnd - rangeStart + 1);
@@ -90,7 +122,7 @@ public class SeekableHttpStream : Stream
                         read += r;
                     }
 
-                    lock (_bufferLock)
+                    lock (_lock)
                     {
                         _bufferStart = downloadFrom;
                         _bufferEnd = rangeStart + read;
@@ -103,7 +135,7 @@ public class SeekableHttpStream : Stream
                         break;
                 }
 
-                _seekSignal.WaitOne(); // Wait until next seek or shutdown
+                _seekSignal.WaitOne();
             }
         });
 
@@ -124,12 +156,20 @@ public class SeekableHttpStream : Stream
         {
             int toCopy = 0;
 
-            lock (_bufferLock)
+            lock (_lock)
             {
                 if (_position >= _length)
                     break;
 
-                if (_position >= _bufferStart && _position < _bufferEnd)
+                if (_fullyLoaded)
+                {
+                    toCopy = (int)Math.Min(count - bytesRead, _length - _position);
+                    Array.Copy(_fullData, _position, buffer, offset + bytesRead, toCopy);
+                    _position += toCopy;
+                    bytesRead += toCopy;
+                    break;
+                }
+                else if (_position >= _bufferStart && _position < _bufferEnd)
                 {
                     long bufferOffset = _position - _bufferStart;
                     toCopy = (int)Math.Min(count - bytesRead, _bufferEnd - _position);
@@ -139,12 +179,11 @@ public class SeekableHttpStream : Stream
                     continue;
                 }
 
-                // If data is not in buffer, request it via downloader
                 _bufferReady.Reset();
-                _seekSignal.Set(); // Notify downloader
+                _seekSignal.Set();
             }
 
-            _bufferReady.Wait(); // Wait until downloader fills buffer
+            _bufferReady.Wait();
         }
 
         return bytesRead;
@@ -152,7 +191,7 @@ public class SeekableHttpStream : Stream
 
     public override long Seek(long offset, SeekOrigin origin)
     {
-        lock (_bufferLock)
+        lock (_lock)
         {
             long newPos = origin switch
             {
@@ -168,7 +207,9 @@ public class SeekableHttpStream : Stream
             _position = newPos;
         }
 
-        _seekSignal.Set(); // Wake downloader to fetch new range
+        if (!_fullyLoaded)
+            _seekSignal.Set();
+
         return Position;
     }
 
@@ -180,28 +221,22 @@ public class SeekableHttpStream : Stream
 
     public override long Position
     {
-        get
-        {
-            lock (_bufferLock)
-            {
-                return _position;
-            }
-        }
+        get { lock (_lock) { return _position; } }
         set => Seek(value, SeekOrigin.Begin);
     }
 
     public override void Flush() { }
 
     public override void SetLength(long value) =>
-        throw new NotSupportedException("SetLength is not supported.");
+        throw new NotSupportedException();
 
     public override void Write(byte[] buffer, int offset, int count) =>
-        throw new NotSupportedException("Write is not supported.");
+        throw new NotSupportedException();
 
     protected override void Dispose(bool disposing)
     {
         _stopRequested = true;
-        _seekSignal.Set(); // Wake the downloader
+        _seekSignal.Set();
         _downloaderThread?.Join();
         _httpClient.Dispose();
         base.Dispose(disposing);
