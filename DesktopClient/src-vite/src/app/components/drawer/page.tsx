@@ -1,6 +1,3 @@
-import clsx from 'clsx'
-import { ChevronDownIcon } from 'lucide-react'
-import { ComponentPropsWithoutRef, useMemo } from 'react'
 import { LyricsTab } from '@/app/components/fullscreen/lyrics'
 import { QueueSettings } from '@/app/components/fullscreen/settings'
 import { CurrentSongInfo } from '@/app/components/queue/current-song-info'
@@ -15,6 +12,9 @@ import {
   useSongColor,
 } from '@/store/player.store'
 import { hexToRgba } from '@/utils/getAverageColor'
+import clsx from 'clsx'
+import { ChevronDownIcon } from 'lucide-react'
+import { ComponentPropsWithoutRef, useMemo } from 'react'
 
 export function MainDrawerPage() {
   const { currentSongColor, useSongColorOnQueue, currentSongColorIntensity } =
@@ -52,7 +52,7 @@ export function MainDrawerPage() {
           )}
           style={{ backgroundColor }}
         >
-          <div className="flex w-full h-14 min-h-14 px-[6%] items-center justify-end gap-2">
+          <div className="absolute flex w-full h-14 min-h-14 px-[6%] items-center justify-end gap-2">
             <QueueSettings />
             <Button
               variant="ghost"
@@ -62,10 +62,10 @@ export function MainDrawerPage() {
               <ChevronDownIcon />
             </Button>
           </div>
-          <div className="flex w-full h-full mt-8 px-[6%] mb-0">
+          <div className="flex items-center w-full h-full mt-8 px-[6%] mb-0">
             <CurrentSongInfo />
 
-            <div className="flex flex-1 justify-center relative">
+            <div className="flex self-stretch flex-1 justify-center relative">
               <ActiveContent active={queueState}>
                 <QueueSongList />
               </ActiveContent>
