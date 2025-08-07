@@ -18,6 +18,24 @@ export interface ILyric {
   value?: string
 }
 
+export interface ILyricLine {
+  start?: number
+  value?: string
+}
+
+export interface ILyricsList {
+  structuredLyrics?: IStructuredLyric[]
+}
+
+export interface IStructuredLyric {
+  displayArtist?: string
+  displayTitle?: string
+  lang?: string
+  offset?: number
+  synced?: boolean
+  line?: ILyricLine[]
+}
+
 export interface IContributor {
   role: string
   artist: IFeaturedArtist
@@ -80,5 +98,7 @@ export interface TopSongsResponse
   extends SubsonicResponse<{ topSongs: SongList }> {}
 
 export interface LyricsResponse extends SubsonicResponse<{ lyrics: ILyric }> {}
+
+export interface OpenLyricsResponse extends SubsonicResponse<{ lyricsList: ILyricsList }> {}
 
 export interface GetSongResponse extends SubsonicResponse<{ song: ISong }> {}

@@ -1,6 +1,6 @@
 import { httpClient } from '@/api/httpClient'
 import { usePlayerStore } from '@/store/player.store'
-import { LyricsResponse } from '@/types/responses/song'
+import { ILyricsList, LyricsResponse, OpenLyricsResponse } from '@/types/responses/song'
 import { lrclibClient } from '@/utils/appName'
 import { checkServerType } from '@/utils/servers'
 
@@ -9,6 +9,7 @@ interface GetLyricsData {
   title: string
   album?: string
   duration?: number
+  id?: string
 }
 
 interface LRCLibResponse {
@@ -41,6 +42,21 @@ async function getLyrics(getLyricsData: GetLyricsData) {
 
   const lyricNotFound =
     !response || !response?.data.lyrics || !response.data.lyrics.value
+
+  if (!lyricNotFound && response?.data.openSubsonic) {
+    // Try to get synced lyrics using getLyricsBySongId
+    const openResponse = await httpClient<OpenLyricsResponse>('/getLyricsBySongId', {
+      method: 'GET',
+      query: {
+        id: getLyricsData.id,
+      },
+    })
+
+    if (openResponse?.data?.lyricsList?.structuredLyrics?.length! > 0) {
+    return convertToLRC(openResponse?.data?.lyricsList);
+    }
+    
+  }
 
   // If the Subsonic API did not return lyrics and the user does not prefer synced lyrics,
   // fallback to fetching lyrics from the LrcLib.
@@ -121,6 +137,29 @@ async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
 
 function formatLyrics(lyrics: string) {
   return lyrics.trim().replaceAll('\r\n', '\n')
+}
+
+function convertToLRC(lyricsList?: ILyricsList) {
+
+
+  if (!lyricsList || lyricsList.structuredLyrics!.length === 0) { return null; }
+
+  // Prioritize synced english lyrics if available
+  const optimalLyrics = lyricsList.structuredLyrics!.find((lyric) => lyric.synced) || lyricsList.structuredLyrics![0];
+  let formattedLyrics = '';
+  
+  // Convert each line to LRC format
+  optimalLyrics.line?.forEach((line) => {
+    if (line.start && line.value) {
+      const timeMS = (line.start + (optimalLyrics.offset || 0));
+      const lrcTime = `[${String(Math.floor(timeMS / 60000)).padStart(2, '0')}:${String(Math.floor(timeMS / 1000) % 60).padStart(2, '0')}.${String(timeMS % 1000).padStart(3, '0')}]`;
+      formattedLyrics += `${lrcTime}${line.value}\n`;
+    }
+  });
+
+  return {
+    value: formattedLyrics.trim()
+  }
 }
 
 export const lyrics = {

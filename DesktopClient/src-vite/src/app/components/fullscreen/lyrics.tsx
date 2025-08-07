@@ -1,16 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
-import clsx from 'clsx'
-import { ComponentPropsWithoutRef, useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Lrc } from 'react-lrc'
 import {
   ScrollArea,
   scrollAreaViewportSelector,
 } from '@/app/components/ui/scroll-area'
 import { subsonic } from '@/service/subsonic'
-import { usePlayerSonglist, usePlayerRef } from '@/store/player.store'
+import { usePlayerRef, usePlayerSonglist } from '@/store/player.store'
 import { ILyric } from '@/types/responses/song'
 import { isSafari } from '@/utils/osType'
+import { useQuery } from '@tanstack/react-query'
+import clsx from 'clsx'
+import { ComponentPropsWithoutRef, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Lrc } from 'react-lrc'
 
 interface LyricProps {
   lyrics: ILyric
@@ -20,7 +20,7 @@ export function LyricsTab() {
   const { currentSong } = usePlayerSonglist()
   const { t } = useTranslation()
 
-  const { artist, title, duration } = currentSong
+  const { artist, title, duration, id } = currentSong
 
   const { data: lyrics, isLoading } = useQuery({
     queryKey: ['get-lyrics', artist, title, duration],
@@ -29,6 +29,7 @@ export function LyricsTab() {
         artist,
         title,
         duration,
+        id,
       }),
   })
 
