@@ -52,17 +52,18 @@ export function LyricsTab({ leftAlign }: { leftAlign?: boolean }) {
 
 function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
   const playerRef = usePlayerRef()
-  const [progress, setProgress] = useState(0)
+  const [timestamp, setTimestamp] = useState<number>(0);
 
-  setTimeout(() => {
-    let newProgress = (playerRef?.currentTime || 0) * 1000
+  requestAnimationFrame(() => {
+      let newTimestamp = (playerRef?.currentTime || 0) * 1000;
 
-    if (newProgress === progress) {
-      newProgress += 1 // Prevents the lyrics from getting stuck when the audio is still loading
-    }
-
-    setProgress(newProgress)
-  }, 50)
+      if (newTimestamp !== timestamp) {
+          setTimestamp(newTimestamp);
+      }
+      else {
+          setTimestamp(newTimestamp + 1);
+      }
+  });
 
   const skipToTime = (timeMs: number) => {
     if (playerRef) {
@@ -75,7 +76,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
       <Lrc
         lrc={lyrics.value!}
         recoverAutoScrollInterval={1500}
-        currentMillisecond={progress}
+        currentMillisecond={timestamp}
         id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
         className={clsx('h-full overflow-y-auto', !isSafari && 'scroll-smooth')}
         verticalSpace={true}

@@ -6,9 +6,12 @@ class NativeVirtualAudioPlayer {
   volume = 0;
   duration = NaN;
   _currentTime = 0;
+  _currentTimeOffset = Date.now();
+  _loop: boolean = false;
   src?: string;
   isCreated = false;
   id?: string;
+  paused: boolean = true;
 
   constructor() {
     setTimeout(async () => {
@@ -26,10 +29,9 @@ class NativeVirtualAudioPlayer {
         }
         else if (e == "timeupdate") {
           this._currentTime = param;
+          this._currentTimeOffset = Date.now();
           this.onTimeUpdate?.();
         }
-
-        console.log("Audio event:", e, param);
       }
 
       await igniteView.commandBridge.createAudioPlayer(this.id);
@@ -39,9 +41,26 @@ class NativeVirtualAudioPlayer {
   }
 
   get currentTime() {
-    return this._currentTime;
+    if (this.paused || this._currentTimeOffset < 1) { return this._currentTime; }
+    return ((Date.now() - this._currentTimeOffset) / 1000) + this._currentTime;
   }
   
+  set currentTime(value: number) {
+    this.seek(value);
+  }
+
+  get loop() {
+    return this._loop;
+  }
+
+  set loop(value: boolean) {
+    this._loop = value;
+    setTimeout(async () => {
+      await this.waitForCreation();
+      igniteView.commandBridge.setAudioPlayerLoopMode(this.id!, this._loop);
+    }, 0);
+  }
+
   set currentTime(value: number) {
     this.seek(value);
   }
@@ -58,6 +77,7 @@ class NativeVirtualAudioPlayer {
   }
 
   async play() {
+    this.paused = false;
     await this.waitForCreation();
     if (!this.src) { return; }
     await this.applySource();
@@ -66,6 +86,8 @@ class NativeVirtualAudioPlayer {
   }
 
   async pause() {
+    this.paused = true;
+    this._currentTimeOffset = 0;
     await this.waitForCreation();
     await igniteView.commandBridge.pauseAudio(this.id!);
     this.onPause?.();
@@ -75,6 +97,7 @@ class NativeVirtualAudioPlayer {
     if (this._currentTime === time) return;
     await this.waitForCreation();
     this._currentTime = time;
+    this._currentTimeOffset = Date.now();
     await igniteView.commandBridge.seekAudio(this.id!, time + 0.0000001); // Adding a small offset to avoid C# thinking its an Int64
     this.onTimeUpdate?.();
   }

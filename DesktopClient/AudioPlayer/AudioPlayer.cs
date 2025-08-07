@@ -16,6 +16,7 @@ namespace Aonsoku.AudioPlayer
 
         public string ID;
         public string Source;
+        public bool Loop = false;
 
         MediaFoundationReader? DataReader;
         DirectSoundOut? DataPlayer;
@@ -28,20 +29,35 @@ namespace Aonsoku.AudioPlayer
             SendTimeUpdate();
         }
 
-        public async Task SendTimeUpdate()
+        public async Task SendTimeUpdate(bool repeat = true)
         {
-            if (DataPlayer != null && DataReader != null && DataPlayer.PlaybackState == PlaybackState.Playing && AssociatedWindow != null)
+            if (DataPlayer != null && DataReader != null && AssociatedWindow != null)
             {
-                AssociatedWindow.CallFunction("handleAudioEvent_" + ID, "timeupdate", DataReader.CurrentTime.TotalSeconds);
-
-                if (DataReader.TotalTime.Subtract(DataReader.CurrentTime).TotalSeconds < 1)
+                if (DataPlayer.PlaybackState == PlaybackState.Playing)
                 {
-                    AssociatedWindow.CallFunction("handleAudioEvent_" + ID, "ended");
+                    AssociatedWindow.CallFunction("handleAudioEvent_" + ID, "timeupdate", DataReader.CurrentTime.TotalSeconds);
+                }
+
+                if (DataReader.TotalTime.Subtract(DataReader.CurrentTime).TotalSeconds < 1 && repeat)
+                {
+                    await Task.Delay(1000); // Makes sure the audio is fully finished
+                    if (Loop)
+                    {
+                        await SeekAudio(ID, 0);
+                        if (DataPlayer.PlaybackState == PlaybackState.Stopped)
+                        {
+                            await PlayAudio(ID);
+                        } 
+                    }
+                    else
+                    {
+                        AssociatedWindow.CallFunction("handleAudioEvent_" + ID, "ended");
+                    }
                 }
             }
 
             await Task.Delay(1000);
-            SendTimeUpdate();
+            if (repeat) SendTimeUpdate();
         }
 
         // Running this task forces the awaiter to run on a different thread.
@@ -99,6 +115,7 @@ namespace Aonsoku.AudioPlayer
             if (ActivePlayers.TryGetValue(id, out var player))
             {
                 player.DataPlayer?.Play();
+                player.SendTimeUpdate(false);
             }
         }
 
@@ -109,6 +126,7 @@ namespace Aonsoku.AudioPlayer
             if (ActivePlayers.TryGetValue(id, out var player))
             {
                 player.DataPlayer?.Pause();
+                player.SendTimeUpdate(false);
             }
         }
 
@@ -118,7 +136,18 @@ namespace Aonsoku.AudioPlayer
             await ForceMultithreaded();
             if (ActivePlayers.TryGetValue(id, out var player) && player.DataReader != null)
             {
-                player.DataReader.CurrentTime = TimeSpan.FromSeconds(time);
+                player.DataReader.CurrentTime = TimeSpan.FromSeconds(Math.Clamp(time, 0, player.DataReader.TotalTime.TotalSeconds - 1));
+                player.SendTimeUpdate(false);
+            }
+        }
+
+        [Command("setAudioPlayerLoopMode")]
+        public static async Task SetAudioPlayerLoopMode(string id, bool loop)
+        {
+            await ForceMultithreaded();
+            if (ActivePlayers.TryGetValue(id, out var player) && player.DataReader != null)
+            {
+                player.Loop = loop;
             }
         }
     }

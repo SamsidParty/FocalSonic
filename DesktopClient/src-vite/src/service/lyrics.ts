@@ -136,7 +136,7 @@ function convertToLRC(lyricsList?: ILyricsList) {
   
   // Convert each line to LRC format
   optimalLyrics.line?.forEach((line) => {
-    if (line.start && line.value) {
+    if (line.start !== undefined && line.value !== undefined) {
       const timeMS = (line.start + (optimalLyrics.offset || 0));
       const lrcTime = `[${String(Math.floor(timeMS / 60000)).padStart(2, '0')}:${String(Math.floor(timeMS / 1000) % 60).padStart(2, '0')}.${String(timeMS % 1000).padStart(3, '0')}]`;
       formattedLyrics += `${lrcTime}${line.value}\n`;
