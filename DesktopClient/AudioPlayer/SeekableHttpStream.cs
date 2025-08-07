@@ -18,18 +18,18 @@ public class SeekableHttpStream : Stream
     private bool _fullyLoaded;
 
     // Streaming mode
-    private const int BufferSize = 5 * 1024 * 1024;
+    private const int BufferSize = 25 * 1024 * 1024;
     private const int DownloadChunkSize = 256 * 1024;
-    private byte[] _buffer = new byte[BufferSize];
+    private byte[]? _buffer;
     private long _bufferStart = 0;
     private long _bufferEnd = 0;
-    private ManualResetEventSlim _bufferReady = new ManualResetEventSlim(false);
-    private AutoResetEvent _seekSignal = new AutoResetEvent(false);
-    private Thread _downloaderThread;
+    private ManualResetEventSlim? _bufferReady;
+    private AutoResetEvent? _seekSignal;
+    private Thread? _downloaderThread;
     private bool _stopRequested = false;
 
     // Fully-loaded mode
-    private byte[] _fullData;
+    private byte[]? _fullData;
 
     public SeekableHttpStream(string url)
     {
@@ -51,19 +51,25 @@ public class SeekableHttpStream : Stream
             {
                 _length = headResponse.Content.Headers.ContentLength.Value;
                 _isSeekableStreaming = true;
+                InitializeStreaming();
                 StartDownloader();
             }
             else
             {
-                // Fall back to full download
                 LoadEntireFile();
             }
         }
         catch
         {
-            // If HEAD fails, try to GET full file
             LoadEntireFile();
         }
+    }
+
+    private void InitializeStreaming()
+    {
+        _buffer = new byte[BufferSize];
+        _bufferReady = new ManualResetEventSlim(false);
+        _seekSignal = new AutoResetEvent(false);
     }
 
     private void LoadEntireFile()
@@ -93,7 +99,7 @@ public class SeekableHttpStream : Stream
                     downloadFrom = _position;
                     _bufferStart = downloadFrom;
                     _bufferEnd = downloadFrom;
-                    _bufferReady.Reset();
+                    _bufferReady?.Reset();
                 }
 
                 long totalDownloaded = 0;
@@ -117,7 +123,7 @@ public class SeekableHttpStream : Stream
                     int read = 0;
                     while (read < chunkSize)
                     {
-                        int r = responseStream.Read(_buffer, bufferOffset + read, chunkSize - read);
+                        int r = responseStream.Read(_buffer!, bufferOffset + read, chunkSize - read);
                         if (r == 0) break;
                         read += r;
                     }
@@ -126,16 +132,14 @@ public class SeekableHttpStream : Stream
                     {
                         _bufferStart = downloadFrom;
                         _bufferEnd = rangeStart + read;
-                        _bufferReady.Set();
+                        _bufferReady?.Set();
                     }
 
                     totalDownloaded += read;
-
-                    if (rangeEnd >= _length - 1)
-                        break;
+                    if (rangeEnd >= _length - 1) break;
                 }
 
-                _seekSignal.WaitOne();
+                _seekSignal?.WaitOne();
             }
         });
 
@@ -164,7 +168,7 @@ public class SeekableHttpStream : Stream
                 if (_fullyLoaded)
                 {
                     toCopy = (int)Math.Min(count - bytesRead, _length - _position);
-                    Array.Copy(_fullData, _position, buffer, offset + bytesRead, toCopy);
+                    Array.Copy(_fullData!, _position, buffer, offset + bytesRead, toCopy);
                     _position += toCopy;
                     bytesRead += toCopy;
                     break;
@@ -173,17 +177,17 @@ public class SeekableHttpStream : Stream
                 {
                     long bufferOffset = _position - _bufferStart;
                     toCopy = (int)Math.Min(count - bytesRead, _bufferEnd - _position);
-                    Array.Copy(_buffer, bufferOffset, buffer, offset + bytesRead, toCopy);
+                    Array.Copy(_buffer!, bufferOffset, buffer, offset + bytesRead, toCopy);
                     _position += toCopy;
                     bytesRead += toCopy;
                     continue;
                 }
 
-                _bufferReady.Reset();
-                _seekSignal.Set();
+                _bufferReady?.Reset();
+                _seekSignal?.Set();
             }
 
-            _bufferReady.Wait();
+            _bufferReady?.Wait();
         }
 
         return bytesRead;
@@ -198,32 +202,32 @@ public class SeekableHttpStream : Stream
                 SeekOrigin.Begin => offset,
                 SeekOrigin.Current => _position + offset,
                 SeekOrigin.End => _length + offset,
-                _ => throw new ArgumentOutOfRangeException(nameof(origin), "Invalid SeekOrigin")
+                _ => throw new ArgumentOutOfRangeException(nameof(origin))
             };
 
             if (newPos < 0 || newPos > _length)
-                throw new IOException("Invalid seek position.");
+                throw new IOException("Invalid seek position");
 
             _position = newPos;
         }
 
-        if (!_fullyLoaded)
-            _seekSignal.Set();
+        if (_isSeekableStreaming)
+            _seekSignal?.Set();
 
         return Position;
     }
-
-    public override bool CanRead => true;
-    public override bool CanSeek => true;
-    public override bool CanWrite => false;
-
-    public override long Length => _length;
 
     public override long Position
     {
         get { lock (_lock) { return _position; } }
         set => Seek(value, SeekOrigin.Begin);
     }
+
+    public override long Length => _length;
+
+    public override bool CanRead => true;
+    public override bool CanSeek => true;
+    public override bool CanWrite => false;
 
     public override void Flush() { }
 
@@ -236,9 +240,24 @@ public class SeekableHttpStream : Stream
     protected override void Dispose(bool disposing)
     {
         _stopRequested = true;
-        _seekSignal.Set();
-        _downloaderThread?.Join();
+        _seekSignal?.Set();
+
+        if (_downloaderThread != null && _downloaderThread.IsAlive)
+        {
+            _downloaderThread.Join();
+        }
+
+        _bufferReady?.Dispose();
+        _seekSignal?.Dispose();
         _httpClient.Dispose();
+
+        // Clear memory
+        _buffer = null!;
+        _fullData = null!;
+        _bufferReady = null!;
+        _seekSignal = null!;
+        _downloaderThread = null!;
+
         base.Dispose(disposing);
     }
 }
