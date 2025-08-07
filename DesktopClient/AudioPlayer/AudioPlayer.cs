@@ -1,5 +1,12 @@
 ﻿using IgniteView.Core;
-using NAudio.Wave;
+using SoundFlow.Abstracts;
+using SoundFlow.Abstracts.Devices;
+using SoundFlow.Backends.MiniAudio;
+using SoundFlow.Backends.MiniAudio.Devices;
+using SoundFlow.Components;
+using SoundFlow.Enums;
+using SoundFlow.Providers;
+using SoundFlow.Structs;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -16,43 +23,47 @@ namespace Aonsoku.AudioPlayer
 
         public string ID;
         public string Source;
-        public bool Loop = false;
+        public bool HasLoaded;
 
         int AssociatedWindowID;
-        MediaFoundationReader? DataReader;
-        DirectSoundOut? DataPlayer;
+        SoundPlayer Player;
+        AudioEngine AudioEngine;
+        NetworkDataProvider DataProvider;
+        AudioPlaybackDevice Device;
         WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
+
+        static AudioFormat PlaybackFormat = new AudioFormat
+        {
+            Format = SampleFormat.F32,
+            SampleRate = 48000,
+            Channels = 2
+        };
 
         public AudioPlayer(string id)
         {
             ID = id;
+            AudioEngine = new MiniAudioEngine();
+            Device = AudioEngine.InitializePlaybackDevice(AudioEngine.PlaybackDevices.FirstOrDefault(d => d.IsDefault), PlaybackFormat, new MiniAudioDeviceConfig()
+            {
+                Wasapi = new WasapiSettings()
+                {
+                    NoAutoConvertSRC = true,
+                    NoDefaultQualitySRC = true,
+                    Usage = SoundFlow.Backends.MiniAudio.Enums.WasapiUsage.ProAudio
+                }
+            });
+            Device.Start();
+
             ActivePlayers.TryAdd(id, this);
         }
 
         public async Task SendTimeUpdate(bool isAutomatic = true)
         {
-            if (DataPlayer != null && DataReader != null)
+            if (Player != null && DataProvider != null)
             {
-                if (DataPlayer.PlaybackState == PlaybackState.Playing)
+                if (Player.State == PlaybackState.Playing)
                 {
-                    AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", DataReader.CurrentTime.TotalSeconds);
-                }
-
-                if (DataReader.TotalTime.Subtract(DataReader.CurrentTime).TotalSeconds < 1 && isAutomatic)
-                {
-                    await Task.Delay(1000); // Makes sure the audio is fully finished
-                    if (Loop)
-                    {
-                        await SeekAudio(ID, 0);
-                        if (DataPlayer.PlaybackState == PlaybackState.Stopped)
-                        {
-                            await PlayAudio(ID);
-                        } 
-                    }
-                    else
-                    {
-                        AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "ended");
-                    }
+                    AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", Player.Time);
                 }
             }
         }
@@ -78,35 +89,52 @@ namespace Aonsoku.AudioPlayer
         [Command("setAudioPlayerSource")]
         public static async Task SetSource(string id, string src, WebWindow ctx)
         {
-            await RunOnPlayerThread(() =>
+
+            await RunOnPlayerThread(async () =>
             {
                 if (ActivePlayers.TryGetValue(id, out var player))
                 {
 
-                    if (player.Source == src) { return; } // Already set
+                    if (player.Source == src && player.Player?.State != PlaybackState.Stopped) { return; } // Already set
 
+                    player.HasLoaded = false;
                     player.Source = src;
                     player.AssociatedWindowID = ctx.ID;
 
                     if (!string.IsNullOrEmpty(src))
                     {
-                        if (player.DataPlayer != null)
+                        if (player.Player != null)
                         {
-                            player.DataPlayer.Stop();
-                            player.DataPlayer.Dispose();
-                            player.DataPlayer = null;
+                            player.Device?.MasterMixer?.RemoveComponent(player.Player);
+                            player.Player?.Stop();
+                            player.Player?.Dispose();
+                            player.DataProvider?.Dispose();
+                            player.Player = null;
+                            player.DataProvider = null;
                         }
 
-                        player.DataReader = new MediaFoundationReader(src);
+                        player.DataProvider = new NetworkDataProvider(player.AudioEngine, PlaybackFormat, src);
+                        player.Player = new SoundPlayer(player.AudioEngine, PlaybackFormat, player.DataProvider);
+                        player.Device.MasterMixer.AddComponent(player.Player);
 
-                        player.DataPlayer = new DirectSoundOut();
-                        player.DataPlayer.Init(player.DataReader);
+                        player.Player.PlaybackEnded += (_, _) =>
+                        {
+                            player.AssociatedWindow?.CallFunction("handleAudioEvent_" + player.ID, "ended");
+                        };
 
-                        ctx.CallFunction("handleAudioEvent_" + id, "loaded", player.DataReader.TotalTime.TotalSeconds);
+                        while (player.Player?.Duration == 0)
+                        {
+                            await Task.Delay(100);
+                        }
+                        if (player.Player?.Duration > 0)
+                        {
+                            player.AssociatedWindow?.CallFunction("handleAudioEvent_" + id, "loaded", player.Player!.Duration);
+                            player.HasLoaded = true;
+                        }
                     }
                     else
                     {
-                        player.DataReader = null;
+                        player.Player = null;
                     }
                 }
             });
@@ -115,11 +143,11 @@ namespace Aonsoku.AudioPlayer
         [Command("playAudio")]
         public static async Task PlayAudio(string id)
         {
-            await RunOnPlayerThread(() =>
+            await RunOnPlayerThread(async () =>
             {
                 if (ActivePlayers.TryGetValue(id, out var player))
                 {
-                    player.DataPlayer?.Play();
+                    player.Player?.Play();
                     player.SendTimeUpdate(false);
                 }
             });
@@ -132,7 +160,7 @@ namespace Aonsoku.AudioPlayer
             {
                 if (ActivePlayers.TryGetValue(id, out var player))
                 {
-                    player.DataPlayer?.Pause();
+                    player.Player?.Pause();
                     player.SendTimeUpdate(false);
                 }
             });
@@ -143,9 +171,9 @@ namespace Aonsoku.AudioPlayer
         {
             await RunOnPlayerThread(() =>
             {
-                if (ActivePlayers.TryGetValue(id, out var player) && player.DataReader != null)
+                if (ActivePlayers.TryGetValue(id, out var player) && player.Player != null)
                 {
-                    player.DataReader.CurrentTime = TimeSpan.FromSeconds(Math.Clamp(time, 0, player.DataReader.TotalTime.TotalSeconds - 1));
+                    player.Player.Seek((float)Math.Clamp(time, 0, player.Player.Duration - 1));
                     player.SendTimeUpdate(false);
                 }
             });
@@ -156,9 +184,9 @@ namespace Aonsoku.AudioPlayer
         {
             await RunOnPlayerThread(() =>
             {
-                if (ActivePlayers.TryGetValue(id, out var player) && player.DataReader != null)
+                if (ActivePlayers.TryGetValue(id, out var player) && player.Player != null)
                 {
-                    player.Loop = loop;
+                    player.Player.IsLooping = loop;
                 }
             });
         }

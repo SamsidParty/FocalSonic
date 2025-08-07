@@ -219,7 +219,7 @@ export function Player() {
             />
 
             {isSong && hasPiPSupport && <MemoMiniPlayerButton />}
-          </div>
+          </div> 
         </div>
       </div>
 

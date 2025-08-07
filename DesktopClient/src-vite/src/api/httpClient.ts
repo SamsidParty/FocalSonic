@@ -1,9 +1,9 @@
-import omit from 'lodash/omit'
 import { useAppStore } from '@/store/app.store'
 import { CoverArt } from '@/types/coverArtType'
 import { AuthType } from '@/types/serverConfig'
 import { appName } from '@/utils/appName'
 import { saltWord } from '@/utils/salt'
+import omit from 'lodash/omit'
 
 export type QueryType = Record<string, string | number | undefined>
 
@@ -122,7 +122,7 @@ export function getCoverArtUrl(
 export function getSongStreamUrl(
   id: string,
   maxBitRate?: string,
-  format?: string,
+  format = "mp3",
 ) {
   return getUrl('stream', {
     id,

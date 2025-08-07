@@ -90,10 +90,10 @@ class NativeVirtualAudioPlayer {
   }
 
   async seek(time: number) {
-    if (this._currentTime === time) return;
-    await this.waitForCreation();
+    if (Math.abs(this._currentTime - time) < 1) return;
     this._currentTime = time;
     this._currentTimeOffset = Date.now();
+    await this.waitForCreation();
     await igniteView.commandBridge.seekAudio(this.id!, time + 0.0000001); // Adding a small offset to avoid C# thinking its an Int64
     this.onTimeUpdate?.();
   }

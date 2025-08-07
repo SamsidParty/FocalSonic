@@ -12,7 +12,7 @@
 	<ItemGroup>
 		<PackageReference Include="IgniteView.Desktop" Version="*" />
 		<PackageReference Include="IgniteView.Core" Version="*" />
-		<PackageReference Include="NAudio" Version="2.2.1" />
+		<PackageReference Include="SoundFlow" Version="1.2.0" />
 		<PackageReference Include="System.Drawing.Common" Version="9.0.8" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
 		<PackageReference Include="System.Security.Permissions" Version="8.0.0" />
