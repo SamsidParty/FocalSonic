@@ -119,7 +119,9 @@ export function Player() {
       audio.currentTime = podcastProgress
     } else {
       const progress = getCurrentProgress()
-      audio.currentTime = progress
+      if (progress > 15) {
+        audio.currentTime = progress
+      }
     }
   }, [
     getAudioRef,
