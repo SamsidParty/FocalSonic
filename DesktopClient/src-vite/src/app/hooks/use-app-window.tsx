@@ -1,7 +1,7 @@
-import { getCurrentWindow, Window } from '@tauri-apps/api/window'
-import { useCallback, useEffect, useState } from 'react'
 import { getOsType, isWindows } from '@/utils/osType'
 import { isTauri } from '@/utils/tauriTools'
+import { getCurrentWindow, Window } from '@tauri-apps/api/window'
+import { useCallback, useEffect, useState } from 'react'
 
 interface AppWindowType {
   appWindow: Window | null
@@ -77,15 +77,11 @@ export function useAppWindow(): AppWindowType {
   }, [appWindow, updateIsFullscreen, updateIsWindowMaximized])
 
   const minimizeWindow = async () => {
-    if (appWindow) {
-      await appWindow.minimize()
-    }
+    window.hide();
   }
 
   const maximizeWindow = async () => {
-    if (appWindow) {
-      await appWindow.toggleMaximize()
-    }
+    window.toggleMaximize();
   }
 
   const toggleFullscreen = async () => {
@@ -126,9 +122,8 @@ export function useAppWindow(): AppWindowType {
   }
 
   const closeWindow = async () => {
-    if (appWindow) {
-      await appWindow.close()
-    }
+    await igniteView.commandBridge.cleanUpUI();
+    window.close();
   }
 
   return {

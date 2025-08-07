@@ -1,13 +1,13 @@
-import clsx from 'clsx'
 import { Linux } from '@/app/components/controls/linux'
 import { Windows } from '@/app/components/controls/windows'
+import { HeaderSongInfo } from '@/app/components/header-song'
 import { NavigationButtons } from '@/app/components/header/navigation-buttons'
 import { UserDropdown } from '@/app/components/header/user-dropdown'
-import { HeaderSongInfo } from '@/app/components/header-song'
 import { SettingsButton } from '@/app/components/settings/header-button'
 import { useAppWindow } from '@/app/hooks/use-app-window'
+import { igniteViewDragRegion } from '@/utils/igniteViewDragRegion'
 import { isLinux, isMac, isWindows } from '@/utils/osType'
-import { tauriDragRegion } from '@/utils/tauriDragRegion'
+import clsx from 'clsx'
 
 export function Header() {
   const { isFullscreen } = useAppWindow()
@@ -19,12 +19,12 @@ export function Header() {
         (isWindows || isLinux) && 'pr-0',
       )}
     >
-      <div {...tauriDragRegion} className="flex items-center">
+      <div {...igniteViewDragRegion} className="flex items-center">
         {isMac && !isFullscreen && <div className="w-[70px]" />}
         <NavigationButtons />
       </div>
       <HeaderSongInfo />
-      <div {...tauriDragRegion} className="flex justify-end items-center gap-2">
+      <div {...igniteViewDragRegion} className="flex justify-end items-center gap-2">
         <SettingsButton />
         <UserDropdown />
         {isWindows && <Windows />}

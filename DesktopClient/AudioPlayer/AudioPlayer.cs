@@ -65,6 +65,13 @@ namespace Aonsoku.AudioPlayer
                 {
                     AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", Player.Time);
                 }
+
+                MediaStatusDisplay.UpdateDisplay(new MediaPlaybackInfo()
+                {
+                    IsPlaying = Player?.State == PlaybackState.Playing,
+                    Duration = TimeSpan.FromSeconds(Player?.Duration ?? 0),
+                    Position = TimeSpan.FromSeconds(Player?.Time ?? 0),
+                });
             }
         }
 

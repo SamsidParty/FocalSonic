@@ -72,7 +72,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
   }
 
   return (
-    <div className="w-full h-full text-center font-semibold text-4xl 2xl:text-3xl px-2 lrc-box maskImage-big-player-lyrics">
+    <div className="w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box maskImage-big-player-lyrics">
       <Lrc
         lrc={lyrics.value!}
         recoverAutoScrollInterval={1500}
@@ -84,7 +84,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
           <p
             onClick={() => skipToTime(line.startMillisecond)}
             className={clsx(
-              'drop-shadow-lg my-10 cursor-pointer hover:opacity-100 duration-700',
+              'drop-shadow-lg my-10 2xl:my-20 cursor-pointer hover:opacity-100 duration-700',
               'transition-[opacity,transform] motion-reduce:transition-none ease-long',
               active ? 'opacity-100 scale-110' : 'opacity-60',
               leftAlign ? 'text-left' : 'text-center',
