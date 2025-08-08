@@ -1,5 +1,6 @@
 ﻿using Aonsoku;
 using Aonsoku.AudioPlayer;
+using Aonsoku.Presence;
 using IgniteView.Core;
 using IgniteView.Desktop;
 using Newtonsoft.Json;
@@ -17,6 +18,7 @@ public class Program
 
         // Background setup
         PlayerThread.Start();
+        Presence.Setup();
         TrayIcon.Setup();
 
         CreateMainWindow();

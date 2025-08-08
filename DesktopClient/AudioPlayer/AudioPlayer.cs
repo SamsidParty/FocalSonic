@@ -1,4 +1,5 @@
-﻿using IgniteView.Core;
+﻿using Aonsoku.Presence;
+using IgniteView.Core;
 using SoundFlow.Abstracts;
 using SoundFlow.Abstracts.Devices;
 using SoundFlow.Backends.MiniAudio;
@@ -66,7 +67,7 @@ namespace Aonsoku.AudioPlayer
                     AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", Player.Time);
                 }
 
-                MediaStatusDisplay.UpdateDisplay(new MediaPlaybackInfo()
+                Presence.Presence.Instance.UpdateMediaStatus(new MediaPlaybackInfo()
                 {
                     IsPlaying = Player?.State == PlaybackState.Playing,
                     Duration = TimeSpan.FromSeconds(Player?.Duration ?? 0),

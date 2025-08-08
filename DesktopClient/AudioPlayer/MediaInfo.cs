@@ -8,5 +8,8 @@ namespace Aonsoku.AudioPlayer
 {
     public class MediaInfo
     {
+        public string? Title;
+        public string? Artist;
+        public string? Album;
     }
 }
