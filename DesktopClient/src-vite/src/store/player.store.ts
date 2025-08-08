@@ -843,10 +843,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
           const appStore = omit(state, [
             'actions',
             'playerState.audioPlayerRef',
-            'playerState.mainDrawerState',
-            'playerState.queueState',
-            'playerState.lyricsState',
-            'state.settings.colors.bigPlayer.blur.settings',
           ])
 
           return appStore

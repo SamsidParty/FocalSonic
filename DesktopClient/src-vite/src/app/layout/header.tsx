@@ -15,7 +15,7 @@ export function Header() {
   return (
     <header
       className={clsx(
-        'w-full grid grid-cols-header h-header px-4 fixed top-0 right-0 left-0 z-20 bg-background border-b',
+        'w-full grid grid-cols-header h-header px-1 fixed top-0 right-0 left-0 z-20 bg-background border-b',
         (isWindows || isLinux) && 'pr-0',
       )}
     >

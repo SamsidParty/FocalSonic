@@ -5,7 +5,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/app/components/ui/drawer'
-import { useAppWindow } from '@/app/hooks/use-app-window'
 import { useFullscreenPlayerSettings } from '@/store/player.store'
 import { enterFullscreen, exitFullscreen } from '@/utils/browser'
 import { isTauri } from '@/utils/tauriTools'
@@ -24,17 +23,10 @@ interface FullscreenModeProps {
 const MemoFullscreenBackdrop = memo(FullscreenBackdrop)
 
 export default function FullscreenMode({ children }: FullscreenModeProps) {
-  const { enterFullscreenWindow, exitFullscreenWindow } = useAppWindow()
   const { autoFullscreenEnabled } = useFullscreenPlayerSettings()
 
-  async function handleFullscreen(open: boolean) {
+  function handleFullscreen(open: boolean) {
     if (!autoFullscreenEnabled) return
-
-    if (isTauri()) {
-      open ? await enterFullscreenWindow() : await exitFullscreenWindow()
-      return
-    }
-
     open ? enterFullscreen() : exitFullscreen()
   }
 

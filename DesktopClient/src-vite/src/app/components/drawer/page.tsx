@@ -62,7 +62,7 @@ export function MainDrawerPage() {
               <ChevronDownIcon />
             </Button>
           </div>
-          <div className="flex items-center w-full h-full mt-8 px-[6%] mb-0">
+          <div className="flex items-center w-full h-full mt-12 px-[6%] mb-0">
             <CurrentSongInfo />
 
             <div className="flex self-stretch flex-1 justify-center relative">
