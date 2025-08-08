@@ -8,9 +8,9 @@ import { ILyric } from '@/types/responses/song'
 import { isSafari } from '@/utils/osType'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { ComponentPropsWithoutRef, useEffect, useRef, useState } from 'react'
+import { ComponentPropsWithoutRef, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Lrc } from 'react-lrc'
+import { Lrc, LrcLine } from 'react-lrc'
 
 interface LyricProps {
   lyrics: ILyric,
@@ -80,23 +80,81 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
         id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
         className={clsx('h-full overflow-y-auto', !isSafari && 'scroll-smooth')}
         verticalSpace={true}
-        lineRenderer={({ active, line }) => (
-          <p
-            onClick={() => skipToTime(line.startMillisecond)}
-            className={clsx(
-              'drop-shadow-lg my-10 2xl:my-20 cursor-pointer hover:opacity-100 duration-700',
-              'transition-[opacity,transform] motion-reduce:transition-none ease-long',
-              active ? 'opacity-100 scale-110' : 'opacity-60',
-              leftAlign ? 'text-left' : 'text-center',
-              (leftAlign && active) ? 'translate-x-[7%]' : '',
-            )}
-          >
-            {line.content}
-          </p>
-        )}
+        lineRenderer={(props) => <LrcLineRenderer {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />}
       />
     </div>
   )
+}
+
+function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number }) {
+
+    const elrcRegex = /<(\d{2}):(\d{2})\.(\d{2})>([^<]+)/g;
+    const elrcTestRegex = /^\s*(<\d{2}:\d{2}\.\d+>[^<]+)+\s*$/;
+    
+    const elrcValues = useMemo(() => {
+        let values = {
+            isElrc: elrcTestRegex.exec(line?.content),
+            elrcPortions: [] as any[]
+        };
+
+        if (values.isElrc) {
+            let match;
+
+            while ((match = elrcRegex.exec(line?.content)) !== null) {
+                const minutes = parseInt(match[1], 10);
+                const seconds = parseInt(match[2], 10);
+                const fractionOfSeconds = parseInt(match[3], 10);
+                const totalSeconds = minutes * 60 + seconds + fractionOfSeconds / 100;
+
+                values.elrcPortions.push({
+                    Time: totalSeconds,
+                    Text: match[4],
+                });
+            }
+        }
+
+        return values;
+    }, [line?.content]);
+
+
+    if (elrcValues.isElrc) {
+        return (
+            <p 
+              key={line?.id}
+              onClick={() => skipToTime(line.startMillisecond)}
+              className={clsx(
+                  'drop-shadow-lg my-10 2xl:my-20 cursor-pointer hover:opacity-100 duration-700',
+                  'transition-[opacity,transform] motion-reduce:transition-none ease-long text-left',
+                  active ? 'opacity-100 scale-110 font-bold translate-x-[7%]' : 'opacity-60',
+              )}
+            >
+                {elrcValues.elrcPortions.map((portion, index) => (
+                    <span 
+                    data-time={portion.Time} 
+                    key={index} 
+                    className={(timestamp >= portion.Time) ? 'opacity-100 transition-opacity duration-200' : 'opacity-40'}
+                  >
+                        {portion.Text}
+                    </span>
+                ))}
+            </p>
+        );
+    }
+
+    // Regular LRC
+    return (
+        <p
+          key={line?.id} 
+          onClick={() => skipToTime(line.startMillisecond)} 
+          className={clsx(
+              'drop-shadow-lg my-10 2xl:my-20 cursor-pointer hover:opacity-100 duration-700',
+              'transition-[opacity,transform] motion-reduce:transition-none ease-long text-left',
+              active ? 'opacity-100 scale-110 font-bold translate-x-[7%]' : 'opacity-60',
+          )}
+        >
+            {line?.content}
+        </p>
+    );
 }
 
 function UnsyncedLyrics({ lyrics }: LyricProps) {
