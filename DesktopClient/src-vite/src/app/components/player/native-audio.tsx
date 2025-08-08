@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { AudioPlayerProps } from "./audio";
 
 
@@ -16,6 +17,7 @@ class NativeVirtualAudioPlayer {
   constructor() {
     setTimeout(async () => {
       this.id = "defaultPlayer";
+      logger.info("NativeVirtualAudioPlayer created with id:", this.id);
       
       window["handleAudioEvent_" + this.id] = (e: string, param: any) => {
         if (e == "ended") {
@@ -28,6 +30,7 @@ class NativeVirtualAudioPlayer {
           this.onTimeUpdate?.();
         }
         else if (e == "timeupdate") {
+          logger.info("Time update", param);
           this._currentTime = param;
           this._currentTimeOffset = Date.now();
           this.onTimeUpdate?.();

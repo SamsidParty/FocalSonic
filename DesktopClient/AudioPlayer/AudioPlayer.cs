@@ -49,7 +49,7 @@ namespace Aonsoku.AudioPlayer
                 {
                     NoAutoConvertSRC = true,
                     NoDefaultQualitySRC = true,
-                    Usage = SoundFlow.Backends.MiniAudio.Enums.WasapiUsage.ProAudio
+                    Usage = SoundFlow.Backends.MiniAudio.Enums.WasapiUsage.Default
                 }
             });
             Device.Start();
@@ -84,11 +84,14 @@ namespace Aonsoku.AudioPlayer
         }
 
         [Command("createAudioPlayer")]
-        public static async Task CreateAudioPlayer(string id)
+        public static async Task CreateAudioPlayer(string id, WebWindow ctx)
         {
             await RunOnPlayerThread(() =>
             {
-                if (ActivePlayers.ContainsKey(id)) { return; }
+                if (ActivePlayers.TryGetValue(id, out var existingPlayer)) {
+                    existingPlayer.AssociatedWindowID = ctx.ID; // Associate the player with the window
+                    return;
+                }
                 var player = new AudioPlayer(id);
             });
         }

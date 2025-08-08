@@ -842,7 +842,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
         partialize: (state) => {
           const appStore = omit(state, [
             'actions',
-            'playerState.isPlaying',
             'playerState.audioPlayerRef',
             'playerState.mainDrawerState',
             'playerState.queueState',

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
@@ -13,22 +14,20 @@ namespace Aonsoku.AudioPlayer
     {
         public static ConcurrentQueue<Action> ActionQueue = new ConcurrentQueue<Action>();
         public static Thread Running;
+        public static Stopwatch Timer = new Stopwatch();
 
         // Millisecond values
-        const int QueueInterval = 5;
-        const int TimeUpdateInterval = 500;
-        static int TimeSinceLastTimeUpdate = TimeUpdateInterval;
+        const long QueueInterval = 5;
+        const long TimeUpdateInterval = 500;
+        static long TimeSinceLastTimeUpdate = TimeUpdateInterval;
 
-        public static void PlayerThreadLoop()
+        public static async Task PlayerThreadLoop()
         {
             while (true)
             {
                 try
                 {
-                    while (ActionQueue.TryDequeue(out var action))
-                    {
-                        action.Invoke();
-                    }
+                    Timer.Restart();
 
                     if (TimeSinceLastTimeUpdate > TimeUpdateInterval)
                     {
@@ -36,8 +35,18 @@ namespace Aonsoku.AudioPlayer
                         TimeSinceLastTimeUpdate = 0;
                     }
 
-                    Thread.Sleep(QueueInterval);
-                    TimeSinceLastTimeUpdate += QueueInterval;
+                    while (ActionQueue.TryDequeue(out var action))
+                    {
+                        action.Invoke();
+                    }
+
+                    while (Timer.ElapsedMilliseconds < QueueInterval)
+                    {
+                        Thread.Yield();
+                    }
+
+                    Timer.Stop();
+                    TimeSinceLastTimeUpdate += Timer.ElapsedMilliseconds;
                 }
                 catch (Exception ex)
                 {
@@ -56,7 +65,7 @@ namespace Aonsoku.AudioPlayer
 
         public static void Start()
         {
-            Running = new Thread(PlayerThreadLoop)
+            Running = new Thread(() => PlayerThreadLoop())
             {
                 IsBackground = false
             };
