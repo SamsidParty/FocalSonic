@@ -42,7 +42,7 @@ const LatestEpisodes = lazy(
 
 export const router = createBrowserRouter([
   {
-    path: ROUTES.LIBRARY.HOME,
+    path: "/",
     element: <BaseLayout />,
     loader: protectedLoader,
     children: [

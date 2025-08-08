@@ -5,7 +5,7 @@
     "theme_color": "#060E23",
     "categories": ["music", "entertainment"],
     "background_color": "#20b358",
-    "start_url": "/",
+    "start_url": "/index.html",
     "display": "standalone",
     "icons": [
         {

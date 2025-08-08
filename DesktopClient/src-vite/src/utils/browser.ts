@@ -1,6 +1,6 @@
-import { engineName, isMacOs } from 'react-device-detect'
 import i18n from '@/i18n'
 import { usePlayerStore } from '@/store/player.store'
+import { engineName, isMacOs } from 'react-device-detect'
 import { isDev } from './env'
 import { isTauri } from './tauriTools'
 

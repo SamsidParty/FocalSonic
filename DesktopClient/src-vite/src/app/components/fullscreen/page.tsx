@@ -1,4 +1,3 @@
-import { memo, ReactNode } from 'react'
 import {
   Drawer,
   DrawerClose,
@@ -10,6 +9,7 @@ import { useAppWindow } from '@/app/hooks/use-app-window'
 import { useFullscreenPlayerSettings } from '@/store/player.store'
 import { enterFullscreen, exitFullscreen } from '@/utils/browser'
 import { isTauri } from '@/utils/tauriTools'
+import { memo, ReactNode } from 'react'
 import { FullscreenBackdrop } from './backdrop'
 import { CloseFullscreenButton } from './buttons'
 import { DragRegion } from './drag-region'

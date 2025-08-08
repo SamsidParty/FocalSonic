@@ -18,7 +18,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sans: ['Poppins', 'sans-serif'],
+        sans: ['Sora', 'sans-serif'],
       },
       spacing: {
         header: 'var(--header-height)',
