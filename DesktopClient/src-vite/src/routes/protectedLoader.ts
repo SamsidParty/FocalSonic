@@ -1,7 +1,7 @@
-import { redirect } from 'react-router-dom'
 import { ROUTES } from '@/routes/routesList'
 import { subsonic } from '@/service/subsonic'
 import { useAppStore } from '@/store/app.store'
+import { redirect } from 'react-router-dom'
 
 export async function protectedLoader() {
   const { url, password, isServerConfigured } = useAppStore.getState().data

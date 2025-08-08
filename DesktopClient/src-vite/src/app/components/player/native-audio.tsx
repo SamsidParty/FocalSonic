@@ -30,7 +30,6 @@ class NativeVirtualAudioPlayer {
           this.onTimeUpdate?.();
         }
         else if (e == "timeupdate") {
-          logger.info("Time update", param);
           this._currentTime = param;
           this._currentTimeOffset = Date.now();
           this.onTimeUpdate?.();
@@ -45,7 +44,7 @@ class NativeVirtualAudioPlayer {
 
   get currentTime() {
     if (this.paused || this._currentTimeOffset < 1) { return this._currentTime; }
-    return ((Date.now() - this._currentTimeOffset) / 1000) + this._currentTime;
+    return Math.min(((Date.now() - this._currentTimeOffset) / 1000) + this._currentTime, this._currentTime + 1);
   }
   
   set currentTime(value: number) {
@@ -97,7 +96,7 @@ class NativeVirtualAudioPlayer {
     this._currentTime = time;
     this._currentTimeOffset = Date.now();
     await this.waitForCreation();
-    await igniteView.commandBridge.seekAudio(this.id!, time + 0.0000001); // Adding a small offset to avoid C# thinking its an Int64
+    await igniteView.commandBridge.seekAudio(this.id!, time);
     this.onTimeUpdate?.();
   }
   

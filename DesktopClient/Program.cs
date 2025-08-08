@@ -1,4 +1,5 @@
-﻿using Aonsoku.AudioPlayer;
+﻿using Aonsoku;
+using Aonsoku.AudioPlayer;
 using IgniteView.Core;
 using IgniteView.Desktop;
 using Newtonsoft.Json;
@@ -13,8 +14,6 @@ public class Program
     {
         DesktopPlatformManager.Activate();
         App = new ViteAppManager();
-
-        App.RegisterPreloadScriptFromString("window.platformHints = " + JsonConvert.SerializeObject(PlatformManager.PlatformHints));
 
         // Background setup
         PlayerThread.Start();
@@ -32,11 +31,13 @@ public class Program
     [Command("cleanUpUI")]
     public static void CleanUpUI()
     {
+        Performance.IsRunningInForeground = false;
         App.OpenWindows.FirstOrDefault(App.MainWindow)?.Close();
     }
 
     public static void CreateMainWindow()
     {
+        Performance.IsRunningInForeground = true;
         App.MainWindow =
             WebWindow.Create()
             .WithTitle("Aonsoku")

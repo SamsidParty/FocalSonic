@@ -1,13 +1,12 @@
 import { type } from '@tauri-apps/plugin-os'
 import { isSafari as isSafariBrowser } from 'react-device-detect'
-import { isTauri } from './tauriTools'
 
 export function getOsType() {
   return Promise.resolve(type())
 }
 
-export const isWindows = window.platformHints?.includes("windows")
-export const isMac = isTauri() ? type() === 'macos' : false
-export const isLinux = isTauri() ? type() === 'linux' : false
+export const isWindows = window.igniteView?.platformHints?.includes("windows")
+export const isMac = window.igniteView?.platformHints?.includes("macos")
+export const isLinux = window.igniteView?.platformHints?.includes("linux")
 
 export const isSafari = isMac || isSafariBrowser

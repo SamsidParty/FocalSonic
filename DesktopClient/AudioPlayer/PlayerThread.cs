@@ -14,10 +14,9 @@ namespace Aonsoku.AudioPlayer
     {
         public static ConcurrentQueue<Action> ActionQueue = new ConcurrentQueue<Action>();
         public static Thread Running;
-        public static Stopwatch Timer = new Stopwatch();
 
         // Millisecond values
-        const long QueueInterval = 5;
+        const long QueueInterval = 25;
         const long TimeUpdateInterval = 500;
         static long TimeSinceLastTimeUpdate = TimeUpdateInterval;
 
@@ -27,9 +26,7 @@ namespace Aonsoku.AudioPlayer
             {
                 try
                 {
-                    Timer.Restart();
-
-                    if (TimeSinceLastTimeUpdate > TimeUpdateInterval)
+                    if (TimeSinceLastTimeUpdate > (Performance.IsRunningInForeground ? 200 : 750))
                     {
                         UpdateTimeForAllPlayers();
                         TimeSinceLastTimeUpdate = 0;
@@ -40,13 +37,9 @@ namespace Aonsoku.AudioPlayer
                         action.Invoke();
                     }
 
-                    while (Timer.ElapsedMilliseconds < QueueInterval)
-                    {
-                        Thread.Yield();
-                    }
+                    await Task.Delay((int)QueueInterval);
 
-                    Timer.Stop();
-                    TimeSinceLastTimeUpdate += Timer.ElapsedMilliseconds;
+                    TimeSinceLastTimeUpdate += QueueInterval;
                 }
                 catch (Exception ex)
                 {
