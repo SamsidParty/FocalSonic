@@ -1,11 +1,11 @@
 import {
+    HomeIcon,
+    LibraryIcon,
     ListMusicIcon,
     Mic2Icon,
     Music2Icon,
-    RadioIcon,
-    HomeIcon,
-    LibraryIcon,
     PodcastIcon,
+    RadioIcon
 } from "lucide-react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,8 +20,12 @@ import {
 import { SidebarGenerator } from "@/app/components/sidebar/sidebar-generator";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
+import { SidebarMenuButton } from "../components/sidebar/menu-button";
 
-interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
+    sidebarOpen: boolean;
+    setSidebarOpen: (open: boolean) => void;
+}
 
 const ListMusic = memo(ListMusicIcon);
 const Mic2 = memo(Mic2Icon);
@@ -34,18 +38,22 @@ const Podcast = memo(PodcastIcon);
 const MemoSidebarGenerator = memo(SidebarGenerator);
 const MemoCommandMenu = memo(CommandMenu);
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, sidebarOpen, setSidebarOpen }: SidebarProps) {
     const { t } = useTranslation();
 
     return (
         <aside>
             <div
                 className={cn(
-                    "hidden 2xl:flex flex-col min-w-sidebar max-w-sidebar border-r fixed top-header left-0 bottom-0 pb-player bg-background z-10",
+                    "flex-col min-w-sidebar max-w-sidebar border-r fixed top-header left-0 bottom-0 pb-player bg-background z-10",
+                    !sidebarOpen ? "hidden" : "flex",
                     className,
                 )}
             >
                 <div className="p-4">
+                    <SidebarMenuButton setSidebarOpen={setSidebarOpen} sidebarOpen={sidebarOpen} />
+                </div>
+                <div className="p-4 pt-0">
                     <MemoCommandMenu />
                 </div>
                 <div className="space-y-4 py-4 pt-0">
