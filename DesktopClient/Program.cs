@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 public class Program
 {
     public static ViteAppManager App;
+    public static HttpClient Http = new HttpClient();
     
 
     [STAThread]

@@ -12,6 +12,8 @@ namespace Aonsoku.Presence
         public static Presence Instance;
         public List<PresenceProvider> Providers = new List<PresenceProvider>();
 
+        private int LastInfoHash = -1;
+
         public static void Setup()
         {
             Instance = new Presence();
@@ -31,8 +33,13 @@ namespace Aonsoku.Presence
             }
         }
 
-        public override void UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
+        public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
+            if (playbackInfo.CurrentSong.GetHashCode() == LastInfoHash) { 
+                return;
+            }
+            LastInfoHash = playbackInfo.CurrentSong.GetHashCode();
+
             foreach (var provider in Providers)
             {
                 provider.UpdateMediaStatus(playbackInfo);

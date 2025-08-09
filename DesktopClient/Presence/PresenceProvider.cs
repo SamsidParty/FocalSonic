@@ -8,6 +8,6 @@ namespace Aonsoku.Presence
 {
     public abstract class PresenceProvider
     {
-        public abstract void UpdateMediaStatus(MediaPlaybackInfo playbackInfo);
+        public abstract Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo);
     }
 }

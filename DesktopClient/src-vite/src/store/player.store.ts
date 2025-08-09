@@ -1,3 +1,4 @@
+import { getCoverArtUrl } from '@/api/httpClient'
 import { subsonic } from '@/service/subsonic'
 import { IPlayerContext, LoopState } from '@/types/playerContext'
 import { ISong } from '@/types/responses/song'
@@ -836,6 +837,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
       {
         name: 'player_store',
         version: 1,
+
         merge: (persistedState, currentState) => {
           return merge(currentState, persistedState)
         },
@@ -844,6 +846,19 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
             'actions',
             'playerState.audioPlayerRef',
           ])
+
+          // Update the state in the C# code
+          if (window.igniteView) {
+            window.igniteView.commandBridge.setCurrentMediaInfo(
+              JSON.stringify(
+                {
+                  currentSong: Object.assign({}, state.songlist.currentSong, {
+                    coverArt: getCoverArtUrl(state.songlist.currentSong.id),
+                  })
+                }
+              )
+            );
+          }
 
           return appStore
         },

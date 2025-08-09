@@ -11,6 +11,7 @@ using SoundFlow.Structs;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -26,11 +27,12 @@ namespace Aonsoku.AudioPlayer
         public string Source;
         public bool HasLoaded;
 
-        int AssociatedWindowID;
         SoundPlayer Player;
         AudioEngine AudioEngine;
         StreamDataProvider DataProvider;
         AudioPlaybackDevice Device;
+
+        int AssociatedWindowID;
         WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
 
         static AudioFormat PlaybackFormat = new AudioFormat
@@ -40,6 +42,7 @@ namespace Aonsoku.AudioPlayer
             Channels = 2
         };
 
+        [SetsRequiredMembers]
         public AudioPlayer(string id)
         {
             ID = id;
@@ -67,13 +70,11 @@ namespace Aonsoku.AudioPlayer
                     AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", Player.Time);
                 }
 
-                Presence.Presence.Instance.UpdateMediaStatus(new MediaPlaybackInfo()
-                {
-                    IsPlaying = Player?.State == PlaybackState.Playing,
-                    Duration = TimeSpan.FromSeconds(Player?.Duration ?? 0),
-                    Position = TimeSpan.FromSeconds(Player?.Time ?? 0),
-                });
+                MediaPlaybackInfo.Instance.IsPlaying = Player?.State == PlaybackState.Playing;
+                MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(Player?.Duration ?? 0);
+                MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(Player?.Time ?? 0);
             }
+            Presence.Presence.Instance.UpdateMediaStatus(MediaPlaybackInfo.Instance);
         }
 
         // We need to run all functions on the player thread for the following reasons:
