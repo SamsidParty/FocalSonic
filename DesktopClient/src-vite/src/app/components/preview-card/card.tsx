@@ -1,9 +1,9 @@
+import { Button } from "@/app/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Play } from "lucide-react";
 import { ComponentPropsWithoutRef } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
-import { Button } from "@/app/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface Children {
     children: React.ReactNode

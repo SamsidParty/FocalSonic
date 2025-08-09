@@ -44,7 +44,7 @@ export function MainDrawerPage() {
                         "default-gradient",
                     )}
                 >
-                    <div className="absolute flex w-full h-14 min-h-14 px-[6%] items-center justify-end gap-2">
+                    <div className="absolute text-white flex w-full h-14 min-h-14 px-[6%] items-center justify-end gap-2">
                         <QueueSettings />
                         <Button
                             variant="ghost"

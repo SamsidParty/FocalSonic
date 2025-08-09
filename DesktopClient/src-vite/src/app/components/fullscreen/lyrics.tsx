@@ -123,7 +123,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
                 key={line?.id}
                 onClick={() => skipToTime(line.startMillisecond)}
                 className={clsx(
-                    "drop-shadow-lg my-10 2xl:my-20 cursor-pointer hover:opacity-100 duration-700",
+                    "drop-shadow-lg my-10 2xl:my-20 text-white cursor-pointer hover:opacity-100 duration-700",
                     "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left",
                     active ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
                 )}
@@ -147,7 +147,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
             key={line?.id} 
             onClick={() => skipToTime(line.startMillisecond)} 
             className={clsx(
-                "drop-shadow-lg my-10 2xl:my-20 cursor-pointer hover:opacity-100 duration-700",
+                "drop-shadow-lg my-10 2xl:my-20 text-white cursor-pointer hover:opacity-100 duration-700",
                 "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left",
                 active ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
             )}
@@ -179,7 +179,7 @@ function UnsyncedLyrics({ lyrics }: LyricProps) {
     return (
         <ScrollArea
             type="always"
-            className="w-full h-full overflow-y-auto text-center font-semibold text-xl 2xl:text-2xl px-2 scroll-smooth"
+            className="w-full h-full text-white overflow-y-auto text-center font-semibold text-xl 2xl:text-2xl px-2 scroll-smooth"
             thumbClassName="secondary-thumb-bar"
             ref={lyricsBoxRef}
         >
@@ -203,7 +203,7 @@ type CenteredMessageProps = ComponentPropsWithoutRef<"p">
 
 function CenteredMessage({ children }: CenteredMessageProps) {
     return (
-        <div className="w-full h-full flex justify-center items-center">
+        <div className="w-full h-full text-white flex justify-center items-center">
             <p className="leading-10 drop-shadow-lg text-center font-semibold text-xl 2xl:text-2xl">
                 {children}
             </p>

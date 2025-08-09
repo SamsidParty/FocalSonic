@@ -1,8 +1,3 @@
-import clsx from "clsx";
-import { Play } from "lucide-react";
-import { isFirefox } from "react-device-detect";
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Link } from "react-router-dom";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
@@ -11,6 +6,11 @@ import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import clsx from "clsx";
+import { Play } from "lucide-react";
+import { isFirefox } from "react-device-detect";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import { Link } from "react-router-dom";
 
 export function HeaderItem({ song }: { song: ISong }) {
     const { setSongList } = usePlayerActions();
@@ -44,7 +44,7 @@ export function HeaderItem({ song }: { song: ISong }) {
             />
             <div
                 className={clsx(
-                    "w-full h-full bg-gradient-to-b from-background/40 to-background/80 absolute z-10",
+                    "w-full h-full bg-[#0000002F] absolute z-10",
                     !isFirefox && "backdrop-blur-xl",
                 )}
             >

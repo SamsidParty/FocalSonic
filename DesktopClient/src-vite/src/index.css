@@ -33,6 +33,10 @@
   }
 }
 
+body, html {
+  background-color: var(--system-body);
+}
+
 .Toastify__toast-container {
   padding: 0px !important;
 }
@@ -97,7 +101,8 @@ img {
 
 .html p,
 .html li:not(li a) {
-  @apply text-foreground/80;
+  @apply text-foreground;
+  opacity: 0.8;
 }
 
 .html img {
@@ -177,7 +182,7 @@ img {
   height: 0px;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
+  background: var(--border);
   border-radius: 7px;
 }
 ::-webkit-scrollbar-track {
@@ -191,7 +196,7 @@ img {
 /* Firefox scrollbar styling */
 * {
   scrollbar-width: auto;
-  scrollbar-color: hsl(var(--border)) transparent;
+  scrollbar-color: var(--border) transparent;
 }
 
 .default-ring {
@@ -285,11 +290,11 @@ svg#bars .eq-bar--4 {
 }
 
 .default-gradient {
-  @apply bg-gradient-to-b from-background/10 to-background/40;
+  @apply bg-gradient-to-b from-background to-background;
 }
 
 .secondary-thumb-bar {
-  @apply bg-foreground/30 hover:bg-foreground/40;
+  @apply bg-foreground hover:bg-foreground;
 }
 
 @media all and (display-mode: picture-in-picture) {
