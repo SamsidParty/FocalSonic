@@ -19,7 +19,7 @@ export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
     const { queueState } = useQueueState();
     const { lyricsState } = useLyricsState();
-    const FullscreenBackdrop = useFullscreenBackdrop();
+    const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
 
     return (
         <Drawer

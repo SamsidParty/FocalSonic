@@ -7,19 +7,23 @@ import { LyricsScene } from "../../../lib/lyricsScene.js";
 
 let GlobalLyricsScene: LyricsScene = null;
 
-export function useFullscreenBackdrop() {
+interface BackdropProps {
+    lightenBackground: boolean
+}
+
+export function useFullscreenBackdrop(props: BackdropProps) {
     const { useSongColorOnQueue } = useSongColor();
 
     return useMemo(() => {
         if (!useSongColorOnQueue) {
-            return <DynamicColorBackdrop></DynamicColorBackdrop>;
+            return <DynamicColorBackdrop {...props}></DynamicColorBackdrop>;
         }
 
-        return <SwirlBackdrop></SwirlBackdrop>;
-    }, [useSongColorOnQueue]);
+        return <SwirlBackdrop {...props}></SwirlBackdrop>;
+    }, [useSongColorOnQueue, props]);
 }
 
-function SwirlBackdrop() {
+function SwirlBackdrop(props: BackdropProps) {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { coverArt } = usePlayerCurrentSong();
@@ -47,15 +51,24 @@ function SwirlBackdrop() {
     }, [coverArtUrl]);
 
     return (
-        <canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full -z-1"
-        />
+        <div
+            className={
+                clsx(
+                    "absolute inset-0 w-full h-full -z-1 transition-opacity duration-500",
+                    props.lightenBackground && "opacity-40"
+                )
+            }
+        >
+            <canvas
+                ref={canvasRef}
+                className="w-full h-full"
+            />
+        </div>
     );
 }
 
 
-function DynamicColorBackdrop() {
+function DynamicColorBackdrop(props: BackdropProps) {
     const { currentSongColor, currentSongColorIntensity } = useSongColor();
 
     const backgroundColor = useMemo(() => {

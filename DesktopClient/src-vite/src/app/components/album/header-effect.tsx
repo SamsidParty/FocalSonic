@@ -1,5 +1,5 @@
-import { ComponentPropsWithoutRef, forwardRef } from "react";
 import { cn } from "@/lib/utils";
+import { ComponentPropsWithoutRef, forwardRef } from "react";
 
 export const ImageHeaderEffect = forwardRef<
     HTMLDivElement,
@@ -9,7 +9,7 @@ export const ImageHeaderEffect = forwardRef<
         <div
             ref={ref}
             className={cn(
-                "bg-gradient-to-b from-background/60 to-background-foreground",
+                "bg-gradient-to-b from-transparent to-background-foreground",
                 "w-full h-64 z-0",
                 "absolute top-[calc(3rem+200px)] 2xl:top-[calc(3rem+250px)]",
                 className,

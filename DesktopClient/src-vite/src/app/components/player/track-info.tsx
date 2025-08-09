@@ -34,7 +34,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
         let color = randomCSSHexColor(true);
 
         try {
-            color = (await getAverageColor(img)).hex;
+            color = (await getAverageColor(img));
             logger.info("[TrackInfo] - Getting Image Average Color", {
                 color,
             });
