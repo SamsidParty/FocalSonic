@@ -1,15 +1,15 @@
-import { useRef } from 'react'
+import { useRef } from "react";
 import {
-  type IAudioContext,
-  type IGainNode,
-  type IMediaElementAudioSourceNode
-} from 'standardized-audio-context'
+    type IAudioContext,
+    type IGainNode,
+    type IMediaElementAudioSourceNode
+} from "standardized-audio-context";
 
 type IAudioSource = IMediaElementAudioSourceNode<IAudioContext>
 
 export function useAudioContext(audio: HTMLAudioElement | null) {
 
-  /*
+    /*
   const { isSong } = usePlayerMediaType()
   const { replayGainError, replayGainEnabled } = useReplayGainState()
 
@@ -98,13 +98,13 @@ export function useAudioContext(audio: HTMLAudioElement | null) {
   }, [audio, setupAudioContext])
     */
 
-  return {
-    audioContextRef: useRef<IAudioContext | null>(null),
-    sourceNodeRef: useRef<IAudioSource | null>(null),
-    gainNodeRef: useRef<IGainNode<IAudioContext> | null>(null),
-    setupAudioContext: () => {},
-    resumeContext: () => {},
-    setupGain: () => {},
-    resetRefs: () => {},
-  }
+    return {
+        audioContextRef: useRef<IAudioContext | null>(null),
+        sourceNodeRef: useRef<IAudioSource | null>(null),
+        gainNodeRef: useRef<IGainNode<IAudioContext> | null>(null),
+        setupAudioContext: () => {},
+        resumeContext: () => {},
+        setupGain: () => {},
+        resetRefs: () => {},
+    };
 }

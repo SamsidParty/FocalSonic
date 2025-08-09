@@ -1,5 +1,5 @@
 import js from "@eslint/js";
-import stylistic from '@stylistic/eslint-plugin';
+import stylistic from "@stylistic/eslint-plugin";
 import eslintPluginReact from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -30,7 +30,7 @@ export default defineConfig([
         plugins: {
             "@typescript-eslint": tseslint.plugin,
             react: eslintPluginReact,
-            '@stylistic': stylistic
+            "@stylistic": stylistic
         },
         rules: {
             "no-unused-vars": ["off", { varsIgnorePattern: "^[A-Z_]" }],

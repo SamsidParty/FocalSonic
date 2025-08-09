@@ -1,1 +1,1 @@
-export type CoverArt = 'artist' | 'album' | 'song' | 'playlist'
+export type CoverArt = "artist" | "album" | "song" | "playlist"

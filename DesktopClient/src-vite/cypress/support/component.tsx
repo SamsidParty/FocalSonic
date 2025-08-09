@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-namespace */
+ 
 
 // ***********************************************************
 // This example support/component.ts is processed and
@@ -16,46 +16,46 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import './commands'
+import "./commands";
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { mount } from 'cypress/react18'
-import { MemoryRouter } from 'react-router-dom'
-import { useAppStore } from '@/store/app.store'
-import { AuthType } from '@/types/serverConfig'
-import 'cypress-real-events'
-import '@/index.css'
-import '@/fonts.css'
-import '@/i18n'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { mount } from "cypress/react18";
+import { MemoryRouter } from "react-router-dom";
+import { useAppStore } from "@/store/app.store";
+import { AuthType } from "@/types/serverConfig";
+import "cypress-real-events";
+import "@/index.css";
+import "@/fonts.css";
+import "@/i18n";
 
 // Augment the Cypress namespace to include type definitions for
 // your custom command.
 // Alternatively, can be defined in cypress/support/component.d.ts
 // with a <reference path="./component" /> at the top of your spec.
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 useAppStore.setState((state) => ({
-  ...state,
-  data: {
+    ...state,
+    data: {
     // fix cy.intercept that wasn't intercepting requests without a base URL
-    url: 'http://localhost:1420',
-    // set a default authType to avoid errors
-    authType: AuthType.TOKEN,
-  },
-}))
+        url: "http://localhost:1420",
+        // set a default authType to avoid errors
+        authType: AuthType.TOKEN,
+    },
+}));
 
-Cypress.Commands.add('mount', (component, options = {}) => {
-  const { routerProps = { initialEntries: ['/'] }, ...mountOptions } = options
+Cypress.Commands.add("mount", (component, options = {}) => {
+    const { routerProps = { initialEntries: ["/"] }, ...mountOptions } = options;
 
-  const wrapped = (
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter {...routerProps}>{component}</MemoryRouter>
-    </QueryClientProvider>
-  )
+    const wrapped = (
+        <QueryClientProvider client={queryClient}>
+            <MemoryRouter {...routerProps}>{component}</MemoryRouter>
+        </QueryClientProvider>
+    );
 
-  return mount(wrapped, mountOptions)
-})
+    return mount(wrapped, mountOptions);
+});

@@ -1,6 +1,6 @@
 
 function setIgniteViewDragRegion() {
-  return { 'data-webview-drag': "", "data-webview-maximize": "double" }
+    return { "data-webview-drag": "", "data-webview-maximize": "double" };
 }
 
-export const igniteViewDragRegion = setIgniteViewDragRegion()
+export const igniteViewDragRegion = setIgniteViewDragRegion();

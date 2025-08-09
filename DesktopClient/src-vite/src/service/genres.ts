@@ -1,14 +1,14 @@
-import { httpClient } from '@/api/httpClient'
-import { GenresResponse } from '@/types/responses/genre'
+import { httpClient } from "@/api/httpClient";
+import { GenresResponse } from "@/types/responses/genre";
 
 async function get() {
-  const response = await httpClient<GenresResponse>('/getGenres', {
-    method: 'GET',
-  })
+    const response = await httpClient<GenresResponse>("/getGenres", {
+        method: "GET",
+    });
 
-  return response?.data.genres.genre
+    return response?.data.genres.genre;
 }
 
 export const genres = {
-  get,
-}
+    get,
+};
