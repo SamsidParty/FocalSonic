@@ -262,7 +262,8 @@ svg#bars .eq-bar--4 {
   50% { transform: scaleY(1); }
 }
 
-#sync-lyrics-box,
+#sync-lyrics-box-left,
+#sync-lyrics-box-center,
 .lrc-box {
   /* webkit */
   &::-webkit-scrollbar {

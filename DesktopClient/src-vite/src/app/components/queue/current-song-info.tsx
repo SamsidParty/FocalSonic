@@ -1,5 +1,3 @@
-import { LazyLoadImage } from 'react-lazy-load-image-component'
-import { Link } from 'react-router-dom'
 import { getCoverArtUrl } from '@/api/httpClient'
 import { LinkWithoutTo } from '@/app/components/song/artist-link'
 import { AspectRatio } from '@/app/components/ui/aspect-ratio'
@@ -8,6 +6,8 @@ import { ROUTES } from '@/routes/routesList'
 import { useMainDrawerState, usePlayerSonglist } from '@/store/player.store'
 import { ISong } from '@/types/responses/song'
 import { ALBUM_ARTISTS_MAX_NUMBER } from '@/utils/multipleArtists'
+import { LazyLoadImage } from 'react-lazy-load-image-component'
+import { Link } from 'react-router-dom'
 
 export function CurrentSongInfo() {
   const { currentSong } = usePlayerSonglist()
@@ -16,7 +16,7 @@ export function CurrentSongInfo() {
   const imageUrl = getCoverArtUrl(currentSong.coverArt, 'song', '900')
 
   return (
-    <div className="mr-12 hidden lg:block w-[260px] lg:w-[320px] 2xl:w-[380px]">
+    <div className="mr-12 hidden lg:block w-[260px] lg:w-[320px] 2xl:w-[500px]">
       <AspectRatio
         ratio={1 / 1}
         className="shadow-header-image rounded-md overflow-hidden bg-accent"

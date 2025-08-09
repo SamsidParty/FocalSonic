@@ -75,7 +75,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
     <div className="w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box maskImage-big-player-lyrics">
       <Lrc
         lrc={lyrics.value!}
-        recoverAutoScrollInterval={1500}
+        recoverAutoScrollInterval={1000}
         currentMillisecond={timestamp}
         id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
         className={clsx('h-full overflow-y-auto', !isSafari && 'scroll-smooth')}
