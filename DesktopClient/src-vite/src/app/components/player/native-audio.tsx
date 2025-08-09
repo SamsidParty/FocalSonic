@@ -4,8 +4,8 @@ import { AudioPlayerProps } from "./audio";
 
 
 class NativeVirtualAudioPlayer {
-  volume = 0;
   duration = NaN;
+  _volume = 1;
   _currentTime = 0;
   _currentTimeOffset = Date.now();
   _loop: boolean = false;
@@ -60,6 +60,18 @@ class NativeVirtualAudioPlayer {
     setTimeout(async () => {
       await this.waitForCreation();
       igniteView.commandBridge.setAudioPlayerLoopMode(this.id!, this._loop);
+    }, 0);
+  }
+
+  get volume() {
+    return this._volume;
+  }
+
+  set volume(value: number) {
+    this._volume = value;
+    setTimeout(async () => {
+      await this.waitForCreation();
+      igniteView.commandBridge.setAudioPlayerVolume(this.id!, this._volume);
     }, 0);
   }
 

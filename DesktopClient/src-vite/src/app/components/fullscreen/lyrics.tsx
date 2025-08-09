@@ -132,7 +132,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
                     <span 
                     data-time={portion.Time} 
                     key={index} 
-                    className={(timestamp >= portion.Time) ? 'opacity-100 transition-opacity duration-200' : 'opacity-40'}
+                    className={(timestamp >= portion.Time - 0.2) ? 'opacity-100 transition-opacity duration-200' : 'opacity-40'}
                   >
                         {portion.Text}
                     </span>

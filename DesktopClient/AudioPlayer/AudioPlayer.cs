@@ -47,7 +47,7 @@ namespace Aonsoku.AudioPlayer
         {
             ID = id;
             AudioEngine = new MiniAudioEngine();
-            Device = AudioEngine.InitializePlaybackDevice(AudioEngine.PlaybackDevices.FirstOrDefault(d => d.IsDefault), PlaybackFormat, new MiniAudioDeviceConfig()
+            Device = AudioEngine.InitializePlaybackDevice(null, PlaybackFormat, new MiniAudioDeviceConfig()
             {
                 Wasapi = new WasapiSettings()
                 {
@@ -200,6 +200,18 @@ namespace Aonsoku.AudioPlayer
                 if (ActivePlayers.TryGetValue(id, out var player) && player.Player != null)
                 {
                     player.Player.IsLooping = loop;
+                }
+            });
+        }
+
+        [Command("setAudioPlayerVolume")]
+        public static async Task SetAudioPlayerVolume(string id, double volume)
+        {
+            await RunOnPlayerThread(() =>
+            {
+                if (ActivePlayers.TryGetValue(id, out var player) && player.Player != null)
+                {
+                    player.Player.Volume = (float)volume;
                 }
             });
         }
