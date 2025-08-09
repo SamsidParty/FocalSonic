@@ -121,14 +121,19 @@ export function getCoverArtUrl(
 
 export function getSongStreamUrl(
   id: string,
-  maxBitRate?: string,
-  format = "mp3",
+  contentType: string,
 ) {
+
+  // Support flac but fallback to mp3
+  let format = "mp3";
+  if (contentType == "audio/flac") {
+    format = "flac";
+  }
+
   return getUrl('stream', {
     id,
-    maxBitRate,
+    maxBitRate: 0,
     format,
-    estimateContentLength: 'true',
   })
 }
 

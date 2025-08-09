@@ -129,8 +129,9 @@ namespace Aonsoku.AudioPlayer
                         player.Player = new SoundPlayer(player.AudioEngine, PlaybackFormat, player.DataProvider);
                         player.Device.MasterMixer.AddComponent(player.Player);
 
-                        player.Player.PlaybackEnded += (_, _) =>
+                        player.Player.PlaybackEnded +=  async (_, _) =>
                         {
+                            await Task.Delay(1000); // Prevents the audio abrubtly being cut off at the end
                             player.AssociatedWindow?.CallFunction("handleAudioEvent_" + player.ID, "ended");
                         };
 

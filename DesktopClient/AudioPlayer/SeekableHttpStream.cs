@@ -67,6 +67,7 @@ public class SeekableHttpStream : Stream
 
     private void InitializeStreaming()
     {
+        Console.WriteLine("Play mode: streaming");
         _buffer = new byte[BufferSize];
         _bufferReady = new ManualResetEventSlim(false);
         _seekSignal = new AutoResetEvent(false);
@@ -74,6 +75,7 @@ public class SeekableHttpStream : Stream
 
     private void LoadEntireFile()
     {
+        Console.WriteLine("Play mode: downloading");
         var response = _httpClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead).Result;
         if (!response.IsSuccessStatusCode)
             throw new IOException($"Failed to download file: {response.StatusCode}");
