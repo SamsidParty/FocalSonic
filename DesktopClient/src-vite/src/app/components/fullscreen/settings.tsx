@@ -1,6 +1,3 @@
-import { SlidersHorizontal } from 'lucide-react'
-import { ComponentPropsWithoutRef, ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Button } from '@/app/components/ui/button'
 import {
   Popover,
@@ -12,6 +9,9 @@ import { Slider } from '@/app/components/ui/slider'
 import { Switch } from '@/app/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { useSongColor } from '@/store/player.store'
+import { SlidersHorizontal } from 'lucide-react'
+import { ComponentPropsWithoutRef, ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export function FullscreenSettings() {
   const { useSongColorOnBigPlayer } = useSongColor()
@@ -34,7 +34,7 @@ export function QueueSettings() {
     <DynamicSettingsPopover>
       <>
         <QueueDynamicColorOption showSeparator={false} />
-        {useSongColorOnQueue && <ColorIntensityOption />}
+        {!useSongColorOnQueue && <ColorIntensityOption />}
       </>
     </DynamicSettingsPopover>
   )

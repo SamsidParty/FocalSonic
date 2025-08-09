@@ -8,8 +8,7 @@ import {
 import { useFullscreenPlayerSettings } from '@/store/player.store'
 import { enterFullscreen, exitFullscreen } from '@/utils/browser'
 import { isTauri } from '@/utils/tauriTools'
-import { memo, ReactNode } from 'react'
-import { FullscreenBackdrop } from './backdrop'
+import { ReactNode } from 'react'
 import { CloseFullscreenButton } from './buttons'
 import { DragRegion } from './drag-region'
 import { FullscreenPlayer } from './player'
@@ -19,8 +18,6 @@ import { FullscreenTabs } from './tabs'
 interface FullscreenModeProps {
   children: ReactNode
 }
-
-const MemoFullscreenBackdrop = memo(FullscreenBackdrop)
 
 export default function FullscreenMode({ children }: FullscreenModeProps) {
   const { autoFullscreenEnabled } = useFullscreenPlayerSettings()
@@ -46,7 +43,6 @@ export default function FullscreenMode({ children }: FullscreenModeProps) {
         showHandle={false}
         aria-describedby={undefined}
       >
-        <MemoFullscreenBackdrop />
         <div className="absolute inset-0 flex flex-col p-8 w-full h-full gap-4 bg-black/0 z-10">
           {isTauri() && <DragRegion className="z-10" />}
 

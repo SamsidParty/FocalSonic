@@ -8,26 +8,18 @@ import { cn } from '@/lib/utils'
 import {
   useLyricsState,
   useMainDrawerState,
-  useQueueState,
-  useSongColor,
+  useQueueState
 } from '@/store/player.store'
-import { hexToRgba } from '@/utils/getAverageColor'
 import clsx from 'clsx'
 import { ChevronDownIcon } from 'lucide-react'
-import { ComponentPropsWithoutRef, useMemo } from 'react'
+import { ComponentPropsWithoutRef } from 'react'
+import { useFullscreenBackdrop } from '../fullscreen/backdrop'
 
 export function MainDrawerPage() {
-  const { currentSongColor, useSongColorOnQueue, currentSongColorIntensity } =
-    useSongColor()
   const { mainDrawerState, closeDrawer } = useMainDrawerState()
   const { queueState } = useQueueState()
   const { lyricsState } = useLyricsState()
-
-  const backgroundColor = useMemo(() => {
-    if (!useSongColorOnQueue || !currentSongColor) return undefined
-
-    return hexToRgba(currentSongColor, currentSongColorIntensity)
-  }, [currentSongColor, useSongColorOnQueue, currentSongColorIntensity])
+  const FullscreenBackdrop = useFullscreenBackdrop();
 
   return (
     <Drawer
@@ -44,13 +36,13 @@ export function MainDrawerPage() {
         showHandle={false}
         aria-describedby={undefined}
       >
+        {FullscreenBackdrop}
         <div
           className={clsx(
             'flex flex-col w-full h-content',
             'transition-[background-image,background-color] duration-1000',
-            currentSongColor && 'default-gradient',
+            'default-gradient',
           )}
-          style={{ backgroundColor }}
         >
           <div className="absolute flex w-full h-14 min-h-14 px-[6%] items-center justify-end gap-2">
             <QueueSettings />
