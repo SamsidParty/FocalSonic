@@ -1,76 +1,33 @@
-import {
-    HomeIcon,
-    LibraryIcon,
-    ListMusicIcon,
-    Mic2Icon,
-    Music2Icon,
-    PodcastIcon,
-    RadioIcon
-} from "lucide-react";
-import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-import CommandMenu from "@/app/components/command/command-menu";
 import { CreatePlaylistDialog } from "@/app/components/playlist/form-dialog";
-import {
-    SectionTitle,
-    SidebarPlaylists,
-    SidebarSection,
-} from "@/app/components/playlist/sidebar-list";
-import { SidebarGenerator } from "@/app/components/sidebar/sidebar-generator";
 import { cn } from "@/lib/utils";
-import { ROUTES } from "@/routes/routesList";
 import { SidebarMenuButton } from "../components/sidebar/menu-button";
+import LargeSidebar from "./large-sidebar";
+import { MiniSidebar } from "./mini-sidebar";
+import { SidebarProps } from "./sidebar-items";
 
-export interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
-    sidebarOpen: boolean;
-    setSidebarOpen: (open: boolean) => void;
-}
-
-const ListMusic = memo(ListMusicIcon);
-const Mic2 = memo(Mic2Icon);
-const Music2 = memo(Music2Icon);
-const Radio = memo(RadioIcon);
-const Home = memo(HomeIcon);
-const Library = memo(LibraryIcon);
-const Podcast = memo(PodcastIcon);
-
-const MemoSidebarGenerator = memo(SidebarGenerator);
-const MemoCommandMenu = memo(CommandMenu);
-
-export function Sidebar({ className, sidebarOpen, setSidebarOpen }: SidebarProps) {
+export function Sidebar(props: SidebarProps) {
     const { t } = useTranslation();
 
     return (
         <aside>
             <div
                 className={cn(
-                    "flex-col min-w-sidebar max-w-sidebar border-r fixed top-header left-0 bottom-0 pb-player bg-background z-10",
-                    !sidebarOpen ? "hidden" : "flex",
-                    className,
+                    "flex-col border-r fixed top-header left-0 bottom-0 pb-player bg-background z-10",
+                    "transition-[width] duration-500 ease-long",
+                    "overflow-clip",
+                    !props.sidebarOpen ? "w-mini-sidebar p-2" : "w-sidebar",
+                    props.className,
                 )}
             >
-                <div className="p-4">
-                    <SidebarMenuButton setSidebarOpen={setSidebarOpen} sidebarOpen={sidebarOpen} />
-                </div>
-                <div className="p-4 pt-0">
-                    <MemoCommandMenu />
-                </div>
-                <div className="space-y-4 py-4 pt-0">
-                    <SidebarSection>
-                        <div>
-                            <MemoSidebarGenerator list={mainMenuItems} />
-                        </div>
-                    </SidebarSection>
-                    <SidebarSection>
-                        <SectionTitle>{t("sidebar.library")}</SectionTitle>
-                        <div>
-                            <MemoSidebarGenerator list={libraryItems} />
-                        </div>
-                    </SidebarSection>
-                </div>
 
-                <SidebarPlaylists />
+                <div className={cn("transition-[margin-left] duration-500 ease-long", props.sidebarOpen ? "p-2 ml-2" : "w-full")}>
+                    <SidebarMenuButton setSidebarOpen={props.setSidebarOpen} sidebarOpen={props.sidebarOpen} />
+                </div>
+                
+                <LargeSidebar {...props} />
+                <MiniSidebar {...props}  />
             </div>
 
             <CreatePlaylistDialog />
@@ -78,60 +35,3 @@ export function Sidebar({ className, sidebarOpen, setSidebarOpen }: SidebarProps
     );
 }
 
-export enum SidebarItems {
-    Home = "home",
-    Artists = "artists",
-    Songs = "songs",
-    Albums = "albums",
-    Playlists = "playlists",
-    Podcasts = "podcasts",
-    Radios = "radios",
-}
-
-export const mainMenuItems = [
-    {
-        id: SidebarItems.Home,
-        title: "sidebar.home",
-        route: ROUTES.LIBRARY.HOME,
-        icon: Home,
-    },
-];
-
-export const libraryItems = [
-    {
-        id: SidebarItems.Artists,
-        title: "sidebar.artists",
-        route: ROUTES.LIBRARY.ARTISTS,
-        icon: Mic2,
-    },
-    {
-        id: SidebarItems.Songs,
-        title: "sidebar.songs",
-        route: ROUTES.LIBRARY.SONGS,
-        icon: Music2,
-    },
-    {
-        id: SidebarItems.Albums,
-        title: "sidebar.albums",
-        route: ROUTES.LIBRARY.ALBUMS,
-        icon: Library,
-    },
-    {
-        id: SidebarItems.Playlists,
-        title: "sidebar.playlists",
-        route: ROUTES.LIBRARY.PLAYLISTS,
-        icon: ListMusic,
-    },
-    {
-        id: SidebarItems.Podcasts,
-        title: "sidebar.podcasts",
-        route: ROUTES.LIBRARY.PODCASTS,
-        icon: Podcast,
-    },
-    {
-        id: SidebarItems.Radios,
-        title: "sidebar.radios",
-        route: ROUTES.LIBRARY.RADIOS,
-        icon: Radio,
-    },
-];

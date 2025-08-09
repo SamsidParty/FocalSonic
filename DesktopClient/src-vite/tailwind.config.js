@@ -74,6 +74,7 @@ module.exports = {
             },
             transitionTimingFunction: {
                 "long": "cubic-bezier(0.16, 1, 0.3, 1)",
+                "very-long": "cubic-bezier(0,1.03,0,.85)",
             },
             keyframes: {
                 "accordion-down": {

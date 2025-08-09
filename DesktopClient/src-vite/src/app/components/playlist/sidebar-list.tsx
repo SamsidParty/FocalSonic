@@ -1,12 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-import { ComponentPropsWithoutRef } from "react";
-import { useTranslation } from "react-i18next";
 import { SidebarPlaylistButtons } from "@/app/components/playlist/sidebar-buttons";
 import { SidebarPlaylistGenerator } from "@/app/components/sidebar/sidebar-generator";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { subsonic } from "@/service/subsonic";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
+import { ComponentPropsWithoutRef } from "react";
+import { useTranslation } from "react-i18next";
 import { EmptyPlaylistsMessage } from "./empty-message";
 
 export function SidebarPlaylists() {
@@ -18,7 +18,7 @@ export function SidebarPlaylists() {
     });
 
     return (
-        <div className="flex flex-col flex-grow overflow-y-auto">
+        <div className="flex flex-col flex-grow min-w-sidebar max-w-sidebar overflow-clip overflow-y-auto">
             <div className="flex justify-between items-center px-4 pb-2">
                 <SectionTitle className="mb-0">{t("sidebar.playlists")}</SectionTitle>
                 <SidebarPlaylistButtons />
@@ -40,7 +40,7 @@ export function SidebarSection({
     className,
     ...props
 }: ComponentPropsWithoutRef<"div">) {
-    return <div className={cn("px-4 py-2 pt-0", className)} {...props} />;
+    return <div className={cn("px-4 py-2 pt-0 w-sidebar", className)} {...props} />;
 }
 
 export function SectionTitle({

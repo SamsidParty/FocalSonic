@@ -1,9 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { SearchIcon } from "lucide-react";
-import { KeyboardEvent, useCallback, useState } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
-import { useTranslation } from "react-i18next";
-import { useDebouncedCallback } from "use-debounce";
 import { Keyboard } from "@/app/components/command/keyboard-key";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -19,6 +13,12 @@ import { useAppStore } from "@/store/app.store";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
+import { SearchIcon } from "lucide-react";
+import { KeyboardEvent, useCallback, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
+import { useTranslation } from "react-i18next";
+import { useDebouncedCallback } from "use-debounce";
 import { CommandAlbumResult } from "./album-result";
 import { CommandArtistResult } from "./artist-result";
 import { CommandGotoPage } from "./goto-page";

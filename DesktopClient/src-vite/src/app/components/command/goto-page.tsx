@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { CommandGroup, CommandItem } from "@/app/components/ui/command";
-import { libraryItems, mainMenuItems, SidebarItems } from "@/app/layout/sidebar";
+import { libraryItems, mainMenuItems, SidebarItems } from "@/app/layout/sidebar-items";
 import { useAppStore } from "@/store/app.store";
 import { GridViewWrapperType, resetGridClickedItem } from "@/utils/gridTools";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { CommandItemProps } from "./command-menu";
 
 export function CommandGotoPage({ runCommand }: CommandItemProps) {
