@@ -4,16 +4,19 @@ import { memo } from "react";
 import CommandMenu from "../components/command/command-menu";
 import { SectionTitle, SidebarPlaylists, SidebarSection } from "../components/playlist/sidebar-list";
 import { SidebarGenerator } from "../components/sidebar/sidebar-generator";
-import { libraryItems, mainMenuItems, SidebarProps } from "./sidebar-items";
+import { libraryItems, mainMenuItems } from "./sidebar-items";
+import { useAppWindow } from "../hooks/use-app-window";
 
 
 const MemoSidebarGenerator = memo(SidebarGenerator);
 const MemoCommandMenu = memo(CommandMenu);
     
 
-export default function LargeSidebar(props: SidebarProps) {
+export default function LargeSidebar() {
+    const { isSidebarOpen } = useAppWindow();
+    
     return (
-        <div className={clsx("min-w-sidebar max-w-sidebar overflow-clip", props.sidebarOpen ? "" : "hidden")}>
+        <div className={clsx("min-w-sidebar max-w-sidebar overflow-clip", isSidebarOpen ? "" : "hidden")}>
             <div className="p-4 pt-0">
                 <MemoCommandMenu />
             </div>

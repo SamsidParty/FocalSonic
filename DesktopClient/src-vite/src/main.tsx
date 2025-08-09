@@ -15,6 +15,7 @@ import App from "@/App";
 import { queryClient } from "@/lib/queryClient";
 import { blockFeatures } from "@/utils/browser";
 import { isLinux } from "@/utils/osType";
+import { AppWindowProvider } from "./app/hooks/use-app-window";
 
 if (isLinux) {
     import("@/tw-fix-linux.css");
@@ -25,7 +26,9 @@ blockFeatures();
 createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
         <QueryClientProvider client={queryClient}>
-            <App />
+            <AppWindowProvider>
+                <App />
+            </AppWindowProvider>
         </QueryClientProvider>
     </StrictMode>,
 );

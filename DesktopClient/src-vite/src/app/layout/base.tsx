@@ -4,7 +4,7 @@ import { RemovePlaylistDialog } from "@/app/components/playlist/remove-dialog";
 import { SongInfoDialog } from "@/app/components/song/info-dialog";
 import { Header } from "@/app/layout/header";
 import { Sidebar } from "@/app/layout/sidebar";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { MainRoutes } from "./main";
 
 const MemoHeader = memo(Header);
@@ -16,15 +16,13 @@ const MemoMainDrawerPage = memo(MainDrawerPage);
 
 export default function BaseLayout() {
 
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-
     return (
         <div className="h-screen w-screen overflow-hidden">
             <MemoHeader/>
-            <MemoSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+            <MemoSidebar />
             <MemoPlayer />
             {/* Routes */}
-            <MainRoutes sidebarOpen={sidebarOpen} />
+            <MainRoutes/>
             <MemoSongInfoDialog />
             <MemoRemovePlaylistDialog />
             <MemoMainDrawerPage />

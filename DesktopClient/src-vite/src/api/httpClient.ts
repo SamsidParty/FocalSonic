@@ -124,11 +124,8 @@ export function getSongStreamUrl(
     contentType: string,
 ) {
 
-    // Support flac but fallback to mp3
+    // TODO: Fix flac support in native audio
     let format = "mp3";
-    if (contentType == "audio/flac") {
-        format = "flac";
-    }
 
     return getUrl("stream", {
         id,

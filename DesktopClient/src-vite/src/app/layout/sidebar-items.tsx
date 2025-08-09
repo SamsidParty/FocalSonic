@@ -1,11 +1,6 @@
 import { ROUTES } from "@/routes/routesList";
-import { ListMusicIcon, Mic2Icon, Music2Icon, RadioIcon, HomeIcon, LibraryIcon, PodcastIcon } from "lucide-react";
+import { HomeIcon, LibraryIcon, ListMusicIcon, Mic2Icon, Music2Icon, PodcastIcon, RadioIcon } from "lucide-react";
 import { memo } from "react";
-
-export interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
-    sidebarOpen: boolean;
-    setSidebarOpen: (open: boolean) => void;
-}
 
 const ListMusic = memo(ListMusicIcon);
 const Mic2 = memo(Mic2Icon);

@@ -3,12 +3,13 @@ import { useTranslation } from "react-i18next";
 import { CreatePlaylistDialog } from "@/app/components/playlist/form-dialog";
 import { cn } from "@/lib/utils";
 import { SidebarMenuButton } from "../components/sidebar/menu-button";
+import { useAppWindow } from "../hooks/use-app-window";
 import LargeSidebar from "./large-sidebar";
 import { MiniSidebar } from "./mini-sidebar";
-import { SidebarProps } from "./sidebar-items";
 
-export function Sidebar(props: SidebarProps) {
+export function Sidebar() {
     const { t } = useTranslation();
+    const { isSidebarOpen, toggleSidebar } = useAppWindow();
 
     return (
         <aside>
@@ -16,18 +17,17 @@ export function Sidebar(props: SidebarProps) {
                 className={cn(
                     "flex-col border-r fixed top-header left-0 bottom-0 pb-player bg-background z-10",
                     "transition-[width] duration-500 ease-long",
-                    "overflow-clip",
-                    !props.sidebarOpen ? "w-mini-sidebar p-2" : "w-sidebar",
-                    props.className,
+                    "overflow-x-clip overflow-y-auto no-scrollbar",
+                    !isSidebarOpen ? "w-mini-sidebar p-2" : "w-sidebar",
                 )}
             >
 
-                <div className={cn("transition-[margin-left] duration-500 ease-long", props.sidebarOpen ? "p-2 ml-2" : "w-full")}>
-                    <SidebarMenuButton setSidebarOpen={props.setSidebarOpen} sidebarOpen={props.sidebarOpen} />
+                <div className={cn("transition-[margin-left] duration-500 ease-long", isSidebarOpen ? "p-2 ml-2" : "w-full")}>
+                    <SidebarMenuButton setSidebarOpen={toggleSidebar} sidebarOpen={isSidebarOpen} />
                 </div>
-                
-                <LargeSidebar {...props} />
-                <MiniSidebar {...props}  />
+
+                <LargeSidebar />
+                <MiniSidebar />
             </div>
 
             <CreatePlaylistDialog />

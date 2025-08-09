@@ -2,14 +2,16 @@ import { MiniSidebarItem } from "@/app/components/sidebar/mini-item";
 import { MiniSidebarSearch } from "@/app/components/sidebar/mini-search";
 import { useAppPages, useAppPodcasts } from "@/store/app.store";
 import { clsx } from "clsx";
-import { libraryItems, mainMenuItems, SidebarProps } from "./sidebar-items";
+import { libraryItems, mainMenuItems } from "./sidebar-items";
+import { useAppWindow } from "../hooks/use-app-window";
 
-export function MiniSidebar(props: SidebarProps) {
+export function MiniSidebar() {
     const { hideRadiosSection } = useAppPages();
+    const { isSidebarOpen } = useAppWindow();
     const { active: isPodcastEnabled } = useAppPodcasts();
 
     return (
-        <div className={clsx(!props.sidebarOpen ? "" : "hidden")}>
+        <div className={clsx(!isSidebarOpen ? "" : "hidden")}>
             <MiniSidebarSearch />
 
             {menuItems.map((item) => {

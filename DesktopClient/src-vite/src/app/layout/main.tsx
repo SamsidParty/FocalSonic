@@ -3,9 +3,11 @@ import { scrollPageToTop } from "@/utils/scrollPageToTop";
 import clsx from "clsx";
 import { useEffect } from "react";
 import { Location, Outlet, useLocation } from "react-router-dom";
+import { useAppWindow } from "../hooks/use-app-window";
 
-export function MainRoutes({ sidebarOpen }: { sidebarOpen: boolean }) {
+export function MainRoutes() {
     const { pathname } = useLocation() as Location;
+    const { isSidebarOpen } = useAppWindow();
 
     useEffect(() => {
         scrollPageToTop();
@@ -15,7 +17,7 @@ export function MainRoutes({ sidebarOpen }: { sidebarOpen: boolean }) {
         <main className={
             clsx(
                 "flex h-full pt-header pb-player transition-[padding-left] duration-500 ease-long",
-                sidebarOpen ? "pl-sidebar" : "pl-mini-sidebar"
+                isSidebarOpen ? "pl-sidebar" : "pl-mini-sidebar"
             )
         }
         >

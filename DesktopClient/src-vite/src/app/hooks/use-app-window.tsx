@@ -1,25 +1,64 @@
 import { getOsType, isWindows } from "@/utils/osType";
 import { isTauri } from "@/utils/tauriTools";
 import { getCurrentWindow, Window } from "@tauri-apps/api/window";
-import { useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+
+const AppWindowContext = createContext<{ context: AppWindowType, setContext: React.Dispatch<React.SetStateAction<AppWindowType>> }>({ context: undefined!, setContext: () => {} });
+
+export function AppWindowProvider({ children }: { children: React.ReactNode }) {
+    const [context, setContext] = useState<AppWindowType>(
+        {
+            appWindow: null,
+            isWindowMaximized: false,
+            isFullscreen: false,
+            isSidebarOpen: false,
+            minimizeWindow: async () => {},
+            maximizeWindow: async () => {},
+            toggleFullscreen: async () => {},
+            toggleSidebar: async () => {},
+            enterFullscreenWindow: async () => {},
+            exitFullscreenWindow: async () => {},
+            closeWindow: async () => {},
+        }
+    );
+
+    return (
+        <AppWindowContext.Provider value={{ context, setContext }}>
+            {children}
+        </AppWindowContext.Provider>
+    )
+
+}
 
 interface AppWindowType {
     appWindow: Window | null
     isWindowMaximized: boolean
     isFullscreen: boolean
+    isSidebarOpen: boolean
     minimizeWindow: () => Promise<void>
     maximizeWindow: () => Promise<void>
     toggleFullscreen: () => Promise<void>
+    toggleSidebar: () => Promise<void>
     enterFullscreenWindow: () => Promise<void>
     exitFullscreenWindow: () => Promise<void>
     closeWindow: () => Promise<void>
 }
 
 export function useAppWindow(): AppWindowType {
-    const [appWindow, setAppWindow] = useState<Window | null>(null);
-    const [isWindowMaximized, setIsWindowMaximized] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    const [stateBeforeFullscreen, setStateBeforeFullscreen] = useState(false);
+
+    const {
+        appWindow,
+        isFullscreen,
+        isWindowMaximized,
+        isSidebarOpen,
+    } = useContext(AppWindowContext).context;
+
+    const setContext = useContext(AppWindowContext).setContext;
+
+    const setIsFullscreen = (v: boolean) => setContext((prev) => ({ ...prev, isFullscreen: v }));
+    const setIsWindowMaximized = (v: boolean) => setContext((prev) => ({ ...prev, isWindowMaximized: v }));
+    const setIsSidebarOpen = (v: boolean) => setContext((prev) => ({ ...prev, isSidebarOpen: v }));
+    const setAppWindow = (v: Window | null) => setContext((prev) => ({ ...prev, appWindow: v }));
 
     useEffect(() => {
         const fetchFullscreenStatus = async () => {
@@ -77,11 +116,11 @@ export function useAppWindow(): AppWindowType {
     }, [appWindow, updateIsFullscreen, updateIsWindowMaximized]);
 
     const minimizeWindow = async () => {
-        window.hide();
+        window.igniteView && window.hide();
     };
 
     const maximizeWindow = async () => {
-        window.toggleMaximize();
+        window.igniteView && window.toggleMaximize();
     };
 
     const toggleFullscreen = async () => {
@@ -91,12 +130,12 @@ export function useAppWindow(): AppWindowType {
         }
     };
 
+    const toggleSidebar = async () => setIsSidebarOpen(!isSidebarOpen);
+
     const enterFullscreenWindow = async () => {
         if (appWindow) {
             const fullscreen = await appWindow.isFullscreen();
             if (!fullscreen) {
-                // Hack to make the app go fullscreen on Windows
-                setStateBeforeFullscreen(isWindowMaximized);
                 if (isWindows && isWindowMaximized) {
                     await maximizeWindow();
                 }
@@ -114,7 +153,7 @@ export function useAppWindow(): AppWindowType {
                 await appWindow.setFullscreen(false);
                 updateIsFullscreen();
 
-                if (isWindows && stateBeforeFullscreen) {
+                if (isWindows) {
                     await maximizeWindow();
                 }
             }
@@ -130,10 +169,12 @@ export function useAppWindow(): AppWindowType {
         appWindow,
         isWindowMaximized,
         isFullscreen,
+        isSidebarOpen,
         minimizeWindow,
         maximizeWindow,
         closeWindow,
         toggleFullscreen,
+        toggleSidebar,
         enterFullscreenWindow,
         exitFullscreenWindow,
     };

@@ -264,7 +264,8 @@ svg#bars .eq-bar--4 {
 
 #sync-lyrics-box-left,
 #sync-lyrics-box-center,
-.lrc-box {
+.lrc-box,
+.no-scrollbar {
   /* webkit */
   &::-webkit-scrollbar {
     width: 0;
