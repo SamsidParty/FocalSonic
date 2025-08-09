@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  aonsoku:
+    container_name: aonsoku-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      - APP_USER=${APP_USER}
+      - APP_PASSWORD=${APP_PASSWORD}
+      - APP_AUTH_TYPE=${APP_AUTH_TYPE}
+      - SERVER_URL=${SERVER_URL}
+      - HIDE_SERVER=${HIDE_SERVER}

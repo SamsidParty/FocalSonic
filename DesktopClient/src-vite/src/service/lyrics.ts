@@ -1,0 +1,154 @@
+import { httpClient } from "@/api/httpClient";
+import { usePlayerStore } from "@/store/player.store";
+import { ILyricsList, LyricsResponse, OpenLyricsResponse } from "@/types/responses/song";
+import { lrclibClient } from "@/utils/appName";
+import { checkServerType } from "@/utils/servers";
+
+interface GetLyricsData {
+    artist: string
+    title: string
+    album?: string
+    duration?: number
+    id?: string
+}
+
+interface LRCLibResponse {
+    id: number
+    trackName: string
+    artistName: string
+    plainLyrics: string
+    syncedLyrics: string
+}
+
+async function getLyrics(getLyricsData: GetLyricsData) {
+
+    const response = await httpClient<LyricsResponse>("/getLyrics", {
+        method: "GET",
+        query: {
+            artist: getLyricsData.artist,
+            title: getLyricsData.title,
+        },
+    });
+
+    const lyricNotFound =
+    !response || !response?.data.lyrics || !response.data.lyrics.value;
+
+    if (!lyricNotFound && response?.data.openSubsonic) {
+    // Try to get synced lyrics using getLyricsBySongId
+        const openResponse = await httpClient<OpenLyricsResponse>("/getLyricsBySongId", {
+            method: "GET",
+            query: {
+                id: getLyricsData.id,
+            },
+        });
+
+        if (openResponse?.data?.lyricsList?.structuredLyrics?.length! > 0) {
+            return convertToLRC(openResponse?.data?.lyricsList);
+        }
+    
+    }
+
+    if (lyricNotFound) {
+        return getLyricsFromLRCLib(getLyricsData);
+    }
+
+    return response?.data.lyrics;
+}
+
+async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
+    const { lrcLibEnabled } = usePlayerStore.getState().settings.privacy;
+    const { isLms } = checkServerType();
+
+    const { title, album, duration } = getLyricsData;
+
+    // LMS server tends to join all artists into a single string
+    // Ex: "Cartoon, Jeja, Daniel Levi, Time To Talk"
+    // To LRCLIB work correctly, we have to send only one
+    const artist = isLms
+        ? getLyricsData.artist.split(",")[0]
+        : getLyricsData.artist;
+
+    if (!lrcLibEnabled) {
+        return {
+            artist,
+            title,
+            value: "",
+        };
+    }
+
+    try {
+        const params = new URLSearchParams({
+            artist_name: artist,
+            track_name: title,
+        });
+
+        if (duration) params.append("duration", duration.toString());
+        if (album) params.append("album_name", album);
+
+        const url = new URL("https://lrclib.net/api/get");
+        url.search = params.toString();
+
+        const request = await fetch(url.toString(), {
+            headers: {
+                "Lrclib-Client": lrclibClient,
+            },
+        });
+        const response: LRCLibResponse = await request.json();
+
+        if (response) {
+            const { syncedLyrics, plainLyrics } = response;
+
+            let finalLyric = "";
+
+            if (syncedLyrics) {
+                finalLyric = syncedLyrics;
+            } else if (plainLyrics) {
+                finalLyric = plainLyrics;
+            }
+
+            return {
+                artist,
+                title,
+                value: formatLyrics(finalLyric),
+            };
+        }
+    } catch {}
+
+    return {
+        artist,
+        title,
+        value: "",
+    };
+}
+
+function formatLyrics(lyrics: string) {
+    return lyrics.trim().replaceAll("\r\n", "\n");
+}
+
+function convertToLRC(lyricsList?: ILyricsList) {
+
+
+    if (!lyricsList || lyricsList.structuredLyrics!.length === 0) { return null; }
+
+    // Prioritize synced english lyrics if available
+    const optimalLyrics = lyricsList.structuredLyrics!.find((lyric) => lyric.synced) || lyricsList.structuredLyrics![0];
+    let formattedLyrics = "";
+  
+    // Convert each line to LRC format
+    optimalLyrics.line?.forEach((line) => {
+        if (line.start !== undefined && line.value !== undefined) {
+            const timeMS = (line.start + (optimalLyrics.offset || 0));
+            const lrcTime = `[${String(Math.floor(timeMS / 60000)).padStart(2, "0")}:${String(Math.floor(timeMS / 1000) % 60).padStart(2, "0")}.${String(timeMS % 1000).padStart(3, "0")}]`;
+            formattedLyrics += `${lrcTime}${line.value}\n`;
+        }
+    });
+
+    return {
+        value: formattedLyrics.trim()
+    };
+}
+
+export const lyrics = {
+    getLyrics,
+    getLyricsFromLRCLib,
+};
