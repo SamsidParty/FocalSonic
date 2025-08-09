@@ -53,6 +53,9 @@
 			<PackageCopyToOutput>true</PackageCopyToOutput>
 		</Content>
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\SamsidParty.Subsonic.Common\SamsidParty.Subsonic.Common.csproj" />
+	</ItemGroup>
 	
 
 </Project>
