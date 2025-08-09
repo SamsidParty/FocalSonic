@@ -57,7 +57,7 @@ export default function ImageHeader({
     let color = randomCSSHexColor(true)
 
     try {
-      color = (await getAverageColor(img)).hex
+      color = await getAverageColor(img);
     } catch (_) {
       console.warn(
         'handleLoadImage: unable to get image color. Using a random color.',
