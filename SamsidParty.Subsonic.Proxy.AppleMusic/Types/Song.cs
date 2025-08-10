@@ -32,7 +32,8 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
                 Year = int.Parse(Attributes.ReleaseDate.Substring(0, 4)),
                 ContentType = "audio/m4a",
                 Suffix = "m4a",
-                Duration = Attributes.DurationInMillis / 1000
+                Duration = Attributes.DurationInMillis / 1000,
+                CoverArt = Attributes.Artwork.Url
             };
         }
     }

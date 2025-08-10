@@ -155,11 +155,6 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
             throw new NotImplementedException();
         }
 
-        public Task<FileResult> GetCoverArtAsync(string id, int? size)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<GetGenresResponse> GetGenresAsync()
         {
             throw new NotImplementedException();
