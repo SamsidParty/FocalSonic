@@ -9,5 +9,8 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
 
         [JsonProperty("kind")]
         public string Kind { get; set; }
+
+        [JsonProperty("catalogId")]
+        public string CatalogId { get; set; }
     }
 }

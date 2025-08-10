@@ -16,8 +16,13 @@ namespace Aonsoku.AudioPlayer
         public string Source;
         public bool HasLoaded;
         internal int AssociatedWindowID;
-
         internal WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
+
+        public AudioPlayer(string id)
+        {
+            ID = id;
+            ActivePlayers.TryAdd(id, this);
+        }
 
         // We need to run all functions on the player thread for the following reasons:
         // 1. Prevents freezing and stuttering the UI
@@ -43,12 +48,19 @@ namespace Aonsoku.AudioPlayer
         {
             await RunOnPlayerThread(() =>
             {
-                if (ActivePlayers.TryGetValue(id, out var existingPlayer))
+                AudioPlayer? player = null;
+
+                if (ActivePlayers.TryGetValue(id, out player)) { }
+                else if (id.StartsWith("appleMusicPlayer"))
                 {
-                    existingPlayer.AssociatedWindowID = ctx.ID; // Associate the player with the window
-                    return;
+                    player = new AppleMusicAudioPlayer(id);
                 }
-                var player = new SoundFlowAudioPlayer(id);
+                else
+                {
+                    player = new SoundFlowAudioPlayer(id);
+                }
+
+                player.AssociatedWindowID = ctx.ID;
             });
         }
 

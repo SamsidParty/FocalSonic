@@ -19,7 +19,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
         {
             return new Child()
             {
-                Id = "applemusic\n" + Id + "\n" + Attributes.PlayParams.Id,
+                Id = "applemusic:" + Id + ":" + Attributes.PlayParams.CatalogId,
                 IsDir = false,
                 IsVideo = false,
                 Type = GenericMediaType.Music,

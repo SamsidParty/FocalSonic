@@ -35,7 +35,7 @@ public class Program
     public static void CleanUpUI()
     {
         Performance.IsRunningInForeground = false;
-        App.OpenWindows.FirstOrDefault(App.MainWindow)?.Close();
+        App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault(App.MainWindow)?.Close();
     }
 
     public static void CreateMainWindow()
@@ -44,6 +44,7 @@ public class Program
         App.MainWindow =
             WebWindow.Create()
             .WithTitle("Aonsoku")
+            .WithSharedContext("MainWindow", "")
             .WithoutTitleBar()
             .Show();
     }

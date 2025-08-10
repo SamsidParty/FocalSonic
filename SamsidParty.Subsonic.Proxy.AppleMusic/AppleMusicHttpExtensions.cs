@@ -4,8 +4,8 @@
     {
         public static HttpRequestMessage WithMusicKitHeaders(this HttpRequestMessage request) {
 
-            request.Headers.Add("Authorization", $"Bearer {Keys.AppleDeveloperToken}");
-            request.Headers.Add("Media-User-Token", Keys.MediaUserToken);
+            request.Headers.Add("Authorization", $"Bearer {AppleMusicKeys.AppleDeveloperToken}");
+            request.Headers.Add("Media-User-Token", AppleMusicKeys.MediaUserToken);
             request.Headers.Add("DNT", "1");
             request.Headers.Add("authority", "amp-api.music.apple.com");
             request.Headers.Add("origin", "https://beta.music.apple.com");

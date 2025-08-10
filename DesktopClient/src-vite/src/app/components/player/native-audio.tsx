@@ -9,14 +9,15 @@ class NativeVirtualAudioPlayer {
     _currentTime = 0;
     _currentTimeOffset = Date.now();
     _loop: boolean = false;
-    src?: string;
+    _src?: string;
     isCreated = false;
     id?: string;
     paused: boolean = true;
 
-    constructor() {
+    initialize() {
+        if (this.isCreated) return;
         setTimeout(async () => {
-            this.id = "defaultPlayer";
+            this.id = this._src?.includes("applemusic%3A") ? "appleMusicPlayer" : "defaultPlayer";
             logger.info("NativeVirtualAudioPlayer created with id:", this.id);
       
             window["handleAudioEvent_" + this.id] = (e: string, param: any) => {
@@ -40,6 +41,15 @@ class NativeVirtualAudioPlayer {
             this.isCreated = true;
             this.onLoadStart?.();
         }, 0);
+    }
+
+    get src() {
+        return this._src;
+    }
+
+    set src(value: string | undefined) {
+        this._src = value;
+        this._src && this.initialize();
     }
 
     get currentTime() {
@@ -83,7 +93,7 @@ class NativeVirtualAudioPlayer {
 
     async applySource() {
         await this.waitForCreation();
-        await igniteView.commandBridge.setAudioPlayerSource(this.id!, this.src);
+        await igniteView.commandBridge.setAudioPlayerSource(this.id!, this._src);
     }
 
     async play() {

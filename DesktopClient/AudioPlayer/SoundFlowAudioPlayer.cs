@@ -34,10 +34,8 @@ namespace Aonsoku.AudioPlayer
             Channels = 2
         };
 
-        [SetsRequiredMembers]
-        public SoundFlowAudioPlayer(string id)
+        public SoundFlowAudioPlayer(string id) : base(id)
         {
-            ID = id;
             AudioEngine = new MiniAudioEngine();
             Device = AudioEngine.InitializePlaybackDevice(null, PlaybackFormat, new MiniAudioDeviceConfig()
             {
@@ -49,8 +47,6 @@ namespace Aonsoku.AudioPlayer
                 }
             });
             Device.Start();
-
-            ActivePlayers.TryAdd(id, this);
         }
 
         public override async Task SendTimeUpdate(bool isAutomatic = true)
