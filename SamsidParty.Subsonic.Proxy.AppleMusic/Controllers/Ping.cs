@@ -1,0 +1,25 @@
+﻿using SamsidParty.Subsonic.Common;
+using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
+
+namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
+{
+    public partial class AppleMusicRequestImplementation : Subsonic.Common.IController
+    {
+        public async Task<SubsonicResponse> PingAsync()
+        {
+            return new SubsonicResponse()
+            {
+                SubsonicResponse1 = new SubsonicSuccessResponse()
+                {
+                    Status = SubsonicSuccessResponseStatus.Ok,
+                    Version = "1.16.1",
+                    Type = "SamsidParty Subsonic",
+                    ServerVersion = $"{RuntimeInformation.FrameworkDescription}",
+                    OpenSubsonic = true,
+                }
+            };
+        }
+    }
+}
