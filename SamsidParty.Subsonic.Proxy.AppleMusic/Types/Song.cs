@@ -1,4 +1,6 @@
 using Newtonsoft.Json;
+using SamsidParty.Subsonic.Common;
+using SamsidParty.Subsonic.Common.Types;
 
 namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
 {
@@ -12,6 +14,27 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
 
         [JsonProperty("relationships")]
         public SongRelationships Relationships { get; set; }
+
+        public Child ToSubsonicType()
+        {
+            return new Child()
+            {
+                Id = Id,
+                IsDir = false,
+                IsVideo = false,
+                Type = GenericMediaType.Music,
+                Title = Attributes.Name,
+                Album = Attributes.AlbumName,
+                Artist = Attributes.ArtistName,
+                DisplayAlbumArtist = Attributes.ArtistName,
+                DiscNumber = Attributes.DiscNumber,
+                Track = Attributes.TrackNumber,
+                Year = int.Parse(Attributes.ReleaseDate.Substring(0, 4)),
+                ContentType = "audio/m4a",
+                Suffix = "m4a",
+                Duration = Attributes.DurationInMillis / 1000
+            };
+        }
     }
 
     public class SongAttributes

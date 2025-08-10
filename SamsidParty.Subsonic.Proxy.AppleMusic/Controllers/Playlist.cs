@@ -27,15 +27,17 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
 
             return new GetPlaylistsResponse() { SubsonicResponse = response };
         }
+
         public async Task<GetPlaylistResponse> GetPlaylistAsync(string id)
         {
             var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"me/library/playlists/{id}?include=tracks").WithMusicKitHeaders());
             var content = await request.Content.ReadAsStringAsync();
             var data = JsonConvert.DeserializeObject<AppleMusic.Types.PlaylistResponse>(content);
-            var p = data.Data.First();
+            var p = data!.Data.First();
 
             var response = GetDefaultResponse().Adapt<GetPlaylistSuccessResponse>();
             response.Playlist = p.ToSubsonicType().Adapt<Subsonic.Common.PlaylistWithSongs>();
+            response.Playlist.Entry = p.Relationships!.Tracks.Data.Select((AppleMusic.Types.Song s) => s.ToSubsonicType()).ToList();
 
             return new GetPlaylistResponse() { SubsonicResponse = response };
         }
