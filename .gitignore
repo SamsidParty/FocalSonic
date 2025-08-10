@@ -460,3 +460,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+SamsidParty.Subsonic.Proxy.AppleMusic/Properties/launchSettings.json
