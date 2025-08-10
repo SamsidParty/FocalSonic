@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Mapster;
 
 namespace Aonsoku.Presence
 {
@@ -24,7 +25,7 @@ namespace Aonsoku.Presence
         [Command("setCurrentMediaInfo")]
         public static async Task SetCurrentMediaInfo(string info)
         {
-            Instance = JsonConvert.DeserializeObject<MediaPlaybackInfo>(info);
+            Instance.CurrentSong = JsonConvert.DeserializeObject<Song>(info);
         }
     }
 }

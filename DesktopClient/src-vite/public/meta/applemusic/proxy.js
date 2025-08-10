@@ -41,8 +41,6 @@ async function overridePage() {
 
 overridePage();
 
-let currentSource = null;
-let shouldPlay = false;
 
 window.executeInjectedQueue = async () => {
     if (!window.proxyMusicInstance) { return; }
@@ -52,24 +50,15 @@ window.executeInjectedQueue = async () => {
         console.log("[Aonsoku][Apple Music Proxy] Executing item:", item);
         
         if (item.type === "play") {
-            if (!window.proxyMusicInstance.isPlaying && !shouldPlay) {
-                await window.proxyMusicInstance.play();
-            }
-            else if (!shouldPlay) {
-                await window.proxyMusicInstance.stop();
-                await window.proxyMusicInstance.play();
-            }
-            shouldPlay = true;
+            await window.proxyMusicInstance.play();
         }
         else if (item.type === "pause") {
-            (shouldPlay && window.proxyMusicInstance.isPlaying) && await window.proxyMusicInstance.pause();
-            shouldPlay = false;
+            await window.proxyMusicInstance.pause();
+        }
+        else if (item.type === "seek") {
+            !!window.proxyMusicInstance.nowPlayingItem && await window.proxyMusicInstance.seekToTime(item.time);
         }
         else if (item.type === "setSource") {
-            if (currentSource == item.source) continue;
-            currentSource = item.source;
-            
-            shouldPlay = false;
             await window.proxyMusicInstance.stop();
             await window.proxyMusicInstance.playNext({ song: item.source }, true);
             await window.proxyMusicInstance.skipToNextItem();

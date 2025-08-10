@@ -851,11 +851,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     if (window.igniteView) {
                         window.igniteView.commandBridge.setCurrentMediaInfo(
                             JSON.stringify(
-                                {
-                                    currentSong: Object.assign({}, state.songlist.currentSong, {
-                                        coverArt: getCoverArtUrl(state.songlist.currentSong.id),
-                                    })
-                                }
+                                Object.assign({}, state.songlist.currentSong, {
+                                    coverArt: getCoverArtUrl(state.songlist.currentSong.id),
+                                })
                             )
                         );
                     }

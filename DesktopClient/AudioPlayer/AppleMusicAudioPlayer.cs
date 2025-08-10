@@ -1,6 +1,7 @@
 ﻿using Aonsoku.Presence;
 using IgniteView.Core;
 using SamsidParty.Subsonic.Proxy.AppleMusic;
+using SamsidParty.Subsonic.Proxy.AppleMusic.Types;
 using SoundFlow.Enums;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,8 @@ namespace Aonsoku.AudioPlayer
 
         const string InjectionPrefix = "if (!window.injectedQueue) { window.injectedQueue = []; }\n";
         const string InjectionSuffix = "\nif (window.executeInjectedQueue) { window.executeInjectedQueue(); }";
+
+        public bool IsPlaying = false;
 
         public AppleMusicAudioPlayer(string id) : base(id) {
             AppleMusicKeys.Load();
@@ -59,6 +62,7 @@ namespace Aonsoku.AudioPlayer
                 owningPlayer.HasLoaded = true;
                 owningPlayer.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "loaded", currentPlaybackDuration);
             }
+
         }
 
         public override async Task SendTimeUpdate(bool isAutomatic = true)
@@ -68,7 +72,11 @@ namespace Aonsoku.AudioPlayer
 
         public override async Task SetSource(string src, WebWindow ctx)
         {
+            if (Source == src) { return; } // Already set
+
+            Source = src;
             HasLoaded = false;
+            IsPlaying = true;
             var uri = new Uri(src);
             var musicID = HttpUtility.ParseQueryString(uri.Query).Get("id");
             ProxyWindow?.ExecuteJavaScript(
@@ -80,6 +88,8 @@ namespace Aonsoku.AudioPlayer
 
         public override async Task PlayAudio()
         {
+            if (IsPlaying) { return; }
+            IsPlaying = true;
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
                 $"window.injectedQueue.push({{ type: 'play' }});" +
@@ -89,9 +99,21 @@ namespace Aonsoku.AudioPlayer
 
         public override async Task PauseAudio()
         {
+            if (!IsPlaying) { return; }
+            IsPlaying = false;
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
                 $"window.injectedQueue.push({{ type: 'pause' }});" +
+                InjectionSuffix
+            );
+        }
+
+        public override async Task SeekAudio(double time)
+        {
+            AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", time);
+            ProxyWindow?.ExecuteJavaScript(
+                InjectionPrefix +
+                $"window.injectedQueue.push({{ type: 'seek', time: {time.ToString()} }});" +
                 InjectionSuffix
             );
         }
