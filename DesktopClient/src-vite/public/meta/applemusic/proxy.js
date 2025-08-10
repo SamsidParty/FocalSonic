@@ -42,6 +42,7 @@ async function overridePage() {
 overridePage();
 
 let currentSource = null;
+let shouldPlay = false;
 
 window.executeInjectedQueue = async () => {
     if (!window.proxyMusicInstance) { return; }
@@ -51,20 +52,31 @@ window.executeInjectedQueue = async () => {
         console.log("[Aonsoku][Apple Music Proxy] Executing item:", item);
         
         if (item.type === "play") {
-            !window.proxyMusicInstance.isPlaying && await window.proxyMusicInstance.play();
+            if (!window.proxyMusicInstance.isPlaying && !shouldPlay) {
+                await window.proxyMusicInstance.play();
+            }
+            else if (!shouldPlay) {
+                await window.proxyMusicInstance.stop();
+                await window.proxyMusicInstance.play();
+            }
+            shouldPlay = true;
         }
         else if (item.type === "pause") {
-            window.proxyMusicInstance.isPlaying && await window.proxyMusicInstance.pause();
+            (shouldPlay && window.proxyMusicInstance.isPlaying) && await window.proxyMusicInstance.pause();
+            shouldPlay = false;
         }
         else if (item.type === "setSource") {
             if (currentSource == item.source) continue;
             currentSource = item.source;
             
+            shouldPlay = false;
             await window.proxyMusicInstance.stop();
             await window.proxyMusicInstance.playNext({ song: item.source }, true);
             await window.proxyMusicInstance.skipToNextItem();
         }
     }
+
+    await igniteView.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, window.proxyMusicInstance.currentPlaybackTime, window.proxyMusicInstance.currentPlaybackDuration);
 };
 
 setInterval(window.executeInjectedQueue, 250);

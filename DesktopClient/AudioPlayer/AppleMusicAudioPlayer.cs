@@ -1,5 +1,7 @@
-﻿using IgniteView.Core;
+﻿using Aonsoku.Presence;
+using IgniteView.Core;
 using SamsidParty.Subsonic.Proxy.AppleMusic;
+using SoundFlow.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,8 +41,34 @@ namespace Aonsoku.AudioPlayer
             );
         }
 
+        [Command("appleMusicRecieveTimeUpdate")]
+        public static void RecieveTimeUpdate(WebWindow ctx, bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration)
+        {
+            var owningPlayer = ActivePlayers.Where((p) =>  p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
+            if (isPlaying)
+            {
+                owningPlayer.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "timeupdate", currentPlaybackTime);
+            }
+
+            MediaPlaybackInfo.Instance.IsPlaying = isPlaying;
+            MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(currentPlaybackDuration);
+            MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(currentPlaybackTime);
+
+            if (isPlaying && !owningPlayer.HasLoaded && currentPlaybackDuration > 0)
+            {
+                owningPlayer.HasLoaded = true;
+                owningPlayer.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "loaded", currentPlaybackDuration);
+            }
+        }
+
+        public override async Task SendTimeUpdate(bool isAutomatic = true)
+        {
+            Presence.Presence.Instance.UpdateMediaStatus(MediaPlaybackInfo.Instance);
+        }
+
         public override async Task SetSource(string src, WebWindow ctx)
         {
+            HasLoaded = false;
             var uri = new Uri(src);
             var musicID = HttpUtility.ParseQueryString(uri.Query).Get("id");
             ProxyWindow?.ExecuteJavaScript(
