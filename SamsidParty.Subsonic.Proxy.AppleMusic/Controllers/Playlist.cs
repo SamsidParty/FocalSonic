@@ -13,33 +13,31 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
         public async Task<GetPlaylistsResponse> GetPlaylistsAsync(string username) // username should be ignored because it's only for admins
         {
             var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, "me/library/playlists").WithMusicKitHeaders());
-            dynamic content = await request.Content.ReadAsStringAsync();
-            dynamic data = JsonConvert.DeserializeObject<ExpandoObject>(content);
+            var content = await request.Content.ReadAsStringAsync();
+            var data = JsonConvert.DeserializeObject<AppleMusic.Types.PlaylistResponse>(content);
 
             var response = GetDefaultResponse().Adapt<GetPlaylistsSuccessResponse>();
             response.Playlists = new Playlists()
             {
-                Playlist = ((List<dynamic>)data.data).Select((p) =>
+                Playlist = data.Data.Select((p) =>
                 {
-                    return new Playlist()
-                    {
-                        Id = p.id,
-                        Name = p.attributes.name,
-                        Public = p.attributes.isPublic,
-                        Created = p.attributes.dateAdded,
-                        Changed = p.attributes.dateAdded,
-                        SongCount = 0,
-                        Duration = 0,
-                    };
+                    return p.ToSubsonicType();
                 }).ToList()
             };
 
+            return new GetPlaylistsResponse() { SubsonicResponse = response };
+        }
+        public async Task<GetPlaylistResponse> GetPlaylistAsync(string id)
+        {
+            var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"me/library/playlists/{id}?include=tracks").WithMusicKitHeaders());
+            var content = await request.Content.ReadAsStringAsync();
+            var data = JsonConvert.DeserializeObject<AppleMusic.Types.PlaylistResponse>(content);
+            var p = data.Data.First();
 
+            var response = GetDefaultResponse().Adapt<GetPlaylistSuccessResponse>();
+            response.Playlist = p.ToSubsonicType().Adapt<Subsonic.Common.PlaylistWithSongs>();
 
-            return new GetPlaylistsResponse()
-            {
-                SubsonicResponse = response,
-            };
+            return new GetPlaylistResponse() { SubsonicResponse = response };
         }
     }
 }

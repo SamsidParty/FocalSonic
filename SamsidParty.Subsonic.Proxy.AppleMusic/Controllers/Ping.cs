@@ -26,5 +26,18 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
                 OpenSubsonic = true,
             };
         }
+
+        public SubsonicFailureResponse GetErrorResponse()
+        {
+            var defaultRes = GetDefaultResponse();
+            return new SubsonicFailureResponse()
+            {
+                Status = SubsonicFailureResponseStatus.Failed,
+                Version = defaultRes.Version,
+                Type = defaultRes.Type,
+                ServerVersion = defaultRes.Version,
+                OpenSubsonic = true,
+            };
+        }
     }
 }

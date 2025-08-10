@@ -215,11 +215,6 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
             throw new NotImplementedException();
         }
 
-        public Task<GetPlaylistResponse> GetPlaylistAsync(string id)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<GetPlayQueueResponse> GetPlayQueueAsync()
         {
             throw new NotImplementedException();
