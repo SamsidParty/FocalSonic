@@ -21,8 +21,8 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
             {
                 Status = SubsonicSuccessResponseStatus.Ok,
                 Version = "1.16.1",
-                Type = "SamsidParty Subsonic",
-                ServerVersion = $"{RuntimeInformation.FrameworkDescription}",
+                Type = "Apple Music",
+                ServerVersion = "SamsidParty.Subsonic.Proxy.AppleMusic",
                 OpenSubsonic = true,
             };
         }

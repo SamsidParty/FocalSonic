@@ -770,9 +770,9 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
             throw new NotImplementedException();
         }
 
-        public Task<FileResult> StreamAsync(string id, int? maxBitRate, string format, int? timeOffset, string size, bool estimateContentLength, bool converted)
+        public async Task<FileResult> StreamAsync(string id, int? maxBitRate, string format, int? timeOffset, string size, bool estimateContentLength, bool converted)
         {
-            throw new NotImplementedException();
+            return new FileContentResult(new byte[0], "audio/mp3");
         }
 
         public Task<GetTokenInfoResponse> TokenInfoAsync()

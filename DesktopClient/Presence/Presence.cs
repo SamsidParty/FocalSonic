@@ -35,7 +35,7 @@ namespace Aonsoku.Presence
 
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
-            if (playbackInfo.CurrentSong.Id == LastSongID) { 
+            if (playbackInfo.CurrentSong?.Id == LastSongID) { 
                 return;
             }
             LastSongID = playbackInfo.CurrentSong.Id;
