@@ -90,10 +90,6 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
             throw new NotImplementedException();
         }
 
-        public Task<GetAlbumResponse> GetAlbumAsync(string id)
-        {
-            throw new NotImplementedException();
-        }
 
         public Task<GetAlbumInfoResponse> GetAlbumInfo2Async(string id)
         {
@@ -101,16 +97,6 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
         }
 
         public Task<GetAlbumInfoResponse> GetAlbumInfoAsync(string id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<GetAlbumList2Response> GetAlbumList2Async(AlbumListType type, int size, int offset, int? fromYear, int? toYear, string genre, string musicFolderId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<GetAlbumListResponse> GetAlbumListAsync(AlbumListType type, int size, int offset, int? fromYear, int? toYear, string genre, string musicFolderId)
         {
             throw new NotImplementedException();
         }

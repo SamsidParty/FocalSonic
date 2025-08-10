@@ -1,4 +1,6 @@
+using Mapster;
 using Newtonsoft.Json;
+using SamsidParty.Subsonic.Common;
 
 namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
 {
@@ -12,6 +14,39 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
 
         [JsonProperty("type")]
         public new string Type { get; set; } = "albums";
+
+        public Subsonic.Common.Child ToSubsonicType()
+        {
+            return new Common.Child
+            {
+                Id = Id,
+                IsDir = true,
+                IsVideo = false,
+                Title = Attributes.Name,
+                Album = Attributes.Name,
+                Artist = Attributes.ArtistName,
+                DisplayAlbumArtist = Attributes.ArtistName,
+                Year = int.Parse(Attributes.ReleaseDate.Substring(0, 4)),
+                CoverArt = Attributes.Artwork.Url,
+                Genres = Attributes.GenreNames?.Select((a) => new ItemGenre() { Name = a }).ToList(),
+                Genre = Attributes.GenreNames != null ? string.Join(", ", Attributes.GenreNames) : "",
+                AdditionalProperties = new Dictionary<string, object>()
+                {
+                    { "name", Attributes.Name },
+                    { "songCount", Attributes.TrackCount },
+                }
+            };
+        }
+
+        public Subsonic.Common.AlbumID3 ToSubsonicTypeID3()
+        {
+            var values = ToSubsonicType();
+            var adapted = values.Adapt<AlbumID3>();
+            adapted.AdditionalProperties = new Dictionary<string, object>();
+            adapted.Name = values.Title;
+            return adapted;
+        }
+
     }
 
     public class AlbumAttributes

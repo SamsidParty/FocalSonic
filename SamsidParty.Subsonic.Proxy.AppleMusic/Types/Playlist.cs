@@ -23,6 +23,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
                 Created = Attributes.DateAdded,
                 Changed = Attributes.DateAdded,
                 SongCount = Relationships?.Tracks.Data.Count ?? 0,
+                CoverArt = Attributes.Artwork.Url,
                 Duration = 0,
             };
         }
