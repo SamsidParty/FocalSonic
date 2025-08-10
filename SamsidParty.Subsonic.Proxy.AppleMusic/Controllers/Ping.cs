@@ -11,14 +11,19 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
         {
             return new SubsonicResponse()
             {
-                SubsonicResponse1 = new SubsonicSuccessResponse()
-                {
-                    Status = SubsonicSuccessResponseStatus.Ok,
-                    Version = "1.16.1",
-                    Type = "SamsidParty Subsonic",
-                    ServerVersion = $"{RuntimeInformation.FrameworkDescription}",
-                    OpenSubsonic = true,
-                }
+                SubsonicResponse1 = GetDefaultResponse()
+            };
+        }
+
+        public SubsonicSuccessResponse GetDefaultResponse()
+        {
+            return new SubsonicSuccessResponse()
+            {
+                Status = SubsonicSuccessResponseStatus.Ok,
+                Version = "1.16.1",
+                Type = "SamsidParty Subsonic",
+                ServerVersion = $"{RuntimeInformation.FrameworkDescription}",
+                OpenSubsonic = true,
             };
         }
     }

@@ -3,12 +3,12 @@
     public class Keys
     {
         public static string? AppleDeveloperToken;
-        public static string? MusicUserToken;
+        public static string? MediaUserToken;
 
         public static void Load()
         {
             AppleDeveloperToken = Environment.GetEnvironmentVariable("APPLE_DEVELOPER_TOKEN");
-            MusicUserToken = Environment.GetEnvironmentVariable("MUSIC_USER_TOKEN");
+            MediaUserToken = Environment.GetEnvironmentVariable("MUSIC_USER_TOKEN");
         }
     }
 }

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SamsidParty.Subsonic.Common;
+using SamsidParty.Subsonic.Proxy.AppleMusic;
 using SamsidParty.Subsonic.Proxy.AppleMusic.Controllers;
 
+Keys.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
