@@ -17,6 +17,7 @@ async function onMusicKitLoad() {
     window.proxyMusicInstance = music;
 };
 
+
 async function overridePage() {
 
     console.log("[Aonsoku][Apple Music Proxy] Started overriding apple music page");
@@ -28,7 +29,7 @@ async function overridePage() {
             <title>Apple Music Proxy</title>
         </head>
         <body>
-            <h1>Proxy</h1>
+            
         </body>
     </html>
     `.trim();

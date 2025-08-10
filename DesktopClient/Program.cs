@@ -14,6 +14,9 @@ public class Program
     [STAThread]
     static void Main(string[] args)
     {
+        // Needed for background playback with Apple Music
+        Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--autoplay-policy=no-user-gesture-required");
+
         DesktopPlatformManager.Activate();
         App = new ViteAppManager();
 
@@ -35,6 +38,10 @@ public class Program
     public static void CleanUpUI()
     {
         Performance.IsRunningInForeground = false;
+        foreach (var window in App.OpenWindows)
+        {
+            window.ExecuteJavaScript("window.gc && window.gc()");
+        }
         App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault(App.MainWindow)?.Close();
     }
 
