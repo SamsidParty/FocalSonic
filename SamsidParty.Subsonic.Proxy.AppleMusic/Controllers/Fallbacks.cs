@@ -716,16 +716,6 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
             throw new NotImplementedException();
         }
 
-        public Task<Search2Response> Search2Async(string query, int artistCount, int artistOffset, int albumCount, int albumOffset, int songCount, int songOffset, string musicFolderId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Search3Response> Search3Async(string query, int artistCount, int artistOffset, int albumCount, int albumOffset, int songCount, int songOffset, string musicFolderId)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<SearchResponse> SearchAsync(string artist, string album, string title, bool? any, int count, int offset, int? newerThan)
         {
             throw new NotImplementedException();

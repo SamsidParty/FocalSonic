@@ -13,6 +13,7 @@ import {
 import { queryKeys } from "@/utils/queryKeys";
 import { getMainScrollElement } from "@/utils/scrollPageToTop";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+import { checkServerType } from "@/utils/servers";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import debounce from "lodash/debounce";
 import { useEffect, useRef } from "react";
@@ -21,9 +22,10 @@ import { useSearchParams } from "react-router-dom";
 export function useAlbumsListModel() {
     const [searchParams] = useSearchParams();
     const { getSearchParam } = new SearchParamsHandler(searchParams);
-    const defaultOffset = 100;
+    const defaultOffset = 25;
     const oldestYear = "0001";
     const currentYear = new Date().getFullYear().toString();
+    const { isAppleMusic } = checkServerType();
 
     const scrollDivRef = useRef<HTMLDivElement | null>(null);
 
@@ -60,7 +62,7 @@ export function useAlbumsListModel() {
 
         if (currentFilter === AlbumsFilters.Search && query !== "") {
             return albumSearch({
-                query,
+                query: isAppleMusic ? `library:${query}` : query, // Tell apple music to search the library intead of the catalog
                 count: defaultOffset,
                 offset: pageParam,
             });
@@ -86,7 +88,7 @@ export function useAlbumsListModel() {
         queryKey: [queryKeys.album.all, currentFilter, yearFilter, genre, query],
         queryFn: fetchAlbums,
         initialPageParam: 0,
-        getNextPageParam: (lastPage) => lastPage.nextOffset,
+        getNextPageParam: (lastPage) => (isAppleMusic && currentFilter === AlbumsFilters.Search && query !== "") ? undefined : lastPage.nextOffset, // Don't wrap around search for apple music
         enabled: enableMainQuery(),
     });
 

@@ -17,6 +17,12 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic
             var request = await Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, url.Replace("{storefront}", AppleMusicKeys.Region)).WithMusicKitHeaders());
             var content = await request.Content.ReadAsStringAsync();
             var data = JsonConvert.DeserializeObject<T>(content);
+
+            if (!request.IsSuccessStatusCode)
+            {
+                Console.Error.WriteLine($"Apple Music API request to {url} failed: {request.StatusCode} - {content}");
+            }
+
             return data;
         }
 

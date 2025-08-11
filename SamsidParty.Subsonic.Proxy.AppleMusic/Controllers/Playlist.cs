@@ -18,10 +18,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
             var response = GetDefaultResponse().Adapt<GetPlaylistsSuccessResponse>();
             response.Playlists = new Playlists()
             {
-                Playlist = data.Data.Select((p) =>
-                {
-                    return p.ToSubsonicType();
-                }).ToList()
+                Playlist = data.Data.Select((p) => p.ToSubsonicType()).ToList()
             };
 
             return new GetPlaylistsResponse() { SubsonicResponse = response };
