@@ -1,9 +1,8 @@
-
 async function onMusicKitLoad() {
     console.log("[Aonsoku][Apple Music Proxy] Overriden MusicKit");
 
     let music = await MusicKit.configure({
-        developerToken: "",
+        developerToken: window.foundDeveloperToken,
         app: {
             name: "Aonsoku",
             build: "AppleMusicProxy",
@@ -21,6 +20,7 @@ async function onMusicKitLoad() {
 async function overridePage() {
 
     console.log("[Aonsoku][Apple Music Proxy] Started overriding apple music page");
+    window.startedOverride = true;
     window.MusicKit = undefined;
 
     document.documentElement.innerHTML = `
@@ -40,7 +40,26 @@ async function overridePage() {
     document.head.appendChild(script);
 }
 
-overridePage();
+function retrieveDefaultToken() {
+    if (window.startedOverride) { return; }
+    console.log("[Aonsoku][Apple Music Proxy] Started search for developer token");
+
+    window.MusicKit.configure = async function (config) {
+        const developerToken = config.developerToken;
+        window.foundDeveloperToken = developerToken;
+        console.log("[Aonsoku][Apple Music Proxy] Found developer token:", developerToken);
+        console.log("[Aonsoku][Apple Music Proxy] Client info:", config);
+        
+        setTimeout(() => overridePage(), 0);
+    };
+}
+
+
+if (window.MusicKit) {
+    retrieveDefaultToken();
+} else {
+    document.addEventListener("musickitloaded", retrieveDefaultToken);
+}
 
 
 window.executeInjectedQueue = async () => {

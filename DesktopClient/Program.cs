@@ -38,11 +38,12 @@ public class Program
     public static void CleanUpUI()
     {
         Performance.IsRunningInForeground = false;
+        App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault(App.MainWindow)?.Close();
+
         foreach (var window in App.OpenWindows)
         {
             window.ExecuteJavaScript("window.gc && window.gc()");
         }
-        App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault(App.MainWindow)?.Close();
     }
 
     public static void CreateMainWindow()
