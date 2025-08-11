@@ -1,3 +1,4 @@
+
 async function onMusicKitLoad() {
     console.log("[Aonsoku][Apple Music Proxy] Overriden MusicKit");
 
@@ -11,6 +12,13 @@ async function onMusicKitLoad() {
 
     music.userToken = window.injectedUserToken;
     await music.authorize();
+
+    music.addEventListener("playbackStateDidChange", ({ oldState, state }) => {
+        console.log(`[Aonsoku][Apple Music Proxy] Playback changed from ${oldState} to ${state}`);
+        if (state === MusicKit.PlaybackStates.ended && window.proxyMusicInstance.repeatMode !== MusicKit.PlayerRepeatMode.one) {
+            igniteView?.commandBridge.appleMusicRecieveEndedEvent();
+        }
+    });
 
     console.log("[Aonsoku][Apple Music Proxy] Auth status: " + (music.isAuthorized ? "Authorized" : "Not Authorized"));
     window.proxyMusicInstance = music;
@@ -77,6 +85,9 @@ window.executeInjectedQueue = async () => {
         }
         else if (item.type === "seek") {
             !!window.proxyMusicInstance.nowPlayingItem && await window.proxyMusicInstance.seekToTime(item.time);
+        }
+        else if (item.type === "setLoopMode") {
+            window.proxyMusicInstance.repeatMode = item.loop ? MusicKit.PlayerRepeatMode.one : MusicKit.PlayerRepeatMode.none;
         }
         else if (item.type === "setSource") {
             await window.proxyMusicInstance.stop();

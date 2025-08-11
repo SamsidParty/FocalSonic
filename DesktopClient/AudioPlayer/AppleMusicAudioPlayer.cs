@@ -101,6 +101,13 @@ namespace Aonsoku.AudioPlayer
 
         }
 
+        [Command("appleMusicRecieveEndedEvent")]
+        public static void RecieveEndedEvent(WebWindow ctx)
+        {
+            var owningPlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
+            owningPlayer.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "ended");
+        }
+
         public override async Task SendTimeUpdate(bool isAutomatic = true)
         {
             Presence.Presence.Instance.UpdateMediaStatus(MediaPlaybackInfo.Instance);
@@ -150,6 +157,15 @@ namespace Aonsoku.AudioPlayer
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
                 $"window.injectedQueue.push({{ type: 'seek', time: {time.ToString()} }});" +
+                InjectionSuffix
+            );
+        }
+
+        public override async Task SetLoopMode(bool loop)
+        {
+            ProxyWindow?.ExecuteJavaScript(
+                InjectionPrefix +
+                $"window.injectedQueue.push({{ type: 'setLoopMode', loop: {loop.ToString().ToLower()} }});" +
                 InjectionSuffix
             );
         }
