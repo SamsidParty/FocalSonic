@@ -1,9 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import clsx from "clsx";
-import { Check, Loader2, XIcon } from "lucide-react";
-import { Fragment } from "react/jsx-runtime";
-import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { Dot } from "@/app/components/dot";
 import { Badge } from "@/app/components/ui/badge";
 import {
@@ -21,10 +15,18 @@ import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
 import { RECORD_LABELS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
+import { useQuery } from "@tanstack/react-query";
+import clsx from "clsx";
+import { Check, Loader2, XIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { Fragment } from "react/jsx-runtime";
 
 export function SongInfoDialog() {
     const { t } = useTranslation();
     const { songId, modalOpen, reset } = useSongInfo();
+    const { isAppleMusic } = checkServerType();
 
     const { data: song, isLoading } = useQuery({
         queryKey: [queryKeys.song.info, songId],
@@ -99,11 +101,6 @@ export function SongInfoDialog() {
                 {song && !isLoading && (
                     <ScrollArea className="p-4">
                         <div className="max-h-[500px]">
-                            <InfoGridItem title="path">
-                                <code className="font-mono text-xs bg-muted border px-2 py-1 rounded flex gap-2 items-center">
-                                    {song.path}
-                                </code>
-                            </InfoGridItem>
 
                             <InfoGridItem title="title">{song.title}</InfoGridItem>
 
@@ -227,23 +224,39 @@ export function SongInfoDialog() {
                             <InfoGridItem title="duration">
                                 {convertSecondsToTime(song.duration ?? 0)}
                             </InfoGridItem>
-                            <InfoGridItem title="size">
-                                {formatBytes(song.size ?? 0)}
-                            </InfoGridItem>
-                            <InfoGridItem title="bpm">{song.bpm ?? 0}</InfoGridItem>
-                            <InfoGridItem title="bitrate">{song.bitRate} kbps</InfoGridItem>
-                            <InfoGridItem title="codec">
-                                <Badge>{song.suffix.toUpperCase()}</Badge>
-                            </InfoGridItem>
 
-                            <InfoGridItem title="plays">{song.playCount ?? 0}</InfoGridItem>
-                            <InfoGridItem title="lastPlayed">
-                                {song.played ? (
-                                    <>{formatLastPlayed()}</>
-                                ) : (
-                                    <XIcon className="w-4 h-4 -ml-0.5 text-red-500" />
-                                )}
-                            </InfoGridItem>
+
+                            {song.playCount! > 0 && (
+                                <InfoGridItem title="plays">{song.playCount ?? 0}</InfoGridItem>
+                            )}
+
+                            {!isAppleMusic && (
+                                <>
+                                    <InfoGridItem title="lastPlayed">
+                                        {song.played ? (
+                                            <>{formatLastPlayed()}</>
+                                        ) : (
+                                            <XIcon className="w-4 h-4 -ml-0.5 text-red-500" />
+                                        )}
+                                    </InfoGridItem>
+                                    <InfoGridItem title="path">
+                                        <code className="font-mono text-xs bg-muted border px-2 py-1 rounded flex gap-2 items-center">
+                                            {song.path}
+                                        </code>
+                                    </InfoGridItem>
+                                    <InfoGridItem title="size">
+                                        {formatBytes(song.size ?? 0)}
+                                    </InfoGridItem>
+                                    <InfoGridItem title="bpm">{song.bpm ?? 0}</InfoGridItem>
+                                    <InfoGridItem title="bitrate">{song.bitRate} kbps</InfoGridItem>
+                                    <InfoGridItem title="codec">
+                                        <Badge>{song.suffix.toUpperCase()}</Badge>
+                                    </InfoGridItem>
+                                </>
+                            )
+                            }
+
+
                             <InfoGridItem title="favorite">
                                 {song.starred ? (
                                     <Check className="w-4 h-4 -ml-0.5 text-primary" />
@@ -269,19 +282,17 @@ export function SongInfoDialog() {
                                 </>
                             )}
 
-                            {song.channelCount && (
+                            {song.channelCount! > 0 && (
                                 <InfoGridItem title="channelCount">
                                     {song.channelCount}
                                 </InfoGridItem>
                             )}
 
-                            {song.samplingRate && (
+                            {song.samplingRate! > 0 && (
                                 <InfoGridItem title="samplingRate">
-                                    {song.samplingRate / 1000} Hz
+                                    {song.samplingRate! / 1000} Hz
                                 </InfoGridItem>
                             )}
-
-                            <InfoGridItem title="bitDepth">{song.bitDepth ?? 0}</InfoGridItem>
                         </div>
                     </ScrollArea>
                 )}
