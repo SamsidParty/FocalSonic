@@ -1,19 +1,19 @@
 ﻿using Mapster;
 using Newtonsoft.Json;
 using SamsidParty.Subsonic.Common;
+using SamsidParty.Subsonic.Proxy.AppleMusic.Types;
 using System.Dynamic;
 
 namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
 {
     public partial class AppleMusicRequestImplementation : Subsonic.Common.IController
     {
-        // The client should send the ID instead of the title
+        // The client should send the song ID instead of the title
         public async Task<GetLyricsResponse> GetLyricsAsync(string artist, string title)
         {
-            var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"catalog/{AppleMusicKeys.Region}/songs/{title}/syllable-lyrics?l=en-US").WithMusicKitHeaders());
-            var content = await request.Content.ReadAsStringAsync();
-            dynamic data = JsonConvert.DeserializeObject<ExpandoObject>(content);
-            var lyrics = data!.data[0].attributes.ttml;
+            var catalogID = new SongID(title).CatalogID;
+            dynamic data = (await AppleMusicHttpClient.SendRequest<ExpandoObject>($"catalog/{AppleMusicKeys.Region}/songs/{catalogID}/syllable-lyrics?l=en-US"));
+            var lyrics = data.data[0].attributes.ttml;
 
             var response = GetDefaultResponse().Adapt<GetLyricsSuccessResponse>();
             response.Lyrics = new Lyrics()

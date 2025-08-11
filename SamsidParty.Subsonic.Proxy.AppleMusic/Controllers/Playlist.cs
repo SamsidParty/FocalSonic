@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System.Dynamic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using SamsidParty.Subsonic.Proxy.AppleMusic.Types;
 
 namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
 {
@@ -12,9 +13,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
     {
         public async Task<GetPlaylistsResponse> GetPlaylistsAsync(string username) // username should be ignored because it's only for admins
         {
-            var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, "me/library/playlists").WithMusicKitHeaders());
-            var content = await request.Content.ReadAsStringAsync();
-            var data = JsonConvert.DeserializeObject<AppleMusic.Types.PlaylistResponse>(content);
+            var data = await AppleMusicHttpClient.SendRequest<PlaylistResponse>("me/library/playlists");
 
             var response = GetDefaultResponse().Adapt<GetPlaylistsSuccessResponse>();
             response.Playlists = new Playlists()
@@ -30,10 +29,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
 
         public async Task<GetPlaylistResponse> GetPlaylistAsync(string id)
         {
-            var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"me/library/playlists/{id}?include=tracks").WithMusicKitHeaders());
-            var content = await request.Content.ReadAsStringAsync();
-            var data = JsonConvert.DeserializeObject<AppleMusic.Types.PlaylistResponse>(content);
-            var p = data!.Data.First();
+            var p = (await AppleMusicHttpClient.SendRequest<PlaylistResponse>($"me/library/playlists/{id}?include=tracks"))!.Data.First();
 
             var response = GetDefaultResponse().Adapt<GetPlaylistSuccessResponse>();
             response.Playlist = p.ToSubsonicType().Adapt<Subsonic.Common.PlaylistWithSongs>();

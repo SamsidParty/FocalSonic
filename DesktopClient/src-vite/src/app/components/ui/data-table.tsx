@@ -1,16 +1,16 @@
 import {
     ColumnFiltersState,
-    SortingState,
     flexRender,
     getCoreRowModel,
-    useReactTable,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
     Row,
     RowData,
-    getPaginationRowModel,
-    getFilteredRowModel,
-    getSortedRowModel,
     SortingFn,
+    SortingState,
     Table,
+    useReactTable,
 } from "@tanstack/react-table";
 import clsx from "clsx";
 import { Disc2Icon, XIcon } from "lucide-react";

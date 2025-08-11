@@ -1,5 +1,3 @@
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
 import { AlbumComment } from "@/app/components/album/comment";
 import ImageHeader from "@/app/components/album/image-header";
 import { AlbumInfo } from "@/app/components/album/info";
@@ -23,11 +21,15 @@ import { ColumnFilter } from "@/types/columnFilter";
 import { Albums } from "@/types/responses/album";
 import { sortRecentAlbums } from "@/utils/album";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
+import { checkServerType } from "@/utils/servers";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 
 export default function Album() {
     const { albumId } = useParams() as { albumId: string };
     const { setSongList } = usePlayerActions();
     const { t } = useTranslation();
+    const { isAppleMusic } = checkServerType()
 
     const {
         data: album,
@@ -78,14 +80,13 @@ export default function Album() {
     const columnsToShow: ColumnFilter[] = [
         "trackNumber",
         "title",
-        // 'artist',
         "duration",
-        "playCount",
+        (isAppleMusic ? "" : "playCount"),
         "played",
         "bitRate",
         "contentType",
-        "select",
-    ];
+        (isAppleMusic ? "" : "select"),
+    ].filter((i) => i) as ColumnFilter[];
 
     function removeCurrentAlbumFromList(moreAlbums: Albums[], sort = false) {
         if (moreAlbums.length === 0 || !album) return null;

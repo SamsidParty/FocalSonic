@@ -30,7 +30,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
                 CoverArt = Attributes.Artwork.Url,
                 Genres = Attributes.GenreNames?.Select((a) => new ItemGenre() { Name = a }).ToList(),
                 Genre = Attributes.GenreNames != null ? string.Join(", ", Attributes.GenreNames) : "",
-                Created = new DateTimeOffset(Attributes.DateAdded ?? DateTime.MinValue),
+                Created = (Attributes.DateAdded != null) ? new DateTimeOffset((DateTime)Attributes.DateAdded!) : DateTimeOffset.MinValue,
                 AdditionalProperties = new Dictionary<string, object>()
                 {
                     { "name", Attributes.Name },

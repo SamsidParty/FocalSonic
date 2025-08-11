@@ -6,6 +6,8 @@ using System.Dynamic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Mapster.Utils;
+using SamsidParty.Subsonic.Proxy.AppleMusic.Types;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
 {
@@ -24,9 +26,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
         // musicFolderId is ignored
         public async Task<GetAlbumListResponse> GetAlbumListAsync(AlbumListType type, int size, int offset, int? fromYear, int? toYear, string genre, string musicFolderId)
         {
-            var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"me/library/albums?limit={Math.Clamp(size, 0, 100)}&offset={offset}").WithMusicKitHeaders());
-            var content = await request.Content.ReadAsStringAsync();
-            var data = JsonConvert.DeserializeObject<AppleMusic.Types.AlbumResponse>(content);
+            var data = await AppleMusicHttpClient.SendRequest<AlbumResponse>($"me/library/albums?limit={Math.Clamp(size, 0, 100)}&offset={offset}");
 
             if (fromYear > toYear)
             {
@@ -53,10 +53,17 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
 
         public async Task<GetAlbumResponse> GetAlbumAsync(string id)
         {
-            var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"me/library/albums/{id}").WithMusicKitHeaders());
-            var content = await request.Content.ReadAsStringAsync();
-            var data = JsonConvert.DeserializeObject<AppleMusic.Types.AlbumResponse>(content);
-            var p = data!.Data.First();
+            if (SongID.IsSongID(id))
+            {
+                var songID = new SongID(id);
+                id = (await AppleMusicHttpClient.SendRequest<AlbumResponse>($"catalog/{AppleMusicKeys.Region}/songs/{songID.CatalogID}/albums"))!.Data.First().Id;
+            }
+            else if (!SongID.IsCatalogID(id))
+            {
+                id = (await AppleMusicHttpClient.SendRequest<AlbumResponse>($"me/library/albums/{id}/catalog"))!.Data.First().Id;
+            }
+
+            var p = (await AppleMusicHttpClient.SendRequest<AlbumResponse>($"catalog/{AppleMusicKeys.Region}/albums/{id}"))!.Data.First();
 
             var response = GetDefaultResponse().Adapt<GetAlbumSuccessResponse>();
             response.Album = p.ToSubsonicTypeID3().Adapt<Subsonic.Common.AlbumID3WithSongs>();

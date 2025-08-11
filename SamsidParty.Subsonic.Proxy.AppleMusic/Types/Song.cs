@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using SamsidParty.Subsonic.Common;
 using SamsidParty.Subsonic.Common.Types;
 
@@ -19,11 +19,12 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
         {
             return new Child()
             {
-                Id = "applemusic:" + Id + ":" + Attributes.PlayParams.CatalogId,
+                Id = new SongID(Id, Attributes.PlayParams.CatalogId ?? Id).ToString(),
+                AlbumId = new SongID(Id, Attributes.PlayParams.CatalogId ?? Id).ToString(),
                 IsDir = false,
                 IsVideo = false,
                 Type = GenericMediaType.Music,
-                Title = Attributes.Name,
+                Title = Attributes.Name + (Attributes.ContentRating == "explicit" ? " 🅴" : ""),
                 Album = Attributes.AlbumName,
                 Artist = Attributes.ArtistName,
                 DisplayAlbumArtist = Attributes.ArtistName,
@@ -32,6 +33,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
                 Year = int.Parse(Attributes.ReleaseDate.Substring(0, 4)),
                 ContentType = "audio/m4a",
                 Suffix = "m4a",
+                ExplicitStatus = (Attributes.ContentRating == "explicit") ? ExplicitStatus.Explicit : ExplicitStatus.Clean,
                 Duration = Attributes.DurationInMillis / 1000,
                 CoverArt = Attributes.Artwork.Url
             };

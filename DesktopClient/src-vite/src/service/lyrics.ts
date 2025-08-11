@@ -27,8 +27,8 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     const response = await httpClient<LyricsResponse>("/getLyrics", {
         method: "GET",
         query: {
-            artist: isAppleMusic ? getLyricsData.id!.split(":").pop() : getLyricsData.artist,
-            title: isAppleMusic ? getLyricsData.id!.split(":").pop() : getLyricsData.title,
+            artist: isAppleMusic ? getLyricsData.id : getLyricsData.artist,
+            title: isAppleMusic ? getLyricsData.id : getLyricsData.title,
         },
     });
 
