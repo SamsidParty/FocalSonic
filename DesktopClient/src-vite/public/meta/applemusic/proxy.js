@@ -85,7 +85,7 @@ window.executeInjectedQueue = async () => {
         }
     }
 
-    await igniteView.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, window.proxyMusicInstance.currentPlaybackTime, window.proxyMusicInstance.currentPlaybackDuration);
+    await igniteView.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, document.getElementById("apple-music-player")?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
 };
 
 setInterval(window.executeInjectedQueue, 250);

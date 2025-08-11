@@ -12,7 +12,6 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
         {
             var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"catalog/{AppleMusicKeys.Region}/songs/{title}/syllable-lyrics?l=en-US").WithMusicKitHeaders());
             var content = await request.Content.ReadAsStringAsync();
-            Console.WriteLine(content);
             dynamic data = JsonConvert.DeserializeObject<ExpandoObject>(content);
             var lyrics = data!.data[0].attributes.ttml;
 

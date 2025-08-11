@@ -31,9 +31,11 @@ class NativeVirtualAudioPlayer {
                     this.onTimeUpdate?.();
                 }
                 else if (e == "timeupdate") {
-                    this._currentTime = param;
-                    this._currentTimeOffset = Date.now();
-                    this.onTimeUpdate?.();
+                    if (this._currentTime != param) {
+                        this._currentTime = param;
+                        this._currentTimeOffset = Date.now();
+                        this.onTimeUpdate?.();
+                    }
                 }
             };
 
