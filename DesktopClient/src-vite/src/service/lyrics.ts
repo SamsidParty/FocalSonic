@@ -22,19 +22,21 @@ interface LRCLibResponse {
 
 async function getLyrics(getLyricsData: GetLyricsData) {
 
+    const { isAppleMusic } = checkServerType();
+
     const response = await httpClient<LyricsResponse>("/getLyrics", {
         method: "GET",
         query: {
-            artist: getLyricsData.artist,
-            title: getLyricsData.title,
+            artist: isAppleMusic ? getLyricsData.id!.split(":").pop() : getLyricsData.artist,
+            title: isAppleMusic ? getLyricsData.id!.split(":").pop() : getLyricsData.title,
         },
     });
 
     const lyricNotFound =
     !response || !response?.data.lyrics || !response.data.lyrics.value;
 
-    if (!lyricNotFound && response?.data.openSubsonic) {
-    // Try to get synced lyrics using getLyricsBySongId
+    if (!isAppleMusic && !lyricNotFound && response?.data.openSubsonic) {
+        // Try to get synced lyrics using getLyricsBySongId
         const openResponse = await httpClient<OpenLyricsResponse>("/getLyricsBySongId", {
             method: "GET",
             query: {

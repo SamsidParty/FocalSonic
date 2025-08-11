@@ -4,6 +4,7 @@
     {
         public static string? AppleDeveloperToken;
         public static string? MediaUserToken;
+        public static string? Region = "in";
 
         public static void Load()
         {

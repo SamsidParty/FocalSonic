@@ -2,6 +2,7 @@ import {
     ScrollArea,
     scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
+import { parseTTML } from "@/lib/ttml/parser";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
 import { ILyric } from "@/types/responses/song";
@@ -54,6 +55,13 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
     const playerRef = usePlayerRef();
     const [timestamp, setTimestamp] = useState<number>(0);
 
+    const formattedLyrics = useMemo(() => {
+        if (areLyricsTTML(lyrics)) {
+            return convertTTMLToLRC(lyrics.value!);
+        }
+        return lyrics.value || "";
+    }, [lyrics]);
+
     requestAnimationFrame(() => {
         let newTimestamp = (playerRef?.currentTime || 0) * 1000;
 
@@ -74,7 +82,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
     return (
         <div className="w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box maskImage-big-player-lyrics">
             <Lrc
-                lrc={lyrics.value!}
+                lrc={formattedLyrics!}
                 recoverAutoScrollInterval={1000}
                 currentMillisecond={timestamp}
                 id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
@@ -216,7 +224,52 @@ function areLyricsSynced(lyrics: ILyric) {
     const lyric = lyrics.value?.trim() ?? "";
     return (
         lyric.startsWith("[00:") ||
-    lyric.startsWith("[01:") ||
-    lyric.startsWith("[02:")
+        lyric.startsWith("[01:") ||
+        lyric.startsWith("[02:") ||
+        areLyricsTTML(lyrics)
     );
+}
+
+function areLyricsTTML(lyrics: ILyric) {
+    const lyric = lyrics.value?.trim() ?? "";
+    return lyric.startsWith("<tt xmlns=");
+}
+
+function convertTTMLToLRC(ttml: string): string {
+    try {
+        let parsedTTML = parseTTML(ttml);
+        const enableELRC = true;
+
+        let convertedELRC = parsedTTML.lyricLines.map((line) => {
+
+            const convertMS = (ms, wrap?: boolean) => {
+                const minutes = Math.floor(ms / 60000);
+                const remainingMsAfterMinutes = ms % 60000;
+                const seconds = Math.floor(remainingMsAfterMinutes / 1000);
+                const milliseconds = remainingMsAfterMinutes % 1000;
+                const formattedMinutes = String(minutes).padStart(2, "0");
+                const formattedSeconds = String(seconds).padStart(2, "0");
+                const formattedMilliseconds = String(milliseconds).padStart(3, "0");
+
+                if (wrap) {
+                    return `<${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds.substring(0, 2)}>`;
+                }
+
+                return `${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds}`;
+            };
+
+            if (enableELRC) {
+                return `[${convertMS(line.startTime)}] ${line.words.map((word) => convertMS(word.startTime, true) + word.word).join("")}`;
+            }
+
+            return `[${convertMS(line.startTime)}]${line.words.map((word) => word.word).join("")}`;
+        }).join("\n");
+
+        return convertedELRC;
+    }
+    catch (error) {
+        console.error("Error parsing TTML:", error);
+    }
+
+    return ttml;
 }
