@@ -94,6 +94,7 @@ window.executeInjectedQueue = async () => {
         }
         else if (item.type === "setSource") {
             await window.proxyMusicInstance.stop();
+            await window.proxyMusicInstance.clearQueue();
             await window.proxyMusicInstance.playNext({ song: item.source }, true);
             await window.proxyMusicInstance.skipToNextItem();
         }
