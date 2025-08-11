@@ -79,8 +79,6 @@ namespace Aonsoku.AudioPlayer
         [Command("appleMusicRecieveTimeUpdate")]
         public static void RecieveTimeUpdate(WebWindow ctx, bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration)
         {
-
-
             var owningPlayer = ActivePlayers.Where((p) =>  p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
             if (isPlaying)
             {
@@ -91,14 +89,18 @@ namespace Aonsoku.AudioPlayer
             MediaPlaybackInfo.Instance.IsPlaying = isPlaying;
             MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(currentPlaybackDuration);
             MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(currentPlaybackTime);
+        }
 
-            if (isPlaying && !owningPlayer.HasLoaded && currentPlaybackDuration > 0)
+        [Command("appleMusicRecieveLoadedEvent")]
+        public static void RecieveLoadedEvent(WebWindow ctx, double currentPlaybackDuration)
+        {
+            var owningPlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
+            if (!owningPlayer.HasLoaded)
             {
                 HideWindow((owningPlayer as AppleMusicAudioPlayer).ProxyWindow.NativeHandle);
                 owningPlayer.HasLoaded = true;
                 owningPlayer.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "loaded", currentPlaybackDuration);
             }
-
         }
 
         [Command("appleMusicRecieveEndedEvent")]

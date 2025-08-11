@@ -15,8 +15,11 @@ async function onMusicKitLoad() {
 
     music.addEventListener("playbackStateDidChange", ({ oldState, state }) => {
         console.log(`[Aonsoku][Apple Music Proxy] Playback changed from ${oldState} to ${state}`);
-        if (state === MusicKit.PlaybackStates.ended && window.proxyMusicInstance.repeatMode !== MusicKit.PlayerRepeatMode.one) {
+        if (state === MusicKit.PlaybackStates.ended && music.repeatMode !== MusicKit.PlayerRepeatMode.one) {
             igniteView?.commandBridge.appleMusicRecieveEndedEvent();
+        }
+        else if (state === MusicKit.PlaybackStates.playing) {
+            igniteView?.commandBridge.appleMusicRecieveLoadedEvent(music.currentPlaybackDuration);
         }
     });
 
