@@ -14,6 +14,7 @@ namespace SamsidParty.Subsonic.Common
     public class SubsonicMiddleware
     {
         private readonly RequestDelegate _next;
+        private string _serverName = "samsidparty";
 
 
         // TODO: Actually implement a user store, this is just a placeholder
@@ -27,9 +28,10 @@ namespace SamsidParty.Subsonic.Common
             { "APIKEY123", "test" },
         };
 
-        public SubsonicMiddleware(RequestDelegate next)
+        public SubsonicMiddleware(RequestDelegate next, string serverName)
         {
             _next = next;
+            _serverName = serverName;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -85,16 +87,22 @@ namespace SamsidParty.Subsonic.Common
                 context.Response.StatusCode = 200; // For some reason subsonic loves returning 200 even on error, so we do the same
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsync(JsonConvert.SerializeObject(
-                    new SubsonicFailureResponse {
-                        Status = SubsonicFailureResponseStatus.Failed,
-                        Version = "1.16.1",
-                        Type = "SamsidParty Subsonic",
-                        ServerVersion = $"{RuntimeInformation.FrameworkDescription}",
-                        OpenSubsonic = true,
-                        Error = new SubsonicError
+                    new Dictionary<string, object>()
+                    {
                         {
-                            Code = SubsonicErrorCode._40, // Unauthorized
-                            Message = "Authentication failed",
+                            "subsonic-response",
+                            new SubsonicFailureResponse() {
+                                Status = SubsonicFailureResponseStatus.Failed,
+                                Version = "1.16.1",
+                                Type = _serverName,
+                                ServerVersion = "1.0.0",
+                                OpenSubsonic = true,
+                                Error = new SubsonicError
+                                {
+                                    Code = SubsonicErrorCode._40, // Unauthorized
+                                    Message = "Authentication failed",
+                                }
+                            }
                         }
                     }
                 ));

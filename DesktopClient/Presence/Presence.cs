@@ -38,7 +38,7 @@ namespace Aonsoku.Presence
             if (playbackInfo.CurrentSong?.Id == LastSongID) { 
                 return;
             }
-            LastSongID = playbackInfo.CurrentSong.Id;
+            LastSongID = playbackInfo.CurrentSong?.Id ?? "None";
 
             foreach (var provider in Providers)
             {

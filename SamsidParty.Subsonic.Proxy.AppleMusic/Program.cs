@@ -16,7 +16,7 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-app.UseMiddleware<SubsonicMiddleware>();
+app.UseMiddleware<SubsonicMiddleware>("applemusic");
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();

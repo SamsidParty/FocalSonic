@@ -1,6 +1,3 @@
-import { ListFilter } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 import {
     DropdownMenu,
@@ -16,13 +13,25 @@ import {
 } from "@/utils/albumsFilter";
 import { scrollPageToTop } from "@/utils/scrollPageToTop";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+import { checkServerType } from "@/utils/servers";
+import { ListFilter } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
-const hiddenFilters = [AlbumsFilters.ByDiscography, AlbumsFilters.Search];
+
 
 export function AlbumsMainFilter() {
     const { t } = useTranslation();
     const [searchParams, setSearchParams] = useSearchParams();
     const { getSearchParam } = new SearchParamsHandler(searchParams);
+    let hiddenFilters = [AlbumsFilters.ByDiscography, AlbumsFilters.Search];
+    const { isAppleMusic } = checkServerType();
+
+    if (isAppleMusic) {
+        hiddenFilters.push(AlbumsFilters.MostPlayed);
+        hiddenFilters.push(AlbumsFilters.Random);
+        hiddenFilters.push(AlbumsFilters.RecentlyPlayed);
+    }
 
     const currentFilter = getSearchParam<AlbumListType>(
         AlbumsSearchParams.MainFilter,

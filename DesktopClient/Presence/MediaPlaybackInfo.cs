@@ -19,13 +19,15 @@ namespace Aonsoku.Presence
         public TimeSpan Position = TimeSpan.Zero;
 
         [JsonProperty("currentSong")]
-        public Song CurrentSong;
+        public Song? CurrentSong;
 
 
         [Command("setCurrentMediaInfo")]
         public static async Task SetCurrentMediaInfo(string info)
         {
-            Instance.CurrentSong = JsonConvert.DeserializeObject<Song>(info);
+            if (string.IsNullOrEmpty(info)) { return; }
+            try { Instance.CurrentSong = JsonConvert.DeserializeObject<Song>(info); }
+            catch { Instance.CurrentSong = null; }
         }
     }
 }

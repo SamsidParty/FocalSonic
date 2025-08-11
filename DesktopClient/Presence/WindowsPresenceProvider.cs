@@ -27,10 +27,10 @@ namespace Aonsoku.Presence
 
             smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
             
-            smtc.DisplayUpdater.MusicProperties.Title = song.Title ?? "Unknown Title";
-            smtc.DisplayUpdater.MusicProperties.Artist = string.Join(", ", song.Artists?.Select((a) => a.Name) ?? new string[0]) ?? "Unknown Artist";
-            smtc.DisplayUpdater.MusicProperties.AlbumTitle = song.Album ?? "Unknown Album";
-            smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song.AlbumArtists?.Select((a) => a.Name) ?? new string[0]) ?? "Unknown Album";
+            smtc.DisplayUpdater.MusicProperties.Title = song?.Title ?? "Unknown Title";
+            smtc.DisplayUpdater.MusicProperties.Artist = string.Join(", ", song?.Artists?.Select((a) => a.Name) ?? new string[0]) ?? "Unknown Artist";
+            smtc.DisplayUpdater.MusicProperties.AlbumTitle = song?.Album ?? "Unknown Album";
+            smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song?.AlbumArtists?.Select((a) => a.Name) ?? new string[0]) ?? "Unknown Album";
 
             if (string.IsNullOrEmpty(song.CoverArt))
             {

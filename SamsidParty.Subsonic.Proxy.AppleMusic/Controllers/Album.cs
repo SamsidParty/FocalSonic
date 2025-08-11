@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System.Dynamic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Mapster.Utils;
 
 namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
 {
@@ -18,11 +19,22 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
             return new GetAlbumList2Response() { SubsonicResponse = response };
         }
 
+        // type is ignored cause we can sort client side
+        // size is capped to 100 instead of 500 because of apple music API limitations
+        // musicFolderId is ignored
         public async Task<GetAlbumListResponse> GetAlbumListAsync(AlbumListType type, int size, int offset, int? fromYear, int? toYear, string genre, string musicFolderId)
         {
-            var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"me/library/albums?limit={100}&offset={offset}").WithMusicKitHeaders());
+            var request = await AppleMusicHttpClient.Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"me/library/albums?limit={Math.Clamp(size, 0, 100)}&offset={offset}").WithMusicKitHeaders());
             var content = await request.Content.ReadAsStringAsync();
             var data = JsonConvert.DeserializeObject<AppleMusic.Types.AlbumResponse>(content);
+
+            if (fromYear > toYear)
+            {
+                // Swap values
+                var temp = fromYear;
+                fromYear = toYear;
+                toYear = temp;
+            }
 
             var response = GetDefaultResponse().Adapt<GetAlbumListSuccessResponse>();
             response.AlbumList = new AlbumList()
@@ -31,7 +43,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
                 {
                     return p.ToSubsonicType();
                 })
-                .Where((a) => (a.Year >= (fromYear ?? 0)) && (a.Year <= (toYear ?? Int32.MaxValue)))
+                .Where((a) => Math.Clamp(a.Year, fromYear ?? 0, toYear ?? Int32.MaxValue) == a.Year)
                 .Where((a) => (!string.IsNullOrEmpty(genre)) ? (a.Genre.ToLower() == genre) : true)
                 .ToList()
             };

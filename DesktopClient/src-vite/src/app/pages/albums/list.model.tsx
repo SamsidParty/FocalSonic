@@ -1,7 +1,3 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import debounce from "lodash/debounce";
-import { useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
 import {
     albumSearch,
     getAlbumList,
@@ -17,11 +13,15 @@ import {
 import { queryKeys } from "@/utils/queryKeys";
 import { getMainScrollElement } from "@/utils/scrollPageToTop";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import debounce from "lodash/debounce";
+import { useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export function useAlbumsListModel() {
     const [searchParams] = useSearchParams();
     const { getSearchParam } = new SearchParamsHandler(searchParams);
-    const defaultOffset = 128;
+    const defaultOffset = 100;
     const oldestYear = "0001";
     const currentYear = new Date().getFullYear().toString();
 

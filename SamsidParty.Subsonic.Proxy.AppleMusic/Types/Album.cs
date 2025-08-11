@@ -30,6 +30,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
                 CoverArt = Attributes.Artwork.Url,
                 Genres = Attributes.GenreNames?.Select((a) => new ItemGenre() { Name = a }).ToList(),
                 Genre = Attributes.GenreNames != null ? string.Join(", ", Attributes.GenreNames) : "",
+                Created = new DateTimeOffset(Attributes.DateAdded ?? DateTime.MinValue),
                 AdditionalProperties = new Dictionary<string, object>()
                 {
                     { "name", Attributes.Name },
@@ -92,6 +93,9 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
 
         [JsonProperty("releaseDate")]
         public string ReleaseDate { get; set; }
+
+        [JsonProperty("dateAdded")]
+        public DateTime? DateAdded { get; set; }
 
         [JsonProperty("trackCount")]
         public int TrackCount { get; set; }
