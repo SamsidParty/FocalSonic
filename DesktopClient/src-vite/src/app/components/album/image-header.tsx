@@ -12,8 +12,9 @@ import { CoverArt } from "@/types/coverArtType";
 import { IFeaturedArtist } from "@/types/responses/artist";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { getTextSizeClass } from "@/utils/getTextSizeClass";
+import hexToCssFilter from "@/utils/hexToCssFilter.js";
+import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
 import { AlbumArtistInfo, AlbumMultipleArtistsInfo } from "./artists";
-import { ImageHeaderEffect } from "./header-effect";
 
 interface ImageHeaderProps {
     type: string
@@ -45,6 +46,7 @@ export default function ImageHeader({
     const [loaded, setLoaded] = useState(false);
     const [open, setOpen] = useState(false);
     const [bgColor, setBgColor] = useState("");
+    const [bgEffectStyle, setBgEffectStyle] = useState("");
 
     function getImage() {
         return document.getElementById("cover-art-image") as HTMLImageElement;
@@ -57,13 +59,15 @@ export default function ImageHeader({
         let color = randomCSSHexColor(true);
 
         try {
-            color = await getAverageColor(img);
+            color = await getAverageColor(img, "LightVibrant");
         } catch (_) {
             console.warn(
                 "handleLoadImage: unable to get image color. Using a random color.",
             );
         }
 
+        let style = hexToCssFilter(color);
+        setBgEffectStyle(style);
         setBgColor(color);
         setLoaded(true);
     }
@@ -88,20 +92,20 @@ export default function ImageHeader({
                 <div className="absolute inset-0 z-20">
                     <AlbumHeaderFallback />
                 </div>
-            )}
+            )} 
+            
             <div
                 className={cn(
                     "w-full px-8 py-6 flex gap-4 absolute inset-0",
-                    "bg-gradient-to-b from-background/20 to-background/50",
                 )}
-                style={{ backgroundColor: bgColor }}
             >
+                <DarkVeil style={{ filter: bgEffectStyle }} speed={2} warpAmount={5}></DarkVeil>
                 <div
                     className={cn(
                         "w-[200px] h-[200px] min-w-[200px] min-h-[200px]",
                         "2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px]",
                         "bg-skeleton aspect-square bg-cover bg-center rounded",
-                        "shadow-header-image overflow-hidden",
+                        "shadow-header-image overflow-hidden z-10",
                         "hover:scale-[1.02] ease-linear duration-100",
                     )}
                 >
@@ -169,11 +173,7 @@ export default function ImageHeader({
                 </div>
             </div>
 
-            {!loaded ? (
-                <ImageHeaderEffect className="bg-muted-foreground" />
-            ) : (
-                <ImageHeaderEffect style={{ backgroundColor: bgColor }} />
-            )}
+
 
             <CustomLightBox
                 open={open}

@@ -1,7 +1,7 @@
 import { Vibrant } from "node-vibrant/browser";
 
-export async function getAverageColor(img: HTMLImageElement | null) {
-    return img.src ? ((await Vibrant.from(img!.src).getPalette()).Vibrant || "").hex.toString() : "#b9fde9ff";
+export async function getAverageColor(img: HTMLImageElement | null, mode: string = "Vibrant") {
+    return img.src ? ((await Vibrant.from(img!.src).getPalette())[mode] || "").hex.toString() : "#b9fde9ff";
 }
 
 export function hexToRgba(hex: string, alpha: number = 1) {
