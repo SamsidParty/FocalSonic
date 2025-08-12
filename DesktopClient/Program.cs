@@ -55,8 +55,10 @@ public class Program
         App.MainWindow =
             WebWindow.Create()
             .WithTitle("Aonsoku")
+            .WithBounds(new WindowBounds(1280, 820))
             .WithSharedContext("MainWindow", "")
             .WithoutTitleBar()
+            .With((w) => { if (w is Win32WebWindow) (w as Win32WebWindow)!.BackgroundMode = Win32WebWindow.WindowBackgroundMode.Mica; })
             .Show();
     }
 

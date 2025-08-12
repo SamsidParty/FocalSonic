@@ -1,40 +1,40 @@
 import { Button } from "@/app/components/ui/button";
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/app/components/ui/popover";
 import { Separator } from "@/app/components/ui/separator";
 import { Slider } from "@/app/components/ui/slider";
 import { Switch } from "@/app/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { useSongColor } from "@/store/player.store";
+import { useDynamicColors } from "@/store/player.store";
 import { SlidersHorizontal } from "lucide-react";
 import { ComponentPropsWithoutRef, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 export function FullscreenSettings() {
-    const { useSongColorOnBigPlayer } = useSongColor();
+    const { useDynamicColorsOnBigPlayer } = useDynamicColors();
 
     return (
         <DynamicSettingsPopover>
             <>
                 <DynamicColorOption showSeparator={false} />
-                {useSongColorOnBigPlayer && <ColorIntensityOption />}
-                {!useSongColorOnBigPlayer && <ImageBlurSizeOption />}
+                {useDynamicColorsOnBigPlayer && <ColorIntensityOption />}
+                {!useDynamicColorsOnBigPlayer && <ImageBlurSizeOption />}
             </>
         </DynamicSettingsPopover>
     );
 }
 
 export function QueueSettings() {
-    const { useSongColorOnQueue } = useSongColor();
+    const { useDynamicColorsOnQueue } = useDynamicColors();
 
     return (
         <DynamicSettingsPopover>
             <>
                 <QueueDynamicColorOption showSeparator={false} />
-                {!useSongColorOnQueue && <ColorIntensityOption />}
+                {!useDynamicColorsOnQueue && <ColorIntensityOption />}
             </>
         </DynamicSettingsPopover>
     );
@@ -67,14 +67,14 @@ type OptionProps = Omit<ComponentPropsWithoutRef<typeof SettingWrapper>, "text">
 
 function DynamicColorOption(props: OptionProps) {
     const { t } = useTranslation();
-    const { useSongColorOnBigPlayer, setUseSongColorOnBigPlayer } = useSongColor();
+    const { useDynamicColorsOnBigPlayer, setuseDynamicColorsOnBigPlayer } = useDynamicColors();
 
     return (
         <SettingWrapper text={t("settings.appearance.colors.group")} {...props}>
             <Switch
-                checked={useSongColorOnBigPlayer}
+                checked={useDynamicColorsOnBigPlayer}
                 onCheckedChange={() =>
-                    setUseSongColorOnBigPlayer(!useSongColorOnBigPlayer)
+                    setuseDynamicColorsOnBigPlayer(!useDynamicColorsOnBigPlayer)
                 }
             />
         </SettingWrapper>
@@ -83,13 +83,13 @@ function DynamicColorOption(props: OptionProps) {
 
 function QueueDynamicColorOption(props: OptionProps) {
     const { t } = useTranslation();
-    const { useSongColorOnQueue, setUseSongColorOnQueue } = useSongColor();
+    const { useDynamicColorsOnQueue, setuseDynamicColorsOnQueue } = useDynamicColors();
 
     return (
         <SettingWrapper text={t("settings.appearance.colors.group")} {...props}>
             <Switch
-                checked={useSongColorOnQueue}
-                onCheckedChange={() => setUseSongColorOnQueue(!useSongColorOnQueue)}
+                checked={useDynamicColorsOnQueue}
+                onCheckedChange={() => setuseDynamicColorsOnQueue(!useDynamicColorsOnQueue)}
             />
         </SettingWrapper>
     );
@@ -97,7 +97,7 @@ function QueueDynamicColorOption(props: OptionProps) {
 
 function ColorIntensityOption(props: OptionProps) {
     const { t } = useTranslation();
-    const { currentSongColorIntensity, setCurrentSongIntensity } = useSongColor();
+    const { currentSongColorIntensity, setCurrentSongIntensity } = useDynamicColors();
 
     const intensityTooltip = `${Math.round(currentSongColorIntensity * 100)}%`;
 
@@ -120,7 +120,7 @@ function ColorIntensityOption(props: OptionProps) {
 
 function ImageBlurSizeOption(props: OptionProps) {
     const { t } = useTranslation();
-    const { bigPlayerBlur, setBigPlayerBlurValue } = useSongColor();
+    const { bigPlayerBlur, setBigPlayerBlurValue } = useDynamicColors();
 
     return (
         <SettingWrapper

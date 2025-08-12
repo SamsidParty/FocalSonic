@@ -1,4 +1,4 @@
-export {};
+export { };
 
 declare global {
     interface Window {
@@ -7,7 +7,7 @@ declare global {
         APP_USER: string | undefined
         APP_PASSWORD: string | undefined
         APP_AUTH_TYPE: string | undefined
-        HIDE_RADIOS_SECTION: boolean | undefined
+        SHOW_RADIOS_SECTION: boolean | undefined
         SERVER_TYPE: string | undefined
     }
 }

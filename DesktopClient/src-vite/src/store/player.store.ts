@@ -115,16 +115,16 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         colors: {
                             currentSongColor: null,
-                            currentSongColorIntensity: 0.65,
+                            currentSongColorIntensity: 0.70,
                             bigPlayer: {
-                                useSongColor: false,
+                                useDynamicColors: true,
                                 blur: {
                                     value: 40,
                                     settings: blurSettings,
                                 },
                             },
                             queue: {
-                                useSongColor: false,
+                                useDynamicColors: true,
                             },
                         },
                     },
@@ -790,12 +790,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         resetConfig: () => {
                             set((state) => {
-                                state.settings.colors.queue.useSongColor = false;
-                                state.settings.colors.bigPlayer.useSongColor = false;
+                                state.settings.colors.queue.useDynamicColors = true;
+                                state.settings.colors.bigPlayer.useDynamicColors = false;
                                 state.settings.colors.bigPlayer.blur.value = 40;
                                 state.settings.colors.bigPlayer.blur.settings = blurSettings;
-                                state.settings.colors.currentSongColorIntensity = 0.65;
-                                state.settings.fullscreen.autoFullscreenEnabled = false;
+                                state.settings.colors.currentSongColorIntensity = 0.70;
+                                state.settings.fullscreen.autoFullscreenEnabled = true;
                                 state.settings.replayGain.values = {
                                     enabled: false,
                                     type: "track",
@@ -815,14 +815,14 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.settings.colors.currentSongColorIntensity = value;
                             });
                         },
-                        setUseSongColorOnQueue: (value) => {
+                        setuseDynamicColorsOnQueue: (value) => {
                             set((state) => {
-                                state.settings.colors.queue.useSongColor = value;
+                                state.settings.colors.queue.useDynamicColors = value;
                             });
                         },
-                        setUseSongColorOnBigPlayer: (value) => {
+                        setuseDynamicColorsOnBigPlayer: (value) => {
                             set((state) => {
-                                state.settings.colors.bigPlayer.useSongColor = value;
+                                state.settings.colors.bigPlayer.useDynamicColors = value;
                             });
                         },
                         setBigPlayerBlurValue: (value) => {
@@ -1031,15 +1031,15 @@ export const useLyricsState = () =>
         toggleLyricsAction: state.actions.toggleLyricsAction,
     }));
 
-export const useSongColor = () =>
+export const useDynamicColors = () =>
     usePlayerStore((state) => {
         const { currentSongColor, currentSongColorIntensity, queue } =
       state.settings.colors;
-        const { useSongColor, blur } = state.settings.colors.bigPlayer;
+        const { useDynamicColors, blur } = state.settings.colors.bigPlayer;
         const {
             setCurrentSongColor,
-            setUseSongColorOnQueue,
-            setUseSongColorOnBigPlayer,
+            setuseDynamicColorsOnQueue,
+            setuseDynamicColorsOnBigPlayer,
             setBigPlayerBlurValue,
             setCurrentSongIntensity,
         } = state.actions;
@@ -1049,10 +1049,10 @@ export const useSongColor = () =>
             setCurrentSongColor,
             currentSongColorIntensity,
             setCurrentSongIntensity,
-            useSongColorOnQueue: queue.useSongColor,
-            useSongColorOnBigPlayer: useSongColor,
-            setUseSongColorOnQueue,
-            setUseSongColorOnBigPlayer,
+            useDynamicColorsOnQueue: queue.useDynamicColors,
+            useDynamicColorsOnBigPlayer: useDynamicColors,
+            setuseDynamicColorsOnQueue,
+            setuseDynamicColorsOnBigPlayer,
             bigPlayerBlur: blur,
             setBigPlayerBlurValue,
         };

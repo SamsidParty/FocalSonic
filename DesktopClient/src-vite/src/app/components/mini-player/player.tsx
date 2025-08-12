@@ -1,7 +1,7 @@
+import { ResizeHandler } from "@/app/components/icons/resize-handler";
+import { useDynamicColors } from "@/store/player.store";
 import clsx from "clsx";
 import { memo } from "react";
-import { ResizeHandler } from "@/app/components/icons/resize-handler";
-import { useSongColor } from "@/store/player.store";
 import { MiniPlayerControls, MiniPlayerLikeButton } from "./controls";
 import { MiniPlayerProgress } from "./progress";
 import { MiniPlayerSongImage } from "./song-image";
@@ -16,7 +16,7 @@ const MemoMiniPlayerSongTitle = memo(MiniPlayerSongTitle);
 const MemoMiniPlayerVolume = memo(MiniPlayerVolume);
 
 export function MiniPlayer() {
-    const { currentSongColor } = useSongColor();
+    const { currentSongColor } = useDynamicColors();
 
     return (
         <div className="w-screen h-screen max-h-screen grid grid-rows-1 mid-player:grid-rows-floating-player gap-2 mid-player:gap-1 p-1 mid-player:p-2 mini-player:p-1.5 pb-4 mid-player:pb-4 relative">

@@ -12,7 +12,7 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
-import { useLyricsState, useSongColor } from "@/store/player.store";
+import { useDynamicColors, useLyricsState } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
@@ -20,7 +20,7 @@ import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 
 export function TrackInfo({ song }: { song: ISong | undefined }) {
     const { t } = useTranslation();
-    const { setCurrentSongColor, currentSongColor } = useSongColor();
+    const { setCurrentSongColor, currentSongColor } = useDynamicColors();
     const { toggleLyricsAction } = useLyricsState(); 
 
     function getImageElement() {

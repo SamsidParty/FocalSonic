@@ -156,7 +156,7 @@ Below is a table describing the environment variables that can be used in this p
 | `APP_PASSWORD`        |            | The password for automatic login.                                                                                 | ✅                           |
 | `APP_AUTH_TYPE`       | `token`    | Specifies the authentication method. </br> **Options:** `token` or `password`.                                    |                              |
 | `SERVER_TYPE`         | `subsonic` | Specifies the server name (important for some fixes). </br> **Options:** `subsonic`, `navidrome` or `lms`         |                              |
-| `HIDE_RADIOS_SECTION` | `false`    | Set to `true` to hide the radios page from the sidebar menu.                                                      |                              |
+| `SHOW_RADIOS_SECTION` | `false`    | Set to `true` to hide the radios page from the sidebar menu.                                                      |                              |
 
 **Notes:**
 - **Automatic Login:** To enable automatic login across devices. This should only be used in secure local environments to avoid password compromise.

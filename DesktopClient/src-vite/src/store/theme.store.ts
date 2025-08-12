@@ -1,15 +1,15 @@
+import { IThemeContext, Theme } from "@/types/themeContext";
 import merge from "lodash/merge";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createWithEqualityFn } from "zustand/traditional";
-import { IThemeContext, Theme } from "@/types/themeContext";
 
 export const useThemeStore = createWithEqualityFn<IThemeContext>()(
     subscribeWithSelector(
         persist(
             devtools(
                 immer((set) => ({
-                    theme: Theme.Dark,
+                    theme: Theme.System,
                     setTheme: (theme: Theme) => {
                         set((state) => {
                             state.theme = theme;
