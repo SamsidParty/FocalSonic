@@ -10,9 +10,21 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
             devtools(
                 immer((set) => ({
                     theme: Theme.System,
+                    uiFont: "Sora",
+                    lyricsFont: "Sora",
                     setTheme: (theme: Theme) => {
                         set((state) => {
                             state.theme = theme;
+                        });
+                    },
+                    setUIFont(font) {
+                        set((state) => {
+                            state.uiFont = font;
+                        });
+                    },
+                    setLyricsFont(font) {
+                        set((state) => {
+                            state.lyricsFont = font;
                         });
                     },
                 })),

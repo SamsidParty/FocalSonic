@@ -16,7 +16,7 @@ module.exports = {
         },
         extend: {
             fontFamily: {
-                sans: ["Sora", "sans-serif"],
+                sans: ["var(--theme-font)", "sans-serif"],
             },
             spacing: {
                 header: "var(--header-height)",

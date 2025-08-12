@@ -601,6 +601,10 @@
       "privacy": "Privacy & Security"
     },
     "appearance": {
+      "font": {
+        "ui": "UI Font",
+        "lyrics": "Lyrics Font"
+      },
       "general": {
         "group": "General",
         "description": "Customize the app's look and display behaviors.",

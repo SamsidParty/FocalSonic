@@ -281,6 +281,10 @@ svg#bars .eq-bar--4 {
   scrollbar-width: none;
 }
 
+.font-lyrics, .font-lyrics * {
+  font-family: var(--theme-lyrics-font);
+}
+
 #sync-lyrics-box-left .react-lrc-line {
   @apply ml-[7%] max-w-[70%] text-balance;
 }

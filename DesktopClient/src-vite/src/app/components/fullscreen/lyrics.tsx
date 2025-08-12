@@ -80,7 +80,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
     };
 
     return (
-        <div className="w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box maskImage-big-player-lyrics">
+        <div className="w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics maskImage-big-player-lyrics">
             <Lrc
                 lrc={formattedLyrics!}
                 recoverAutoScrollInterval={1000}
@@ -187,7 +187,7 @@ function UnsyncedLyrics({ lyrics }: LyricProps) {
     return (
         <ScrollArea
             type="always"
-            className="w-full h-full text-white overflow-y-auto text-center font-semibold text-xl 2xl:text-2xl px-2 scroll-smooth"
+            className="w-full h-full text-white overflow-y-auto text-center font-semibold font-lyrics text-xl 2xl:text-2xl px-2 scroll-smooth"
             thumbClassName="secondary-thumb-bar"
             ref={lyricsBoxRef}
         >
