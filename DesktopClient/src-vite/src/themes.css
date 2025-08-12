@@ -3,10 +3,17 @@
 @layer base {
   :root {
     --radius: 0.5rem;
+    --origin-color: white;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --origin-color: black;
+    }
   }
 
   .system {
-    --background: color-mix(in hsl, var(--system-background2), var(--system-outline) 70%);
+    --background: color-mix(in hsl, var(--system-background2), var(--origin-color) 70%);
     --background-foreground: var(--system-background2);
     --foreground: var(--system-foreground);
     --card: var(--system-background);
@@ -17,7 +24,7 @@
     --primary-foreground: var(--system-accent-foreground);
     --secondary: var(--system-background2);
     --secondary-foreground: var(--system-foreground);
-    --muted: var(--system-background);
+    --muted: var(--system-background2);
     --muted-foreground: color-mix(in hsl, var(--system-background), var(--system-foreground) 70%);
     --accent: color-mix(in hsl, var(--system-background), var(--system-foreground) 10%);
     --accent-foreground: var(--system-foreground);
@@ -25,6 +32,7 @@
     --destructive-foreground: hsl(210 20% 98%);
     --border: var(--system-outline);
     --input: var(--system-outline);
+    --body: var(--system-body);
     --ring: var(--system-accent);
   }
 
@@ -48,6 +56,7 @@
     --destructive-foreground: hsl(210 20% 98%);
     --border: hsl(220 13% 91%);
     --input: hsl(220 13% 91%);
+    --body: var(--background-foreground);
     --ring: hsl(161 94% 30%);
   }
 
@@ -71,6 +80,7 @@
     --destructive-foreground: hsl(210 20% 95%);
     --border: hsl(215 27.9% 19.9%);
     --input: hsl(215 27.9% 19.9%);
+    --body: var(--background-foreground);
     --ring: hsl(160 84% 39%);
   }
 
@@ -94,6 +104,7 @@
     --destructive-foreground: hsl(0 0% 98%);
     --border: hsl(240 3.7% 15.9%);
     --input: hsl(240 3.7% 15.9%);
+    --body: var(--background-foreground);
     --ring: hsl(240 4.9% 83.9%);
   }
 
@@ -117,6 +128,7 @@
     --accent-foreground: hsl(220 13% 93%);
     --destructive: hsl(3 89% 50%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(220 13% 86%);
   }
 
@@ -140,6 +152,7 @@
     --accent-foreground: hsl(0 0% 23%);
     --destructive: hsl(8 94% 20%);
     --destructive-foreground: hsl(8 94% 80%);
+    --body: var(--background-foreground);
     --ring: hsl(243 14% 29%);
   }
 
@@ -163,6 +176,7 @@
     --accent-foreground: hsl(233 18% 94%);
     --destructive: hsl(10 90% 57%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(44 100% 71%);
   }
 
@@ -186,6 +200,7 @@
     --accent-foreground: hsl(249 33% 21%);
     --destructive: hsl(3 93% 20%);
     --destructive-foreground: hsl(3 93% 80%);
+    --body: var(--background-foreground);
     --ring: hsl(247 78% 65%);
   }
 
@@ -209,6 +224,7 @@
     --accent-foreground: hsl(200 19% 93%);
     --destructive: hsl(8 94% 48%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(180 100% 97%);
   }
 
@@ -232,6 +248,7 @@
     --accent-foreground: hsl(285 5% 92%);
     --destructive: hsl(10 97% 48%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(45 100% 70%);
   }
 
@@ -255,6 +272,7 @@
     --accent-foreground: hsl(216 28% 82%);
     --destructive: hsl(1 86% 57%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(210 17% 82%);
   }
 
@@ -278,6 +296,7 @@
     --accent-foreground: hsl(0 0% 100%);
     --destructive: hsl(3 82% 47%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(50 100% 49%);
   }
 
@@ -301,6 +320,7 @@
     --accent-foreground: hsl(195 46% 89%);
     --destructive: hsl(2 91% 53%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(175 59% 55%);
   }
 
@@ -324,6 +344,7 @@
     --accent-foreground: hsl(240 21% 90%);
     --destructive: hsl(8 96% 56%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(267 84% 81%);
   }
 
@@ -347,6 +368,7 @@
     --accent-foreground: hsl(90 40% 98.04%);
     --destructive: hsl(344.15 100% 46.54%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(331 100% 68%);
   }
 
@@ -370,6 +392,7 @@
     --accent-foreground: hsl(18 14% 20%);
     --destructive: hsl(20 87% 25%);
     --destructive-foreground: hsl(20 87% 85%);
+    --body: var(--background-foreground);
     --ring: hsl(18 83% 58%);
   }
 
@@ -393,6 +416,7 @@
     --accent-foreground: hsl(60 30% 96%);
     --destructive: hsl(0 100% 67%);
     --destructive-foreground: hsl(60 30% 96%);
+    --body: var(--background-foreground);
     --ring: hsl(265 89% 78%);
   }
 
@@ -416,6 +440,7 @@
     --accent-foreground: hsl(334 34% 98%);
     --destructive: hsl(358.16 68.78% 53.53%);
     --destructive-foreground: hsl(334 34% 98%);
+    --body: var(--background-foreground);
     --ring: hsl(226.73 58.43% 65.1%);
   }
 
@@ -439,6 +464,7 @@
     --accent-foreground: hsl(240 100% 24%);
     --destructive: hsl(5 89% 27%);
     --destructive-foreground: hsl(5 89% 87%);
+    --body: var(--background-foreground);
     --ring: hsl(330 100% 60%);
   }
 
@@ -462,6 +488,7 @@
     --accent-foreground: hsl(0 0% 100%);
     --destructive: hsl(2 95% 56%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(171 82% 43%);
   }
 
@@ -485,6 +512,7 @@
     --accent-foreground: hsl(20 3% 94%);
     --destructive: hsl(6 85% 47%);
     --destructive-foreground: hsl(0 0% 100%);
+    --body: var(--background-foreground);
     --ring: hsl(43 59% 81%);
   }
 }

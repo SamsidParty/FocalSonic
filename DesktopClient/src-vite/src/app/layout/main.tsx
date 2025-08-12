@@ -23,7 +23,7 @@ export function MainRoutes() {
         >
             <ScrollArea
                 id="main-scroll-area"
-                className="w-full bg-background-foreground"
+                className="w-full bg-body"
             >
                 <Outlet />
             </ScrollArea>

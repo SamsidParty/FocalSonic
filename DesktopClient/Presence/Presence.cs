@@ -17,10 +17,9 @@ namespace Aonsoku.Presence
         public static void Setup()
         {
             Instance = new Presence();
-            if (PlatformManager.HasPlatformHint("win32"))
-            {
-                Instance.RegisterProvider(new WindowsPresenceProvider());
-            }
+            #if WINDOWS
+            Instance.RegisterProvider(new WindowsPresenceProvider());
+            #endif
         }
 
         public Presence() { Instance = this; }

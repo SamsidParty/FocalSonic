@@ -23,7 +23,10 @@ public class Program
         // Background setup
         PlayerThread.Start();
         Presence.Setup();
+        
+        #if WINDOWS
         TrayIcon.Setup();
+        #endif
 
         CreateMainWindow();
 
