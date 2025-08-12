@@ -82,6 +82,7 @@ void main(){
 
 type Props = {
   style?: React.CSSProperties;
+  className?: string;
   noiseIntensity?: number;
   scanlineIntensity?: number;
   speed?: number;
@@ -92,6 +93,7 @@ type Props = {
 
 export default function DarkVeil({
   style = {},
+  className = "",
   noiseIntensity = 0,
   scanlineIntensity = 0,
   speed = 0.5,
@@ -168,12 +170,13 @@ export default function DarkVeil({
     speed,
     scanlineFrequency,
     warpAmount,
+    className,
     resolutionScale,
   ]);
   return (
     <canvas
       ref={ref}
-      className="absolute inset-0 bg-transparent"
+      className={`absolute inset-0 bg-transparent ${className}`}
       style={style}
     />
   );

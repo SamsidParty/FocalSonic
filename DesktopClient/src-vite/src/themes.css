@@ -18,7 +18,7 @@
     --foreground: var(--system-foreground);
     --card: var(--system-background);
     --card-foreground: var(--system-foreground);
-    --popover: var(--system-background);
+    --popover: var(--system-background2);
     --popover-foreground: var(--system-foreground);
     --primary: var(--system-accent);
     --primary-foreground: var(--system-accent-foreground);

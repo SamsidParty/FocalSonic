@@ -1,10 +1,9 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
 import { getCoverArtUrl } from "@/api/httpClient";
-import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";
 import { cn } from "@/lib/utils";
@@ -15,6 +14,8 @@ import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import hexToCssFilter from "@/utils/hexToCssFilter.js";
 import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
 import { AlbumArtistInfo, AlbumMultipleArtistsInfo } from "./artists";
+
+const DarkVeilMemo = memo(DarkVeil, (o, n) => o.style?.opacity === n.style?.opacity);
 
 interface ImageHeaderProps {
     type: string
@@ -43,10 +44,9 @@ export default function ImageHeader({
     badges,
     isPlaylist = false,
 }: ImageHeaderProps) {
-    const [loaded, setLoaded] = useState(false);
     const [open, setOpen] = useState(false);
     const [bgColor, setBgColor] = useState("");
-    const [bgEffectStyle, setBgEffectStyle] = useState("");
+    const [bgEffectStyle, setBgEffectStyle] = useState(null);
 
     function getImage() {
         return document.getElementById("cover-art-image") as HTMLImageElement;
@@ -66,10 +66,9 @@ export default function ImageHeader({
             );
         }
 
-        let style = hexToCssFilter(color);
+        let style = "opacity(1) " + hexToCssFilter(color);
         setBgEffectStyle(style);
         setBgColor(color);
-        setLoaded(true);
     }
 
     function handleError() {
@@ -77,8 +76,6 @@ export default function ImageHeader({
         if (!img) return;
 
         img.crossOrigin = null;
-
-        setLoaded(true);
     }
 
     const hasMultipleArtists = artists ? artists.length > 1 : false;
@@ -88,18 +85,14 @@ export default function ImageHeader({
             className="flex relative w-full h-[calc(3rem+200px)] 2xl:h-[calc(3rem+250px)]"
             key={`header-${coverArtId}`}
         >
-            {!loaded && (
-                <div className="absolute inset-0 z-20">
-                    <AlbumHeaderFallback />
-                </div>
-            )} 
             
             <div
                 className={cn(
                     "w-full px-8 py-6 flex gap-4 absolute inset-0",
                 )}
             >
-                <DarkVeil style={{ filter: bgEffectStyle }} speed={2} warpAmount={5}></DarkVeil>
+                <DarkVeilMemo style={{ filter: bgEffectStyle!, opacity: (!bgEffectStyle ? "0" : "1") }} className="transition-opacity duration-1000" speed={2} warpAmount={5}></DarkVeilMemo>
+
                 <div
                     className={cn(
                         "w-[200px] h-[200px] min-w-[200px] min-h-[200px]",
