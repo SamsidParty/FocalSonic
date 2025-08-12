@@ -192,7 +192,7 @@ const MenubarSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <MenubarPrimitive.Separator
         ref={ref}
-        className={cn("-mx-1 my-1 h-px bg-muted", className)}
+        className={cn("-mx-1 my-1 h-px bg-border", className)}
         {...props}
     />
 ));
@@ -215,20 +215,8 @@ const MenubarShortcut = ({
 MenubarShortcut.displayname = "MenubarShortcut";
 
 export {
-    Menubar,
-    MenubarMenu,
-    MenubarTrigger,
-    MenubarContent,
-    MenubarItem,
-    MenubarSeparator,
-    MenubarLabel,
-    MenubarCheckboxItem,
-    MenubarRadioGroup,
-    MenubarRadioItem,
-    MenubarPortal,
-    MenubarSubContent,
-    MenubarSubTrigger,
-    MenubarGroup,
-    MenubarSub,
-    MenubarShortcut,
+    Menubar, MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarItem, MenubarLabel, MenubarMenu, MenubarPortal, MenubarRadioGroup,
+    MenubarRadioItem, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent,
+    MenubarSubTrigger, MenubarTrigger
 };
+

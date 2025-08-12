@@ -1,8 +1,8 @@
 import { Info, Keyboard, LogOut, User } from "lucide-react";
 import { useState } from "react";
-import { Fragment } from "react/jsx-runtime";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
+import { Fragment } from "react/jsx-runtime";
 
 import { AboutDialog } from "@/app/components/about/dialog";
 import { ShortcutsDialog } from "@/app/components/shortcuts/dialog";

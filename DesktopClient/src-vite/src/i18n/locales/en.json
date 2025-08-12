@@ -22,7 +22,8 @@
     "language": "Language",
     "server": "Server",
     "about": "About",
-    "serverLogout": "Logout"
+    "serverLogout": "Logout",
+    "devTools": "Developer Tools"
   },
   "generic": {
     "seeMore": "See more",
