@@ -1,4 +1,4 @@
-import { getCoverArtUrl } from "@/api/httpClient";
+import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
 import { subsonic } from "@/service/subsonic";
 import { IPlayerContext, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
@@ -841,20 +841,34 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 merge: (persistedState, currentState) => {
                     return merge(currentState, persistedState);
                 },
+                onRehydrateStorage(state) {
+                    // Recalculate the current song incase the index changed
+                    return () => state.actions.setCurrentSong();
+                },
                 partialize: (state) => {
                     const appStore = omit(state, [
                         "actions",
                         "playerState.audioPlayerRef",
                     ]);
 
+                    // We need to do some manipulation before sending to C#
+                    // The native code wants URLs instead of IDs
+                    const transformSongBeforeSending = (song: ISong) => {
+                        return Object.assign({}, song, {
+                            coverArt: getCoverArtUrl(song.coverArt),
+                            path: getSongStreamUrl(song.id),
+                        });
+                    }
+
                     // Update the state in the C# code
                     if (window.igniteView) {
                         window.igniteView.commandBridge.setCurrentMediaInfo(
-                            JSON.stringify(
-                                Object.assign({}, state.songlist.currentSong, {
-                                    coverArt: getCoverArtUrl(state.songlist.currentSong.coverArt),
-                                })
-                            )
+                            JSON.stringify({
+                                currentSong: transformSongBeforeSending(state.songlist.currentSong),
+                                currentSongIndex: state.songlist.currentSongIndex,
+                                isPlaying: state.playerState.isPlaying,
+                                queue: state.songlist.currentList.map(transformSongBeforeSending)
+                            })
                         );
                     }
 

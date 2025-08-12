@@ -65,13 +65,13 @@ namespace Aonsoku.AudioPlayer
         }
 
 
-        public override async Task SetSource(string src, WebWindow ctx)
+        public override async Task SetSource(string src, WebWindow? ctx)
         {
             if (Source == src && Player?.State != PlaybackState.Stopped) { return; } // Already set
 
+            await base.SetSource(src, ctx);
             HasLoaded = false;
             Source = src;
-            AssociatedWindowID = ctx.ID;
 
             if (!string.IsNullOrEmpty(src))
             {
@@ -92,7 +92,7 @@ namespace Aonsoku.AudioPlayer
                 Player.PlaybackEnded += async (_, _) =>
                 {
                     await Task.Delay(1000); // Prevents the audio abrubtly being cut off at the end
-                    AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "ended");
+                    await CallEndEvent();
                 };
 
                 while (Player?.Duration == 0)
@@ -101,8 +101,7 @@ namespace Aonsoku.AudioPlayer
                 }
                 if (Player?.Duration > 0)
                 {
-                    AssociatedWindow?.CallFunction("handleAudioEvent_" + this.ID, "loaded", Player!.Duration);
-                    HasLoaded = true;
+                    CallLoadEvent(Player!.Duration);
                 }
             }
             else
@@ -134,6 +133,7 @@ namespace Aonsoku.AudioPlayer
 
         public override async Task SetLoopMode(bool loop)
         {
+            await base.SetLoopMode(loop);
             if (Player != null)
             {
                 Player.IsLooping = loop;
@@ -142,6 +142,7 @@ namespace Aonsoku.AudioPlayer
 
         public override async Task SetVolume(double volume)
         {
+            await base.SetVolume(volume);
             if (Player != null)
             {
                 Player.Volume = (float)volume;

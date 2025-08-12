@@ -1,7 +1,10 @@
-﻿using IgniteView.Core;
+﻿using Aonsoku.Presence;
+using IgniteView.Core;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +18,8 @@ namespace Aonsoku.AudioPlayer
         public string ID;
         public string Source;
         public bool HasLoaded;
+        public bool Looping;
+        public float Volume = 1.0f;
         internal int AssociatedWindowID;
         internal WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
 
@@ -65,14 +70,76 @@ namespace Aonsoku.AudioPlayer
         }
 
         public virtual async Task SendTimeUpdate(bool isAutomatic = true) { }
-        public virtual async Task SetSource(string src, WebWindow ctx) { }
+
+        public virtual async Task SetSource(string src, WebWindow ctx) 
+        {
+            if (ctx != null)
+            {
+                AssociatedWindowID = ctx.ID;
+            }
+        }
+
         public virtual async Task PlayAudio() { }
         public virtual async Task PauseAudio() { }
         public virtual async Task SeekAudio(double time) { }
-        public virtual async Task SetLoopMode(bool loop) { }
-        public virtual async Task SetVolume(double volume) { }
+        public virtual async Task SetLoopMode(bool loop) { Looping = loop; }
+        public virtual async Task SetVolume(double volume) { Volume = (float)volume; }
 
+        public async Task CallEndEvent()
+        {
+            if (AssociatedWindow != null && Program.App.OpenWindows.Contains(AssociatedWindow))
+            {
+                AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "ended");
+            }
+            else
+            {
+                // Skip to the next song in the queue
+                var nextSongIndex = MediaPlaybackInfo.Instance.CurrentSongIndex + 1;
+                var nextQueueItem = MediaPlaybackInfo.Instance.Queue.ElementAtOrDefault(nextSongIndex);
+                MediaPlaybackInfo.Instance.CurrentSongIndex = nextSongIndex;
+                MediaPlaybackInfo.Instance.CurrentSong = nextQueueItem;
 
+                // Modify the localStorage to reflect these changes
+                dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store"));
+                playerStore.state.songlist.currentSongIndex = nextSongIndex;
+                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore));
+
+                if (nextQueueItem == null)
+                {
+                    return; // Playback finished, do nothing
+                }
+
+                var playbackURL = nextQueueItem.Path; // The client explicitly tells us what URL to stream from by overriding the path
+
+                await SetSource(playbackURL, null);
+                await UpdatePlaybackParameters();
+                await PlayAudio();
+            }
+        }
+        
+        public async Task CallLoadEvent(double duration)
+        {
+            HasLoaded = true;
+
+            if (AssociatedWindow != null && Program.App.OpenWindows.Contains(AssociatedWindow))
+            {
+                AssociatedWindow?.CallFunction("handleAudioEvent_" + this.ID, "loaded", duration);
+            }
+            else
+            {
+
+                // Modify the localStorage to reflect these changes
+                dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store"));
+                playerStore.state.playerState.currentDuration = duration;
+                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore));
+            }
+        }
+
+        public async Task UpdatePlaybackParameters()
+        {
+            await SetLoopMode(Looping);
+            await SetVolume(Volume);
+        }
 
         [Command("setAudioPlayerSource")] public static async Task SetSourceOnPlayer(string id, string src, WebWindow ctx) => RunOnPlayer(id, (p) => p.SetSource(src, ctx));
         [Command("playAudio")] public static async Task PlayAudioOnPlayer(string id) => RunOnPlayer(id, (p) => p.PlayAudio());

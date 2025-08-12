@@ -127,7 +127,7 @@ export function getCoverArtUrl(
 
 export function getSongStreamUrl(
     id: string,
-    contentType: string,
+    contentType?: string,
 ) {
 
     // TODO: Fix flac support in native audio

@@ -98,8 +98,7 @@ namespace Aonsoku.AudioPlayer
             if (!owningPlayer.HasLoaded)
             {
                 HideWindow((owningPlayer as AppleMusicAudioPlayer).ProxyWindow.NativeHandle);
-                owningPlayer.HasLoaded = true;
-                owningPlayer.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "loaded", currentPlaybackDuration);
+                owningPlayer.CallLoadEvent(currentPlaybackDuration);
             }
         }
 
@@ -107,7 +106,7 @@ namespace Aonsoku.AudioPlayer
         public static void RecieveEndedEvent(WebWindow ctx)
         {
             var owningPlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
-            owningPlayer.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "ended");
+            owningPlayer?.CallEndEvent();
         }
 
         public override async Task SendTimeUpdate(bool isAutomatic = true)
