@@ -133,8 +133,9 @@ export default function DarkVeil({
 
     const mesh = new Mesh(gl, { geometry, program });
 
-    const resize = () => {
-      const w = parent.clientWidth,
+    const resize = (e) => {
+      if (e?.isFromSidebar) { return; } // Don't resize if the event is from the sidebar
+      const w = (parent.clientWidth + 300), // 300px to account for the sidebar
         h = parent.clientHeight * 2;
       renderer.setSize(w * resolutionScale, h * resolutionScale);
       program.uniforms.uResolution.value.set(w, h);

@@ -34,7 +34,7 @@ namespace Aonsoku.Presence
             smtc.DisplayUpdater.MusicProperties.AlbumTitle = song?.Album ?? "Unknown Album";
             smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song?.AlbumArtists?.Select((a) => a.Name) ?? new string[] { song?.DisplayAlbumArtist ?? "" });
 
-            if (string.IsNullOrEmpty(song.CoverArt))
+            if (string.IsNullOrEmpty(song?.CoverArt))
             {
                 using (var stream = Program.App.CurrentServerManager.Resolver.OpenFileStream("/default_album_art.png"))
                 {

@@ -29,6 +29,7 @@ module.exports = {
                 toast: "var(--toastify-toast-container-height)",
             },
             colors: {
+                body: "var(--body)",
                 border: "var(--border)",
                 input: "var(--input)",
                 ring: "var(--ring)",

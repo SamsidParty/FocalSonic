@@ -82,9 +82,9 @@ export default function Album() {
         "title",
         "duration",
         (isAppleMusic ? "" : "playCount"),
-        "played",
-        "bitRate",
-        "contentType",
+        (isAppleMusic ? "" : "played"),
+        (isAppleMusic ? "" : "bitRate"),
+        (isAppleMusic ? "" : "contentType"),
         (isAppleMusic ? "" : "select"),
     ].filter((i) => i) as ColumnFilter[];
 
