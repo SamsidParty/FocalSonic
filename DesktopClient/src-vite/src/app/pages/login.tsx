@@ -18,7 +18,7 @@ export default function Login() {
                     </div>
                 </header>
             )}
-            <main className="flex flex-col w-full h-full justify-center items-center">
+            <main className="flex flex-col w-full h-full justify-center items-center bg-body">
                 <LoginForm />
             </main>
         </div>

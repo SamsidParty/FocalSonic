@@ -9,7 +9,7 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
         persist(
             devtools(
                 immer((set) => ({
-                    theme: Theme.System,
+                    theme: (window.igniteView) ? Theme.System : Theme.GithubDark,
                     uiFont: "Sora",
                     lyricsFont: "Sora",
                     setTheme: (theme: Theme) => {
