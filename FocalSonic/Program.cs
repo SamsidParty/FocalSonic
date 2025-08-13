@@ -1,0 +1,67 @@
+﻿using FocalSonic;
+using FocalSonic.AudioPlayer;
+using FocalSonic.Presence;
+using IgniteView.Core;
+using IgniteView.Desktop;
+using Newtonsoft.Json;
+
+public class Program
+{
+    public static ViteAppManager App;
+    public static HttpClient Http = new HttpClient();
+    public static WebWindow? MainWindow => App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault(App.MainWindow);
+    
+
+    [STAThread]
+    static void Main(string[] args)
+    {
+        // Needed for background playback with Apple Music
+        Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--autoplay-policy=no-user-gesture-required --disable-features=HardwareMediaKeyHandling");
+
+        DesktopPlatformManager.Activate();
+        App = new ViteAppManager();
+
+        // Background setup
+        PlayerThread.Start();
+        Presence.Setup();
+        
+        #if WINDOWS
+        TrayIcon.Setup();
+        #endif
+
+        CreateMainWindow();
+
+        while (true)
+        {
+            App.Run();
+        }
+    }
+
+    // Run before entering background mode to make sure the UI is not still running
+    [Command("cleanUpUI")]
+    public static void CleanUpUI()
+    {
+        Performance.IsRunningInForeground = false;
+        MainWindow?.Close();
+
+        foreach (var window in App.OpenWindows)
+        {
+            window.ExecuteJavaScript("window.gc && window.gc()");
+        }
+    }
+
+    public static void CreateMainWindow()
+    {
+        Performance.IsRunningInForeground = true;
+        App.MainWindow =
+            WebWindow.Create()
+            .WithTitle("FocalSonic")
+            .WithBounds(new WindowBounds(1280, 820))
+            .WithSharedContext("MainWindow", "")
+            .WithoutTitleBar()
+            .With((w) => { if (w is Win32WebWindow) (w as Win32WebWindow)!.BackgroundMode = Win32WebWindow.WindowBackgroundMode.Mica; })
+            .Show();
+    }
+
+
+}
