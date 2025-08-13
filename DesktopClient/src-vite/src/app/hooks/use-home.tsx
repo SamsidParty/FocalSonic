@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { appleMusic } from "@/service/appleMusic";
 import { subsonic } from "@/service/subsonic";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
 
 export const useGetRandomSongs = () => {
     return useQuery({
@@ -9,6 +10,13 @@ export const useGetRandomSongs = () => {
         queryFn: () => subsonic.songs.getRandomSongs({ size: 10 }),
     });
 };
+
+export const useGetAppleMusicHome = () => {
+    return useQuery({
+        queryKey: [queryKeys.appleMusic.recommendations],
+        queryFn: () => appleMusic.recommendations.getHome(),
+    });
+}
 
 export const useGetRecentlyAdded = () => {
     return useQuery({

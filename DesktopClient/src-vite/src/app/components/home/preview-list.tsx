@@ -1,6 +1,3 @@
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import {
@@ -13,10 +10,15 @@ import { CarouselButton } from "@/app/components/ui/carousel-button";
 import { ROUTES } from "@/routes/routesList";
 import { subsonic } from "@/service/subsonic";
 import { usePlayerActions } from "@/store/player.store";
+import { IAppleMusicRecommendationContent } from "@/types/appleMusic/recommendations";
 import { Albums } from "@/types/responses/album";
+import { checkServerType } from "@/utils/servers";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 interface PreviewListProps {
-    list: Albums[]
+    list: Albums[] | IAppleMusicRecommendationContent[]
     title: string
     showMore?: boolean
     moreTitle?: string
@@ -35,6 +37,7 @@ export default function PreviewList({
     const [canScrollNext, setCanScrollNext] = useState<boolean>();
     const { setSongList } = usePlayerActions();
     const { t } = useTranslation();
+    const { isAppleMusic } = checkServerType();
 
     moreTitle = moreTitle || t("generic.seeMore");
 
@@ -63,6 +66,11 @@ export default function PreviewList({
             setCanScrollNext(api.canScrollNext());
         });
     }, [api]);
+
+    const getResourceType = (entry: IAppleMusicRecommendationContent | Albums) => {
+        let type = (entry as IAppleMusicRecommendationContent).type;
+        return type?.substring(0, type.length - 1).toUpperCase() || "ALBUM";
+    }
 
     return (
         <div className="w-full flex flex-col mt-4">
@@ -98,6 +106,7 @@ export default function PreviewList({
                 </div>
             </div>
 
+
             <div className="transform-gpu">
                 <Carousel
                     opts={{
@@ -108,31 +117,31 @@ export default function PreviewList({
                     data-testid="preview-list-carousel"
                 >
                     <CarouselContent>
-                        {list.map((album, index) => (
+                        {list.map((entry, index) => (
                             <CarouselItem
-                                key={album.id}
+                                key={entry.id}
                                 className="basis-1/6 2xl:basis-1/8"
                                 data-testid={`preview-list-carousel-item-${index}`}
                             >
                                 <PreviewCard.Root>
-                                    <PreviewCard.ImageWrapper link={ROUTES.ALBUM.PAGE(album.id)}>
+                                    <PreviewCard.ImageWrapper link={ROUTES[getResourceType(entry)]?.PAGE(entry.id)}>
                                         <PreviewCard.Image
-                                            src={getCoverArtUrl(album.coverArt, "album")}
-                                            alt={album.name}
+                                            src={getCoverArtUrl(entry.coverArt || (entry as IAppleMusicRecommendationContent).attributes.artwork.url, "album")}
+                                            alt={title}
                                         />
                                         <PreviewCard.PlayButton
-                                            onClick={() => handlePlayAlbum(album)}
+                                            onClick={() => handlePlayAlbum(entry)}
                                         />
                                     </PreviewCard.ImageWrapper>
                                     <PreviewCard.InfoWrapper>
-                                        <PreviewCard.Title link={ROUTES.ALBUM.PAGE(album.id)}>
-                                            {album.name}
+                                        <PreviewCard.Title link={ROUTES.ALBUM.PAGE(entry.id)}>
+                                            {entry.name || (entry as IAppleMusicRecommendationContent).attributes.name}
                                         </PreviewCard.Title>
                                         <PreviewCard.Subtitle
-                                            enableLink={album.artistId !== undefined}
-                                            link={ROUTES.ARTIST.PAGE(album.artistId ?? "")}
+                                            enableLink={entry.artistId !== undefined}
+                                            link={ROUTES.ARTIST.PAGE(entry.artistId ?? "")}
                                         >
-                                            {album.artist}
+                                            {entry.artist || (entry as IAppleMusicRecommendationContent).attributes.artistName || (entry as IAppleMusicRecommendationContent).attributes.curatorName}
                                         </PreviewCard.Subtitle>
                                     </PreviewCard.InfoWrapper>
                                 </PreviewCard.Root>

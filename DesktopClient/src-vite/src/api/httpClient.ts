@@ -79,7 +79,7 @@ async function browserFetch<T>(
             const data = await response.json();
             return {
                 count: parseInt(response.headers.get("x-total-count") || "0", 10),
-                data: data["subsonic-response"] as T,
+                data: (data["subsonic-response"] as T) || (data["data"] as T),
             };
         }
     } catch (error) {

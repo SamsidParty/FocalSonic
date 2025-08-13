@@ -25,34 +25,6 @@ namespace Aonsoku.AudioPlayer
         /// </summary>
         WebWindow ProxyWindow;
 
-        #region Windowing
-
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        [DllImport("user32.dll")]
-        public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll")]
-        public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        public const int SW_HIDE = 0;
-        public const int GWL_EXSTYLE = -20;
-        public const int WS_EX_TOOLWINDOW = 0x00000080;
-        public const int WS_EX_APPWINDOW = 0x00040000;
-
-        public static void HideWindow(IntPtr hwnd)
-        {
-            int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-            exStyle &= ~WS_EX_APPWINDOW; 
-            exStyle |= WS_EX_TOOLWINDOW; 
-            SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
-
-            ShowWindow(hwnd, SW_HIDE);
-        }
-
-        #endregion
-
         const string InjectionPrefix = "if (!window.injectedQueue) { window.injectedQueue = []; }\n";
         const string InjectionSuffix = "\nif (window.executeInjectedQueue) { window.executeInjectedQueue(); }";
 
@@ -66,8 +38,7 @@ namespace Aonsoku.AudioPlayer
                 .WithURL($"https://beta.music.apple.com/{AppleMusicKeys.Region}/home")
                 .WithBounds(new LockedWindowBounds(200, 200))
                 .WithoutTitleBar()
-                .WithSharedContext("AppleMusicWindow", "")
-                .Show();
+                .WithSharedContext("AppleMusicWindow", "");
 
 
             // Since we're serving from apple.com instead of localhost, interop needs to be setup manually
@@ -103,7 +74,6 @@ namespace Aonsoku.AudioPlayer
             var owningPlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
             if (!owningPlayer.HasLoaded)
             {
-                HideWindow((owningPlayer as AppleMusicAudioPlayer).ProxyWindow.NativeHandle);
                 owningPlayer.CallLoadEvent(currentPlaybackDuration);
             }
         }

@@ -17,7 +17,8 @@ public class AppleMusicSubsonicProxy
         services.AddSingleton<IController, AppleMusicRequestImplementation>();
         services.AddControllers()
             .AddNewtonsoftJson()
-            .AddApplicationPart(typeof(SubsonicMiddleware).Assembly);
+            .AddApplicationPart(typeof(SubsonicMiddleware).Assembly)
+            .AddApplicationPart(typeof(AppleMusicSubsonicProxy).Assembly);
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
