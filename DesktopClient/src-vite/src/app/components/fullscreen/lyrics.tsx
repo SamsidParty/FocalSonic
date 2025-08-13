@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { Lrc, LrcLine } from "react-lrc";
 
 interface LyricProps {
-    lyrics: ILyric,
+    lyrics: string,
     leftAlign?: boolean
 }
 
@@ -40,7 +40,7 @@ export function LyricsTab({ leftAlign }: { leftAlign?: boolean }) {
 
     if (isLoading) {
         return <CenteredMessage>{loadingLyrics}</CenteredMessage>;
-    } else if (lyrics && lyrics.value) {
+    } else if (lyrics) {
         return areLyricsSynced(lyrics) ? (
             <SyncedLyrics leftAlign={leftAlign} lyrics={lyrics} />
         ) : (
@@ -57,9 +57,9 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
 
     const formattedLyrics = useMemo(() => {
         if (areLyricsTTML(lyrics)) {
-            return convertTTMLToLRC(lyrics.value!);
+            return convertTTMLToLRC(lyrics!);
         }
-        return lyrics.value || "";
+        return lyrics || "";
     }, [lyrics]);
 
     requestAnimationFrame(() => {
@@ -169,7 +169,7 @@ function UnsyncedLyrics({ lyrics }: LyricProps) {
     const { currentSong } = usePlayerSonglist();
     const lyricsBoxRef = useRef<HTMLDivElement>(null);
 
-    const lines = lyrics.value!.split("\n");
+    const lines = lyrics!.split("\n");
 
     useEffect(() => {
         if (lyricsBoxRef.current) {
@@ -221,7 +221,7 @@ function CenteredMessage({ children }: CenteredMessageProps) {
 
 function areLyricsSynced(lyrics: ILyric) {
     // Most LRC files start with the string "[00:" or "[01:" indicating synced lyrics
-    const lyric = lyrics.value?.trim() ?? "";
+    const lyric = lyrics?.trim() ?? "";
     return (
         lyric.startsWith("[00:") ||
         lyric.startsWith("[01:") ||
@@ -231,7 +231,7 @@ function areLyricsSynced(lyrics: ILyric) {
 }
 
 function areLyricsTTML(lyrics: ILyric) {
-    const lyric = lyrics.value?.trim() ?? "";
+    const lyric = lyrics?.trim() ?? "";
     return lyric.startsWith("<tt xmlns=");
 }
 

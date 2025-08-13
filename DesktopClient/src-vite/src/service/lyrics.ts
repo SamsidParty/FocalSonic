@@ -1,4 +1,5 @@
 import { httpClient } from "@/api/httpClient";
+import { useCacheStore } from "@/store/cache.store";
 import { usePlayerStore } from "@/store/player.store";
 import { ILyricsList, LyricsResponse, OpenLyricsResponse } from "@/types/responses/song";
 import { lrclibClient } from "@/utils/appName";
@@ -23,6 +24,11 @@ interface LRCLibResponse {
 async function getLyrics(getLyricsData: GetLyricsData) {
 
     const { isAppleMusic } = checkServerType();
+    
+    let lyrics = useCacheStore.getState().tryGetLyrics(getLyricsData.id!);
+    if (lyrics) {
+        return lyrics;
+    }
 
     const response = await httpClient<LyricsResponse>("/getLyrics", {
         method: "GET",
@@ -32,10 +38,9 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         },
     });
 
-    const lyricNotFound =
-    !response || !response?.data.lyrics || !response.data.lyrics.value;
+    (response && response?.data.lyrics || response!.data.lyrics.value) && (lyrics = response!.data.lyrics.value);
 
-    if (!isAppleMusic && !lyricNotFound && response?.data.openSubsonic) {
+    if (!isAppleMusic && lyrics && response?.data.openSubsonic) {
         // Try to get synced lyrics using getLyricsBySongId
         const openResponse = await httpClient<OpenLyricsResponse>("/getLyricsBySongId", {
             method: "GET",
@@ -45,16 +50,17 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         });
 
         if (openResponse?.data?.lyricsList?.structuredLyrics?.length! > 0) {
-            return convertToLRC(openResponse?.data?.lyricsList);
+            lyrics = convertToLRC(openResponse?.data?.lyricsList)?.value;
         }
     
     }
 
-    if (lyricNotFound) {
-        return getLyricsFromLRCLib(getLyricsData);
+    if (!lyrics) {
+        lyrics = (await getLyricsFromLRCLib(getLyricsData)).value;
     }
 
-    return response?.data.lyrics;
+    useCacheStore.getState().saveLyrics(getLyricsData.id!, lyrics);
+    return lyrics;
 }
 
 async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {

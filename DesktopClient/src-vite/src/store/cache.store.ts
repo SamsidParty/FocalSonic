@@ -35,6 +35,15 @@ export const useCacheStore = createWithEqualityFn<ICacheContext>()(
                     tryGetImageDominantColor: (url) => {
                         return get().imageDominantColors[hash(url)];
                     },
+                    lyrics: {},
+                    saveLyrics: (id, lyrics) => {
+                        set((state) => {
+                            state.lyrics[id] = lyrics;
+                        });
+                    },
+                    tryGetLyrics: (id) => {
+                        return get().lyrics[id];
+                    },
                 })),
                 {
                     name: "cache_store",

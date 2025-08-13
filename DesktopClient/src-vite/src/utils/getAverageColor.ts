@@ -1,16 +1,18 @@
 import { useCacheStore } from "@/store/cache.store";
+import { Palette, rgbToHex } from "@vibrant/color";
 import { Vibrant } from "node-vibrant/browser";
+
 
 export async function getAverageColor(img: HTMLImageElement | null, mode: string = "Vibrant") {
     if (!img.src) { return "#b9fde9ff"; }
 
-    let cachedColor = useCacheStore.getState().tryGetImageDominantColor(img?.src);
+    let cachedColor: Palette = useCacheStore.getState().tryGetImageDominantColor(img?.src);
     if (!cachedColor) {
         cachedColor = await Vibrant.from(img!.src).getPalette();
         useCacheStore.getState().saveImageDominantColor(img!.src, cachedColor);
     }
 
-    return img.src ? (cachedColor[mode] || "").hex.toString() : "#b9fde9ff";
+    return img.src ? rgbToHex(cachedColor[mode]!.rgb[0], cachedColor[mode]!.rgb[1], cachedColor[mode]!.rgb[2]) : "#b9fde9ff";
 }
 
 export function hexToRgba(hex: string, alpha: number = 1) {
