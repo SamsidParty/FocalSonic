@@ -6,7 +6,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic
 {
     public class AppleMusicKeys
     {
-        // Contant address, hopefully no port conflicts will happen
+        // Constant address, hopefully no port conflicts will happen
         public static string? ServerAddress = "http://localhost:45896";
 
         public static string? AppleDeveloperToken;
