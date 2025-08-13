@@ -76,6 +76,8 @@ namespace Aonsoku.AudioPlayer
             );
         }
 
+        #region Player
+
         [Command("appleMusicRecieveTimeUpdate")]
         public static void RecieveTimeUpdate(WebWindow ctx, bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration)
         {
@@ -165,5 +167,26 @@ namespace Aonsoku.AudioPlayer
                 InjectionSuffix
             );
         }
+
+        #endregion
+
+        #region Sign In
+
+        [Command("signInToAppleMusic")]
+        public static async Task SignInToAppleMusic(WebWindow ctx)
+        {
+            var signInWindow = WebWindow.Create()
+                .WithTitle("Apple Music")
+                .WithURL("https://music.apple.com/us/login")
+                .WithBounds(new LockedWindowBounds(1200, 720))
+                .WithoutTitleBar()
+                .WithSharedContext("AppleMusicSignIn", "")
+                .Show();
+
+            signInWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
+            signInWindow.ExecuteJavaScript(Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/signin.js"));
+        }
+
+        #endregion
     }
 }

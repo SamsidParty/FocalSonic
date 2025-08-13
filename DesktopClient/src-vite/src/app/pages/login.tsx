@@ -14,7 +14,7 @@ export default function Login() {
                     className="w-full h-header border-b bg-background flex justify-center items-center relative"
                 >
                     <AppTitle />
-                    <div className="flex items-center absolute right-4">
+                    <div className="flex items-center absolute right-0">
                         {isWindows && <Windows />}
                     </div>
                 </header>
