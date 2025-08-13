@@ -109,11 +109,6 @@ namespace Aonsoku.AudioPlayer
             owningPlayer?.CallEndEvent();
         }
 
-        public override async Task SendTimeUpdate(bool isAutomatic = true)
-        {
-            Presence.Presence.Instance.UpdateMediaStatus(MediaPlaybackInfo.Instance);
-        }
-
         public override async Task SetSource(string src, WebWindow ctx)
         {
             if (Source == src) { return; } // Already set

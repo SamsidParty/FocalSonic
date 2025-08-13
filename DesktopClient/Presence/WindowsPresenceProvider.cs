@@ -17,6 +17,9 @@ namespace Aonsoku.Presence
     {
         public static MediaPlayer HostPlayer = new MediaPlayer();
 
+        private string? LastSongID;
+        private RandomAccessStreamReference LastAlbumArt; // Prevents refreshing album art every time which wastes resources
+
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
             var song = playbackInfo.CurrentSong;
@@ -34,16 +37,20 @@ namespace Aonsoku.Presence
             smtc.DisplayUpdater.MusicProperties.AlbumTitle = song?.Album ?? "Unknown Album";
             smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song?.AlbumArtists?.Select((a) => a.Name) ?? new string[] { song?.DisplayAlbumArtist ?? "" });
 
-            if (string.IsNullOrEmpty(song?.CoverArt))
+            if (song?.Id != LastSongID || LastAlbumArt == null)
             {
-                using (var stream = Program.App.CurrentServerManager.Resolver.OpenFileStream("/default_album_art.png"))
+                if (string.IsNullOrEmpty(song?.CoverArt))
                 {
-                    smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(stream.AsRandomAccessStream());
+                    using (var stream = Program.App.CurrentServerManager.Resolver.OpenFileStream("/default_album_art.png"))
+                    {
+                        smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(stream.AsRandomAccessStream());
+                    }
                 }
-            }
-            else
-            {
-                smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(song.CoverArt));
+                else
+                {
+                    smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(song.CoverArt));
+                }
+                LastAlbumArt = smtc.DisplayUpdater.Thumbnail;
             }
 
             smtc.UpdateTimelineProperties(new SystemMediaTransportControlsTimelineProperties()
@@ -54,6 +61,7 @@ namespace Aonsoku.Presence
             });
 
             smtc.DisplayUpdater.Update();
+            LastSongID = song?.Id ?? null;
         }
     }
 }

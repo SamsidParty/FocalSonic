@@ -12,7 +12,6 @@ namespace Aonsoku.Presence
         public static Presence Instance;
         public List<PresenceProvider> Providers = new List<PresenceProvider>();
 
-        private string LastSongID;
 
         public static void Setup()
         {
@@ -34,11 +33,6 @@ namespace Aonsoku.Presence
 
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
-            if (playbackInfo.CurrentSong?.Id == LastSongID) { 
-                return;
-            }
-            LastSongID = playbackInfo.CurrentSong?.Id ?? "None";
-
             foreach (var provider in Providers)
             {
                 provider.UpdateMediaStatus(playbackInfo);

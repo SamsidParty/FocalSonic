@@ -69,7 +69,10 @@ namespace Aonsoku.AudioPlayer
             });
         }
 
-        public virtual async Task SendTimeUpdate(bool isAutomatic = true) { }
+        public virtual async Task SendTimeUpdate(bool isAutomatic = true) 
+        {
+            await Presence.Presence.Instance.UpdateMediaStatus(MediaPlaybackInfo.Instance);
+        }
 
         public virtual async Task SetSource(string src, WebWindow ctx) 
         {

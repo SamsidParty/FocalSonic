@@ -70,7 +70,7 @@ namespace Aonsoku.AudioPlayer
                 MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(Player?.Duration ?? 0);
                 MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(Player?.Time ?? 0);
             }
-            Presence.Presence.Instance.UpdateMediaStatus(MediaPlaybackInfo.Instance);
+            base.SendTimeUpdate();
         }
 
 
