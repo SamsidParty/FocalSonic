@@ -378,6 +378,12 @@
         "password": "Please provide a password",
         "passwordLength": "Password must be at least 2 characters."
       }
+    },
+    "appleMusic": {
+      "loading": "Signing you into apple music...",
+      "loadingDescription": "This can take up to 30 seconds",
+      "loadingStuck": "If loading seems stuck,",
+      "resolveIssues": "click here to log out"
     }
   },
   "toast": {

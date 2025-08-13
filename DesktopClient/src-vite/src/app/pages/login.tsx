@@ -1,8 +1,8 @@
 import { Windows } from "@/app/components/controls/windows";
-import { AppTitle } from "@/app/components/header/app-title";
 import { LoginForm } from "@/app/components/login/form";
 import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { isLinux, isWindows } from "@/utils/osType";
+import DefaultTitlebar from "../components/header/default-titlebar";
 
 export default function Login() {
 
@@ -13,7 +13,7 @@ export default function Login() {
                     {...igniteViewDragRegion}
                     className="w-full h-header border-b bg-background flex justify-center items-center relative"
                 >
-                    <AppTitle />
+                    <DefaultTitlebar />
                     <div className="flex items-center absolute right-0">
                         {isWindows && <Windows />}
                     </div>

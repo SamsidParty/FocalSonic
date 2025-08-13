@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -83,6 +83,10 @@ export function LoginForm() {
             password: "",
         },
     });
+
+    useEffect(() => {
+        igniteView?.commandBridge.disposeAllAudioPlayers();
+    }, []);
 
     async function onSubmit(data: FormData, forceCompatible?: boolean) {
         setLoading(true);

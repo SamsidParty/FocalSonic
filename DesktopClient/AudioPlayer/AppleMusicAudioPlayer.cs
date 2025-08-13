@@ -29,6 +29,7 @@ namespace Aonsoku.AudioPlayer
         const string InjectionSuffix = "\nif (window.executeInjectedQueue) { window.executeInjectedQueue(); }";
 
         public bool IsPlaying = false;
+        public string LoadStatus = "loading";
 
         public AppleMusicAudioPlayer(string id) : base(id) {
 
@@ -36,7 +37,7 @@ namespace Aonsoku.AudioPlayer
             ProxyWindow = WebWindow.Create()
                 .WithTitle("Apple Music Runtime")
                 .WithURL($"https://beta.music.apple.com/{AppleMusicKeys.Region}/home")
-                .WithBounds(new LockedWindowBounds(200, 200))
+                .WithBounds(new LockedWindowBounds(1280, 720))
                 .WithoutTitleBar()
                 .WithSharedContext("AppleMusicWindow", "");
 
@@ -52,6 +53,13 @@ namespace Aonsoku.AudioPlayer
         }
 
         #region Player
+
+        [Command("setAppleMusicPlayerLoadStatus")]
+        public static async Task SetAppleMusicPlayerLoadStatus(string loadStatus, WebWindow ctx)
+        {
+            var owningPlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value as AppleMusicAudioPlayer;
+            owningPlayer.LoadStatus = loadStatus;
+        }
 
         [Command("appleMusicRecieveTimeUpdate")]
         public static void RecieveTimeUpdate(WebWindow ctx, bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration)
@@ -203,6 +211,7 @@ namespace Aonsoku.AudioPlayer
 
         #region Proxy
 
+        [Command("loadAppleMusicKeys")]
         public static void LoadKeys()
         {
             AppleMusicKeys.AppleDeveloperToken = LocalStorage.GetItem("applemusic_developer_token");
@@ -210,6 +219,50 @@ namespace Aonsoku.AudioPlayer
             AppleMusicKeys.Region = LocalStorage.GetItem("applemusic_region") ?? "us";
             AppleMusicKeys.ProxyUsername = LocalStorage.GetItem("applemusic_proxy_username");
             AppleMusicKeys.ProxyPassword = LocalStorage.GetItem("applemusic_proxy_password");
+        }
+
+        [Command("logOutOfAppleMusic")]
+        public static async Task LogOutOfAppleMusic()
+        {
+            await DisposeAudioPlayers();
+            LocalStorage.RemoveItem("applemusic_media_user_token");
+            LocalStorage.RemoveItem("applemusic_developer_token");
+            LocalStorage.RemoveItem("applemusic_proxy_username");
+            LocalStorage.RemoveItem("applemusic_proxy_password");
+            LocalStorage.RemoveItem("applemusic_region");
+            LoadKeys();
+        }
+
+        [Command("waitUntilAppleMusicLoads")]
+        public static async Task<string> WaitUntilAppleMusicLoads(WebWindow ctx)
+        {
+            
+            if (ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer).Any())
+            {
+                var activePlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer).FirstOrDefault().Value as AppleMusicAudioPlayer;
+                // Wait until the proxy window is loaded
+                while (activePlayer.LoadStatus == "loading")
+                {
+                    await Task.Delay(100);
+                }
+
+                // Start the proxy
+                await EnsureProxyIsRunning();
+
+                return activePlayer.LoadStatus;
+            }
+            else
+            {
+                // If no player exists, create one
+                await CreateAudioPlayer("appleMusicPlayer", ctx);
+
+                while (!ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer).Any())
+                {
+                    await Task.Delay(100);
+                }
+
+                return await WaitUntilAppleMusicLoads(ctx);
+            }
         }
 
         public static async Task EnsureProxyIsRunning()

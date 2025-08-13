@@ -14,26 +14,34 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic
 
         public static async Task<T> SendRequest<T>(string url) where T : class
         {
-            var request = await Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, url.Replace("{storefront}", AppleMusicKeys.Region)).WithMusicKitHeaders());
-            var content = await request.Content.ReadAsStringAsync();
-            T data;
-
-            if (typeof(T) == typeof(string))
+            try
             {
-                data = (content as T)!;
-            }
-            else
-            {
-                data = JsonConvert.DeserializeObject<T>(content);
-            }
-                
+                var request = await Instance.SendAsync(new HttpRequestMessage(HttpMethod.Get, url.Replace("{storefront}", AppleMusicKeys.Region)).WithMusicKitHeaders());
+                var content = await request.Content.ReadAsStringAsync();
+                T data;
 
-            if (!request.IsSuccessStatusCode)
-            {
-                Console.Error.WriteLine($"Apple Music API request to {url} failed: {request.StatusCode} - {content}");
-            }
+                if (typeof(T) == typeof(string))
+                {
+                    data = (content as T)!;
+                }
+                else
+                {
+                    data = JsonConvert.DeserializeObject<T>(content);
+                }
 
-            return data;
+
+                if (!request.IsSuccessStatusCode)
+                {
+                    throw new Exception(content);
+                }
+
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Apple Music API request to {url} failed: {ex.ToString()}");
+                return null;
+            }
         }
 
     }

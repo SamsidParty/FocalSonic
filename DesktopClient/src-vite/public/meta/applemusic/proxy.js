@@ -3,6 +3,7 @@ async function onMusicKitLoad() {
 
     console.log("[Aonsoku][Apple Music Proxy] MusicKit available");
     console.log("[Aonsoku][Apple Music Proxy] Auth status: " + (window.proxyMusicInstance.isAuthorized ? "Authorized" : "Not Authorized"));
+    igniteView.commandBridge.setAppleMusicPlayerLoadStatus("success");
 
     window.proxyMusicInstance.addEventListener("playbackStateDidChange", ({ oldState, state }) => {
         console.log(`[Aonsoku][Apple Music Proxy] Playback changed from ${oldState} to ${state}`);
@@ -33,8 +34,13 @@ function retrieveDefaultToken() {
 
         const developerToken = config.developerToken;
         window.foundDeveloperToken = developerToken;
-        console.log("[Aonsoku][Apple Music Proxy] Found developer token:", developerToken);
         console.log("[Aonsoku][Apple Music Proxy] Client info:", config);
+        
+        // Update the developer keys to the latest ones
+        console.log("[Aonsoku][Apple Music Proxy] Found developer token:", developerToken);
+        localStorage.setItem("applemusic_developer_token", developerToken);
+        igniteView.commandBridge.loadAppleMusicKeys();
+
         window.capturedConfig = config;
         
         instancePromise.then((music) => {

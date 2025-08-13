@@ -14,8 +14,8 @@ const MemoSongInfoDialog = memo(SongInfoDialog);
 const MemoRemovePlaylistDialog = memo(RemovePlaylistDialog);
 const MemoMainDrawerPage = memo(MainDrawerPage);
 
-export default function BaseLayout() {
 
+export default function BaseLayout() {
     return (
         <div className="h-screen w-screen overflow-hidden">
             <MemoHeader/>

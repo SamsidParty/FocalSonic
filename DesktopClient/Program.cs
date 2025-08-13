@@ -29,7 +29,6 @@ public class Program
         TrayIcon.Setup();
         #endif
 
-        AppleMusicAudioPlayer.EnsureProxyIsRunning();
         CreateMainWindow();
 
         while (true)
