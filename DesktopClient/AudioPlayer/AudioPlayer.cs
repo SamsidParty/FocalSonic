@@ -96,18 +96,22 @@ namespace Aonsoku.AudioPlayer
                 // Skip to the next song in the queue
                 var nextSongIndex = MediaPlaybackInfo.Instance.CurrentSongIndex + 1;
                 var nextQueueItem = MediaPlaybackInfo.Instance.Queue.ElementAtOrDefault(nextSongIndex);
-                MediaPlaybackInfo.Instance.CurrentSongIndex = nextSongIndex;
-                MediaPlaybackInfo.Instance.CurrentSong = nextQueueItem;
+
+                if (nextQueueItem == null && MediaPlaybackInfo.Instance.LoopState == PlayerLoopState.All)
+                {
+                    nextQueueItem = MediaPlaybackInfo.Instance.Queue.FirstOrDefault(); // Loop back to the first song if looping is enabled
+                    nextSongIndex = 0;
+                }
+                if (nextQueueItem == null) { return; }  // Playback finished, do nothing
 
                 // Modify the localStorage to reflect these changes
                 dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store"));
                 playerStore.state.songlist.currentSongIndex = nextSongIndex;
                 LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore));
 
-                if (nextQueueItem == null)
-                {
-                    return; // Playback finished, do nothing
-                }
+                // Update presence
+                MediaPlaybackInfo.Instance.CurrentSongIndex = nextSongIndex;
+                MediaPlaybackInfo.Instance.CurrentSong = nextQueueItem;
 
                 var playbackURL = nextQueueItem.Path; // The client explicitly tells us what URL to stream from by overriding the path
 

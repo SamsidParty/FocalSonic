@@ -874,7 +874,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 currentSong: transformSongBeforeSending(state.songlist.currentSong),
                                 currentSongIndex: state.songlist.currentSongIndex,
                                 isPlaying: state.playerState.isPlaying,
-                                queue: state.songlist.currentList.map(transformSongBeforeSending)
+                                queue: state.songlist.currentList.map(transformSongBeforeSending),
+                                LoopState: state.playerState.loopState,
                             })
                         );
                     }

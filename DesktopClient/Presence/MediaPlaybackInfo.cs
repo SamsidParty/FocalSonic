@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mapster;
+using Aonsoku.AudioPlayer;
 
 namespace Aonsoku.Presence
 {
@@ -27,6 +28,9 @@ namespace Aonsoku.Presence
         [JsonProperty("queue")]
         public List<Song> Queue = new List<Song>();
 
+        // This is different than AudioPlayer.Looping
+        [JsonProperty("loopState")]
+        public PlayerLoopState LoopState = PlayerLoopState.Off;
 
         [Command("setCurrentMediaInfo")]
         public static async Task SetCurrentMediaInfo(string info)

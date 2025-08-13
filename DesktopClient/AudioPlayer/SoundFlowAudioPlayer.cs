@@ -92,6 +92,7 @@ namespace Aonsoku.AudioPlayer
                 DataProvider = new StreamDataProvider(AudioEngine, PlaybackFormat, new SeekableHttpStream(src));
                 Player = new SoundPlayer(AudioEngine, PlaybackFormat, DataProvider);
                 Device.MasterMixer.AddComponent(Player);
+                await UpdatePlaybackParameters();
 
                 Player.PlaybackEnded += async (_, _) =>
                 {
