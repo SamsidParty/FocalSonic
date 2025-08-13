@@ -12,4 +12,15 @@ function setupTitlebar() {
     titlebar.style.zIndex = "999999";
 }
 
+async function checkAuthState() {
+    const music = MusicKit?.getInstance();
+
+    if (music && music.isAuthorized && music.musicUserToken) {
+        igniteView.commandBridge.appleMusicSignInRecieveToken(music.musicUserToken, music.developerToken, music.storefrontCountryCode || "us");
+        window.close();
+    }
+}
+
+addEventListener("beforeunload", window.close); // Closes the window if the user tries to navigate away
 setupTitlebar();
+setInterval(checkAuthState, 500);

@@ -175,6 +175,9 @@ namespace Aonsoku.AudioPlayer
         [Command("signInToAppleMusic")]
         public static async Task SignInToAppleMusic(WebWindow ctx)
         {
+            // Close any existing sign in windows
+            Program.App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("AppleMusicSignIn")).FirstOrDefault()?.Close();
+
             var signInWindow = WebWindow.Create()
                 .WithTitle("Apple Music")
                 .WithURL("https://music.apple.com/us/login")
@@ -185,6 +188,14 @@ namespace Aonsoku.AudioPlayer
 
             signInWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
             signInWindow.ExecuteJavaScript(Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/signin.js"));
+        }
+
+        [Command("appleMusicSignInRecieveToken")]
+        public static async Task AppleMusicSignInRecieveToken(string mediaUserToken, string developerToken, string region)
+        {
+            LocalStorage.SetItem("applemusic_media_user_token", mediaUserToken);
+            LocalStorage.SetItem("applemusic_developer_token", developerToken);
+            LocalStorage.SetItem("applemusic_region", region);
         }
 
         #endregion
