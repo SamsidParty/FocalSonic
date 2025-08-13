@@ -22,7 +22,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Types
             CatalogID = catalogID;
         }
 
-        public string ToString()
+        public override string ToString()
         {
             return "applemusic:" + PrimaryID + ":" + CatalogID;
         }
