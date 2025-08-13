@@ -8,7 +8,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
     {
         public async Task<FileResult> GetCoverArtAsync(string id, int? size)
         {
-            if (size <= 0)
+            if (size == null || size <= 0)
             {
                 size = 512;
             }
