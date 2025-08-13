@@ -1,5 +1,7 @@
 ﻿using Aonsoku.Presence;
 using IgniteView.Core;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using SamsidParty.Subsonic.Proxy.AppleMusic;
 using SamsidParty.Subsonic.Proxy.AppleMusic.Types;
 using SoundFlow.Enums;
@@ -55,8 +57,8 @@ namespace Aonsoku.AudioPlayer
         public bool IsPlaying = false;
 
         public AppleMusicAudioPlayer(string id) : base(id) {
-            AppleMusicKeys.Load();
 
+            LoadKeys();
             ProxyWindow = WebWindow.Create()
                 .WithTitle("Apple Music Runtime")
                 .WithURL("https://beta.music.apple.com/en/404") // Load 404 page on purpose to prevent content from loading
@@ -196,6 +198,39 @@ namespace Aonsoku.AudioPlayer
             LocalStorage.SetItem("applemusic_media_user_token", mediaUserToken);
             LocalStorage.SetItem("applemusic_developer_token", developerToken);
             LocalStorage.SetItem("applemusic_region", region);
+            await EnsureProxyIsRunning();
+            Program.MainWindow?.CallFunction("window.completeExternalLogin", "test", "test123", "http://localhost:10562");
+        }
+
+        #endregion
+
+        #region Proxy
+
+        public static void LoadKeys()
+        {
+            AppleMusicKeys.AppleDeveloperToken = LocalStorage.GetItem("applemusic_developer_token");
+            AppleMusicKeys.MediaUserToken = LocalStorage.GetItem("applemusic_media_user_token");
+            AppleMusicKeys.Region = LocalStorage.GetItem("applemusic_region");
+        }
+
+        public static async Task EnsureProxyIsRunning()
+        {
+            LoadKeys();
+            if (!AppleMusicSubsonicProxy.IsRunning)
+            {
+                (new Thread(async () =>
+                {
+                    var host = Host.CreateDefaultBuilder(new string[0])
+                    .ConfigureWebHostDefaults(webBuilder =>
+                    {
+                        webBuilder.UseStartup<AppleMusicSubsonicProxy>()
+                                  .UseUrls("http://localhost:10562");
+                    })
+                    .Build();
+
+                    await host.RunAsync();
+                }) { IsBackground = true }).Start();
+            }
         }
 
         #endregion

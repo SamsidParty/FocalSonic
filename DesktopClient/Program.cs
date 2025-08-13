@@ -9,6 +9,7 @@ public class Program
 {
     public static ViteAppManager App;
     public static HttpClient Http = new HttpClient();
+    public static WebWindow? MainWindow => App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault(App.MainWindow);
     
 
     [STAThread]
@@ -28,6 +29,7 @@ public class Program
         TrayIcon.Setup();
         #endif
 
+        AppleMusicAudioPlayer.EnsureProxyIsRunning();
         CreateMainWindow();
 
         while (true)
@@ -41,7 +43,7 @@ public class Program
     public static void CleanUpUI()
     {
         Performance.IsRunningInForeground = false;
-        App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault(App.MainWindow)?.Close();
+        MainWindow?.Close();
 
         foreach (var window in App.OpenWindows)
         {

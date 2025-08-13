@@ -114,6 +114,15 @@ export function LoginForm() {
         }
     }
 
+    // Allows C# to set the login credentials
+    window.completeExternalLogin = async (username: string, password: string, url: string) => {
+        await onSubmit({
+            username,
+            password,
+            url
+        });
+    }
+
     return (
         <>
             <Card className="w-[450px] bg-background-foreground">
