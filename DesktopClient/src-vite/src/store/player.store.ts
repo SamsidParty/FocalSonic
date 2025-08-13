@@ -8,7 +8,6 @@ import { produce } from "immer";
 import clamp from "lodash/clamp";
 import merge from "lodash/merge";
 import omit from "lodash/omit";
-import { undefined } from "zod";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
