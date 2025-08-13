@@ -1,6 +1,5 @@
 
 async function onMusicKitLoad() {
-
     console.log("[Aonsoku][Apple Music Proxy] MusicKit available");
     console.log("[Aonsoku][Apple Music Proxy] Auth status: " + (window.proxyMusicInstance.isAuthorized ? "Authorized" : "Not Authorized"));
     igniteView.commandBridge.setAppleMusicPlayerLoadStatus("success");
@@ -17,47 +16,23 @@ async function onMusicKitLoad() {
 
 };
 
+async function checkAuthState() {
+    const music = MusicKit?.getInstance();
 
-async function overridePage() {
-    console.log("[Aonsoku][Apple Music Proxy] Started overriding apple music page");
-    window.startedOverride = true;
-    onMusicKitLoad();
-}
+    if (music && music.isAuthorized && music.musicUserToken && music.developerToken) {
+        clearInterval(window.checkAuthStateInterval);
+        window.proxyMusicInstance = music;
+        console.log("[Aonsoku][Apple Music Proxy] Found developer token:", music.developerToken);
+        console.log("[Aonsoku][Apple Music Proxy] Found user token:", music.musicUserToken);
 
-function retrieveDefaultToken() {
-    if (window.startedOverride) { return; }
-    console.log("[Aonsoku][Apple Music Proxy] Started search for developer token");
-
-    const originalConfigure = window.MusicKit.configure;
-    window.MusicKit.configure = async function (config) {
-        const instancePromise = originalConfigure.call(this, config);
-
-        const developerToken = config.developerToken;
-        window.foundDeveloperToken = developerToken;
-        console.log("[Aonsoku][Apple Music Proxy] Client info:", config);
-        
-        // Update the developer keys to the latest ones
-        console.log("[Aonsoku][Apple Music Proxy] Found developer token:", developerToken);
-        localStorage.setItem("applemusic_developer_token", developerToken);
+        window.foundDeveloperToken = music.developerToken;
+        localStorage.setItem("applemusic_developer_token", music.developerToken);
         igniteView.commandBridge.loadAppleMusicKeys();
-
-        window.capturedConfig = config;
-        
-        instancePromise.then((music) => {
-            window.proxyMusicInstance = music;
-            setTimeout(() => overridePage(), 0);
-        }); 
-
-        return instancePromise;
-    };
+        setTimeout(() => onMusicKitLoad(), 0);
+    }
 }
 
-
-if (window.MusicKit) {
-    retrieveDefaultToken();
-} else {
-    document.addEventListener("musickitloaded", retrieveDefaultToken);
-}
+window.checkAuthStateInterval = setInterval(checkAuthState, 500);
 
 
 window.executeInjectedQueue = async () => {
