@@ -69,7 +69,7 @@ export default function PreviewList({
 
     const getResourceType = (entry: IAppleMusicRecommendationContent | Albums) => {
         let type = (entry as IAppleMusicRecommendationContent).type;
-        return type?.substring(0, type.length - 1).toUpperCase() || "ALBUM";
+        return type?.slice(0, -1).toUpperCase() || "ALBUM";
     }
 
     return (
@@ -134,7 +134,7 @@ export default function PreviewList({
                                         />
                                     </PreviewCard.ImageWrapper>
                                     <PreviewCard.InfoWrapper>
-                                        <PreviewCard.Title link={ROUTES.ALBUM.PAGE(entry.id)}>
+                                        <PreviewCard.Title link={ROUTES[getResourceType(entry)]?.PAGE(entry.id)}>
                                             {entry.name || (entry as IAppleMusicRecommendationContent).attributes.name}
                                         </PreviewCard.Title>
                                         <PreviewCard.Subtitle

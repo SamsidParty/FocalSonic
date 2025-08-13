@@ -26,7 +26,15 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
 
         public async Task<GetPlaylistResponse> GetPlaylistAsync(string id)
         {
-            var p = (await AppleMusicHttpClient.SendRequest<PlaylistResponse>($"me/library/playlists/{id}?include=tracks"))!.Data.First();
+            AppleMusic.Types.Playlist p;
+            try
+            {
+                p = (await AppleMusicHttpClient.SendRequest<PlaylistResponse>($"me/library/playlists/{id}?include=tracks"))!.Data.First();
+            }
+            catch
+            {
+                p = (await AppleMusicHttpClient.SendRequest<PlaylistResponse>($"catalog/{AppleMusicKeys.Region}/playlists/{id}?include=tracks"))!.Data.First();
+            }
 
             var response = GetDefaultResponse().Adapt<GetPlaylistSuccessResponse>();
             response.Playlist = p.ToSubsonicType().Adapt<Subsonic.Common.PlaylistWithSongs>();

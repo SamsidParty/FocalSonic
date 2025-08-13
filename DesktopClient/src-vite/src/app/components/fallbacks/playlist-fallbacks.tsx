@@ -1,4 +1,3 @@
-import { ImageHeaderEffect } from "@/app/components/album/header-effect";
 import {
     AlbumHeaderFallback,
     PlayButtonsFallback,
@@ -11,7 +10,6 @@ export function PlaylistFallback() {
         <div className="w-full">
             <div className="relative">
                 <AlbumHeaderFallback />
-                <ImageHeaderEffect />
             </div>
 
             <ListWrapper>
