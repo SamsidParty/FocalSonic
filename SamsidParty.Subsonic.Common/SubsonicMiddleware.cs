@@ -18,20 +18,15 @@ namespace SamsidParty.Subsonic.Common
 
 
         // TODO: Actually implement a user store, this is just a placeholder
-        private readonly Dictionary<string, string> Users = new()
-        {
-            { "test", "test123" },
-        };
+        private Func<Dictionary<string, string>> _userGetter;
 
-        private readonly Dictionary<string, string> APIKeys = new()
-        {
-            { "APIKEY123", "test" },
-        };
+        private Dictionary<string, string> APIKeys = new() { };
 
-        public SubsonicMiddleware(RequestDelegate next, string serverName)
+        public SubsonicMiddleware(RequestDelegate next, string serverName, Func<Dictionary<string, string>> userGetter)
         {
             _next = next;
             _serverName = serverName;
+            _userGetter = userGetter;   
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -117,7 +112,7 @@ namespace SamsidParty.Subsonic.Common
 
         private string ValidateToken(string username, string token, string salt)
         {
-            if (!Users.TryGetValue(username, out var password))
+            if (!_userGetter().TryGetValue(username, out var password))
                 return null;
 
             // Spec: token = MD5(password + salt)
@@ -129,7 +124,7 @@ namespace SamsidParty.Subsonic.Common
 
         private string ValidatePassword(string username, string plainOrEnc)
         {
-            if (!Users.TryGetValue(username, out var storedPassword))
+            if (!_userGetter().TryGetValue(username, out var storedPassword))
                 return null;
 
             if (plainOrEnc.StartsWith("enc:", StringComparison.OrdinalIgnoreCase))

@@ -1,38 +1,25 @@
 
 async function onMusicKitLoad() {
-    console.log("[Aonsoku][Apple Music Proxy] Overriden MusicKit");
 
-    let music = await MusicKit.configure({
-        developerToken: window.foundDeveloperToken,
-        app: {
-            name: "Aonsoku",
-            build: "AppleMusicProxy",
-        },
-    });
+    console.log("[Aonsoku][Apple Music Proxy] MusicKit available");
+    console.log("[Aonsoku][Apple Music Proxy] Auth status: " + (window.proxyMusicInstance.isAuthorized ? "Authorized" : "Not Authorized"));
 
-    music.userToken = window.injectedUserToken;
-    await music.authorize();
-
-    music.addEventListener("playbackStateDidChange", ({ oldState, state }) => {
+    window.proxyMusicInstance.addEventListener("playbackStateDidChange", ({ oldState, state }) => {
         console.log(`[Aonsoku][Apple Music Proxy] Playback changed from ${oldState} to ${state}`);
-        if (state === MusicKit.PlaybackStates.ended && music.repeatMode !== MusicKit.PlayerRepeatMode.one) {
+        if (state === MusicKit.PlaybackStates.ended && window.proxyMusicInstance.repeatMode !== MusicKit.PlayerRepeatMode.one) {
             igniteView?.commandBridge.appleMusicRecieveEndedEvent();
         }
         else if (state === MusicKit.PlaybackStates.playing) {
-            igniteView?.commandBridge.appleMusicRecieveLoadedEvent(music.currentPlaybackDuration);
+            igniteView?.commandBridge.appleMusicRecieveLoadedEvent(window.proxyMusicInstance.currentPlaybackDuration);
         }
     });
 
-    console.log("[Aonsoku][Apple Music Proxy] Auth status: " + (music.isAuthorized ? "Authorized" : "Not Authorized"));
-    window.proxyMusicInstance = music;
 };
 
 
 async function overridePage() {
-
     console.log("[Aonsoku][Apple Music Proxy] Started overriding apple music page");
     window.startedOverride = true;
-    window.MusicKit = undefined;
 
     document.documentElement.innerHTML = `
     <html>
@@ -45,23 +32,29 @@ async function overridePage() {
     </html>
     `.trim();
 
-    const script = document.createElement("script");
-    script.src = "https://music.apple.com/includes/js-cdn/musickit/v3/amp/musickit.js";
-    script.onload = () => setTimeout(onMusicKitLoad, 0);
-    document.head.appendChild(script);
+    onMusicKitLoad();
 }
 
 function retrieveDefaultToken() {
     if (window.startedOverride) { return; }
     console.log("[Aonsoku][Apple Music Proxy] Started search for developer token");
 
+    const originalConfigure = window.MusicKit.configure;
     window.MusicKit.configure = async function (config) {
+        const instancePromise = originalConfigure.call(this, config);
+
         const developerToken = config.developerToken;
         window.foundDeveloperToken = developerToken;
         console.log("[Aonsoku][Apple Music Proxy] Found developer token:", developerToken);
         console.log("[Aonsoku][Apple Music Proxy] Client info:", config);
+        window.capturedConfig = config;
         
-        setTimeout(() => overridePage(), 0);
+        instancePromise.then((music) => {
+            window.proxyMusicInstance = music;
+            setTimeout(() => overridePage(), 0);
+        }); 
+
+        return instancePromise;
     };
 }
 

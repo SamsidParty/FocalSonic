@@ -7,6 +7,8 @@ using SamsidParty.Subsonic.Proxy.AppleMusic.Types;
 using SoundFlow.Enums;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Dynamic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -61,7 +63,7 @@ namespace Aonsoku.AudioPlayer
             LoadKeys();
             ProxyWindow = WebWindow.Create()
                 .WithTitle("Apple Music Runtime")
-                .WithURL("https://beta.music.apple.com/en/404") // Load 404 page on purpose to prevent content from loading
+                .WithURL($"https://beta.music.apple.com/{AppleMusicKeys.Region}/home")
                 .WithBounds(new LockedWindowBounds(200, 200))
                 .WithoutTitleBar()
                 .WithSharedContext("AppleMusicWindow", "")
@@ -86,7 +88,7 @@ namespace Aonsoku.AudioPlayer
             var owningPlayer = ActivePlayers.Where((p) =>  p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
             if (isPlaying)
             {
-                owningPlayer.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "timeupdate", currentPlaybackTime);
+                owningPlayer?.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "timeupdate", currentPlaybackTime);
             }
 
 
@@ -182,7 +184,7 @@ namespace Aonsoku.AudioPlayer
 
             var signInWindow = WebWindow.Create()
                 .WithTitle("Apple Music")
-                .WithURL("https://music.apple.com/us/login")
+                .WithURL("https://beta.music.apple.com/us/login")
                 .WithBounds(new LockedWindowBounds(1200, 720))
                 .WithoutTitleBar()
                 .WithSharedContext("AppleMusicSignIn", "")
@@ -193,13 +195,38 @@ namespace Aonsoku.AudioPlayer
         }
 
         [Command("appleMusicSignInRecieveToken")]
-        public static async Task AppleMusicSignInRecieveToken(string mediaUserToken, string developerToken, string region)
+        public static async Task AppleMusicSignInRecieveToken(string mediaUserToken, string developerToken)
         {
             LocalStorage.SetItem("applemusic_media_user_token", mediaUserToken);
             LocalStorage.SetItem("applemusic_developer_token", developerToken);
-            LocalStorage.SetItem("applemusic_region", region);
-            await EnsureProxyIsRunning();
-            Program.MainWindow?.CallFunction("window.completeExternalLogin", "test", "test123", "http://localhost:10562");
+            LocalStorage.SetItem("applemusic_proxy_username", AppleMusicKeys.RandomString(12));
+            LocalStorage.SetItem("applemusic_proxy_password", AppleMusicKeys.RandomString(32));
+            LoadKeys();
+
+            try
+            {
+                // We have to find the user's account region because apple is very picky
+                // If the region is wrong then we can only stream the previews of the music
+                dynamic data = (await AppleMusicHttpClient.SendRequest<ExpandoObject>($"me/storefront"));
+                LocalStorage.SetItem("applemusic_region", data!.data[0]!.id!);
+
+                await EnsureProxyIsRunning();
+                Program.MainWindow?.CallFunction("window._localStorage.hydrate", LocalStorage.GetAllItems()); // Reload localStorage
+                Program.MainWindow?.CallFunction("window.completeExternalLogin", AppleMusicKeys.ProxyUsername, AppleMusicKeys.ProxyPassword, AppleMusicKeys.ServerAddress);
+            }
+            catch
+            {
+                // The token is probably invalid
+            }
+            
+
+
+        }
+
+        public override void Dispose()
+        {
+            ProxyWindow?.Close();
+            base.Dispose();
         }
 
         #endregion
@@ -210,7 +237,9 @@ namespace Aonsoku.AudioPlayer
         {
             AppleMusicKeys.AppleDeveloperToken = LocalStorage.GetItem("applemusic_developer_token");
             AppleMusicKeys.MediaUserToken = LocalStorage.GetItem("applemusic_media_user_token");
-            AppleMusicKeys.Region = LocalStorage.GetItem("applemusic_region");
+            AppleMusicKeys.Region = LocalStorage.GetItem("applemusic_region") ?? "us";
+            AppleMusicKeys.ProxyUsername = LocalStorage.GetItem("applemusic_proxy_username");
+            AppleMusicKeys.ProxyPassword = LocalStorage.GetItem("applemusic_proxy_password");
         }
 
         public static async Task EnsureProxyIsRunning()
@@ -224,7 +253,7 @@ namespace Aonsoku.AudioPlayer
                     .ConfigureWebHostDefaults(webBuilder =>
                     {
                         webBuilder.UseStartup<AppleMusicSubsonicProxy>()
-                                  .UseUrls("http://localhost:10562");
+                                  .UseUrls(AppleMusicKeys.ServerAddress);
                     })
                     .Build();
 

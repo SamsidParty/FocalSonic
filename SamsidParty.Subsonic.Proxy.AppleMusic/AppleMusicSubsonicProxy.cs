@@ -24,7 +24,17 @@ public class AppleMusicSubsonicProxy
     {
         IsRunning = true;
 
-        app.UseMiddleware<SubsonicMiddleware>("applemusic");
+        app.UseMiddleware<SubsonicMiddleware>("applemusic", () =>
+        {
+            var users = new Dictionary<string, string>();
+
+            if (AppleMusicKeys.ProxyUsername != null && AppleMusicKeys.ProxyPassword != null)
+            {
+                users.Add(AppleMusicKeys.ProxyUsername, AppleMusicKeys.ProxyPassword);
+            }
+
+            return users;
+        });
         app.UseRouting();
         app.UseAuthorization();
         app.UseEndpoints(endpoints => endpoints.MapControllers());
