@@ -1,5 +1,5 @@
 import { getCoverArtUrl } from "@/api/httpClient.js";
-import { usePlayerCurrentSong, useSongColor } from "@/store/player.store";
+import { useDynamicColors, usePlayerCurrentSong } from "@/store/player.store";
 import { hexToRgba } from "@/utils/getAverageColor";
 import clsx from "clsx";
 import { useEffect, useMemo, useRef } from "react";
@@ -12,15 +12,15 @@ interface BackdropProps {
 }
 
 export function useFullscreenBackdrop(props: BackdropProps) {
-    const { useSongColorOnQueue } = useSongColor();
+    const { useDynamicColorsOnQueue } = useDynamicColors();
 
     return useMemo(() => {
-        if (!useSongColorOnQueue) {
+        if (!useDynamicColorsOnQueue) {
             return <DynamicColorBackdrop {...props}></DynamicColorBackdrop>;
         }
 
         return <SwirlBackdrop {...props}></SwirlBackdrop>;
-    }, [useSongColorOnQueue, props]);
+    }, [useDynamicColorsOnQueue, props]);
 }
 
 function SwirlBackdrop(props: BackdropProps) {
@@ -69,7 +69,7 @@ function SwirlBackdrop(props: BackdropProps) {
 
 
 function DynamicColorBackdrop(props: BackdropProps) {
-    const { currentSongColor, currentSongColorIntensity } = useSongColor();
+    const { currentSongColor, currentSongColorIntensity } = useDynamicColors();
 
     const backgroundColor = useMemo(() => {
         if (!currentSongColor) return undefined;

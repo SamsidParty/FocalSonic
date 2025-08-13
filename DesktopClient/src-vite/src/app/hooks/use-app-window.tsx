@@ -130,7 +130,19 @@ export function useAppWindow(): AppWindowType {
         }
     };
 
-    const toggleSidebar = async () => setIsSidebarOpen(!isSidebarOpen);
+    const toggleSidebar = async () => {
+        setIsSidebarOpen(!isSidebarOpen);
+
+        let hasFinishedAnimation = false;
+        const sidebarAnimation = () => {
+            let event = new Event("resize");
+            event["isFromSidebar"] = true; // Custom property to indicate the event is from sidebar toggle
+            window.dispatchEvent(event);
+            !hasFinishedAnimation && requestAnimationFrame(sidebarAnimation);
+        }
+        setTimeout(() => { hasFinishedAnimation = true; }, 500);
+        sidebarAnimation();
+    }
 
     const enterFullscreenWindow = async () => {
         if (appWindow) {

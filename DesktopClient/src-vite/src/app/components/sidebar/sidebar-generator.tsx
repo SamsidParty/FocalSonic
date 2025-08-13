@@ -28,7 +28,7 @@ export interface ISidebarItem {
 export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
     const location = useLocation();
     const { t } = useTranslation();
-    const hideRadiosSection = useAppStore().pages.hideRadiosSection;
+    const showRadiosSection = useAppStore().pages.showRadiosSection;
     const isPodcastsActive = useAppStore().podcasts.active;
 
     const isActive = useCallback(
@@ -42,7 +42,7 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
         <>
             {list.map((item) => {
                 // Setting to show/hide Radios/Podcasts section
-                if (hideRadiosSection && item.id === SidebarItems.Radios) return null;
+                if (!showRadiosSection && item.id === SidebarItems.Radios) return null;
                 if (!isPodcastsActive && item.id === SidebarItems.Podcasts) return null;
 
                 if (isPodcastsActive && item.id === SidebarItems.Podcasts) {

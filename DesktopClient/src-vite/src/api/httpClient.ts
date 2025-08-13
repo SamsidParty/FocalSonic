@@ -79,7 +79,7 @@ async function browserFetch<T>(
             const data = await response.json();
             return {
                 count: parseInt(response.headers.get("x-total-count") || "0", 10),
-                data: data["subsonic-response"] as T,
+                data: (data["subsonic-response"] as T) || (data["data"] as T),
             };
         }
     } catch (error) {
@@ -108,6 +108,12 @@ export function getCoverArtUrl(
     type: CoverArt = "album",
     size = "300",
 ): string {
+
+    // No point proxying apple music cover art URLs, let it get served through the CDN directly
+    if (id?.startsWith("https://")) {
+        return id.replaceAll("{w}", size).replaceAll("{h}", size);
+    }
+
     if (!id) {
     // everything except artists uses the same default cover art
         type = type === "artist" ? "artist" : "album";
@@ -121,7 +127,7 @@ export function getCoverArtUrl(
 
 export function getSongStreamUrl(
     id: string,
-    contentType: string,
+    contentType?: string,
 ) {
 
     // TODO: Fix flac support in native audio

@@ -1,4 +1,6 @@
-﻿using IgniteView.Core;
+﻿#if WINDOWS
+
+using IgniteView.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,12 +10,16 @@ using Windows.Media;
 using Windows.Media.Control;
 using Windows.Media.Playback;
 using Windows.Storage.Streams;
+using Aonsoku.AudioPlayer;
 
 namespace Aonsoku.Presence
 {
     public class WindowsPresenceProvider : PresenceProvider
     {
         public static MediaPlayer HostPlayer = new MediaPlayer();
+
+        private string? LastSongID;
+        private RandomAccessStreamReference LastAlbumArt; // Prevents refreshing album art every time which wastes resources
 
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
@@ -27,21 +33,25 @@ namespace Aonsoku.Presence
 
             smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
             
-            smtc.DisplayUpdater.MusicProperties.Title = song.Title ?? "Unknown Title";
-            smtc.DisplayUpdater.MusicProperties.Artist = string.Join(", ", song.Artists?.Select((a) => a.Name) ?? new string[0]) ?? "Unknown Artist";
-            smtc.DisplayUpdater.MusicProperties.AlbumTitle = song.Album ?? "Unknown Album";
-            smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song.AlbumArtists?.Select((a) => a.Name) ?? new string[0]) ?? "Unknown Album";
+            smtc.DisplayUpdater.MusicProperties.Title = song?.Title ?? "Unknown Title";
+            smtc.DisplayUpdater.MusicProperties.Artist = string.Join(", ", song?.Artists?.Select((a) => a.Name) ?? new string[] { song?.Artist ?? "" });
+            smtc.DisplayUpdater.MusicProperties.AlbumTitle = song?.Album ?? "Unknown Album";
+            smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song?.AlbumArtists?.Select((a) => a.Name) ?? new string[] { song?.DisplayAlbumArtist ?? "" });
 
-            if (string.IsNullOrEmpty(song.CoverArt))
+            if (song?.Id != LastSongID || LastAlbumArt == null)
             {
-                using (var stream = Program.App.CurrentServerManager.Resolver.OpenFileStream("/default_album_art.png"))
+                if (string.IsNullOrEmpty(song?.CoverArt))
                 {
-                    smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(stream.AsRandomAccessStream());
+                    using (var stream = Program.App.CurrentServerManager.Resolver.OpenFileStream("/default_album_art.png"))
+                    {
+                        smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(stream.AsRandomAccessStream());
+                    }
                 }
-            }
-            else
-            {
-                smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(song.CoverArt));
+                else
+                {
+                    smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(song.CoverArt));
+                }
+                LastAlbumArt = smtc.DisplayUpdater.Thumbnail;
             }
 
             smtc.UpdateTimelineProperties(new SystemMediaTransportControlsTimelineProperties()
@@ -51,7 +61,22 @@ namespace Aonsoku.Presence
                 EndTime = playbackInfo.Duration
             });
 
+            smtc.ButtonPressed += (sender, args) =>
+            {
+                if (args.Button == SystemMediaTransportControlsButton.Play)
+                {
+                    AudioPlayer.AudioPlayer.Instance?.PlayAudio();
+                }
+                else if (args.Button == SystemMediaTransportControlsButton.Pause)
+                {
+                    AudioPlayer.AudioPlayer.Instance?.PauseAudio();
+                }
+            };
+
             smtc.DisplayUpdater.Update();
+            LastSongID = song?.Id ?? null;
         }
     }
 }
+
+#endif

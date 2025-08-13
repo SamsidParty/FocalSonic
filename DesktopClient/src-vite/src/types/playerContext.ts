@@ -91,12 +91,12 @@ interface IBlurSettings {
 }
 
 interface IBigPlayerSettings {
-    useSongColor: boolean
+    useDynamicColors: boolean
     blur: IBlurSettings
 }
 
 interface IQueueSettings {
-    useSongColor: boolean
+    useDynamicColors: boolean
 }
 
 interface IColorsSettings {
@@ -132,6 +132,7 @@ export interface IPlayerActions {
     hasPrevSong: () => boolean
     isPlayingOneSong: () => boolean
     clearPlayerState: () => void
+    disposePlayer: () => void
     resetProgress: () => void
     setProgress: (progress: number) => void
     setVolume: (volume: number) => void
@@ -166,8 +167,8 @@ export interface IPlayerActions {
     updateQueueChecks: () => void
     setCurrentSongColor: (value: string | null) => void
     setCurrentSongIntensity: (value: number) => void
-    setUseSongColorOnQueue: (value: boolean) => void
-    setUseSongColorOnBigPlayer: (value: boolean) => void
+    setuseDynamicColorsOnQueue: (value: boolean) => void
+    setuseDynamicColorsOnBigPlayer: (value: boolean) => void
     setBigPlayerBlurValue: (value: number) => void
 }
 

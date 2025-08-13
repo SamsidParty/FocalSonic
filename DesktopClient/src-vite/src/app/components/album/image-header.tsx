@@ -1,10 +1,9 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
 import { getCoverArtUrl } from "@/api/httpClient";
-import { AlbumHeaderFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";
 import { cn } from "@/lib/utils";
@@ -12,8 +11,11 @@ import { CoverArt } from "@/types/coverArtType";
 import { IFeaturedArtist } from "@/types/responses/artist";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { getTextSizeClass } from "@/utils/getTextSizeClass";
+import hexToCssFilter from "@/utils/hexToCssFilter.js";
+import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
 import { AlbumArtistInfo, AlbumMultipleArtistsInfo } from "./artists";
-import { ImageHeaderEffect } from "./header-effect";
+
+const DarkVeilMemo = memo(DarkVeil, (o, n) => o.style?.opacity === n.style?.opacity);
 
 interface ImageHeaderProps {
     type: string
@@ -42,9 +44,9 @@ export default function ImageHeader({
     badges,
     isPlaylist = false,
 }: ImageHeaderProps) {
-    const [loaded, setLoaded] = useState(false);
     const [open, setOpen] = useState(false);
     const [bgColor, setBgColor] = useState("");
+    const [bgEffectStyle, setBgEffectStyle] = useState(null);
 
     function getImage() {
         return document.getElementById("cover-art-image") as HTMLImageElement;
@@ -57,15 +59,17 @@ export default function ImageHeader({
         let color = randomCSSHexColor(true);
 
         try {
-            color = await getAverageColor(img);
-        } catch (_) {
+            color = await getAverageColor(img, "LightVibrant");
+        } catch (ex) {
             console.warn(
                 "handleLoadImage: unable to get image color. Using a random color.",
+                ex
             );
         }
 
+        let style = "opacity(1) " + hexToCssFilter(color);
+        setBgEffectStyle(style);
         setBgColor(color);
-        setLoaded(true);
     }
 
     function handleError() {
@@ -73,8 +77,6 @@ export default function ImageHeader({
         if (!img) return;
 
         img.crossOrigin = null;
-
-        setLoaded(true);
     }
 
     const hasMultipleArtists = artists ? artists.length > 1 : false;
@@ -84,24 +86,20 @@ export default function ImageHeader({
             className="flex relative w-full h-[calc(3rem+200px)] 2xl:h-[calc(3rem+250px)]"
             key={`header-${coverArtId}`}
         >
-            {!loaded && (
-                <div className="absolute inset-0 z-20">
-                    <AlbumHeaderFallback />
-                </div>
-            )}
+            
             <div
                 className={cn(
                     "w-full px-8 py-6 flex gap-4 absolute inset-0",
-                    "bg-gradient-to-b from-background/20 to-background/50",
                 )}
-                style={{ backgroundColor: bgColor }}
             >
+                <DarkVeilMemo style={{ filter: bgEffectStyle!, opacity: (!bgEffectStyle ? "0" : "1") }} className="transition-opacity duration-1000" speed={2} warpAmount={5}></DarkVeilMemo>
+
                 <div
                     className={cn(
                         "w-[200px] h-[200px] min-w-[200px] min-h-[200px]",
                         "2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px]",
                         "bg-skeleton aspect-square bg-cover bg-center rounded",
-                        "shadow-header-image overflow-hidden",
+                        "shadow-header-image overflow-hidden z-10",
                         "hover:scale-[1.02] ease-linear duration-100",
                     )}
                 >
@@ -169,11 +167,7 @@ export default function ImageHeader({
                 </div>
             </div>
 
-            {!loaded ? (
-                <ImageHeaderEffect className="bg-muted-foreground" />
-            ) : (
-                <ImageHeaderEffect style={{ backgroundColor: bgColor }} />
-            )}
+
 
             <CustomLightBox
                 open={open}

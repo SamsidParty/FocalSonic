@@ -1,26 +1,26 @@
-import { useTranslation } from "react-i18next";
 import {
-    Content,
-    ContentItem,
-    ContentItemForm,
-    ContentItemTitle,
-    ContentSeparator,
-    Header,
-    HeaderTitle,
-    HeaderDescription,
-    Root,
+  Content,
+  ContentItem,
+  ContentItemForm,
+  ContentItemTitle,
+  ContentSeparator,
+  Header,
+  HeaderDescription,
+  HeaderTitle,
+  Root,
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
-import { useSongColor } from "@/store/player.store";
+import { useDynamicColors } from "@/store/player.store";
+import { useTranslation } from "react-i18next";
 
 export function ColorSettings() {
     const { t } = useTranslation();
     const {
-        useSongColorOnQueue,
-        setUseSongColorOnQueue,
-        useSongColorOnBigPlayer,
-        setUseSongColorOnBigPlayer,
-    } = useSongColor();
+        useDynamicColorsOnQueue,
+        setuseDynamicColorsOnQueue,
+        useDynamicColorsOnBigPlayer,
+        setuseDynamicColorsOnBigPlayer,
+    } = useDynamicColors();
 
     return (
         <Root>
@@ -37,8 +37,8 @@ export function ColorSettings() {
                     </ContentItemTitle>
                     <ContentItemForm>
                         <Switch
-                            checked={useSongColorOnQueue}
-                            onCheckedChange={setUseSongColorOnQueue}
+                            checked={useDynamicColorsOnQueue}
+                            onCheckedChange={setuseDynamicColorsOnQueue}
                         />
                     </ContentItemForm>
                 </ContentItem>
@@ -49,8 +49,8 @@ export function ColorSettings() {
                     </ContentItemTitle>
                     <ContentItemForm>
                         <Switch
-                            checked={useSongColorOnBigPlayer}
-                            onCheckedChange={setUseSongColorOnBigPlayer}
+                            checked={useDynamicColorsOnBigPlayer}
+                            onCheckedChange={setuseDynamicColorsOnBigPlayer}
                         />
                     </ContentItemForm>
                 </ContentItem>

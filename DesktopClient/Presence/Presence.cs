@@ -12,15 +12,13 @@ namespace Aonsoku.Presence
         public static Presence Instance;
         public List<PresenceProvider> Providers = new List<PresenceProvider>();
 
-        private string LastSongID;
 
         public static void Setup()
         {
             Instance = new Presence();
-            if (PlatformManager.HasPlatformHint("win32"))
-            {
-                Instance.RegisterProvider(new WindowsPresenceProvider());
-            }
+            #if WINDOWS
+            Instance.RegisterProvider(new WindowsPresenceProvider());
+            #endif
         }
 
         public Presence() { Instance = this; }
@@ -35,11 +33,6 @@ namespace Aonsoku.Presence
 
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
-            if (playbackInfo.CurrentSong.Id == LastSongID) { 
-                return;
-            }
-            LastSongID = playbackInfo.CurrentSong.Id;
-
             foreach (var provider in Providers)
             {
                 provider.UpdateMediaStatus(playbackInfo);

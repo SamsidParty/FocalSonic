@@ -13,7 +13,7 @@ export enum MouseButton {
 export const isChromeOrFirefox = ["Blink", "Gecko"].includes(engineName);
 
 // Enable only for browsers
-export const hasPiPSupport = isTauri()
+export const hasPiPSupport = (window.igniteView)
     ? false
     : "documentPictureInPicture" in window;
 

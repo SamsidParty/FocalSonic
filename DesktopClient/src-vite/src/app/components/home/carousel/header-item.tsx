@@ -73,7 +73,7 @@ export function HeaderItem({ song }: { song: ISong }) {
                             </Button>
                         </div>
                     </div>
-                    <div className="flex flex-1 h-full flex-col justify-end">
+                    <div className="flex flex-1 h-full flex-col justify-end text-white">
                         <Link to={ROUTES.ALBUM.PAGE(song.albumId)} className="w-fit">
                             <h1
                                 data-testid="header-title"

@@ -6,10 +6,12 @@ export function checkServerType() {
     const isSubsonic = serverType === "subsonic";
     const isNavidrome = serverType === "navidrome";
     const isLms = serverType === "lms";
+    const isAppleMusic = serverType === "applemusic";
 
     return {
         isSubsonic,
         isNavidrome,
         isLms,
+        isAppleMusic
     };
 }

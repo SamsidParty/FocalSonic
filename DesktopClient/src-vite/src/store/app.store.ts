@@ -1,9 +1,3 @@
-import merge from "lodash/merge";
-import omit from "lodash/omit";
-import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
-import { shallow } from "zustand/shallow";
-import { createWithEqualityFn } from "zustand/traditional";
 import { pingServer } from "@/api/pingServer";
 import { queryServerInfo } from "@/api/queryServerInfo";
 import { AuthType, IAppContext, IServerConfig } from "@/types/serverConfig";
@@ -16,8 +10,14 @@ import {
     getAuthType,
     hasValidConfig,
 } from "@/utils/salt";
+import merge from "lodash/merge";
+import omit from "lodash/omit";
+import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import { shallow } from "zustand/shallow";
+import { createWithEqualityFn } from "zustand/traditional";
 
-const { SERVER_URL, HIDE_SERVER, HIDE_RADIOS_SECTION, SERVER_TYPE } = window;
+const { SERVER_URL, HIDE_SERVER, SHOW_RADIOS_SECTION, SERVER_TYPE } = window;
 
 export const useAppStore = createWithEqualityFn<IAppContext>()(
     subscribeWithSelector(
@@ -79,10 +79,10 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.pages.showInfoPanel = !showInfoPanel;
                             });
                         },
-                        hideRadiosSection: HIDE_RADIOS_SECTION ?? false,
-                        setHideRadiosSection: (value) => {
+                        showRadiosSection: SHOW_RADIOS_SECTION ?? false,
+                        setshowRadiosSection: (value) => {
                             set((state) => {
-                                state.pages.hideRadiosSection = value;
+                                state.pages.showRadiosSection = value;
                             });
                         },
                         artistsPageViewType: "table",
@@ -196,7 +196,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.data.serverType = "subsonic";
                                 state.data.songCount = null;
                                 state.pages.showInfoPanel = true;
-                                state.pages.hideRadiosSection = HIDE_RADIOS_SECTION ?? false;
+                                state.pages.showRadiosSection = SHOW_RADIOS_SECTION ?? false;
                                 state.pages.artistsPageViewType = "table";
                                 state.podcasts.active = false;
                                 state.podcasts.serviceUrl = "";
@@ -223,13 +223,13 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                     try {
                         const persisted = persistedState as Partial<IAppContext> | undefined;
 
-                        let hideRadiosSection = false;
+                        let showRadiosSection = false;
 
                         if (persisted) {
-                            hideRadiosSection = persisted.pages?.hideRadiosSection ?? false;
+                            showRadiosSection = persisted.pages?.showRadiosSection ?? false;
                         }
-                        if (HIDE_RADIOS_SECTION !== undefined) {
-                            hideRadiosSection = HIDE_RADIOS_SECTION;
+                        if (SHOW_RADIOS_SECTION !== undefined) {
+                            showRadiosSection = SHOW_RADIOS_SECTION;
                         }
 
                         if (hasValidConfig) {
@@ -245,7 +245,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                     lockUser: true,
                                 },
                                 pages: {
-                                    hideRadiosSection,
+                                    showRadiosSection,
                                 },
                             };
 
@@ -261,7 +261,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 lockUser: false,
                             },
                             pages: {
-                                hideRadiosSection,
+                                showRadiosSection,
                             },
                         };
 

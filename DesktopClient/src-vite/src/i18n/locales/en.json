@@ -22,7 +22,8 @@
     "language": "Language",
     "server": "Server",
     "about": "About",
-    "serverLogout": "Logout"
+    "serverLogout": "Logout",
+    "devTools": "Developer Tools"
   },
   "generic": {
     "seeMore": "See more",
@@ -377,6 +378,12 @@
         "password": "Please provide a password",
         "passwordLength": "Password must be at least 2 characters."
       }
+    },
+    "appleMusic": {
+      "loading": "Signing you into apple music...",
+      "loadingDescription": "This can take up to 30 seconds",
+      "loadingStuck": "If loading seems stuck,",
+      "resolveIssues": "click here to log out"
     }
   },
   "toast": {
@@ -601,6 +608,10 @@
       "privacy": "Privacy & Security"
     },
     "appearance": {
+      "font": {
+        "ui": "UI Font",
+        "lyrics": "Lyrics Font"
+      },
       "general": {
         "group": "General",
         "description": "Customize the app's look and display behaviors.",

@@ -25,4 +25,8 @@ export enum Theme {
 export interface IThemeContext {
     theme: Theme
     setTheme: (theme: Theme) => void
+    uiFont: string
+    setUIFont: (font: string) => void
+    lyricsFont: string
+    setLyricsFont: (font: string) => void
 }

@@ -9,18 +9,25 @@ public class Program
 {
     public static ViteAppManager App;
     public static HttpClient Http = new HttpClient();
+    public static WebWindow? MainWindow => App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault(App.MainWindow);
     
 
     [STAThread]
     static void Main(string[] args)
     {
+        // Needed for background playback with Apple Music
+        Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--autoplay-policy=no-user-gesture-required --disable-features=HardwareMediaKeyHandling");
+
         DesktopPlatformManager.Activate();
         App = new ViteAppManager();
 
         // Background setup
         PlayerThread.Start();
         Presence.Setup();
+        
+        #if WINDOWS
         TrayIcon.Setup();
+        #endif
 
         CreateMainWindow();
 
@@ -35,7 +42,12 @@ public class Program
     public static void CleanUpUI()
     {
         Performance.IsRunningInForeground = false;
-        App.OpenWindows.FirstOrDefault(App.MainWindow)?.Close();
+        MainWindow?.Close();
+
+        foreach (var window in App.OpenWindows)
+        {
+            window.ExecuteJavaScript("window.gc && window.gc()");
+        }
     }
 
     public static void CreateMainWindow()
@@ -44,7 +56,10 @@ public class Program
         App.MainWindow =
             WebWindow.Create()
             .WithTitle("Aonsoku")
+            .WithBounds(new WindowBounds(1280, 820))
+            .WithSharedContext("MainWindow", "")
             .WithoutTitleBar()
+            .With((w) => { if (w is Win32WebWindow) (w as Win32WebWindow)!.BackgroundMode = Win32WebWindow.WindowBackgroundMode.Mica; })
             .Show();
     }
 

@@ -1,4 +1,4 @@
-import { getCoverArtUrl } from "@/api/httpClient";
+import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
 import { subsonic } from "@/service/subsonic";
 import { IPlayerContext, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
@@ -115,16 +115,16 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         colors: {
                             currentSongColor: null,
-                            currentSongColorIntensity: 0.65,
+                            currentSongColorIntensity: 0.70,
                             bigPlayer: {
-                                useSongColor: false,
+                                useDynamicColors: true,
                                 blur: {
                                     value: 40,
                                     settings: blurSettings,
                                 },
                             },
                             queue: {
-                                useSongColor: false,
+                                useDynamicColors: true,
                             },
                         },
                     },
@@ -485,8 +485,13 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.playerState.queueState = false;
                                 state.playerState.lyricsState = false;
                                 state.playerState.currentDuration = 0;
-                                state.playerState.audioPlayerRef = null;
                                 state.settings.colors.currentSongColor = null;
+                            });
+                        },
+                        disposePlayer: () => {
+                            set((state) => {
+                                const disposeFn = state.playerState?.audioPlayerRef?.dispose;
+                                disposeFn && disposeFn(state.playerState?.audioPlayerRef); // Only native-audio will have the dispose function
                             });
                         },
                         resetProgress: () => {
@@ -629,6 +634,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         setAudioPlayerRef: (audioPlayer) => {
                             set(
                                 produce((state: IPlayerContext) => {
+                                    if (audioPlayer === null) { state.actions.disposePlayer(); }
                                     state.playerState.audioPlayerRef = audioPlayer;
                                 }),
                             );
@@ -790,12 +796,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         resetConfig: () => {
                             set((state) => {
-                                state.settings.colors.queue.useSongColor = false;
-                                state.settings.colors.bigPlayer.useSongColor = false;
+                                state.settings.colors.queue.useDynamicColors = true;
+                                state.settings.colors.bigPlayer.useDynamicColors = false;
                                 state.settings.colors.bigPlayer.blur.value = 40;
                                 state.settings.colors.bigPlayer.blur.settings = blurSettings;
-                                state.settings.colors.currentSongColorIntensity = 0.65;
-                                state.settings.fullscreen.autoFullscreenEnabled = false;
+                                state.settings.colors.currentSongColorIntensity = 0.70;
+                                state.settings.fullscreen.autoFullscreenEnabled = true;
                                 state.settings.replayGain.values = {
                                     enabled: false,
                                     type: "track",
@@ -815,14 +821,14 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.settings.colors.currentSongColorIntensity = value;
                             });
                         },
-                        setUseSongColorOnQueue: (value) => {
+                        setuseDynamicColorsOnQueue: (value) => {
                             set((state) => {
-                                state.settings.colors.queue.useSongColor = value;
+                                state.settings.colors.queue.useDynamicColors = value;
                             });
                         },
-                        setUseSongColorOnBigPlayer: (value) => {
+                        setuseDynamicColorsOnBigPlayer: (value) => {
                             set((state) => {
-                                state.settings.colors.bigPlayer.useSongColor = value;
+                                state.settings.colors.bigPlayer.useDynamicColors = value;
                             });
                         },
                         setBigPlayerBlurValue: (value) => {
@@ -841,22 +847,35 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 merge: (persistedState, currentState) => {
                     return merge(currentState, persistedState);
                 },
+                onRehydrateStorage(state) {
+                    // Recalculate the current song incase the index changed
+                    return () => state.actions.setCurrentSong();
+                },
                 partialize: (state) => {
                     const appStore = omit(state, [
                         "actions",
                         "playerState.audioPlayerRef",
                     ]);
 
+                    // We need to do some manipulation before sending to C#
+                    // The native code wants URLs instead of IDs
+                    const transformSongBeforeSending = (song: ISong) => {
+                        return Object.assign({}, song, {
+                            coverArt: getCoverArtUrl(song.coverArt),
+                            path: getSongStreamUrl(song.id),
+                        });
+                    }
+
                     // Update the state in the C# code
                     if (window.igniteView) {
                         window.igniteView.commandBridge.setCurrentMediaInfo(
-                            JSON.stringify(
-                                {
-                                    currentSong: Object.assign({}, state.songlist.currentSong, {
-                                        coverArt: getCoverArtUrl(state.songlist.currentSong.id),
-                                    })
-                                }
-                            )
+                            JSON.stringify({
+                                currentSong: transformSongBeforeSending(state.songlist.currentSong),
+                                currentSongIndex: state.songlist.currentSongIndex,
+                                isPlaying: state.playerState.isPlaying,
+                                queue: state.songlist.currentList.map(transformSongBeforeSending),
+                                LoopState: state.playerState.loopState,
+                            })
                         );
                     }
 
@@ -1033,15 +1052,15 @@ export const useLyricsState = () =>
         toggleLyricsAction: state.actions.toggleLyricsAction,
     }));
 
-export const useSongColor = () =>
+export const useDynamicColors = () =>
     usePlayerStore((state) => {
         const { currentSongColor, currentSongColorIntensity, queue } =
       state.settings.colors;
-        const { useSongColor, blur } = state.settings.colors.bigPlayer;
+        const { useDynamicColors, blur } = state.settings.colors.bigPlayer;
         const {
             setCurrentSongColor,
-            setUseSongColorOnQueue,
-            setUseSongColorOnBigPlayer,
+            setuseDynamicColorsOnQueue,
+            setuseDynamicColorsOnBigPlayer,
             setBigPlayerBlurValue,
             setCurrentSongIntensity,
         } = state.actions;
@@ -1051,10 +1070,10 @@ export const useSongColor = () =>
             setCurrentSongColor,
             currentSongColorIntensity,
             setCurrentSongIntensity,
-            useSongColorOnQueue: queue.useSongColor,
-            useSongColorOnBigPlayer: useSongColor,
-            setUseSongColorOnQueue,
-            setUseSongColorOnBigPlayer,
+            useDynamicColorsOnQueue: queue.useDynamicColors,
+            useDynamicColorsOnBigPlayer: useDynamicColors,
+            setuseDynamicColorsOnQueue,
+            setuseDynamicColorsOnBigPlayer,
             bigPlayerBlur: blur,
             setBigPlayerBlurValue,
         };

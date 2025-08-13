@@ -12,19 +12,25 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
-import { useLyricsState, useSongColor } from "@/store/player.store";
+import { useDynamicColors, useLyricsState } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
+import { enterFullscreen } from "@/utils/browser";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 
 export function TrackInfo({ song }: { song: ISong | undefined }) {
     const { t } = useTranslation();
-    const { setCurrentSongColor, currentSongColor } = useSongColor();
+    const { setCurrentSongColor, currentSongColor } = useDynamicColors();
     const { toggleLyricsAction } = useLyricsState(); 
 
     function getImageElement() {
         return document.getElementById("track-song-image") as HTMLImageElement;
+    }
+
+    function openFullscreen() {
+        enterFullscreen();
+        toggleLyricsAction();
     }
 
     const getImageColor = useCallback(async () => {
@@ -38,8 +44,8 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
             logger.info("[TrackInfo] - Getting Image Average Color", {
                 color,
             });
-        } catch {
-            logger.error("[TrackInfo] - Unable to get image average color.");
+        } catch (ex) {
+            logger.error("[TrackInfo] - Unable to get image average color.", { ex });
         }
 
         if (color !== currentSongColor) {
@@ -95,7 +101,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
                     size="icon"
                     className="cursor-pointer w-8 h-8 shadow-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity ease-in-out absolute top-1 right-1 focus-visible:opacity-100"
                     data-testid="track-fullscreen-button"
-                    onClick={() => toggleLyricsAction()}
+                    onClick={() => openFullscreen()}
                 >
                     <SimpleTooltip text={t("fullscreen.switchButton")} align="start">
                         <div className="w-full h-full flex items-center justify-center">

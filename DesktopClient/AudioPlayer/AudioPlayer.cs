@@ -1,80 +1,33 @@
 ﻿using Aonsoku.Presence;
 using IgniteView.Core;
-using SoundFlow.Abstracts;
-using SoundFlow.Abstracts.Devices;
-using SoundFlow.Backends.MiniAudio;
-using SoundFlow.Backends.MiniAudio.Devices;
-using SoundFlow.Components;
-using SoundFlow.Enums;
-using SoundFlow.Providers;
-using SoundFlow.Structs;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Dynamic;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Aonsoku.AudioPlayer
 {
-    public class AudioPlayer
+    public class AudioPlayer : IDisposable
     {
         public static ConcurrentDictionary<string, AudioPlayer> ActivePlayers = new ConcurrentDictionary<string, AudioPlayer>();
+        public static AudioPlayer? Instance => ActivePlayers.FirstOrDefault().Value;
 
         public string ID;
         public string Source;
         public bool HasLoaded;
+        public bool Looping;
+        public float Volume = 1.0f;
+        internal int AssociatedWindowID;
+        internal WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
 
-        SoundPlayer Player;
-        AudioEngine AudioEngine;
-        StreamDataProvider DataProvider;
-        AudioPlaybackDevice Device;
-
-        int AssociatedWindowID;
-        WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
-
-        static AudioFormat PlaybackFormat = new AudioFormat
-        {
-            Format = SampleFormat.F32,
-            SampleRate = 48000,
-            Channels = 2
-        };
-
-        [SetsRequiredMembers]
         public AudioPlayer(string id)
         {
             ID = id;
-            AudioEngine = new MiniAudioEngine();
-            Device = AudioEngine.InitializePlaybackDevice(null, PlaybackFormat, new MiniAudioDeviceConfig()
-            {
-                Wasapi = new WasapiSettings()
-                {
-                    NoAutoConvertSRC = true,
-                    NoDefaultQualitySRC = true,
-                    Usage = SoundFlow.Backends.MiniAudio.Enums.WasapiUsage.Default
-                }
-            });
-            Device.Start();
-
             ActivePlayers.TryAdd(id, this);
-        }
-
-        public async Task SendTimeUpdate(bool isAutomatic = true)
-        {
-            if (Player != null && DataProvider != null)
-            {
-                if (Player.State == PlaybackState.Playing)
-                {
-                    AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", Player.Time);
-                }
-
-                MediaPlaybackInfo.Instance.IsPlaying = Player?.State == PlaybackState.Playing;
-                MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(Player?.Duration ?? 0);
-                MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(Player?.Time ?? 0);
-            }
-            Presence.Presence.Instance.UpdateMediaStatus(MediaPlaybackInfo.Instance);
         }
 
         // We need to run all functions on the player thread for the following reasons:
@@ -85,135 +38,145 @@ namespace Aonsoku.AudioPlayer
             PlayerThread.ActionQueue.Enqueue(f);
         }
 
+        public static async Task RunOnPlayer(string id, Action<AudioPlayer> f)
+        {
+            if (!ActivePlayers.ContainsKey(id)) return;
+            await RunOnPlayerThread(async () =>
+            {
+                if (ActivePlayers.TryGetValue(id, out var player))
+                {
+                    f.Invoke(player);
+                }
+            });
+        }
+
         [Command("createAudioPlayer")]
         public static async Task CreateAudioPlayer(string id, WebWindow ctx)
         {
             await RunOnPlayerThread(() =>
             {
-                if (ActivePlayers.TryGetValue(id, out var existingPlayer)) {
-                    existingPlayer.AssociatedWindowID = ctx.ID; // Associate the player with the window
-                    return;
+                AudioPlayer? player = null;
+
+                if (ActivePlayers.TryGetValue(id, out player)) { }
+                else if (id.StartsWith("appleMusicPlayer"))
+                {
+                    player = new AppleMusicAudioPlayer(id);
                 }
-                var player = new AudioPlayer(id);
+                else
+                {
+                    player = new SoundFlowAudioPlayer(id);
+                }
+
+                player.AssociatedWindowID = ctx.ID;
             });
         }
 
-        [Command("setAudioPlayerSource")]
-        public static async Task SetSource(string id, string src, WebWindow ctx)
+        public virtual async Task SendTimeUpdate(bool isAutomatic = true) 
         {
-
-            await RunOnPlayerThread(async () =>
-            {
-                if (ActivePlayers.TryGetValue(id, out var player))
-                {
-
-                    if (player.Source == src && player.Player?.State != PlaybackState.Stopped) { return; } // Already set
-
-                    player.HasLoaded = false;
-                    player.Source = src;
-                    player.AssociatedWindowID = ctx.ID;
-
-                    if (!string.IsNullOrEmpty(src))
-                    {
-                        if (player.Player != null)
-                        {
-                            player.Device?.MasterMixer?.RemoveComponent(player.Player);
-                            player.Player?.Stop();
-                            player.Player?.Dispose();
-                            player.DataProvider?.Dispose();
-                            player.Player = null;
-                            player.DataProvider = null;
-                        }
-
-                        player.DataProvider = new StreamDataProvider(player.AudioEngine, PlaybackFormat, new SeekableHttpStream(src));
-                        player.Player = new SoundPlayer(player.AudioEngine, PlaybackFormat, player.DataProvider);
-                        player.Device.MasterMixer.AddComponent(player.Player);
-
-                        player.Player.PlaybackEnded +=  async (_, _) =>
-                        {
-                            await Task.Delay(1000); // Prevents the audio abrubtly being cut off at the end
-                            player.AssociatedWindow?.CallFunction("handleAudioEvent_" + player.ID, "ended");
-                        };
-
-                        while (player.Player?.Duration == 0)
-                        {
-                            await Task.Delay(100);
-                        }
-                        if (player.Player?.Duration > 0)
-                        {
-                            player.AssociatedWindow?.CallFunction("handleAudioEvent_" + id, "loaded", player.Player!.Duration);
-                            player.HasLoaded = true;
-                        }
-                    }
-                    else
-                    {
-                        player.Player = null;
-                    }
-                }
-            });
+            await Presence.Presence.Instance.UpdateMediaStatus(MediaPlaybackInfo.Instance);
         }
 
-        [Command("playAudio")]
-        public static async Task PlayAudio(string id)
+        public virtual async Task SetSource(string src, WebWindow ctx) 
         {
-            await RunOnPlayerThread(async () =>
+            if (ctx != null)
             {
-                if (ActivePlayers.TryGetValue(id, out var player))
-                {
-                    player.Player?.Play();
-                    player.SendTimeUpdate(false);
-                }
-            });
+                AssociatedWindowID = ctx.ID;
+            }
         }
 
-        [Command("pauseAudio")]
-        public static async Task PauseAudio(string id)
+        public virtual async Task PlayAudio() { }
+        public virtual async Task PauseAudio() { }
+        public virtual async Task SeekAudio(double time) { }
+        public virtual async Task SetLoopMode(bool loop) { Looping = loop; }
+        public virtual async Task SetVolume(double volume) { Volume = (float)volume; }
+
+        public async Task CallEndEvent()
         {
-            await RunOnPlayerThread(() =>
+            if (AssociatedWindow != null && Program.App.OpenWindows.Contains(AssociatedWindow))
             {
-                if (ActivePlayers.TryGetValue(id, out var player))
+                AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "ended");
+            }
+            else
+            {
+                // Skip to the next song in the queue
+                var nextSongIndex = MediaPlaybackInfo.Instance.CurrentSongIndex + 1;
+                var nextQueueItem = MediaPlaybackInfo.Instance.Queue.ElementAtOrDefault(nextSongIndex);
+
+                if (nextQueueItem == null && MediaPlaybackInfo.Instance.LoopState == PlayerLoopState.All)
                 {
-                    player.Player?.Pause();
-                    player.SendTimeUpdate(false);
+                    nextQueueItem = MediaPlaybackInfo.Instance.Queue.FirstOrDefault(); // Loop back to the first song if looping is enabled
+                    nextSongIndex = 0;
                 }
-            });
+                if (nextQueueItem == null) { return; }  // Playback finished, do nothing
+
+                // Modify the localStorage to reflect these changes
+                dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store"));
+                playerStore.state.songlist.currentSongIndex = nextSongIndex;
+                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore));
+
+                // Update presence
+                MediaPlaybackInfo.Instance.CurrentSongIndex = nextSongIndex;
+                MediaPlaybackInfo.Instance.CurrentSong = nextQueueItem;
+
+                var playbackURL = nextQueueItem.Path; // The client explicitly tells us what URL to stream from by overriding the path
+
+                await SetSource(playbackURL, null);
+                await UpdatePlaybackParameters();
+                await PlayAudio();
+            }
+        }
+        
+        public async Task CallLoadEvent(double duration)
+        {
+            HasLoaded = true;
+
+            if (AssociatedWindow != null && Program.App.OpenWindows.Contains(AssociatedWindow))
+            {
+                AssociatedWindow?.CallFunction("handleAudioEvent_" + this.ID, "loaded", duration);
+            }
+            else
+            {
+
+                // Modify the localStorage to reflect these changes
+                dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store"));
+                playerStore.state.playerState.currentDuration = duration;
+                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore));
+            }
         }
 
-        [Command("seekAudio")]
-        public static async Task SeekAudio(string id, double time)
+        public async Task UpdatePlaybackParameters()
         {
-            await RunOnPlayerThread(() =>
-            {
-                if (ActivePlayers.TryGetValue(id, out var player) && player.Player != null)
-                {
-                    player.Player.Seek((float)Math.Clamp(time, 0, player.Player.Duration - 1));
-                    player.SendTimeUpdate(false);
-                }
-            });
+            await SetLoopMode(Looping);
+            await SetVolume(Volume);
         }
 
-        [Command("setAudioPlayerLoopMode")]
-        public static async Task SetAudioPlayerLoopMode(string id, bool loop)
+        [Command("setAudioPlayerSource")] public static async Task SetSourceOnPlayer(string id, string src, WebWindow ctx) => RunOnPlayer(id, (p) => p.SetSource(src, ctx));
+        [Command("playAudio")] public static async Task PlayAudioOnPlayer(string id) => RunOnPlayer(id, (p) => p.PlayAudio());
+        [Command("pauseAudio")] public static async Task PauseAudioOnPlayer(string id) => RunOnPlayer(id, (p) => p.PauseAudio());
+        [Command("seekAudio")] public static async Task SeekAudioOnPlayer(string id, double time) => RunOnPlayer(id, (p) => p.SeekAudio(time));
+        [Command("setAudioPlayerLoopMode")] public static async Task SetLoopModeOnPlayer(string id, bool loop) => RunOnPlayer(id, (p) => p.SetLoopMode(loop));
+        [Command("setAudioPlayerVolume")] public static async Task SetVolumeOnPlayer(string id, double volume) => RunOnPlayer(id, (p) => p.SetVolume(volume));
+
+        [Command("disposeAudioPlayer")] 
+        public static async Task DisposeAudioPlayer(string id)
         {
-            await RunOnPlayerThread(() =>
-            {
-                if (ActivePlayers.TryGetValue(id, out var player) && player.Player != null)
-                {
-                    player.Player.IsLooping = loop;
-                }
-            });
+            await RunOnPlayer(id, (p) => p.Dispose());
         }
 
-        [Command("setAudioPlayerVolume")]
-        public static async Task SetAudioPlayerVolume(string id, double volume)
+        [Command("disposeAllAudioPlayers")] 
+        public static async Task DisposeAudioPlayers()
         {
-            await RunOnPlayerThread(() =>
+            foreach (var player in ActivePlayers.Values)
             {
-                if (ActivePlayers.TryGetValue(id, out var player) && player.Player != null)
-                {
-                    player.Player.Volume = (float)volume;
-                }
-            });
+                player.Dispose();
+            }
+            ActivePlayers.Clear();
+        }
+
+        public virtual void Dispose()
+        {
+            MediaPlaybackInfo.Instance = new MediaPlaybackInfo();
+            ActivePlayers.TryRemove(ID, out _);
         }
     }
 }

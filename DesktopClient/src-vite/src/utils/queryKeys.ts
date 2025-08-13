@@ -1,3 +1,7 @@
+const appleMusic = {
+    recommendations: "get-apple-music-recommendations",
+};
+
 const playlist = {
     all: "get-all-playlists",
     single: "get-playlist",
@@ -64,4 +68,5 @@ export const queryKeys = {
     update,
     podcast,
     episode,
+    appleMusic
 };

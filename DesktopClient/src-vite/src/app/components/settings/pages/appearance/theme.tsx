@@ -1,10 +1,10 @@
-import clsx from "clsx";
-import { Check, Minus } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { ContentItemTitle } from "@/app/components/settings/section";
 import { appThemes } from "@/app/observers/theme-observer";
 import { useTheme } from "@/store/theme.store";
 import { Theme } from "@/types/themeContext";
+import clsx from "clsx";
+import { Check, Minus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function ThemeSettingsPicker() {
     const { t } = useTranslation();
@@ -16,6 +16,9 @@ export function ThemeSettingsPicker() {
             <div className="w-full h-full grid grid-cols-4 gap-3">
                 {appThemes.map((theme) => {
                     const isActive = theme === currentTheme;
+
+                    // Disable system theme if not running in igniteview
+                    if (theme == Theme.System && !window.igniteView) { return; }
 
                     return (
                         <div key={theme} onClick={() => setTheme(theme)}>
@@ -30,6 +33,7 @@ export function ThemeSettingsPicker() {
 }
 
 export function ThemePlaceholder({ theme }: { theme: Theme }) {
+
     return (
         <div className={theme}>
             <div className="bg-background aspect-square border border-border rounded overflow-hidden flex cursor-pointer">
