@@ -1,6 +1,3 @@
-import { MouseEvent } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -14,6 +11,9 @@ import {
 import { ROUTES } from "@/routes/routesList";
 import { useAppActions, useAppStore } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
+import { MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 interface AlertDialogProps {
     openDialog: boolean
@@ -29,11 +29,13 @@ export function LogoutConfirmDialog({
         (state) => state.actions.setLogoutDialogState,
     );
     const navigate = useNavigate();
-    const { clearPlayerState, resetConfig } = usePlayerActions();
+    const { clearPlayerState, resetConfig, disposePlayer } = usePlayerActions();
     const { t } = useTranslation();
 
     function handleRemoveConfig(e: MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
+        disposePlayer();
+        setTimeout
         removeConfig();
         clearPlayerState();
         resetConfig();

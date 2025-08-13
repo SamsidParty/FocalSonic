@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Aonsoku.AudioPlayer
 {
-    public class AudioPlayer
+    public class AudioPlayer : IDisposable
     {
         public static ConcurrentDictionary<string, AudioPlayer> ActivePlayers = new ConcurrentDictionary<string, AudioPlayer>();
 
@@ -147,5 +147,27 @@ namespace Aonsoku.AudioPlayer
         [Command("seekAudio")] public static async Task SeekAudioOnPlayer(string id, double time) => RunOnPlayer(id, (p) => p.SeekAudio(time));
         [Command("setAudioPlayerLoopMode")] public static async Task SetLoopModeOnPlayer(string id, bool loop) => RunOnPlayer(id, (p) => p.SetLoopMode(loop));
         [Command("setAudioPlayerVolume")] public static async Task SetVolumeOnPlayer(string id, double volume) => RunOnPlayer(id, (p) => p.SetVolume(volume));
+
+        [Command("disposeAudioPlayer")] 
+        public static async Task DisposeAudioPlayer(string id)
+        {
+            await RunOnPlayer(id, (p) => p.Dispose());
+        }
+
+        [Command("disposeAllAudioPlayers")] 
+        public static async Task DisposeAudioPlayers()
+        {
+            foreach (var player in ActivePlayers.Values)
+            {
+                player.Dispose();
+            }
+            ActivePlayers.Clear();
+        }
+
+        public virtual void Dispose()
+        {
+            MediaPlaybackInfo.Instance = new MediaPlaybackInfo();
+            ActivePlayers.TryRemove(ID, out _);
+        }
     }
 }

@@ -8,6 +8,7 @@ import { produce } from "immer";
 import clamp from "lodash/clamp";
 import merge from "lodash/merge";
 import omit from "lodash/omit";
+import { undefined } from "zod";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
@@ -485,8 +486,13 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.playerState.queueState = false;
                                 state.playerState.lyricsState = false;
                                 state.playerState.currentDuration = 0;
-                                state.playerState.audioPlayerRef = null;
                                 state.settings.colors.currentSongColor = null;
+                            });
+                        },
+                        disposePlayer: () => {
+                            set((state) => {
+                                const disposeFn = state.playerState?.audioPlayerRef?.dispose;
+                                disposeFn && disposeFn(state.playerState?.audioPlayerRef); // Only native-audio will have the dispose function
                             });
                         },
                         resetProgress: () => {
@@ -629,6 +635,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         setAudioPlayerRef: (audioPlayer) => {
                             set(
                                 produce((state: IPlayerContext) => {
+                                    if (audioPlayer === null) { state.actions.disposePlayer(); }
                                     state.playerState.audioPlayerRef = audioPlayer;
                                 }),
                             );

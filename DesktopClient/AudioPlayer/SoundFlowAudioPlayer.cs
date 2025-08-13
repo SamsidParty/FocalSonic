@@ -1,5 +1,6 @@
 ﻿using Aonsoku.Presence;
 using IgniteView.Core;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using SoundFlow.Abstracts;
 using SoundFlow.Abstracts.Devices;
 using SoundFlow.Backends.MiniAudio;
@@ -19,12 +20,14 @@ using System.Threading.Tasks;
 
 namespace Aonsoku.AudioPlayer
 {
-    public class SoundFlowAudioPlayer : AudioPlayer
+    public class SoundFlowAudioPlayer : AudioPlayer, IDisposable
     {
+        // Don't dispose these because once they are disposed they can't be recreated properly.
+        static AudioPlaybackDevice Device;
+        static AudioEngine AudioEngine;
+
         SoundPlayer Player;
-        AudioEngine AudioEngine;
         StreamDataProvider DataProvider;
-        AudioPlaybackDevice Device;
 
         static AudioFormat PlaybackFormat = new AudioFormat
         {
@@ -35,17 +38,23 @@ namespace Aonsoku.AudioPlayer
 
         public SoundFlowAudioPlayer(string id) : base(id)
         {
-            AudioEngine = new MiniAudioEngine();
-            Device = AudioEngine.InitializePlaybackDevice(null, PlaybackFormat, new MiniAudioDeviceConfig()
+            if (AudioEngine == null)
             {
-                Wasapi = new WasapiSettings()
+                AudioEngine = new MiniAudioEngine();
+            }
+            if (Device == null)
+            {
+                Device = AudioEngine.InitializePlaybackDevice(null, PlaybackFormat, new MiniAudioDeviceConfig()
                 {
-                    NoAutoConvertSRC = true,
-                    NoDefaultQualitySRC = true,
-                    Usage = SoundFlow.Backends.MiniAudio.Enums.WasapiUsage.Default
-                }
-            });
-            Device.Start();
+                    Wasapi = new WasapiSettings()
+                    {
+                        NoAutoConvertSRC = true,
+                        NoDefaultQualitySRC = true,
+                        Usage = SoundFlow.Backends.MiniAudio.Enums.WasapiUsage.Default
+                    }
+                });
+                Device.Start();
+            }
         }
 
         public override async Task SendTimeUpdate(bool isAutomatic = true)
@@ -77,12 +86,7 @@ namespace Aonsoku.AudioPlayer
             {
                 if (Player != null)
                 {
-                    Device?.MasterMixer?.RemoveComponent(Player);
-                    Player?.Stop();
-                    Player?.Dispose();
-                    DataProvider?.Dispose();
-                    Player = null;
-                    DataProvider = null;
+                    Stop();
                 }
 
                 DataProvider = new StreamDataProvider(AudioEngine, PlaybackFormat, new SeekableHttpStream(src));
@@ -147,6 +151,22 @@ namespace Aonsoku.AudioPlayer
             {
                 Player.Volume = (float)volume;
             }
+        }
+
+        public override void Dispose()
+        {
+            Stop();
+            base.Dispose();
+        }
+
+        public void Stop()
+        {
+            Device?.MasterMixer?.RemoveComponent(Player);
+            Player?.Stop();
+            Player?.Dispose();
+            DataProvider?.Dispose();
+            Player = null;
+            DataProvider = null;
         }
     }
 }

@@ -5,6 +5,7 @@ import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { isLinux, isWindows } from "@/utils/osType";
 
 export default function Login() {
+
     return (
         <div className="flex flex-col w-screen h-screen">
             {!isLinux && (

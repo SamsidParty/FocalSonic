@@ -7,8 +7,6 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import { toast } from "react-toastify";
-import { z } from "zod";
 import { queryServerInfo } from "@/api/queryServerInfo";
 import { LangToggle } from "@/app/components/login/lang-toggle";
 import { Button } from "@/app/components/ui/button";
@@ -42,6 +40,8 @@ import { ROUTES } from "@/routes/routesList";
 import { useAppActions, useAppData } from "@/store/app.store";
 import { removeSlashFromUrl } from "@/utils/removeSlashFromUrl";
 import { isTauri } from "@/utils/tauriTools";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const loginSchema = z.object({
     url: z
@@ -107,7 +107,7 @@ export function LoginForm() {
         if (status) {
             await queryClient.invalidateQueries();
             toast.success(t("toast.server.success"));
-            navigate(ROUTES.LIBRARY.HOME, { replace: true });
+            window.location.href = ROUTES.LIBRARY.HOME; // Hard redirect
         } else {
             setLoading(false);
             toast.error(t("toast.server.error"));

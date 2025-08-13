@@ -1,4 +1,5 @@
 import { logger } from "@/utils/logger";
+import { checkServerType } from "@/utils/servers";
 import { AudioPlayerProps } from "./audio";
 
 
@@ -10,14 +11,15 @@ class NativeVirtualAudioPlayer {
     _currentTimeOffset = Date.now();
     _loop: boolean = false;
     _src?: string;
-    isCreated = false;
+    _state = "idle";
     id?: string;
     paused: boolean = true;
 
     initialize() {
-        if (this.isCreated) return;
+        if (this._state === "created" || this._state === "creating") return;
+        this._state = "creating";
         setTimeout(async () => {
-            this.id = this._src?.includes("applemusic%3A") ? "appleMusicPlayer" : "defaultPlayer";
+            this.id = (checkServerType().isAppleMusic) ? "appleMusicPlayer" : "defaultPlayer";
             logger.info("NativeVirtualAudioPlayer created with id:", this.id);
       
             window["handleAudioEvent_" + this.id] = (e: string, param: any) => {
@@ -40,9 +42,18 @@ class NativeVirtualAudioPlayer {
             };
 
             await igniteView.commandBridge.createAudioPlayer(this.id);
-            this.isCreated = true;
+            this._state = "created";
             this.onLoadStart?.();
         }, 0);
+    }
+
+    // "this" is undefined in the dispose function, so we pass it as an argument
+    dispose(self) {
+        if (self._state !== "created") return;
+        self._state = "disposed";
+        self._src = undefined;
+        logger.info("NativeVirtualAudioPlayer disposed with id:", self.id);
+        igniteView.commandBridge.disposeAudioPlayer(self.id!);
     }
 
     get src() {
@@ -88,7 +99,7 @@ class NativeVirtualAudioPlayer {
     }
 
     async waitForCreation() {
-        while (!this.isCreated) {
+        while (this._state !== "created") {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
     }
