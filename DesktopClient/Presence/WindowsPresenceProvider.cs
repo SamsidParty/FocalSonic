@@ -10,6 +10,7 @@ using Windows.Media;
 using Windows.Media.Control;
 using Windows.Media.Playback;
 using Windows.Storage.Streams;
+using Aonsoku.AudioPlayer;
 
 namespace Aonsoku.Presence
 {
@@ -59,6 +60,18 @@ namespace Aonsoku.Presence
                 Position = playbackInfo.Position,
                 EndTime = playbackInfo.Duration
             });
+
+            smtc.ButtonPressed += (sender, args) =>
+            {
+                if (args.Button == SystemMediaTransportControlsButton.Play)
+                {
+                    AudioPlayer.AudioPlayer.Instance?.PlayAudio();
+                }
+                else if (args.Button == SystemMediaTransportControlsButton.Pause)
+                {
+                    AudioPlayer.AudioPlayer.Instance?.PauseAudio();
+                }
+            };
 
             smtc.DisplayUpdater.Update();
             LastSongID = song?.Id ?? null;

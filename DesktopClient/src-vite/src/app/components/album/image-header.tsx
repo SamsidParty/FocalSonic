@@ -60,9 +60,10 @@ export default function ImageHeader({
 
         try {
             color = await getAverageColor(img, "LightVibrant");
-        } catch (_) {
+        } catch (ex) {
             console.warn(
                 "handleLoadImage: unable to get image color. Using a random color.",
+                ex
             );
         }
 

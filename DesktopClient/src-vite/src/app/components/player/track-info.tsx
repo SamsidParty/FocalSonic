@@ -44,8 +44,8 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
             logger.info("[TrackInfo] - Getting Image Average Color", {
                 color,
             });
-        } catch {
-            logger.error("[TrackInfo] - Unable to get image average color.");
+        } catch (ex) {
+            logger.error("[TrackInfo] - Unable to get image average color.", { ex });
         }
 
         if (color !== currentSongColor) {

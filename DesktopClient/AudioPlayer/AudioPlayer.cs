@@ -14,6 +14,7 @@ namespace Aonsoku.AudioPlayer
     public class AudioPlayer : IDisposable
     {
         public static ConcurrentDictionary<string, AudioPlayer> ActivePlayers = new ConcurrentDictionary<string, AudioPlayer>();
+        public static AudioPlayer? Instance => ActivePlayers.FirstOrDefault().Value;
 
         public string ID;
         public string Source;
@@ -39,6 +40,7 @@ namespace Aonsoku.AudioPlayer
 
         public static async Task RunOnPlayer(string id, Action<AudioPlayer> f)
         {
+            if (!ActivePlayers.ContainsKey(id)) return;
             await RunOnPlayerThread(async () =>
             {
                 if (ActivePlayers.TryGetValue(id, out var player))

@@ -1,7 +1,16 @@
+import { useCacheStore } from "@/store/cache.store";
 import { Vibrant } from "node-vibrant/browser";
 
 export async function getAverageColor(img: HTMLImageElement | null, mode: string = "Vibrant") {
-    return img.src ? ((await Vibrant.from(img!.src).getPalette())[mode] || "").hex.toString() : "#b9fde9ff";
+    if (!img.src) { return "#b9fde9ff"; }
+
+    let cachedColor = useCacheStore.getState().tryGetImageDominantColor(img?.src);
+    if (!cachedColor) {
+        cachedColor = await Vibrant.from(img!.src).getPalette();
+        useCacheStore.getState().saveImageDominantColor(img!.src, cachedColor);
+    }
+
+    return img.src ? (cachedColor[mode] || "").hex.toString() : "#b9fde9ff";
 }
 
 export function hexToRgba(hex: string, alpha: number = 1) {
