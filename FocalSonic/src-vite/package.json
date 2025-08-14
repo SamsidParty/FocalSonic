@@ -6,12 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "pages": "vite build --base=/FocalSonic/",
     "preview": "vite preview",
-    "tauri": "tauri",
-    "lint": "eslint --fix",
-    "lint:fix": "pnpm lint --fix",
-    "cy:open": "cypress open",
-    "test": "cypress run --component"
+    "lint": "eslint --fix"
   },
   "repository": {
     "url": "https://github.com/SamsidParty/FocalSonic"
