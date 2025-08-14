@@ -27,6 +27,12 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                             state.lyricsFont = font;
                         });
                     },
+                    isPlayerAtTop: true,
+                    setIsPlayerAtTop(isAtTop: boolean) {
+                        set((state) => {
+                            state.isPlayerAtTop = isAtTop;
+                        });
+                    },
                 })),
                 {
                     name: "theme_store",

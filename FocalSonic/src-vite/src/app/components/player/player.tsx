@@ -15,10 +15,12 @@ import {
     usePlayerStore,
     useReplayGainState,
 } from "@/store/player.store";
+import { useTheme } from "@/store/theme.store";
 import { LoopState } from "@/types/playerContext";
 import { hasPiPSupport } from "@/utils/browser";
 import { logger } from "@/utils/logger";
 import { ReplayGainParams } from "@/utils/replayGain";
+import clsx from "clsx";
 import { memo, useCallback, useEffect, useRef } from "react";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
@@ -71,6 +73,8 @@ export function Player() {
     const song = currentList[currentSongIndex];
     const radio = radioList[currentSongIndex];
     const podcast = podcastList[currentSongIndex];
+
+    const { isPlayerAtTop } = useTheme();
 
     const getAudioRef = useCallback(() => {
         if (isRadio) return radioRef;
@@ -179,7 +183,10 @@ export function Player() {
     }
 
     return (
-        <footer className="border-t h-[--player-height] w-full flex items-center fixed bottom-0 left-0 right-0 z-40 bg-background">
+        <footer className={clsx(
+            "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-background",
+            isPlayerAtTop ? "top-header border-b" : "bottom-0 border-t"
+        )}>
             <div className="w-full h-full grid grid-cols-player gap-2 px-3">
                 {/* Track Info */}
                 <div className="flex items-center gap-2 w-full">

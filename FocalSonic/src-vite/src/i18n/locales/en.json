@@ -631,6 +631,9 @@
           "label": "Big Player",
           "blurSize": "Image Blur Size"
         }
+      },
+      "player": {
+        "showAtTop": "Integrate player in titlebar"
       }
     },
     "audio": {

@@ -10,6 +10,7 @@ import {
     useMainDrawerState,
     useQueueState
 } from "@/store/player.store";
+import { useTheme } from "@/store/theme.store";
 import clsx from "clsx";
 import { ChevronDownIcon } from "lucide-react";
 import { ComponentPropsWithoutRef } from "react";
@@ -19,6 +20,7 @@ export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
     const { queueState } = useQueueState();
     const { lyricsState } = useLyricsState();
+    const { isPlayerAtTop } = useTheme();
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
 
     return (
@@ -32,7 +34,10 @@ export function MainDrawerPage() {
             modal={false}
         >
             <DrawerContent
-                className="main-drawer rounded-t-none border-none select-none cursor-default outline-none"
+                className={clsx(
+                    "main-drawer rounded-t-none border-none select-none cursor-default outline-none",
+                    isPlayerAtTop ? "mt-player" : "mb-player"
+                )}
                 showHandle={false}
                 aria-describedby={undefined}
             >

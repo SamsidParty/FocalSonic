@@ -1,4 +1,5 @@
 import { ScrollArea } from "@/app/components/ui/scroll-area";
+import { useTheme } from "@/store/theme.store";
 import { scrollPageToTop } from "@/utils/scrollPageToTop";
 import clsx from "clsx";
 import { useEffect } from "react";
@@ -8,6 +9,7 @@ import { useAppWindow } from "../hooks/use-app-window";
 export function MainRoutes() {
     const { pathname } = useLocation() as Location;
     const { isSidebarOpen } = useAppWindow();
+    const { isPlayerAtTop } = useTheme();
 
     useEffect(() => {
         scrollPageToTop();
@@ -16,8 +18,9 @@ export function MainRoutes() {
     return (
         <main className={
             clsx(
-                "flex h-full pt-header pb-player transition-[padding-left] duration-500 ease-long",
-                isSidebarOpen ? "pl-sidebar" : "pl-mini-sidebar"
+                "flex h-full transition-[padding-left] duration-500 ease-long",
+                isSidebarOpen ? "pl-sidebar" : "pl-mini-sidebar",
+                isPlayerAtTop ? "pt-[calc(var(--player-height)+var(--header-height))]" : "pb-player pt-header"
             )
         }
         >

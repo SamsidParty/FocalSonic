@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { CreatePlaylistDialog } from "@/app/components/playlist/form-dialog";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/store/theme.store";
 import { SidebarMenuButton } from "../components/sidebar/menu-button";
 import { useAppWindow } from "../hooks/use-app-window";
 import LargeSidebar from "./large-sidebar";
@@ -10,15 +11,17 @@ import { MiniSidebar } from "./mini-sidebar";
 export function Sidebar() {
     const { t } = useTranslation();
     const { isSidebarOpen, toggleSidebar } = useAppWindow();
+    const { isPlayerAtTop } = useTheme();
 
     return (
         <aside>
             <div
                 className={cn(
-                    "flex-col border-r fixed top-header left-0 bottom-0 pb-player bg-background z-10",
+                    "flex-col border-r fixed left-0 bottom-0 pb-player bg-background z-10",
                     "transition-[width] duration-500 ease-long",
                     "overflow-x-clip overflow-y-auto no-scrollbar",
                     !isSidebarOpen ? "w-mini-sidebar p-2" : "w-sidebar",
+                    isPlayerAtTop ? "top-[calc(var(--player-height)+var(--header-height))]" : "top-header"
                 )}
             >
 

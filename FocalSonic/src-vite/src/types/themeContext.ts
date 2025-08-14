@@ -29,4 +29,6 @@ export interface IThemeContext {
     setUIFont: (font: string) => void
     lyricsFont: string
     setLyricsFont: (font: string) => void
+    isPlayerAtTop: boolean
+    setIsPlayerAtTop: (isAtTop: boolean) => void
 }
