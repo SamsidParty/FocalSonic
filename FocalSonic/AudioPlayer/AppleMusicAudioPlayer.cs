@@ -72,6 +72,7 @@ namespace FocalSonic.AudioPlayer
             if (isPlaying)
             {
                 owningPlayer?.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "timeupdate", currentPlaybackTime);
+                owningPlayer?.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "durationupdate", currentPlaybackDuration);
             }
 
 

@@ -1,3 +1,16 @@
+import { ProgressSlider } from "@/app/components/ui/slider";
+import { podcasts } from "@/service/podcasts";
+import { subsonic } from "@/service/subsonic";
+import {
+    usePlayerActions,
+    usePlayerDuration,
+    usePlayerIsPlaying,
+    usePlayerMediaType,
+    usePlayerProgress,
+    usePlayerSonglist,
+} from "@/store/player.store";
+import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { logger } from "@/utils/logger";
 import clsx from "clsx";
 import {
     RefObject,
@@ -7,19 +20,6 @@ import {
     useRef,
     useState,
 } from "react";
-import { ProgressSlider } from "@/app/components/ui/slider";
-import { podcasts } from "@/service/podcasts";
-import { subsonic } from "@/service/subsonic";
-import {
-    usePlayerActions,
-    usePlayerDuration,
-    usePlayerMediaType,
-    usePlayerProgress,
-    usePlayerSonglist,
-    usePlayerIsPlaying,
-} from "@/store/player.store";
-import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
-import { logger } from "@/utils/logger";
 
 interface PlayerProgressProps {
     audioRef: RefObject<HTMLAudioElement>
@@ -178,6 +178,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
                 <ProgressSlider
                     defaultValue={[0]}
                     value={isSeeking ? [localProgress] : [progress]}
+                    isLoading={audioRef.current?.readyState === 0}
                     tooltipTransformer={convertSecondsToTime}
                     max={currentDuration}
                     step={1}

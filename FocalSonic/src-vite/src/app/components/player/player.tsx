@@ -123,9 +123,6 @@ export function Player() {
             audio.currentTime = podcastProgress;
         } else {
             const progress = getCurrentProgress();
-            if (progress > 15) {
-                audio.currentTime = progress;
-            }
         }
     }, [
         getAudioRef,

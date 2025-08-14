@@ -64,6 +64,7 @@ namespace FocalSonic.AudioPlayer
                 if (Player.State == PlaybackState.Playing)
                 {
                     AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", Player.Time);
+                    AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "durationupdate", Player.Duration);
                 }
 
                 MediaPlaybackInfo.Instance.IsPlaying = Player?.State == PlaybackState.Playing;

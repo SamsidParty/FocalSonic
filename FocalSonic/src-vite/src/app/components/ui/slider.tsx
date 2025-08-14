@@ -146,7 +146,8 @@ type ProgressSliderProps = React.ComponentPropsWithoutRef<
 > & {
     variant?: Variant
     tooltipValue?: string
-    tooltipTransformer?: (value: number) => string
+    tooltipTransformer?: (value: number) => string,
+    isLoading?: boolean
 }
 
 export function ProgressSlider(props: ProgressSliderProps) {
@@ -155,6 +156,7 @@ export function ProgressSlider(props: ProgressSliderProps) {
         tooltipValue,
         tooltipTransformer,
         variant = "default",
+        isLoading = false,
         onValueChange,
         ...rest
     } = props;
@@ -282,6 +284,7 @@ export function ProgressSlider(props: ProgressSliderProps) {
             className={cn(
                 "relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
                 className,
+                isLoading && "pointer-events-none"
             )}
             onMouseOver={handleMouseOver}
             onMouseOut={() => setShowTooltip(false)}
@@ -305,6 +308,11 @@ export function ProgressSlider(props: ProgressSliderProps) {
                     )}
                     onContextMenu={handleContextMenu}
                 >
+                    {
+                        isLoading && (<>
+                            <div className="relative h-1 w-full grow overflow-hidden rounded-full select-none bg-border animate-pulse"></div>
+                        </>)
+                    }
                     <SliderPrimitive.Range
                         className={clsx(
                             "absolute h-full select-none transition-[border-radius]",

@@ -28,6 +28,7 @@ class NativeVirtualAudioPlayer {
                 }
                 else if (e == "loaded") {
                     this.duration = param;
+                    this._currentTime = 0;
                     this.onLoadedMetadata?.();
                     this.onLoadedData?.();
                     this.onTimeUpdate?.();
@@ -37,6 +38,12 @@ class NativeVirtualAudioPlayer {
                         this._currentTime = param;
                         this._currentTimeOffset = Date.now();
                         this.onTimeUpdate?.();
+                    }
+                }
+                else if (e == "durationupdate") {
+                    if (this.duration != param) {
+                        this.duration = param;
+                        this.onLoadedMetadata?.();
                     }
                 }
             };
@@ -61,11 +68,19 @@ class NativeVirtualAudioPlayer {
     }
 
     set src(value: string | undefined) {
+        if (this._src !== value) {
+            this._currentTime = 0;
+            this._currentTimeOffset = Date.now();
+            this.duration = 0;
+            this.onTimeUpdate?.();
+            this.onLoadedMetadata?.();
+        }
         this._src = value;
         this._src && this.initialize();
     }
 
     get currentTime() {
+        if (this.readyState === 0) { return 0; }
         if (this.paused || this._currentTimeOffset < 1) { return this._currentTime; }
         return Math.min(((Date.now() - this._currentTimeOffset) / 1000) + this._currentTime, this._currentTime + 1);
     }
@@ -79,6 +94,7 @@ class NativeVirtualAudioPlayer {
     }
 
     set loop(value: boolean) {
+        if (this._loop === value) return;
         this._loop = value;
         setTimeout(async () => {
             await this.waitForCreation();
@@ -91,11 +107,21 @@ class NativeVirtualAudioPlayer {
     }
 
     set volume(value: number) {
+        if (this._volume === value) return;
         this._volume = value;
         setTimeout(async () => {
             await this.waitForCreation();
             window.igniteView?.commandBridge.setAudioPlayerVolume(this.id!, this._volume);
         }, 0);
+    }
+
+    get readyState() {
+        
+        if (!this.paused && (this._state !== "created" || this._currentTime === 0 || !this.duration)) {
+            return 0;
+        }
+
+        return 4;
     }
 
     async waitForCreation() {
@@ -127,6 +153,7 @@ class NativeVirtualAudioPlayer {
     }
 
     async seek(time: number) {
+        if (this.readyState === 0) { return; }
         if (Math.abs(this._currentTime - time) < 1) return;
         this._currentTime = time;
         this._currentTimeOffset = Date.now();
