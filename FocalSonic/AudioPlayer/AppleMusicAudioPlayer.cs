@@ -1,4 +1,5 @@
-﻿using FocalSonic.Presence;
+﻿using FocalSonic.Helpers;
+using FocalSonic.Presence;
 using IgniteView.Core;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -41,7 +42,7 @@ namespace FocalSonic.AudioPlayer
                     .WithTitle("Apple Music Runtime")
                     .WithURL($"https://beta.music.apple.com/{AppleMusicKeys.Region}/home")
                     .WithBounds(new LockedWindowBounds(1280, 720))
-                    .WithoutTitleBar()
+                    .WithPlatformBasedAdditions()
                     .WithSharedContext("AppleMusicWindow", "");
 
                 // Since we're serving from apple.com instead of localhost, interop needs to be setup manually
@@ -168,7 +169,7 @@ namespace FocalSonic.AudioPlayer
                     .WithTitle("Apple Music")
                     .WithURL("https://beta.music.apple.com/us/login")
                     .WithBounds(new LockedWindowBounds(1200, 720))
-                    .WithoutTitleBar()
+                    .WithPlatformBasedAdditions()
                     .WithSharedContext("AppleMusicSignIn", "")
                     .Show();
 

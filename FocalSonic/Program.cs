@@ -1,5 +1,6 @@
 ﻿using FocalSonic;
 using FocalSonic.AudioPlayer;
+using FocalSonic.Helpers;
 using FocalSonic.Presence;
 using IgniteView.Core;
 using IgniteView.Desktop;
@@ -61,8 +62,7 @@ public class Program
             .WithTitle("FocalSonic")
             .WithBounds(new WindowBounds(1280, 820))
             .WithSharedContext("MainWindow", "")
-            .WithoutTitleBar()
-            .With((w) => { if (w is Win32WebWindow) (w as Win32WebWindow)!.BackgroundMode = Win32WebWindow.WindowBackgroundMode.Acrylic; })
+            .WithPlatformBasedAdditions()
             .Show();
     }
 
