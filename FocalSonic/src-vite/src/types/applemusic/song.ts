@@ -1,5 +1,6 @@
 import { Resource } from "i18next";
 import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
+import { AppleMusicAlbum } from "./albums";
 
 export interface AppleMusicLyricsResponse {
     data: AppleMusicLyrics[];
@@ -48,4 +49,17 @@ export interface AppleMusicSongRelationships {
     artists: AppleMusicRelationship<AppleMusicArtist>;
     genres?: AppleMusicRelationship<AppleMusicGenre> | undefined;
     station?: { data: AppleMusicStation } | undefined;
+}
+
+export function convertAppleMusicSongToSubsonic(song: AppleMusicSong): Song {
+    if (!song) { return; }
+    return {
+        id: song.id,
+        title: song.attributes?.name || "Unknown",
+        artist: song.attributes?.artistName || "Unknown",
+        album: song.attributes?.albumName || "Unknown",
+        duration: (song.attributes?.durationInMillis || 0) / 1000,
+        suffix: "m4a",
+        coverArt: song.attributes?.artwork?.url || "",
+    };
 }

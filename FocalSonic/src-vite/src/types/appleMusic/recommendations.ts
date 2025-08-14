@@ -1,3 +1,4 @@
+import { AppleMusicAlbum } from "./albums";
 import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship, AppleMusicResource } from "./common";
 import { AppleMusicPlaylist } from "./playlist";
 
@@ -47,44 +48,12 @@ export interface AppleMusicRecommendationContent {
   id: string;
   type: string;
   href: string;
-  attributes: AppleMusicAlbumAttributes | AppleMusicPlaylist | AppleMusicStationAttributes;
+  attributes: AppleMusicAlbum | AppleMusicPlaylist | AppleMusicStationAttributes;
   meta?: {
     contentVersion?: Record<string, number>;
   };
 }
 
-
-export interface AppleMusicAlbumAttributes {
-  artistName?: string;
-  artwork: AppleMusicArtwork;
-  audioTraits?: string[];
-  curatorName?: string;
-  description?: {
-    standard: string;
-    short?: string;
-  };
-  editorialNotes?: AppleMusicEditorialNotes;
-  hasCollaboration?: boolean;
-  isChart?: boolean;
-  lastModifiedDate?: string;
-  name: string;
-  playParams: AppleMusicPlayParams;
-  playlistType?: string;
-  supportsSing?: boolean;
-  url: string;
-  copyright?: string;
-  genreNames?: string[];
-  isCompilation?: boolean;
-  isComplete?: boolean;
-  isMasteredForItunes?: boolean;
-  isPrerelease?: boolean;
-  isSingle?: boolean;
-  recordLabel?: string;
-  releaseDate?: string;
-  trackCount?: number;
-  upc?: string;
-  contentRating?: string;
-}
 
 export interface AppleMusicStationAttributes {
   artwork: AppleMusicArtwork;

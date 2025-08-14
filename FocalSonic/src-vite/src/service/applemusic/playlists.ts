@@ -14,13 +14,24 @@ async function getAll() {
 }
 
 async function getOne(id: string) {
-    const response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${id}`,
+    let response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${id}`,
     { 
         method: "GET",
         query: {
             include: "tracks"
         }
     });
+
+    if (response?.data.length === 0) {
+        // Try again but this time in the catalog not the library
+        response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/catalog/{storefront}/playlists/${id}`, {
+            method: "GET",
+            query: {
+                include: "tracks"
+            }
+        });
+    }
+
     return convertAppleMusicPlaylistToSubsonic(response?.data[0]) || null;
 }
 

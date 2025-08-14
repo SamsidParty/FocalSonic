@@ -1,7 +1,7 @@
 import { Playlist } from "../responses/playlist";
 import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship, AppleMusicResource } from "./common";
 import { AppleMusicCurator } from "./recommendations";
-import { AppleMusicSong } from "./song";
+import { AppleMusicSong, convertAppleMusicSongToSubsonic } from "./song";
 
 export interface AppleMusicPlaylistResponse {
     data: AppleMusicPlaylist[];
@@ -41,14 +41,6 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
         owner: "",
         changed: new Date(playlist.attributes?.lastModifiedDate || "").toString() || Date.now().toString(),
         created: new Date(playlist.attributes?.lastModifiedDate || "").toString() || Date.now().toString(),
-        entry: playlist.relationships?.tracks?.data.map((track) => ({
-            id: track.id,
-            title: track.attributes?.name || "Unknown",
-            artist: track.attributes?.artistName || "Unknown",
-            album: track.attributes?.albumName || "Unknown",
-            duration: (track.attributes?.durationInMillis || 0) / 1000,
-            suffix: "m4a",
-            coverArt: track.attributes?.artwork?.url || "",
-        })) || [],
+        entry: playlist.relationships?.tracks?.data.map(convertAppleMusicSongToSubsonic) || [],
     };
 }
