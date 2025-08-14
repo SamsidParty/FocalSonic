@@ -40,11 +40,6 @@ const LatestEpisodes = lazy(
     () => import("@/app/pages/podcasts/latest-episodes"),
 );
 
-let baseName = "/";
-if (window.location.pathname.startsWith("/FocalSonic")) {
-    baseName = "/FocalSonic/";
-}
-
 export const router = createHashRouter([
     {
         path: "/",
@@ -206,6 +201,4 @@ export const router = createHashRouter([
             </Suspense>
         ),
     },
-], {
-    basename: baseName
-});
+]);
