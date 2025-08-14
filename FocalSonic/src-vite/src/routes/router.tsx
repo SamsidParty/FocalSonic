@@ -40,12 +40,6 @@ const LatestEpisodes = lazy(
     () => import("@/app/pages/podcasts/latest-episodes"),
 );
 
-let baseName = "/";
-if (window.location.pathname.startsWith("/FocalSonic")) {
-    console.log("Using /FocalSonic as base directory");
-    baseName = "/FocalSonic/";
-}
-
 export const router = createMemoryRouter([
     {
         path: "/",
@@ -207,6 +201,4 @@ export const router = createMemoryRouter([
             </Suspense>
         ),
     },
-], {
-    basename: baseName
-});
+]);
