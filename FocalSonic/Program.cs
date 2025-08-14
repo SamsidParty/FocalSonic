@@ -2,6 +2,7 @@
 using FocalSonic.AudioPlayer;
 using FocalSonic.Helpers;
 using FocalSonic.Presence;
+using FocalSonic.Windows;
 using IgniteView.Core;
 using IgniteView.Desktop;
 using Newtonsoft.Json;

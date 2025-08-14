@@ -11,8 +11,9 @@ using Windows.Media.Control;
 using Windows.Media.Playback;
 using Windows.Storage.Streams;
 using FocalSonic.AudioPlayer;
+using FocalSonic.Presence;
 
-namespace FocalSonic.Presence
+namespace FocalSonic.Windows
 {
     public class WindowsPresenceProvider : PresenceProvider
     {

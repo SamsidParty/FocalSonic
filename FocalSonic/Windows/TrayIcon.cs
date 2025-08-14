@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FocalSonic.AudioPlayer
+namespace FocalSonic.Windows
 {
     /// <summary>
     /// This class makes heavy use of reflection because winforms isnt actually referenced in the project.
