@@ -1,24 +1,12 @@
 ﻿using FocalSonic.Helpers;
 using FocalSonic.Presence;
 using IgniteView.Core;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
-using SamsidParty.Subsonic.Proxy.AppleMusic;
-using SamsidParty.Subsonic.Proxy.AppleMusic.Types;
-using SoundFlow.Enums;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Dynamic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 
-namespace FocalSonic.AudioPlayer
+namespace FocalSonic.AppleMusic
 {
-    public class AppleMusicAudioPlayer : AudioPlayer
+    public class AppleMusicAudioPlayer : AudioPlayer.AudioPlayer
     {
         /// <summary>
         /// Due to DRM, we need a webwindow with url https://music.apple.com to play audio from apple music.
@@ -105,11 +93,10 @@ namespace FocalSonic.AudioPlayer
             Source = src;
             HasLoaded = false;
             IsPlaying = true;
-            var uri = new Uri(src);
-            var musicID = HttpUtility.ParseQueryString(uri.Query).Get("id");
+
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'setSource', source: '{musicID.Split(":", StringSplitOptions.RemoveEmptyEntries)[2]}' }});" +
+                $"window.injectedQueue.push({{ type: 'setSource', source: '{src}' }});" +
                 InjectionSuffix
             );
         }
@@ -184,20 +171,17 @@ namespace FocalSonic.AudioPlayer
         {
             LocalStorage.SetItem("applemusic_media_user_token", mediaUserToken, "default");
             LocalStorage.SetItem("applemusic_developer_token", developerToken, "default");
-            LocalStorage.SetItem("applemusic_proxy_username", AppleMusicKeys.RandomString(12), "default");
-            LocalStorage.SetItem("applemusic_proxy_password", AppleMusicKeys.RandomString(32), "default");
             LoadKeys();
 
             try
             {
                 // We have to find the user's account region because apple is very picky
                 // If the region is wrong then we can only stream the previews of the music
-                dynamic data = (await AppleMusicHttpClient.SendRequest<ExpandoObject>($"me/storefront"));
+                dynamic data = await AppleMusicHttpClient.SendRequest<ExpandoObject>($"me/storefront");
                 LocalStorage.SetItem("applemusic_region", data!.data[0]!.id!, "default");
 
-                await EnsureProxyIsRunning();
                 Program.MainWindow?.CallFunction("window._localStorage.hydrate", LocalStorage.GetAllItems("default")); // Reload localStorage
-                Program.MainWindow?.CallFunction("window.completeExternalLogin", AppleMusicKeys.ProxyUsername, AppleMusicKeys.ProxyPassword, AppleMusicKeys.ServerAddress);
+                Program.MainWindow?.CallFunction("window.completeAppleMusicLogin");
             }
             catch
             {
@@ -222,8 +206,6 @@ namespace FocalSonic.AudioPlayer
             {
                 AppleMusicKeys.AppleDeveloperToken = LocalStorage.GetItem("applemusic_developer_token", "default");
                 AppleMusicKeys.MediaUserToken = LocalStorage.GetItem("applemusic_media_user_token", "default");
-                AppleMusicKeys.ProxyUsername = LocalStorage.GetItem("applemusic_proxy_username", "default");
-                AppleMusicKeys.ProxyPassword = LocalStorage.GetItem("applemusic_proxy_password", "default");
                 AppleMusicKeys.Region = LocalStorage.GetItem("applemusic_region", "default") ?? "us";
             }
             catch { }
@@ -242,8 +224,6 @@ namespace FocalSonic.AudioPlayer
             await DisposeAudioPlayers();
             LocalStorage.RemoveItem("applemusic_media_user_token", "default");
             LocalStorage.RemoveItem("applemusic_developer_token", "default");
-            LocalStorage.RemoveItem("applemusic_proxy_username", "default");
-            LocalStorage.RemoveItem("applemusic_proxy_password", "default");
             LocalStorage.RemoveItem("applemusic_region", "default");
             LoadKeys();
         }
@@ -255,14 +235,12 @@ namespace FocalSonic.AudioPlayer
             if (ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer).Any())
             {
                 var activePlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer).FirstOrDefault().Value as AppleMusicAudioPlayer;
+
                 // Wait until the proxy window is loaded
                 while (activePlayer.LoadStatus == "loading")
                 {
                     await Task.Delay(100);
                 }
-
-                // Start the proxy
-                await EnsureProxyIsRunning();
 
                 return activePlayer.LoadStatus;
             }
@@ -277,32 +255,6 @@ namespace FocalSonic.AudioPlayer
                 }
 
                 return await WaitUntilAppleMusicLoads(ctx);
-            }
-        }
-
-        public static async Task EnsureProxyIsRunning()
-        {
-            LoadKeys();
-            if (!AppleMusicSubsonicProxy.HasStarted)
-            {
-                (new Thread(async () =>
-                {
-                    var host = Host.CreateDefaultBuilder(new string[0])
-                    .ConfigureWebHostDefaults(webBuilder =>
-                    {
-                        webBuilder.UseStartup<AppleMusicSubsonicProxy>()
-                                  .UseUrls(AppleMusicKeys.ServerAddress);
-                    })
-                    .Build();
-
-                    await host.RunAsync();
-                })
-                { IsBackground = true }).Start();
-            }
-            
-            while (!AppleMusicSubsonicProxy.IsRunning)
-            {
-                await Task.Delay(100);
             }
         }
 

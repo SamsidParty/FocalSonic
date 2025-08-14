@@ -10,7 +10,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         return lyrics;
     }
 
-    const response = await httpClient<AppleMusicLyricsResponse>(`/apple/music/catalog/{storefront}/songs/${getLyricsData.id}/syllable-lyrics?l=en-US`, {
+    const response = await httpClient<AppleMusicLyricsResponse>(`/applemusic/catalog/{storefront}/songs/${getLyricsData.id}/syllable-lyrics?l=en-US`, {
         method: "GET"
     });
 

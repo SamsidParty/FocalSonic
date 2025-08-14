@@ -4,6 +4,15 @@ import { authQueryParams } from "./httpClient";
 
 export async function queryServerInfo(url: string) {
     try {
+
+        if (url === "applemusic") { 
+            return {
+                protocolVersion: "1.16.0",
+                protocolVersionNumber: 1160,
+                serverType: "applemusic",
+            };
+        }
+
         const query = {
             ...authQueryParams("dummy", "dummy", AuthType.PASSWORD), // Use dummy credentials, we don't want to actually be logged in
             v: "1.16.0",

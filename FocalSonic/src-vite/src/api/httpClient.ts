@@ -3,6 +3,7 @@ import { CoverArt } from "@/types/coverArtType";
 import { AuthType } from "@/types/serverConfig";
 import { appName } from "@/utils/appName";
 import { saltWord } from "@/utils/salt";
+import { checkServerType } from "@/utils/servers";
 import omit from "lodash/omit";
 
 export type QueryType = Record<string, string | number | undefined>
@@ -47,8 +48,9 @@ function queryParams() {
 }
 
 function getUrl(path: string, options?: QueryType) {
-    const serverUrl = useAppStore.getState().data.url;
-    const params = new URLSearchParams(path.startsWith("/applemusic") ? [] : queryParams());
+    let serverUrl = useAppStore.getState().data.url;
+
+    const params = new URLSearchParams(serverUrl !== "applemusic" ? queryParams() : []);
 
     if (options) {
         Object.keys(options).forEach((key) => {
@@ -65,6 +67,10 @@ function getUrl(path: string, options?: QueryType) {
     let url = `${serverUrl}/rest/${pathWithoutSlash}`;
     url += path.includes("?") ? "&" : "?";
     url += queries;
+
+    if (serverUrl === "applemusic") {
+        url = window.igniteView?.resolverURL + "/applemusic?" + encodeURIComponent(url.replace("applemusic/rest/applemusic/", ""));
+    }
 
     return url;
 }
@@ -130,6 +136,10 @@ export function getSongStreamUrl(
     id: string,
     contentType?: string,
 ) {
+
+    if (checkServerType().isAppleMusic) {
+        return id; // We only need the ID for streaming apple music
+    }
 
     // TODO: Fix flac support in native audio
     let format = "mp3";

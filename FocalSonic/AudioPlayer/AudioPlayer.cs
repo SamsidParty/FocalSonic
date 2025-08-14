@@ -1,4 +1,5 @@
-﻿using FocalSonic.Presence;
+﻿using FocalSonic.AppleMusic;
+using FocalSonic.Presence;
 using IgniteView.Core;
 using Newtonsoft.Json;
 using System;

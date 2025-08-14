@@ -1,4 +1,6 @@
-﻿namespace SamsidParty.Subsonic.Proxy.AppleMusic
+﻿using System.Net.Http;
+
+namespace FocalSonic.AppleMusic
 {
     public static class AppleMusicHttpExtensions
     {

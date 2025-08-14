@@ -10,6 +10,9 @@ export async function pingServer(
     protocolVersion?: string,
 ): Promise<boolean> {
     try {
+        
+        if (url === "applemusic") { return true; }
+
         const query = {
             ...authQueryParams(user, password, authType),
             v: protocolVersion || "1.16.0",

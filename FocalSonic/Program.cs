@@ -1,4 +1,5 @@
 ﻿using FocalSonic;
+using FocalSonic.AppleMusic;
 using FocalSonic.AudioPlayer;
 using FocalSonic.Helpers;
 using FocalSonic.Presence;
@@ -23,6 +24,9 @@ public class Program
 
         DesktopPlatformManager.Activate();
         App = new ViteAppManager();
+
+        // Allows communication with the apple music API from javascript
+        App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute);
 
         // Background setup
         PlayerThread.Start();

@@ -150,12 +150,24 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                             });
                         },
                         saveConfig: async ({ url, username, password }: IServerConfig) => {
+
+                            if (url === "applemusic") {
+                                set((state) => {
+                                    state.data.url = url;
+                                    state.data.username = username;
+                                    state.data.password = "";
+                                    state.data.authType = AuthType.TOKEN;
+                                    state.data.protocolVersion = "1.16.0";
+                                    state.data.serverType = "applemusic";
+                                    state.data.isServerConfigured = true;
+                                });
+                                return true;
+                            }
+
                             // try both token and password methods
                             for (const authType of [AuthType.TOKEN, AuthType.PASSWORD]) {
-                                const token =
-                  authType === AuthType.TOKEN
-                      ? genPasswordToken(password)
-                      : genEncodedPassword(password);
+
+                                const token = authType === AuthType.TOKEN ? genPasswordToken(password) : genEncodedPassword(password);
 
                                 const canConnect = await pingServer(
                                     url,

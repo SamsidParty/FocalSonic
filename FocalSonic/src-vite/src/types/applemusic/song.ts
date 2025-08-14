@@ -1,6 +1,6 @@
 import { Resource } from "i18next";
-import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
 import { AppleMusicAlbum } from "./albums";
+import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
 
 export interface AppleMusicLyricsResponse {
     data: AppleMusicLyrics[];
@@ -53,8 +53,9 @@ export interface AppleMusicSongRelationships {
 
 export function convertAppleMusicSongToSubsonic(song: AppleMusicSong): Song {
     if (!song) { return; }
+
     return {
-        id: song.id,
+        id: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
         title: song.attributes?.name || "Unknown",
         artist: song.attributes?.artistName || "Unknown",
         album: song.attributes?.albumName || "Unknown",

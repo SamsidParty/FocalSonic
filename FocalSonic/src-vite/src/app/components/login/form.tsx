@@ -130,13 +130,19 @@ export function LoginForm() {
         window.igniteView?.commandBridge.signInToAppleMusic();
     }
 
-    // Allows C# to set the login credentials
-    window.completeExternalLogin = async (username: string, password: string, url: string) => {
-        await onSubmit({
-            username,
-            password,
-            url
+    // Called by C#
+    window.completeAppleMusicLogin = async () => {
+        await saveConfig({
+            username: "Apple Music",
+            password: "",
+            url: "applemusic",
+            serverType: "applemusic",
+            protocolVersion: "1.16.0"
         });
+
+        await queryClient.invalidateQueries();
+        toast.success(t("toast.server.success"));
+        location.reload();
     }
 
     return (

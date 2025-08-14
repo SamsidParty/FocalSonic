@@ -60,7 +60,6 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\SamsidParty.Subsonic.Common\SamsidParty.Subsonic.Common.csproj" />
-	  <ProjectReference Include="..\SamsidParty.Subsonic.Proxy.AppleMusic\SamsidParty.Subsonic.Proxy.AppleMusic.csproj" />
 	</ItemGroup>
 	
 

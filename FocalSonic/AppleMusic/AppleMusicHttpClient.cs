@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
-using SamsidParty.Subsonic.Proxy.AppleMusic.Types;
+using System.Net.Http;
 
-namespace SamsidParty.Subsonic.Proxy.AppleMusic
+namespace FocalSonic.AppleMusic
 {
     public class AppleMusicHttpClient : HttpClient
     {
