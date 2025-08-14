@@ -40,68 +40,7 @@ namespace SamsidParty.Subsonic.Common
             // CORS
             context.Response.Headers.AccessControlAllowOrigin = "*";
 
-            // Try to authenticate the request
-            var q = context.Request.Query;
-            string u = q["u"];
-            string p = q["p"];
-            string t = q["t"];
-            string s = q["s"];
-            string apiKey = q["apiKey"];
-
-            try
-            {
-                string authenticatedUser = null;
-
-                if (!string.IsNullOrEmpty(apiKey) && string.IsNullOrEmpty(u) && string.IsNullOrEmpty(p) && string.IsNullOrEmpty(t))
-                {
-                    authenticatedUser = ValidateApiKey(apiKey);
-                }
-                else if (!string.IsNullOrEmpty(t) && !string.IsNullOrEmpty(s) && !string.IsNullOrEmpty(u))
-                {
-                    authenticatedUser = ValidateToken(u, t, s);
-                }
-                else if (!string.IsNullOrEmpty(p) && !string.IsNullOrEmpty(u))
-                {
-                    authenticatedUser = ValidatePassword(u, p);
-                }
-                else
-                {
-                    throw new UnauthorizedAccessException("Missing authentication parameters");
-                }
-
-                if (authenticatedUser == null)
-                    throw new UnauthorizedAccessException("Authentication failed");
-
-                // Allow controllers to tell what user is authenticated
-                context.Items["SubsonicUser"] = authenticatedUser;
-
-                await _next(context);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                context.Response.StatusCode = 200; // For some reason subsonic loves returning 200 even on error, so we do the same
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonConvert.SerializeObject(
-                    new Dictionary<string, object>()
-                    {
-                        {
-                            "subsonic-response",
-                            new SubsonicFailureResponse() {
-                                Status = SubsonicFailureResponseStatus.Failed,
-                                Version = "1.16.1",
-                                Type = _serverName,
-                                ServerVersion = "1.0.0",
-                                OpenSubsonic = true,
-                                Error = new SubsonicError
-                                {
-                                    Code = SubsonicErrorCode._40, // Unauthorized
-                                    Message = "Authentication failed",
-                                }
-                            }
-                        }
-                    }
-                ));
-            }
+            await _next(context);
         }
 
 

@@ -1,3 +1,6 @@
+import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship, AppleMusicResource } from "./common";
+import { AppleMusicPlaylist } from "./playlist";
+
 export interface AppleMusicRecommendationsResponse {
   data: AppleMusicRecommendation[];
   meta: {
@@ -44,7 +47,7 @@ export interface AppleMusicRecommendationContent {
   id: string;
   type: string;
   href: string;
-  attributes: AppleMusicAlbumAttributes | AppleMusicPlaylistAttributes | AppleMusicStationAttributes;
+  attributes: AppleMusicAlbumAttributes | AppleMusicPlaylist | AppleMusicStationAttributes;
   meta?: {
     contentVersion?: Record<string, number>;
   };
@@ -60,12 +63,7 @@ export interface AppleMusicAlbumAttributes {
     standard: string;
     short?: string;
   };
-  editorialNotes?: {
-    name?: string;
-    short?: string;
-    standard?: string;
-    tagline?: string;
-  };
+  editorialNotes?: AppleMusicEditorialNotes;
   hasCollaboration?: boolean;
   isChart?: boolean;
   lastModifiedDate?: string;
@@ -88,30 +86,6 @@ export interface AppleMusicAlbumAttributes {
   contentRating?: string;
 }
 
-export interface AppleMusicPlaylistAttributes {
-  artwork: AppleMusicArtwork;
-  audioTraits?: string[];
-  curatorName?: string;
-  description?: {
-    standard: string;
-    short?: string;
-  };
-  editorialNotes?: {
-    name?: string;
-    short?: string;
-    standard?: string;
-    tagline?: string;
-  };
-  hasCollaboration?: boolean;
-  isChart?: boolean;
-  lastModifiedDate?: string;
-  name: string;
-  playParams: AppleMusicPlayParams;
-  playlistType?: string;
-  supportsSing?: boolean;
-  url: string;
-}
-
 export interface AppleMusicStationAttributes {
   artwork: AppleMusicArtwork;
   isLive: boolean;
@@ -124,25 +98,16 @@ export interface AppleMusicStationAttributes {
   url: string;
 }
 
-export interface AppleMusicArtwork {
-  bgColor: string;
-  hasP3: boolean;
-  height: number;
-  textColor1: string;
-  textColor2: string;
-  textColor3: string;
-  textColor4: string;
-  url: string;
-  width: number;
-  gradient?: object;
-}
 
-export interface AppleMusicPlayParams {
-  id: string;
-  kind: string;
-  versionHash?: string;
-  format?: string;
-  hasDrm?: boolean;
-  mediaType?: number;
-  stationHash?: string;
-}
+export interface AppleMusicCurator extends AppleMusicResource {
+    attributes?: {
+        artwork?: AppleMusicArtwork | undefined;
+        editorialNotes?: AppleMusicEditorialNotes | undefined;
+        name: string;
+        url: string;
+    } | undefined;
+    relationships?: {
+        playlists?: AppleMusicRelationship<AppleMusicPlaylist> | undefined;
+    } | undefined;
+    type: "curators";
+} 

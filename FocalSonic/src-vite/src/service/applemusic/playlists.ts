@@ -1,33 +1,27 @@
 import { httpClient } from "@/api/httpClient";
+import { AppleMusicPlaylist, convertAppleMusicPlaylistToSubsonic } from "@/types/applemusic/playlist";
 import {
     CreateParams,
-    PlaylistWithEntriesResponse,
-    PlaylistsResponse,
     SinglePlaylistResponse,
-    UpdateParams,
+    UpdateParams
 } from "@/types/responses/playlist";
 import { SubsonicResponse } from "@/types/responses/subsonicResponse";
 
 async function getAll() {
-    const response = await httpClient<PlaylistsResponse>("/getPlaylists", {
-        method: "GET",
-    });
+    const response = await httpClient<AppleMusicPlaylist[]>("/applemusic/me/library/playlists", { method: "GET", });
 
-    return response?.data.playlists.playlist ?? [];
+    return response?.data.map(convertAppleMusicPlaylistToSubsonic) ?? [];
 }
 
 async function getOne(id: string) {
-    const response = await httpClient<PlaylistWithEntriesResponse>(
-        "/getPlaylist",
-        {
-            method: "GET",
-            query: {
-                id,
-            },
-        },
-    );
-
-    return response?.data.playlist;
+    const response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${id}`,
+    { 
+        method: "GET",
+        query: {
+            include: "tracks"
+        }
+    });
+    return convertAppleMusicPlaylistToSubsonic(response?.data[0]) || null;
 }
 
 async function remove(id: string) {

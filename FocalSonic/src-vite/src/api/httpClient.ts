@@ -34,6 +34,7 @@ export function authQueryParams(
 }
 
 function queryParams() {
+
     const { username, password, authType, protocolVersion } =
     useAppStore.getState().data;
 
@@ -47,7 +48,7 @@ function queryParams() {
 
 function getUrl(path: string, options?: QueryType) {
     const serverUrl = useAppStore.getState().data.url;
-    const params = new URLSearchParams(queryParams());
+    const params = new URLSearchParams(path.startsWith("/applemusic") ? [] : queryParams());
 
     if (options) {
         Object.keys(options).forEach((key) => {

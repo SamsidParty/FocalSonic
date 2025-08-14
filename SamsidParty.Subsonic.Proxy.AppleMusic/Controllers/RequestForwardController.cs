@@ -12,7 +12,7 @@ namespace SamsidParty.Subsonic.Proxy.AppleMusic.Controllers
         [HttpGet("rest/applemusic/{*url}")]
         public async Task<IActionResult> ForwardRequestToApple(string url)
         {
-            var response = await AppleMusicHttpClient.SendRequest<string>(url);
+            var response = await AppleMusicHttpClient.SendRequest<string>(url + Request.QueryString);
             Response.ContentLength = response.Length;
             return Content(response, "application/json");
         }
