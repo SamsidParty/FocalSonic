@@ -36,7 +36,7 @@ export function MainDrawerPage() {
             <DrawerContent
                 className={clsx(
                     "main-drawer rounded-t-none border-none select-none cursor-default outline-none",
-                    isPlayerAtTop ? "mt-player" : "mb-player"
+                    isPlayerAtTop ? "mt-player h-content" : "h-drawer"
                 )}
                 showHandle={false}
                 aria-describedby={undefined}

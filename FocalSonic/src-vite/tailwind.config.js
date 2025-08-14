@@ -24,6 +24,7 @@ module.exports = {
                 "mini-sidebar": "var(--mini-sidebar-width)",
                 player: "var(--player-height)",
                 content: "var(--content-height)",
+                drawer: "var(--drawer-height)",
                 "shadow-header": "var(--shadow-header-height)",
                 "shadow-header-distance": "var(--shadow-header-distance)",
                 toast: "var(--toastify-toast-container-height)",

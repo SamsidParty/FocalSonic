@@ -43,8 +43,7 @@ namespace FocalSonic.AudioPlayer
                     .WithURL($"https://beta.music.apple.com/{AppleMusicKeys.Region}/home")
                     .WithBounds(new LockedWindowBounds(1280, 720))
                     .WithPlatformBasedAdditions()
-                    .WithSharedContext("AppleMusicWindow", "")
-                    .Show();
+                    .WithSharedContext("AppleMusicWindow", "");
 
                 // Since we're serving from apple.com instead of localhost, interop needs to be setup manually
                 ProxyWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
