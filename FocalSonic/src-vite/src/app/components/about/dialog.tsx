@@ -4,6 +4,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/app/components/ui/dialog";
+import favicon from "@/assets/favicon.png";
 import { subsonic } from "@/service/subsonic";
 import { getAppInfo } from "@/utils/appName";
 import { queryKeys } from "@/utils/queryKeys";
@@ -34,7 +35,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                 <DialogHeader>
                     <div className="flex gap-2 items-center justify-center w-full py-4">
                         <img
-                            src="/favicon.png"
+                            src={favicon}
                             alt="FocalSonic"
                             className="w-12 h-12 drop-shadow"
                         />

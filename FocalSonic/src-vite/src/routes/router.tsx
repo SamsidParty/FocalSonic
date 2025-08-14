@@ -40,6 +40,11 @@ const LatestEpisodes = lazy(
     () => import("@/app/pages/podcasts/latest-episodes"),
 );
 
+let baseName = "/";
+if (window.location.pathname.startsWith("/FocalSonic")) {
+    baseName = "/FocalSonic";
+}
+
 export const router = createBrowserRouter([
     {
         path: "/",
@@ -201,4 +206,6 @@ export const router = createBrowserRouter([
             </Suspense>
         ),
     },
-]);
+], {
+    basename: baseName
+});

@@ -1,3 +1,4 @@
+import favicon from "@/assets/favicon.png";
 import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
@@ -6,7 +7,7 @@ export function AppTitle() {
         <div {...igniteViewDragRegion} className="flex gap-2 items-center">
             <LazyLoadImage
                 {...igniteViewDragRegion}
-                src="/favicon.png"
+                src={favicon}
                 alt="FocalSonic icon"
                 className="w-6 h-6"
             />
