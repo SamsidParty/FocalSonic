@@ -184,8 +184,8 @@ export function Player() {
 
     return (
         <footer className={clsx(
-            "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-background",
-            isPlayerAtTop ? "top-header border-b" : "bottom-0 border-t"
+            "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-bar",
+            isPlayerAtTop ? "top-header" : "bottom-0"
         )}>
             <div className="w-full h-full grid grid-cols-player gap-2 px-3">
                 {/* Track Info */}

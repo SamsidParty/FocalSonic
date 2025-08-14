@@ -1,13 +1,13 @@
-import clsx from "clsx";
-import { type HTMLProps } from "react";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { cn } from "@/lib/utils";
+import clsx from "clsx";
+import { type HTMLProps } from "react";
 import { ControlButton } from "./button";
 import { Icons } from "./icons";
 
 const regularButton = clsx(
     "min-h-[42px] max-h-[42px] mt-[1px] w-[46px] cursor-default rounded-none bg-transparent",
-    "text-foreground hover:bg-border active:bg-border",
+    "text-foreground hover:bg-bar active:bg-bar",
     "p-0 flex items-center justify-center",
 );
 

@@ -62,7 +62,7 @@ public class Program
             .WithBounds(new WindowBounds(1280, 820))
             .WithSharedContext("MainWindow", "")
             .WithoutTitleBar()
-            .With((w) => { if (w is Win32WebWindow) (w as Win32WebWindow)!.BackgroundMode = Win32WebWindow.WindowBackgroundMode.Mica; })
+            .With((w) => { if (w is Win32WebWindow) (w as Win32WebWindow)!.BackgroundMode = Win32WebWindow.WindowBackgroundMode.Acrylic; })
             .Show();
     }
 

@@ -17,11 +17,11 @@ export function Sidebar() {
         <aside>
             <div
                 className={cn(
-                    "flex-col border-r fixed left-0 bottom-0 pb-player bg-background z-10",
+                    "flex-col fixed left-0 bottom-0 pb-player bg-bar z-10",
                     "transition-[width] duration-500 ease-long",
                     "overflow-x-clip overflow-y-auto no-scrollbar",
                     !isSidebarOpen ? "w-mini-sidebar p-2" : "w-sidebar",
-                    isPlayerAtTop ? "top-[calc(var(--player-height)+var(--header-height))]" : "top-header"
+                    isPlayerAtTop ? "top-[calc(var(--player-height)+var(--header-height))]" : "top-header bottom-player"
                 )}
             >
 

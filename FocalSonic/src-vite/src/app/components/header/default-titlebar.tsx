@@ -10,7 +10,7 @@ export default function DefaultTitlebar() {
             {!isLinux && (
                 <header
                     {...igniteViewDragRegion}
-                    className="w-full h-header border-b bg-background flex justify-center items-center relative"
+                    className="w-full h-header border-b bg-bar flex justify-center items-center relative"
                 >
                     <AppTitle />
                     <div className="flex items-center absolute right-0">

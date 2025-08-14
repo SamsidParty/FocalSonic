@@ -5,21 +5,18 @@ import { NavigationButtons } from "@/app/components/header/navigation-buttons";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { SettingsButton } from "@/app/components/settings/header-button";
 import { useAppWindow } from "@/app/hooks/use-app-window";
-import { useTheme } from "@/store/theme.store";
 import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { isLinux, isMac, isWindows } from "@/utils/osType";
 import clsx from "clsx";
 
 export function Header() {
     const { isFullscreen } = useAppWindow();
-    const { isPlayerAtTop } = useTheme();
 
     return (
         <header
             className={clsx(
-                "w-full grid grid-cols-header h-header px-1 fixed top-0 right-0 left-0 z-20 bg-background",
-                (isWindows || isLinux) && "pr-0",
-                !isPlayerAtTop && "border-b"
+                "w-full grid grid-cols-header h-header px-1 fixed top-0 right-0 left-0 z-20 bg-bar",
+                (isWindows || isLinux) && "pr-0"
             )}
         >
             <div {...igniteViewDragRegion} className="flex items-center">

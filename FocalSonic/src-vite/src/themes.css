@@ -32,7 +32,8 @@
     --destructive-foreground: hsl(210 20% 98%);
     --border: var(--system-outline);
     --input: var(--system-outline);
-    --body: var(--system-body);
+    --body: color-mix(in hsl, var(--system-background2), var(--origin-color) 50%);
+    --bar: color-mix(in srgb, transparent, var(--origin-color) 55%);
     --ring: var(--system-accent);
   }
 
@@ -57,6 +58,7 @@
     --border: hsl(220 13% 91%);
     --input: hsl(220 13% 91%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(161 94% 30%);
   }
 
@@ -81,6 +83,7 @@
     --border: hsl(215 27.9% 19.9%);
     --input: hsl(215 27.9% 19.9%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(160 84% 39%);
   }
 
@@ -105,6 +108,7 @@
     --border: hsl(240 3.7% 15.9%);
     --input: hsl(240 3.7% 15.9%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(240 4.9% 83.9%);
   }
 
@@ -129,6 +133,7 @@
     --destructive: hsl(3 89% 50%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(220 13% 86%);
   }
 
@@ -153,6 +158,7 @@
     --destructive: hsl(8 94% 20%);
     --destructive-foreground: hsl(8 94% 80%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(243 14% 29%);
   }
 
@@ -177,6 +183,7 @@
     --destructive: hsl(10 90% 57%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(44 100% 71%);
   }
 
@@ -201,6 +208,7 @@
     --destructive: hsl(3 93% 20%);
     --destructive-foreground: hsl(3 93% 80%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(247 78% 65%);
   }
 
@@ -225,6 +233,7 @@
     --destructive: hsl(8 94% 48%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(180 100% 97%);
   }
 
@@ -249,6 +258,7 @@
     --destructive: hsl(10 97% 48%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(45 100% 70%);
   }
 
@@ -273,6 +283,7 @@
     --destructive: hsl(1 86% 57%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(210 17% 82%);
   }
 
@@ -297,6 +308,7 @@
     --destructive: hsl(3 82% 47%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(50 100% 49%);
   }
 
@@ -321,6 +333,7 @@
     --destructive: hsl(2 91% 53%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(175 59% 55%);
   }
 
@@ -345,6 +358,7 @@
     --destructive: hsl(8 96% 56%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(267 84% 81%);
   }
 
@@ -369,6 +383,7 @@
     --destructive: hsl(344.15 100% 46.54%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(331 100% 68%);
   }
 
@@ -393,6 +408,7 @@
     --destructive: hsl(20 87% 25%);
     --destructive-foreground: hsl(20 87% 85%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(18 83% 58%);
   }
 
@@ -417,6 +433,7 @@
     --destructive: hsl(0 100% 67%);
     --destructive-foreground: hsl(60 30% 96%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(265 89% 78%);
   }
 
@@ -441,6 +458,7 @@
     --destructive: hsl(358.16 68.78% 53.53%);
     --destructive-foreground: hsl(334 34% 98%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(226.73 58.43% 65.1%);
   }
 
@@ -465,6 +483,7 @@
     --destructive: hsl(5 89% 27%);
     --destructive-foreground: hsl(5 89% 87%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(330 100% 60%);
   }
 
@@ -489,6 +508,7 @@
     --destructive: hsl(2 95% 56%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(171 82% 43%);
   }
 
@@ -513,6 +533,7 @@
     --destructive: hsl(6 85% 47%);
     --destructive-foreground: hsl(0 0% 100%);
     --body: var(--background-foreground);
+    --bar: var(--background);
     --ring: hsl(43 59% 81%);
   }
 }
