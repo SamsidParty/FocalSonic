@@ -26,7 +26,7 @@
 	
 	<!-- IgniteView -->
 	<ItemGroup>
-		<PackageReference Include="IgniteView.Desktop" Version="*" />
+		<PackageReference Include="IgniteView.Desktop" Version="2.2.5" />
 		<PackageReference Include="IgniteView.Core" Version="*" />
 		<PackageReference Include="SoundFlow" Version="1.2.0" />
 		<PackageReference Include="System.Drawing.Common" Version="9.0.8" />

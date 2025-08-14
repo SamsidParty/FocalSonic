@@ -110,9 +110,9 @@ namespace FocalSonic.AudioPlayer
                 if (nextQueueItem == null) { return; }  // Playback finished, do nothing
 
                 // Modify the localStorage to reflect these changes
-                dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store"));
+                dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store", "default"));
                 playerStore.state.songlist.currentSongIndex = nextSongIndex;
-                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore));
+                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore), null);
 
                 // Update presence
                 MediaPlaybackInfo.Instance.CurrentSongIndex = nextSongIndex;
@@ -138,9 +138,9 @@ namespace FocalSonic.AudioPlayer
             {
 
                 // Modify the localStorage to reflect these changes
-                dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store"));
+                dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store", "default"));
                 playerStore.state.playerState.currentDuration = duration;
-                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore));
+                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore), null);
             }
         }
 
