@@ -380,10 +380,13 @@
       }
     },
     "appleMusic": {
+      "connect": "Sign in with Apple Music",
       "loading": "Signing you into apple music...",
       "loadingDescription": "This can take up to 30 seconds",
       "loadingStuck": "If loading seems stuck,",
-      "resolveIssues": "click here to log out"
+      "resolveIssues": "click here to log out",
+      "widevineNotSupported": "Widevine is not installed",
+      "widevineNotSupportedDescription": "Apple Music requires Widevine to play music securely. Widevine comes with proprietary Google Chrome, so you must download the specific package for your distribution. Note that the flatpak/AppImage version of Chrome will not work."
     }
   },
   "toast": {

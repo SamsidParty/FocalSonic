@@ -10,6 +10,7 @@ using SamsidParty.Subsonic.Proxy.AppleMusic.Controllers;
 public class AppleMusicSubsonicProxy
 {
     public static bool IsRunning = false;
+    public static bool HasStarted = false;
 
 
     public void ConfigureServices(IServiceCollection services)
@@ -23,7 +24,7 @@ public class AppleMusicSubsonicProxy
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        IsRunning = true;
+        HasStarted = true;
 
         app.UseMiddleware<SubsonicMiddleware>("applemusic", () =>
         {
@@ -39,6 +40,8 @@ public class AppleMusicSubsonicProxy
         app.UseRouting();
         app.UseAuthorization();
         app.UseEndpoints(endpoints => endpoints.MapControllers());
+
+        IsRunning = true;
     }
 }
 

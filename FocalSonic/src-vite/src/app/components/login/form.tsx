@@ -39,8 +39,10 @@ import { Password } from "@/app/components/ui/password";
 import { useAppActions, useAppData } from "@/store/app.store";
 import { removeSlashFromUrl } from "@/utils/removeSlashFromUrl";
 import { isTauri } from "@/utils/tauriTools";
+import isWidevineSupported from "@/utils/widevine";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { Separator } from "../ui/separator";
 
 const loginSchema = z.object({
     url: z
@@ -66,6 +68,7 @@ const urlIsValid = url !== defaultUrl;
 export function LoginForm() {
     const [loading, setLoading] = useState(false);
     const [serverIsIncompatible, setServerIsIncompatible] = useState(false);
+    const [widevineDialogOpen, setWidevineDialogOpen] = useState(false);
     const { saveConfig } = useAppActions();
     const { hideServer } = useAppData();
     const navigate = useNavigate();
@@ -115,6 +118,16 @@ export function LoginForm() {
             setLoading(false);
             toast.error(t("toast.server.error"));
         }
+    }
+
+    async function signInToAppleMusic() {
+        // Check DRM support first
+        if (!(await isWidevineSupported())) {
+            setWidevineDialogOpen(true);
+            return;
+        }
+
+        window.igniteView?.commandBridge.signInToAppleMusic();
     }
 
     // Allows C# to set the login credentials
@@ -211,7 +224,7 @@ export function LoginForm() {
                             />
                         </CardContent>
 
-                        <CardFooter className="flex">
+                        <CardFooter className="flex flex-col gap-5">
                             <Button type="submit" className="w-full" disabled={loading}>
                                 {loading ? (
                                     <>
@@ -222,15 +235,20 @@ export function LoginForm() {
                                     <>{t("login.form.connect")}</>
                                 )}
                             </Button>
+
+                            <Separator />
+
+                            <Button type="button" onClick={signInToAppleMusic} className="w-full bg-[#FC3C44]" disabled={loading}>
+                                <>{t("login.appleMusic.connect")}</>
+                            </Button>
                         </CardFooter>
+
                     </form>
                 </Form>
             </Card>
             <Dialog
                 open={serverIsIncompatible}
-                onOpenChange={(state) => {
-                    setServerIsIncompatible(state);
-                }}
+                onOpenChange={setServerIsIncompatible}
             >
                 <DialogContent className="max-w-[500px]">
                     <DialogHeader>
@@ -242,6 +260,17 @@ export function LoginForm() {
                             {t("server.incompatible.skip")}
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog
+                open={widevineDialogOpen}
+                onOpenChange={setWidevineDialogOpen}
+            >
+                <DialogContent className="max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>{t("login.appleMusic.widevineNotSupported")}</DialogTitle>
+                    </DialogHeader>
+                    <p>{t("login.appleMusic.widevineNotSupportedDescription")}</p>
                 </DialogContent>
             </Dialog>
         </>

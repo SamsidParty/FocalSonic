@@ -43,7 +43,8 @@ namespace FocalSonic.AudioPlayer
                     .WithURL($"https://beta.music.apple.com/{AppleMusicKeys.Region}/home")
                     .WithBounds(new LockedWindowBounds(1280, 720))
                     .WithPlatformBasedAdditions()
-                    .WithSharedContext("AppleMusicWindow", "");
+                    .WithSharedContext("AppleMusicWindow", "")
+                    .Show();
 
                 // Since we're serving from apple.com instead of localhost, interop needs to be setup manually
                 ProxyWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
@@ -282,7 +283,7 @@ namespace FocalSonic.AudioPlayer
         public static async Task EnsureProxyIsRunning()
         {
             LoadKeys();
-            if (!AppleMusicSubsonicProxy.IsRunning)
+            if (!AppleMusicSubsonicProxy.HasStarted)
             {
                 (new Thread(async () =>
                 {
@@ -295,7 +296,13 @@ namespace FocalSonic.AudioPlayer
                     .Build();
 
                     await host.RunAsync();
-                }) { IsBackground = true }).Start();
+                })
+                { IsBackground = true }).Start();
+            }
+            
+            while (!AppleMusicSubsonicProxy.IsRunning)
+            {
+                await Task.Delay(100);
             }
         }
 
