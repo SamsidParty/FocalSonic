@@ -42,7 +42,8 @@ const LatestEpisodes = lazy(
 
 let baseName = "/";
 if (window.location.pathname.startsWith("/FocalSonic")) {
-    baseName = "/FocalSonic";
+    console.log("Using /FocalSonic as base directory");
+    baseName = "/FocalSonic/";
 }
 
 export const router = createMemoryRouter([
