@@ -27,7 +27,7 @@ export function ShadowHeader({
                 showGlassEffect && "backdrop-blur-lg supports-[backdrop-filter]:bg-background/80",
                 "transition-[left] duration-500 ease-long",
                 (fixed && isSidebarOpen) ? " left-sidebar" : (fixed && " left-mini-sidebar"),
-                isPlayerAtTop ? "top-[calc(var(--player-height)+var(--header-height))]" : "top-header",
+                fixed && (isPlayerAtTop ? "top-[calc(var(--player-height)+var(--header-height))]" : "top-header"),
                 className,
             )}
             {...rest}

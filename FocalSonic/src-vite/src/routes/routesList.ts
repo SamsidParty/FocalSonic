@@ -1,7 +1,7 @@
 import { AlbumsFilters } from "@/utils/albumsFilter";
 
 const LIBRARY = {
-    HOME: "/index.html",
+    HOME: "/",
     ARTISTS: "/library/artists",
     SONGS: "/library/songs",
     ALBUMS: "/library/albums",
