@@ -34,22 +34,25 @@ namespace FocalSonic.AudioPlayer
         public AppleMusicAudioPlayer(string id) : base(id) {
 
             LoadKeys();
-            ProxyWindow = WebWindow.Create()
-                .WithTitle("Apple Music Runtime")
-                .WithURL($"https://beta.music.apple.com/{AppleMusicKeys.Region}/home")
-                .WithBounds(new LockedWindowBounds(1280, 720))
-                .WithoutTitleBar()
-                .WithSharedContext("AppleMusicWindow", "");
 
+            Program.App.InvokeOnMainThread(() =>
+            {
+                ProxyWindow = WebWindow.Create()
+                    .WithTitle("Apple Music Runtime")
+                    .WithURL($"https://beta.music.apple.com/{AppleMusicKeys.Region}/home")
+                    .WithBounds(new LockedWindowBounds(1280, 720))
+                    .WithoutTitleBar()
+                    .WithSharedContext("AppleMusicWindow", "");
 
-            // Since we're serving from apple.com instead of localhost, interop needs to be setup manually
-            ProxyWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData); 
-            ProxyWindow.ExecuteJavaScript(new JSAssignment("window.injectedUserToken", AppleMusicKeys.MediaUserToken!)); 
-            ProxyWindow.ExecuteJavaScript(
-                InjectionPrefix + 
-                Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/proxy.js") + 
-                InjectionSuffix
-            );
+                // Since we're serving from apple.com instead of localhost, interop needs to be setup manually
+                ProxyWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
+                ProxyWindow.ExecuteJavaScript(new JSAssignment("window.injectedUserToken", AppleMusicKeys.MediaUserToken!));
+                ProxyWindow.ExecuteJavaScript(
+                    InjectionPrefix +
+                    Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/proxy.js") +
+                    InjectionSuffix
+                );
+            });
         }
 
         #region Player
@@ -160,16 +163,18 @@ namespace FocalSonic.AudioPlayer
             // Close any existing sign in windows
             Program.App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("AppleMusicSignIn")).FirstOrDefault()?.Close();
 
-            var signInWindow = WebWindow.Create()
-                .WithTitle("Apple Music")
-                .WithURL("https://beta.music.apple.com/us/login")
-                .WithBounds(new LockedWindowBounds(1200, 720))
-                .WithoutTitleBar()
-                .WithSharedContext("AppleMusicSignIn", "")
-                .Show();
+           await Program.App.InvokeOnMainThread(() => {
+                var signInWindow = WebWindow.Create()
+                    .WithTitle("Apple Music")
+                    .WithURL("https://beta.music.apple.com/us/login")
+                    .WithBounds(new LockedWindowBounds(1200, 720))
+                    .WithoutTitleBar()
+                    .WithSharedContext("AppleMusicSignIn", "")
+                    .Show();
 
-            signInWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
-            signInWindow.ExecuteJavaScript(Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/signin.js"));
+                signInWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
+                signInWindow.ExecuteJavaScript(Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/signin.js"));
+            });
         }
 
         [Command("appleMusicSignInRecieveToken")]
