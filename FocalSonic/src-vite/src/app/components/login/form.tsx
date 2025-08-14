@@ -36,7 +36,6 @@ import {
 } from "@/app/components/ui/form";
 import { Input } from "@/app/components/ui/input";
 import { Password } from "@/app/components/ui/password";
-import { ROUTES } from "@/routes/routesList";
 import { useAppActions, useAppData } from "@/store/app.store";
 import { removeSlashFromUrl } from "@/utils/removeSlashFromUrl";
 import { isTauri } from "@/utils/tauriTools";
@@ -111,7 +110,7 @@ export function LoginForm() {
         if (status) {
             await queryClient.invalidateQueries();
             toast.success(t("toast.server.success"));
-            window.location.href = ROUTES.LIBRARY.HOME; // Hard redirect
+            location.reload();
         } else {
             setLoading(false);
             toast.error(t("toast.server.error"));
