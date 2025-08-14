@@ -39,7 +39,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist 
+          path: ./FocalSonic/src-vite/dist 
 
       - name: Deploy to GitHub Pages
         id: deployment
