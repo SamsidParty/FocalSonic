@@ -16,7 +16,12 @@
 	<PropertyGroup Condition="'$(IsWindows)'=='true'">
 		<DefineConstants>Windows</DefineConstants>
 		<TargetFramework>net9.0-windows10.0.19041</TargetFramework>
+		<UseWPF>true</UseWPF>
 	</PropertyGroup>
+	<ItemGroup Condition="'$(IsWindows)'=='true'">
+		<Reference Include="PresentationFramework.Fluent" />
+	</ItemGroup>
+	
 	<PropertyGroup Condition="'$(IsLinux)'=='true'">
 		<DefineConstants>Linux</DefineConstants>
 	</PropertyGroup>

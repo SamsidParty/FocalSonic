@@ -6,6 +6,7 @@ using FocalSonic.Windows;
 using IgniteView.Core;
 using IgniteView.Desktop;
 using Newtonsoft.Json;
+using System.Net.Http;
 
 public class Program
 {
@@ -26,8 +27,9 @@ public class Program
         // Background setup
         PlayerThread.Start();
         Presence.Setup();
-        
+
         #if WINDOWS
+        WPFStyling.Setup();
         TrayIcon.Setup();
         #endif
 

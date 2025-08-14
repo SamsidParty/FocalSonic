@@ -12,6 +12,7 @@ using Windows.Media.Playback;
 using Windows.Storage.Streams;
 using FocalSonic.AudioPlayer;
 using FocalSonic.Presence;
+using System.IO;
 
 namespace FocalSonic.Windows
 {
