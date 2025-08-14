@@ -868,7 +868,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
 
                     // Update the state in the C# code
                     if (window.igniteView) {
-                        window.igniteView.commandBridge.setCurrentMediaInfo(
+                        window.igniteView?.commandBridge.setCurrentMediaInfo(
                             JSON.stringify({
                                 currentSong: transformSongBeforeSending(state.songlist.currentSong),
                                 currentSongIndex: state.songlist.currentSongIndex,

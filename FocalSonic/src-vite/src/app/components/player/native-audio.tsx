@@ -41,7 +41,7 @@ class NativeVirtualAudioPlayer {
                 }
             };
 
-            await igniteView.commandBridge.createAudioPlayer(this.id);
+            await window.igniteView?.commandBridge.createAudioPlayer(this.id);
             this._state = "created";
             this.onLoadStart?.();
         }, 0);
@@ -53,7 +53,7 @@ class NativeVirtualAudioPlayer {
         self._state = "disposed";
         self._src = undefined;
         logger.info("NativeVirtualAudioPlayer disposed with id:", self.id);
-        igniteView.commandBridge.disposeAudioPlayer(self.id!);
+        window.igniteView?.commandBridge.disposeAudioPlayer(self.id!);
     }
 
     get src() {
@@ -82,7 +82,7 @@ class NativeVirtualAudioPlayer {
         this._loop = value;
         setTimeout(async () => {
             await this.waitForCreation();
-            igniteView.commandBridge.setAudioPlayerLoopMode(this.id!, this._loop);
+            window.igniteView?.commandBridge.setAudioPlayerLoopMode(this.id!, this._loop);
         }, 0);
     }
 
@@ -94,7 +94,7 @@ class NativeVirtualAudioPlayer {
         this._volume = value;
         setTimeout(async () => {
             await this.waitForCreation();
-            igniteView.commandBridge.setAudioPlayerVolume(this.id!, this._volume);
+            window.igniteView?.commandBridge.setAudioPlayerVolume(this.id!, this._volume);
         }, 0);
     }
 
@@ -106,7 +106,7 @@ class NativeVirtualAudioPlayer {
 
     async applySource() {
         await this.waitForCreation();
-        await igniteView.commandBridge.setAudioPlayerSource(this.id!, this._src);
+        await window.igniteView?.commandBridge.setAudioPlayerSource(this.id!, this._src);
     }
 
     async play() {
@@ -114,7 +114,7 @@ class NativeVirtualAudioPlayer {
         await this.waitForCreation();
         if (!this.src) { return; }
         await this.applySource();
-        await igniteView.commandBridge.playAudio(this.id!);
+        await window.igniteView?.commandBridge.playAudio(this.id!);
         this.onPlay?.();
     }
 
@@ -122,7 +122,7 @@ class NativeVirtualAudioPlayer {
         this.paused = true;
         this._currentTimeOffset = 0;
         await this.waitForCreation();
-        await igniteView.commandBridge.pauseAudio(this.id!);
+        await window.igniteView?.commandBridge.pauseAudio(this.id!);
         this.onPause?.();
     }
 
@@ -131,7 +131,7 @@ class NativeVirtualAudioPlayer {
         this._currentTime = time;
         this._currentTimeOffset = Date.now();
         await this.waitForCreation();
-        await igniteView.commandBridge.seekAudio(this.id!, time);
+        await window.igniteView?.commandBridge.seekAudio(this.id!, time);
         this.onTimeUpdate?.();
     }
   

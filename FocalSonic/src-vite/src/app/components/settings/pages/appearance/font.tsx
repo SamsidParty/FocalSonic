@@ -29,7 +29,7 @@ export function FontSelect() {
 
     const { isLoading, error, data } = useQuery({
         queryKey: ["fonts"],
-        queryFn: async () => (await igniteView?.commandBridge.getInstalledFonts()) || [],
+        queryFn: async () => (await window.igniteView?.commandBridge.getInstalledFonts()) || [],
     });
 
     const availableFonts = Array.from(new Set([...builtinFonts, ...(data || [])]));

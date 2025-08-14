@@ -2,15 +2,15 @@
 async function onMusicKitLoad() {
     console.log("[FocalSonic][Apple Music Proxy] MusicKit available");
     console.log("[FocalSonic][Apple Music Proxy] Auth status: " + (window.proxyMusicInstance.isAuthorized ? "Authorized" : "Not Authorized"));
-    igniteView.commandBridge.setAppleMusicPlayerLoadStatus("success");
+    window.igniteView?.commandBridge.setAppleMusicPlayerLoadStatus("success");
 
     window.proxyMusicInstance.addEventListener("playbackStateDidChange", ({ oldState, state }) => {
         console.log(`[FocalSonic][Apple Music Proxy] Playback changed from ${oldState} to ${state}`);
         if (state === MusicKit.PlaybackStates.ended && window.proxyMusicInstance.repeatMode !== MusicKit.PlayerRepeatMode.one) {
-            igniteView?.commandBridge.appleMusicRecieveEndedEvent();
+            window.igniteView?.commandBridge.appleMusicRecieveEndedEvent();
         }
         else if (state === MusicKit.PlaybackStates.playing) {
-            igniteView?.commandBridge.appleMusicRecieveLoadedEvent(window.proxyMusicInstance.currentPlaybackDuration);
+            window.igniteView?.commandBridge.appleMusicRecieveLoadedEvent(window.proxyMusicInstance.currentPlaybackDuration);
         }
     });
 
@@ -27,7 +27,7 @@ async function checkAuthState() {
 
         window.foundDeveloperToken = music.developerToken;
         localStorage.setItem("applemusic_developer_token", music.developerToken);
-        igniteView.commandBridge.loadAppleMusicKeys();
+        window.igniteView?.commandBridge.loadAppleMusicKeys();
         setTimeout(() => onMusicKitLoad(), 0);
     }
 }
@@ -62,7 +62,7 @@ window.executeInjectedQueue = async () => {
         }
     }
 
-    await igniteView.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, document.getElementById("apple-music-player")?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
+    await window.igniteView?.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, document.getElementById("apple-music-player")?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
 };
 
 setInterval(window.executeInjectedQueue, 250);

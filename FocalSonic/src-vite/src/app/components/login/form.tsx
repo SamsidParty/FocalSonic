@@ -85,7 +85,7 @@ export function LoginForm() {
     });
 
     useEffect(() => {
-        igniteView?.commandBridge.disposeAllAudioPlayers();
+        window.igniteView?.commandBridge.disposeAllAudioPlayers();
     }, []);
 
     async function onSubmit(data: FormData, forceCompatible?: boolean) {

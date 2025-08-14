@@ -173,7 +173,7 @@ export function useAppWindow(): AppWindowType {
     };
 
     const closeWindow = async () => {
-        await igniteView.commandBridge.cleanUpUI();
+        await window.igniteView?.commandBridge.cleanUpUI();
         window.close();
     };
 

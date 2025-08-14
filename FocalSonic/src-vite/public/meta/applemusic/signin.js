@@ -16,7 +16,7 @@ async function checkAuthState() {
     const music = MusicKit?.getInstance();
 
     if (music && music.isAuthorized && music.musicUserToken) {
-        igniteView.commandBridge.appleMusicSignInRecieveToken(music.musicUserToken, music.developerToken);
+        window.igniteView?.commandBridge.appleMusicSignInRecieveToken(music.musicUserToken, music.developerToken);
         window.close();
     }
 }

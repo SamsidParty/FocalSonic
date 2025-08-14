@@ -14,7 +14,7 @@ export default function AppleMusicLoader() {
     }, []);
 
     const resolveSignInIssues = async () => {
-        await window.igniteView.commandBridge.logOutOfAppleMusic();
+        await window.igniteView?.commandBridge.logOutOfAppleMusic();
         location.reload();
     }
 
