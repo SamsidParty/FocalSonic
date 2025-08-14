@@ -1,11 +1,11 @@
-import { AlbumListParams } from "@/service/albums";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
+import { AlbumListParams } from "@/service/subsonic/albums";
 import { checkServerType } from "@/utils/servers";
 
 const emptyResponse = { albums: [], nextOffset: null, albumsCount: 0 };
 
 export async function getArtistDiscography(artistId: string) {
-    const response = await subsonic.artists.getOne(artistId);
+    const response = await service.artists.getOne(artistId);
 
     if (!response || !response.album) return emptyResponse;
 
@@ -23,7 +23,7 @@ interface AlbumSearch {
 }
 
 export async function albumSearch({ query, count, offset }: AlbumSearch) {
-    const response = await subsonic.search.get({
+    const response = await service.search.get({
         query,
         songCount: 0,
         artistCount: 0,
@@ -47,7 +47,7 @@ export async function albumSearch({ query, count, offset }: AlbumSearch) {
 }
 
 export async function getAlbumList(params: Required<AlbumListParams>) {
-    const response = await subsonic.albums.getAlbumList(params);
+    const response = await service.albums.getAlbumList(params);
     const { isAppleMusic } = checkServerType();
 
     if (!response) return emptyResponse;

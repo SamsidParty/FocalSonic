@@ -5,7 +5,7 @@ import { ILyricsList, LyricsResponse, OpenLyricsResponse } from "@/types/respons
 import { lrclibClient } from "@/utils/appName";
 import { checkServerType } from "@/utils/servers";
 
-interface GetLyricsData {
+export interface GetLyricsData {
     artist: string
     title: string
     album?: string
@@ -22,8 +22,6 @@ interface LRCLibResponse {
 }
 
 async function getLyrics(getLyricsData: GetLyricsData) {
-
-    const { isAppleMusic } = checkServerType();
     
     let lyrics = useCacheStore.getState().tryGetLyrics(getLyricsData.id!);
     if (lyrics) {
@@ -33,14 +31,14 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     const response = await httpClient<LyricsResponse>("/getLyrics", {
         method: "GET",
         query: {
-            artist: isAppleMusic ? getLyricsData.id : getLyricsData.artist,
-            title: isAppleMusic ? getLyricsData.id : getLyricsData.title,
+            artist: getLyricsData.artist,
+            title: getLyricsData.title,
         },
     });
 
     (response && response?.data.lyrics || response!.data.lyrics.value) && (lyrics = response!.data.lyrics.value);
 
-    if (!isAppleMusic && lyrics && response?.data.openSubsonic) {
+    if (lyrics && response?.data.openSubsonic) {
         // Try to get synced lyrics using getLyricsBySongId
         const openResponse = await httpClient<OpenLyricsResponse>("/getLyricsBySongId", {
             method: "GET",

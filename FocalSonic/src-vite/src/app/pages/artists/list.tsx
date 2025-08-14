@@ -1,6 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { memo } from "react";
-import { useTranslation } from "react-i18next";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { ArtistGridCard } from "@/app/components/artist/artist-grid-card";
 import { ArtistsFallback } from "@/app/components/fallbacks/artists.tsx";
@@ -11,11 +8,14 @@ import { MainViewTypeSelector } from "@/app/components/main-grid";
 import { DataTable } from "@/app/components/ui/data-table";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { artistsColumns } from "@/app/tables/artists-columns";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { useAppArtistsViewType } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
 import { ISimilarArtist } from "@/types/responses/artist";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
+import { memo } from "react";
+import { useTranslation } from "react-i18next";
 
 const MemoShadowHeader = memo(ShadowHeader);
 const MemoHeaderTitle = memo(HeaderTitle);
@@ -38,7 +38,7 @@ export default function ArtistsList() {
 
     const { data: artists, isLoading } = useQuery({
         queryKey: [queryKeys.artist.all],
-        queryFn: subsonic.artists.getAll,
+        queryFn: service.artists.getAll,
     });
 
     async function handlePlayArtistRadio(artist: ISimilarArtist) {

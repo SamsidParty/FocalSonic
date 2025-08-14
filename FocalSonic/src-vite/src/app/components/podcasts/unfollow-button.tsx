@@ -1,9 +1,3 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BookmarkIcon } from "lucide-react";
-import { MouseEvent } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -18,8 +12,14 @@ import {
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { ROUTES } from "@/routes/routesList";
-import { podcasts } from "@/service/podcasts";
+import { podcasts } from "@/service/subsonic/podcasts";
 import { queryKeys } from "@/utils/queryKeys";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { BookmarkIcon } from "lucide-react";
+import { MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 interface UnfollowButtonProps {
     title: string

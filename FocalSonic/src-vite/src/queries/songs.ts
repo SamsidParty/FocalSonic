@@ -1,5 +1,5 @@
-import { SearchQueryOptions } from "@/service/search";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
+import { SearchQueryOptions } from "@/service/subsonic/search";
 
 const emptyResponse = { songs: [], nextOffset: null };
 
@@ -8,7 +8,7 @@ type SongSearchParams = Required<
 >
 
 export async function songsSearch(params: SongSearchParams) {
-    const response = await subsonic.search.get({
+    const response = await service.search.get({
         artistCount: 0,
         albumCount: 0,
         ...params,
@@ -29,12 +29,12 @@ export async function songsSearch(params: SongSearchParams) {
 }
 
 export async function getArtistAllSongs(artistId: string) {
-    const artist = await subsonic.artists.getOne(artistId);
+    const artist = await service.artists.getOne(artistId);
 
     if (!artist || !artist.album) return emptyResponse;
 
     const results = await Promise.all(
-        artist.album.map((a) => subsonic.albums.getOne(a.id)),
+        artist.album.map((a) => service.albums.getOne(a.id)),
     );
 
     const songs = results.flatMap((result) => {

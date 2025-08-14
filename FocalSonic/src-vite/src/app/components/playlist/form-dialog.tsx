@@ -4,8 +4,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { toast } from "react-toastify";
-import { z } from "zod";
 import { Button } from "@/app/components/ui/button";
 import {
     Dialog,
@@ -26,10 +24,12 @@ import {
 import { Input } from "@/app/components/ui/input";
 import { Switch } from "@/app/components/ui/switch";
 import { Textarea } from "@/app/components/ui/textarea";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlaylists } from "@/store/playlists.store";
 import { PlaylistData } from "@/types/playlistsContext";
 import { queryKeys } from "@/utils/queryKeys";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const playlistSchema = z.object({
     name: z.string().min(2, { message: "playlist.form.validations.nameLength" }),
@@ -72,7 +72,7 @@ export function CreatePlaylistDialog() {
     const queryClient = useQueryClient();
 
     const createMutation = useMutation({
-        mutationFn: subsonic.playlists.createWithDetails,
+        mutationFn: service.playlists.createWithDetails,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.playlist.all],
@@ -85,7 +85,7 @@ export function CreatePlaylistDialog() {
     });
 
     const updateMutation = useMutation({
-        mutationFn: subsonic.playlists.update,
+        mutationFn: service.playlists.update,
         onSuccess: () => {
             Promise.all([
                 queryClient.invalidateQueries({

@@ -1,10 +1,10 @@
-import { memo } from "react";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { ROUTES } from "@/routes/routesList";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { Albums } from "@/types/responses/album";
+import { memo } from "react";
 
 type AlbumCardProps = {
     album: Albums
@@ -14,7 +14,7 @@ function AlbumCard({ album }: AlbumCardProps) {
     const { setSongList } = usePlayerActions();
 
     async function handlePlayAlbum() {
-        const response = await subsonic.albums.getOne(album.id);
+        const response = await service.albums.getOne(album.id);
 
         if (response) {
             setSongList(response.song, 0);

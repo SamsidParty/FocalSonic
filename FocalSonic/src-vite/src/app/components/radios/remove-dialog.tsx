@@ -1,7 +1,3 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -12,10 +8,14 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/app/components/ui/alert-dialog";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { useRadios } from "@/store/radios.store";
 import { Radio } from "@/types/responses/radios";
 import { queryKeys } from "@/utils/queryKeys";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 
 export function RemoveRadioDialog() {
     const { t } = useTranslation();
@@ -25,7 +25,7 @@ export function RemoveRadioDialog() {
     const queryClient = useQueryClient();
 
     const removeMutation = useMutation({
-        mutationFn: subsonic.radios.remove,
+        mutationFn: service.radios.remove,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.radio.all],

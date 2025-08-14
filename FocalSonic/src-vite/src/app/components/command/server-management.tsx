@@ -1,12 +1,12 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { Badge } from "@/app/components/ui/badge";
 import { CommandGroup, CommandItem } from "@/app/components/ui/command";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { useAppStore } from "@/store/app.store";
 import dateTime from "@/utils/dateTime";
 import { checkServerType } from "@/utils/servers";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 async function delayedFn<T>(callback: () => T): Promise<T> {
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -15,10 +15,10 @@ async function delayedFn<T>(callback: () => T): Promise<T> {
 }
 
 const getScanStatus = async () => {
-    return await delayedFn(subsonic.library.getScanStatus);
+    return await delayedFn(service.library.getScanStatus);
 };
 const startScan = async () => {
-    return await delayedFn(subsonic.library.startScan);
+    return await delayedFn(service.library.startScan);
 };
 
 export function CommandServer() {

@@ -1,7 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import clsx from "clsx";
-import { PlusIcon } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { EmptyWrapper } from "@/app/components/albums/empty-wrapper";
 import { SongListFallback } from "@/app/components/fallbacks/song-fallbacks";
@@ -13,11 +9,15 @@ import { RemoveRadioDialog } from "@/app/components/radios/remove-dialog";
 import { Button } from "@/app/components/ui/button";
 import { DataTable } from "@/app/components/ui/data-table";
 import { radiosColumns } from "@/app/tables/radios-columns";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { useRadios } from "@/store/radios.store";
 import { Radio } from "@/types/responses/radios";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
+import clsx from "clsx";
+import { PlusIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function Radios() {
     const { setDialogState, setData } = useRadios();
@@ -26,7 +26,7 @@ export default function Radios() {
 
     const { data: radios, isLoading } = useQuery({
         queryKey: [queryKeys.radio.all],
-        queryFn: subsonic.radios.getAll,
+        queryFn: service.radios.getAll,
     });
 
     const columns = radiosColumns();

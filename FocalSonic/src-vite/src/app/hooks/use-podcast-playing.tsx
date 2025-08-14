@@ -1,11 +1,11 @@
-import { MouseEvent, useCallback, useMemo } from "react";
-import { podcasts } from "@/service/podcasts";
+import { podcasts } from "@/service/subsonic/podcasts";
 import {
     usePlayerActions,
     usePlayerIsPlaying,
     usePlayerMediaType,
     usePlayerSonglist,
 } from "@/store/player.store";
+import { MouseEvent, useCallback, useMemo } from "react";
 import { getEpisodePlayProgress } from "./use-episode-progress";
 
 interface IEpisodeProps {

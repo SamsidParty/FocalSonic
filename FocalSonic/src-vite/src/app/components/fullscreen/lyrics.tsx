@@ -3,7 +3,7 @@ import {
     scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
 import { parseTTML } from "@/lib/ttml/parser";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
 import { ILyric } from "@/types/responses/song";
 import { isSafari } from "@/utils/osType";
@@ -27,7 +27,7 @@ export function LyricsTab({ leftAlign }: { leftAlign?: boolean }) {
     const { data: lyrics, isLoading } = useQuery({
         queryKey: ["get-lyrics", artist, title, duration],
         queryFn: () =>
-            subsonic.lyrics.getLyrics({
+            service.lyrics.getLyrics({
                 artist,
                 title,
                 duration,

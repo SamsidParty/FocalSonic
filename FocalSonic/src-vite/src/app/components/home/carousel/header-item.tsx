@@ -2,7 +2,7 @@ import { getCoverArtUrl } from "@/api/httpClient";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { ROUTES } from "@/routes/routesList";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
@@ -16,7 +16,7 @@ export function HeaderItem({ song }: { song: ISong }) {
     const { setSongList } = usePlayerActions();
 
     async function handlePlaySongAlbum(song: ISong) {
-        const album = await subsonic.albums.getOne(song.albumId);
+        const album = await service.albums.getOne(song.albumId);
 
         if (album) {
             const songIndex = album.song.findIndex((item) => item.id === song.id);

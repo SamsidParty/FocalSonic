@@ -15,7 +15,7 @@ import {
     AlertDialogTitle,
 } from "@/app/components/ui/alert-dialog";
 import { ROUTES } from "@/routes/routesList";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { useRemovePlaylist } from "@/store/playlists.store";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -37,7 +37,7 @@ export function RemovePlaylistDialog() {
     const queryClient = useQueryClient();
 
     const removeMutation = useMutation({
-        mutationFn: subsonic.playlists.remove,
+        mutationFn: service.playlists.remove,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.playlist.all],

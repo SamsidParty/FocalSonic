@@ -1,10 +1,3 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
-import { z } from "zod";
 import { Button } from "@/app/components/ui/button";
 import {
     Dialog,
@@ -22,8 +15,15 @@ import {
     FormMessage,
 } from "@/app/components/ui/form";
 import { Textarea } from "@/app/components/ui/textarea";
-import { podcasts } from "@/service/podcasts";
+import { podcasts } from "@/service/subsonic/podcasts";
 import { logger } from "@/utils/logger";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const urlSchema = z
     .string()

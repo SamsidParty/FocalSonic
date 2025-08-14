@@ -5,7 +5,7 @@ import {
     DialogTitle,
 } from "@/app/components/ui/dialog";
 import favicon from "@/assets/favicon.png";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { getAppInfo } from "@/utils/appName";
 import { queryKeys } from "@/utils/queryKeys";
 import { useQuery } from "@tanstack/react-query";
@@ -22,7 +22,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
 
     const { data: server, isLoading } = useQuery({
         queryKey: [queryKeys.update.serverInfo],
-        queryFn: subsonic.ping.pingInfo,
+        queryFn: service.ping.pingInfo,
     });
 
     return (

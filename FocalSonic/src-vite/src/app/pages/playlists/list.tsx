@@ -11,7 +11,7 @@ import { EmptyPlaylistsPage } from "@/app/components/playlist/empty-page";
 import { Button } from "@/app/components/ui/button";
 import { DataTable } from "@/app/components/ui/data-table";
 import { playlistsColumns } from "@/app/tables/playlists-columns";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylists } from "@/store/playlists.store";
 import { queryKeys } from "@/utils/queryKeys";
@@ -23,13 +23,13 @@ export default function PlaylistsPage() {
 
     const { data: playlists, isLoading } = useQuery({
         queryKey: [queryKeys.playlist.all],
-        queryFn: subsonic.playlists.getAll,
+        queryFn: service.playlists.getAll,
     });
 
     const columns = playlistsColumns();
 
     async function handlePlayPlaylist(playlistId: string) {
-        const playlist = await subsonic.playlists.getOne(playlistId);
+        const playlist = await service.playlists.getOne(playlistId);
 
         if (playlist && playlist.entry.length > 0) {
             setSongList(playlist.entry, 0);

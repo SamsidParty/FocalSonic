@@ -1,11 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import { Actions } from "@/app/components/actions";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { useAppPages } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
 import { SingleAlbum } from "@/types/responses/album";
 import { queryKeys } from "@/utils/queryKeys";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { AlbumOptions } from "./options";
 
 interface AlbumButtonsProps {
@@ -23,7 +23,7 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
     const queryClient = useQueryClient();
 
     const starMutation = useMutation({
-        mutationFn: subsonic.star.handleStarItem,
+        mutationFn: service.star.handleStarItem,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.album.single, album.id],

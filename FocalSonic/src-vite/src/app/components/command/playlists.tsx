@@ -1,15 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import { useNavigate } from "react-router-dom";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { Dot } from "@/app/components/dot";
 import { CommandGroup, CommandItem } from "@/app/components/ui/command";
 import { ROUTES } from "@/routes/routesList";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { Playlist } from "@/types/responses/playlist";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import { useNavigate } from "react-router-dom";
 import { CommandItemProps } from "./command-menu";
 
 export function CommandPlaylists({ runCommand }: CommandItemProps) {
@@ -18,7 +18,7 @@ export function CommandPlaylists({ runCommand }: CommandItemProps) {
 
     const { data: playlists } = useQuery({
         queryKey: [queryKeys.playlist.all],
-        queryFn: subsonic.playlists.getAll,
+        queryFn: service.playlists.getAll,
     });
 
     if (!playlists || playlists.length === 0) return null;

@@ -1,7 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMatches } from "react-router-dom";
 import { getDownloadUrl } from "@/api/httpClient";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylistRemoveSong } from "@/store/playlists.store";
 import { useSongInfo } from "@/store/ui.store";
@@ -9,6 +7,8 @@ import { UpdateParams } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
 import { queryKeys } from "@/utils/queryKeys";
 import { isTauri } from "@/utils/tauriTools";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMatches } from "react-router-dom";
 import { useDownload } from "./use-download";
 
 type SongIdToAdd = Pick<UpdateParams, "songIdToAdd">["songIdToAdd"]
@@ -47,7 +47,7 @@ export function useOptions() {
     }
 
     const updateMutation = useMutation({
-        mutationFn: subsonic.playlists.update,
+        mutationFn: service.playlists.update,
         onSuccess: () => {
             if (isOnPlaylistPage) {
                 queryClient.invalidateQueries({
@@ -65,7 +65,7 @@ export function useOptions() {
     }
 
     const createMutation = useMutation({
-        mutationFn: subsonic.playlists.createWithDetails,
+        mutationFn: service.playlists.createWithDetails,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.playlist.all],

@@ -3,7 +3,7 @@ import { getProxyURL } from "@/api/podcastClient";
 import { MiniPlayerButton } from "@/app/components/mini-player/button";
 import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
-import { podcasts } from "@/service/podcasts";
+import { podcasts } from "@/service/subsonic/podcasts";
 import {
     getVolume,
     usePlayerActions,

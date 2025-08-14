@@ -4,8 +4,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { toast } from "react-toastify";
-import { z } from "zod";
 import { Button } from "@/app/components/ui/button";
 import {
     Dialog,
@@ -23,10 +21,12 @@ import {
     FormMessage,
 } from "@/app/components/ui/form";
 import { Input } from "@/app/components/ui/input";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { useRadios } from "@/store/radios.store";
 import { Radio } from "@/types/responses/radios";
 import { queryKeys } from "@/utils/queryKeys";
+import { toast } from "react-toastify";
+import { z } from "zod";
 
 const radioSchema = z.object({
     name: z.string().min(3, { message: "radios.form.validations.name" }),
@@ -81,7 +81,7 @@ export function RadioFormDialog() {
     const queryClient = useQueryClient();
 
     const createMutation = useMutation({
-        mutationFn: subsonic.radios.create,
+        mutationFn: service.radios.create,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.radio.all],
@@ -94,7 +94,7 @@ export function RadioFormDialog() {
     });
 
     const updateMutation = useMutation({
-        mutationFn: subsonic.radios.update,
+        mutationFn: service.radios.update,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.radio.all],

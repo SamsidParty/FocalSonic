@@ -1,6 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
 import { PlaylistFallback } from "@/app/components/fallbacks/playlist-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
@@ -10,11 +7,14 @@ import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-s
 import { DataTable } from "@/app/components/ui/data-table";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 
 export default function Playlist() {
     const { playlistId } = useParams() as { playlistId: string };
@@ -28,7 +28,7 @@ export default function Playlist() {
         isFetching,
     } = useQuery({
         queryKey: [queryKeys.playlist.single, playlistId],
-        queryFn: () => subsonic.playlists.getOne(playlistId),
+        queryFn: () => service.playlists.getOne(playlistId),
     });
 
     if (isFetching || isLoading) return <PlaylistFallback />;

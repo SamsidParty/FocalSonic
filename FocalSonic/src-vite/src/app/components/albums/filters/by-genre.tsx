@@ -1,8 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 import { Button } from "@/app/components/ui/button";
 import {
     Command,
@@ -19,11 +14,16 @@ import {
 } from "@/app/components/ui/popover";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { AlbumsSearchParams } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
 import { scrollPageToTop } from "@/utils/scrollPageToTop";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+import { useQuery } from "@tanstack/react-query";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 export function AlbumsFilterByGenre() {
     const { t } = useTranslation();
@@ -33,7 +33,7 @@ export function AlbumsFilterByGenre() {
 
     const { data: genres, isLoading } = useQuery({
         queryKey: [queryKeys.genre],
-        queryFn: subsonic.genres.get,
+        queryFn: service.genres.get,
     });
 
     const genre = getSearchParam<string>(AlbumsSearchParams.Genre, "");

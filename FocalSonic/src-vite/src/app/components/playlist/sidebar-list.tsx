@@ -2,7 +2,7 @@ import { SidebarPlaylistButtons } from "@/app/components/playlist/sidebar-button
 import { SidebarPlaylistGenerator } from "@/app/components/sidebar/sidebar-generator";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { queryKeys } from "@/utils/queryKeys";
 import { useQuery } from "@tanstack/react-query";
 import { ComponentPropsWithoutRef } from "react";
@@ -14,7 +14,7 @@ export function SidebarPlaylists() {
 
     const { data: playlists } = useQuery({
         queryKey: [queryKeys.playlist.all],
-        queryFn: subsonic.playlists.getAll,
+        queryFn: service.playlists.getAll,
     });
 
     return (

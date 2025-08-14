@@ -4,7 +4,7 @@ import {
     SearchEpisodesParams,
     SearchParams,
     ShowParams,
-} from "@/service/podcasts";
+} from "@/service/subsonic/podcasts";
 
 const emptyPodcastResponse = { podcasts: [], nextOffset: null };
 

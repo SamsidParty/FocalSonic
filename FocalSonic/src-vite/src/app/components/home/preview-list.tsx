@@ -8,9 +8,9 @@ import {
 } from "@/app/components/ui/carousel";
 import { CarouselButton } from "@/app/components/ui/carousel-button";
 import { ROUTES } from "@/routes/routesList";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
-import { IAppleMusicRecommendationContent } from "@/types/appleMusic/recommendations";
+import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
 import { checkServerType } from "@/utils/servers";
 import { useEffect, useState } from "react";
@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 interface PreviewListProps {
-    list: Albums[] | IAppleMusicRecommendationContent[]
+    list: Albums[] | AppleMusicRecommendationContent[]
     title: string
     showMore?: boolean
     moreTitle?: string
@@ -46,7 +46,7 @@ export default function PreviewList({
     }
 
     async function handlePlayAlbum(album: Albums) {
-        const response = await subsonic.albums.getOne(album.id);
+        const response = await service.albums.getOne(album.id);
 
         if (response) {
             setSongList(response.song, 0);
@@ -67,8 +67,8 @@ export default function PreviewList({
         });
     }, [api]);
 
-    const getResourceType = (entry: IAppleMusicRecommendationContent | Albums) => {
-        let type = (entry as IAppleMusicRecommendationContent).type;
+    const getResourceType = (entry: AppleMusicRecommendationContent | Albums) => {
+        let type = (entry as AppleMusicRecommendationContent).type;
         return type?.slice(0, -1).toUpperCase() || "ALBUM";
     }
 
@@ -126,7 +126,7 @@ export default function PreviewList({
                                 <PreviewCard.Root>
                                     <PreviewCard.ImageWrapper link={ROUTES[getResourceType(entry)]?.PAGE(entry.id)}>
                                         <PreviewCard.Image
-                                            src={getCoverArtUrl(entry.coverArt || (entry as IAppleMusicRecommendationContent).attributes.artwork.url, "album")}
+                                            src={getCoverArtUrl(entry.coverArt || (entry as AppleMusicRecommendationContent).attributes.artwork.url, "album")}
                                             alt={title}
                                         />
                                         <PreviewCard.PlayButton
@@ -135,13 +135,13 @@ export default function PreviewList({
                                     </PreviewCard.ImageWrapper>
                                     <PreviewCard.InfoWrapper>
                                         <PreviewCard.Title link={ROUTES[getResourceType(entry)]?.PAGE(entry.id)}>
-                                            {entry.name || (entry as IAppleMusicRecommendationContent).attributes.name}
+                                            {entry.name || (entry as AppleMusicRecommendationContent).attributes.name}
                                         </PreviewCard.Title>
                                         <PreviewCard.Subtitle
                                             enableLink={entry.artistId !== undefined}
                                             link={ROUTES.ARTIST.PAGE(entry.artistId ?? "")}
                                         >
-                                            {entry.artist || (entry as IAppleMusicRecommendationContent).attributes.artistName || (entry as IAppleMusicRecommendationContent).attributes.curatorName}
+                                            {entry.artist || (entry as AppleMusicRecommendationContent).attributes.artistName || (entry as AppleMusicRecommendationContent).attributes.curatorName}
                                         </PreviewCard.Subtitle>
                                     </PreviewCard.InfoWrapper>
                                 </PreviewCard.Root>

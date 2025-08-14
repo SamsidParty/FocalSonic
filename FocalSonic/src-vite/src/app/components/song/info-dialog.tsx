@@ -8,7 +8,7 @@ import {
 } from "@/app/components/ui/dialog";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { ROUTES } from "@/routes/routesList";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { useSongInfo } from "@/store/ui.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import dateTime from "@/utils/dateTime";
@@ -30,7 +30,7 @@ export function SongInfoDialog() {
 
     const { data: song, isLoading } = useQuery({
         queryKey: [queryKeys.song.info, songId],
-        queryFn: () => subsonic.songs.getSong(songId),
+        queryFn: () => service.songs.getSong(songId),
         enabled: modalOpen,
     });
 
@@ -38,7 +38,7 @@ export function SongInfoDialog() {
 
     const { data: album, isLoading: albumLoading } = useQuery({
         queryKey: [queryKeys.album.single, song?.albumId],
-        queryFn: () => subsonic.albums.getOne(song?.albumId ?? ""),
+        queryFn: () => service.albums.getOne(song?.albumId ?? ""),
         enabled: loadedAlbumId,
     });
 

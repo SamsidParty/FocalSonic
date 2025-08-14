@@ -1,7 +1,7 @@
 import { OptionsButtons } from "@/app/components/options/buttons";
 import { DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlaylists, useRemovePlaylist } from "@/store/playlists.store";
 import { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
@@ -42,7 +42,7 @@ export function PlaylistOptions({
     }
 
     async function getSongsToQueue(callback: (songs: ISong[]) => void) {
-        const playlistWithEntries = await subsonic.playlists.getOne(playlist.id);
+        const playlistWithEntries = await service.playlists.getOne(playlist.id);
         if (!playlistWithEntries) return;
 
         callback(playlistWithEntries.entry);

@@ -8,7 +8,7 @@ import {
     CommandList,
 } from "@/app/components/ui/command";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { useAppStore } from "@/store/app.store";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
@@ -49,7 +49,7 @@ export default function CommandMenu() {
     const { data: searchResult } = useQuery({
         queryKey: [queryKeys.search, query],
         queryFn: () =>
-            subsonic.search.get({
+            service.search.get({
                 query,
                 albumCount: 4,
                 artistCount: 4,

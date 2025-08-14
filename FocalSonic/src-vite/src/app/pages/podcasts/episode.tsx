@@ -1,5 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
 import { Actions } from "@/app/components/actions";
 import { EpisodeFallback } from "@/app/components/fallbacks/podcast-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
@@ -8,9 +6,11 @@ import {
     useIsEpisodePlaying,
     usePlayEpisode,
 } from "@/app/hooks/use-podcast-playing";
-import { podcasts } from "@/service/podcasts";
+import { podcasts } from "@/service/subsonic/podcasts";
 import { linkifyText, sanitizeLinks } from "@/utils/parseTexts";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
 
 export default function Episode() {
     const { episodeId } = useParams() as { episodeId: string };

@@ -1,5 +1,5 @@
 import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { IPlayerContext, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
 import { areSongListsEqual } from "@/utils/compareSongLists";
@@ -611,7 +611,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
 
                             const { id, starred } = get().songlist.currentSong;
                             const isSongStarred = typeof starred === "string";
-                            await subsonic.star.handleStarItem({
+                            await service.star.handleStarItem({
                                 id,
                                 starred: isSongStarred,
                             });

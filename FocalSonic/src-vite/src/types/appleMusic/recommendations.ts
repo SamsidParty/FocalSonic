@@ -1,19 +1,19 @@
-export interface IAppleMusicRecommendationsResponse {
-  data: IAppleMusicRecommendation[];
+export interface AppleMusicRecommendationsResponse {
+  data: AppleMusicRecommendation[];
   meta: {
     metrics: Record<string, string>;
   };
 }
 
-export interface IAppleMusicRecommendation {
+export interface AppleMusicRecommendation {
   id: string;
   type: string;
   href: string;
-  attributes: IAppleMusicRecommendationAttributes;
+  attributes: AppleMusicRecommendationAttributes;
   relationships: {
     contents: {
       href: string;
-      data: IAppleMusicRecommendationContent[];
+      data: AppleMusicRecommendationContent[];
     };
   };
   meta: {
@@ -24,7 +24,7 @@ export interface IAppleMusicRecommendation {
   };
 }
 
-export interface IAppleMusicRecommendationAttributes {
+export interface AppleMusicRecommendationAttributes {
   display: {
     decorations: any[];
     kind: string;
@@ -40,20 +40,20 @@ export interface IAppleMusicRecommendationAttributes {
   version: number;
 }
 
-export interface IAppleMusicRecommendationContent {
+export interface AppleMusicRecommendationContent {
   id: string;
   type: string;
   href: string;
-  attributes: IAlbumAttributes | IPlaylistAttributes | IStationAttributes;
+  attributes: AppleMusicAlbumAttributes | AppleMusicPlaylistAttributes | AppleMusicStationAttributes;
   meta?: {
     contentVersion?: Record<string, number>;
   };
 }
 
-// Album/Playlist/Station attributes (partial, extend as needed)
-export interface IAlbumAttributes {
+
+export interface AppleMusicAlbumAttributes {
   artistName?: string;
-  artwork: IArtwork;
+  artwork: AppleMusicArtwork;
   audioTraits?: string[];
   curatorName?: string;
   description?: {
@@ -70,7 +70,7 @@ export interface IAlbumAttributes {
   isChart?: boolean;
   lastModifiedDate?: string;
   name: string;
-  playParams: IPlayParams;
+  playParams: AppleMusicPlayParams;
   playlistType?: string;
   supportsSing?: boolean;
   url: string;
@@ -88,8 +88,8 @@ export interface IAlbumAttributes {
   contentRating?: string;
 }
 
-export interface IPlaylistAttributes {
-  artwork: IArtwork;
+export interface AppleMusicPlaylistAttributes {
+  artwork: AppleMusicArtwork;
   audioTraits?: string[];
   curatorName?: string;
   description?: {
@@ -106,25 +106,25 @@ export interface IPlaylistAttributes {
   isChart?: boolean;
   lastModifiedDate?: string;
   name: string;
-  playParams: IPlayParams;
+  playParams: AppleMusicPlayParams;
   playlistType?: string;
   supportsSing?: boolean;
   url: string;
 }
 
-export interface IStationAttributes {
-  artwork: IArtwork;
+export interface AppleMusicStationAttributes {
+  artwork: AppleMusicArtwork;
   isLive: boolean;
   kind: string;
   mediaKind: string;
   name: string;
-  playParams: IPlayParams;
+  playParams: AppleMusicPlayParams;
   radioUrl: string;
   requiresSubscription: boolean;
   url: string;
 }
 
-export interface IArtwork {
+export interface AppleMusicArtwork {
   bgColor: string;
   hasP3: boolean;
   height: number;
@@ -137,7 +137,7 @@ export interface IArtwork {
   gradient?: object;
 }
 
-export interface IPlayParams {
+export interface AppleMusicPlayParams {
   id: string;
   kind: string;
   versionHash?: string;

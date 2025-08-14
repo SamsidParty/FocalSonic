@@ -1,6 +1,6 @@
 import { ProgressSlider } from "@/app/components/ui/slider";
-import { podcasts } from "@/service/podcasts";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
+import { podcasts } from "@/service/subsonic/podcasts";
 import {
     usePlayerActions,
     usePlayerDuration,
@@ -78,7 +78,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
     );
 
     const sendScrobble = useCallback(async (songId: string) => {
-        await subsonic.scrobble.send(songId);
+        await service.scrobble.send(songId);
     }, []);
 
     const progressTicks = useRef(0);

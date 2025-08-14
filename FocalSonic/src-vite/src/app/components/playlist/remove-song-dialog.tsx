@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-import { toast } from "react-toastify";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -12,9 +11,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/app/components/ui/alert-dialog";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { usePlaylistRemoveSong } from "@/store/playlists.store";
 import { queryKeys } from "@/utils/queryKeys";
+import { toast } from "react-toastify";
 
 export function RemoveSongFromPlaylistDialog() {
     const { t } = useTranslation();
@@ -26,7 +26,7 @@ export function RemoveSongFromPlaylistDialog() {
     const queryClient = useQueryClient();
 
     const updateMutation = useMutation({
-        mutationFn: subsonic.playlists.update,
+        mutationFn: service.playlists.update,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.playlist.single, actionData.playlistId],

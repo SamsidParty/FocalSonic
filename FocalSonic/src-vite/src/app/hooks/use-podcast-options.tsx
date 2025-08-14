@@ -1,10 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/routes/routesList";
-import { podcasts } from "@/service/podcasts";
+import { podcasts } from "@/service/subsonic/podcasts";
 import { Episode } from "@/types/responses/podcasts";
 import { queryKeys } from "@/utils/queryKeys";
 import { isTauri } from "@/utils/tauriTools";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { useDownload } from "./use-download";
 
 interface PodcastOptionsProps {

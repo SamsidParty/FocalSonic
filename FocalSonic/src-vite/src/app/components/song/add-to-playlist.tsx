@@ -1,8 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { CommandItem } from "cmdk";
-import { PlusIcon } from "lucide-react";
-import { KeyboardEvent } from "react";
-import { useTranslation } from "react-i18next";
 import { NoPlaylistsMessage } from "@/app/components/playlist/empty-message";
 import {
     Command,
@@ -14,8 +9,13 @@ import {
 import { ContextMenuItem } from "@/app/components/ui/context-menu";
 import { DropdownMenuItem } from "@/app/components/ui/dropdown-menu";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
+import { CommandItem } from "cmdk";
+import { PlusIcon } from "lucide-react";
+import { KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 interface AddToPlaylistSubMenuProps {
     newPlaylistFn: () => void
@@ -32,7 +32,7 @@ export function AddToPlaylistSubMenu({
 
     const { data: playlists } = useQuery({
         queryKey: [queryKeys.playlist.all],
-        queryFn: subsonic.playlists.getAll,
+        queryFn: service.playlists.getAll,
     });
 
     function avoidTypeAhead(e: KeyboardEvent<HTMLInputElement>) {

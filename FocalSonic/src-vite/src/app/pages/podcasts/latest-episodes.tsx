@@ -1,6 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { memo, useMemo } from "react";
-import { useTranslation } from "react-i18next";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { LatestEpisodesFallback } from "@/app/components/fallbacks/podcast-fallbacks";
 import { HeaderTitle } from "@/app/components/header-title";
@@ -8,8 +5,11 @@ import ListWrapper from "@/app/components/list-wrapper";
 import { EmptyLatestEpisodesPage } from "@/app/components/podcasts/empty-latest-episodes";
 import { FeaturedEpisodeCard } from "@/app/components/podcasts/featured-episode-card";
 import { LatestEpisodesList } from "@/app/components/podcasts/latest-episodes-list";
-import { podcasts } from "@/service/podcasts";
+import { podcasts } from "@/service/subsonic/podcasts";
 import { queryKeys } from "@/utils/queryKeys";
+import { useQuery } from "@tanstack/react-query";
+import { memo, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 const episodesToFeature = 5;
 

@@ -1,12 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import { Actions } from "@/app/components/actions";
 import { useSongList } from "@/app/hooks/use-song-list";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import { useAppPages } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
 import { IArtist } from "@/types/responses/artist";
 import { queryKeys } from "@/utils/queryKeys";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ArtistOptions } from "./options";
 
 interface ArtistButtonsProps {
@@ -30,7 +30,7 @@ export function ArtistButtons({
     const queryClient = useQueryClient();
 
     const starMutation = useMutation({
-        mutationFn: subsonic.star.handleStarItem,
+        mutationFn: service.star.handleStarItem,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.artist.single, artist.id],

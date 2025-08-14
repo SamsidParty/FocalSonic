@@ -3,7 +3,7 @@ import { Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/app/components/ui/button";
-import { subsonic } from "@/service/subsonic";
+import { service } from "@/service/service";
 import {
     usePlayerActions,
     usePlayerMediaType,
@@ -40,7 +40,7 @@ export function TableLikeButton({
     async function handleStarred() {
         const state = !isStarred;
 
-        await subsonic.star.handleStarItem({
+        await service.star.handleStarItem({
             id: entityId,
             starred: isStarred,
         });
