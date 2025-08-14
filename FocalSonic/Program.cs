@@ -9,7 +9,7 @@ public class Program
 {
     public static ViteAppManager App;
     public static HttpClient Http = new HttpClient();
-    public static WebWindow? MainWindow => App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault(App.MainWindow);
+    public static WebWindow? MainWindow => App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault();
     
 
     [STAThread]
@@ -46,12 +46,15 @@ public class Program
 
         foreach (var window in App.OpenWindows)
         {
+            window.SharedContext.Remove("MainWindow");
             window.ExecuteJavaScript("window.gc && window.gc()");
         }
     }
 
     public static void CreateMainWindow()
     {
+        if (MainWindow != null) { return; }
+
         Performance.IsRunningInForeground = true;
         App.MainWindow =
             WebWindow.Create()
