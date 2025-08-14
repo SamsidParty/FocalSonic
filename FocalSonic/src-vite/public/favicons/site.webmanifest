@@ -31,41 +31,4 @@
             "purpose": "maskable"
         }
     ],
-    "screenshots": [
-        {
-            "src": "/screenshots/albums.png",
-            "type": "image/png",
-            "sizes": "1924x1059",
-            "form_factor": "wide",
-            "label": "Screenshot Displaying Albums"
-        },
-        {
-            "src": "/screenshots/artist.png",
-            "type": "image/png",
-            "sizes": "1924x1059",
-            "form_factor": "wide",
-            "label": "Screenshot Displaying Artists"
-        },
-        {
-            "src": "/screenshots/player.png",
-            "type": "image/png",
-            "sizes": "1924x1059",
-            "form_factor": "wide",
-            "label": "Screenshot of Playing"
-        },
-        {
-            "src": "/screenshots/playlist.png",
-            "type": "image/png",
-            "sizes": "1924x1059",
-            "form_factor": "wide",
-            "label": "Screenshot Displaying Playlists"
-        },
-        {
-            "src": "/screenshots/home.png",
-            "type": "image/png",
-            "sizes": "1924x1059",
-            "form_factor": "wide",
-            "label": "Screenshot Displaying Home"
-        }
-    ]
 }

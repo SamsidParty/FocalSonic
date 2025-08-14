@@ -6,7 +6,7 @@ export function AppTitle() {
         <div {...igniteViewDragRegion} className="flex gap-2 items-center">
             <LazyLoadImage
                 {...igniteViewDragRegion}
-                src="/icon_transparent.svg"
+                src="/favicon.png"
                 alt="FocalSonic icon"
                 className="w-6 h-6"
             />

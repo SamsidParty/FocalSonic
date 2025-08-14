@@ -61,7 +61,7 @@ namespace FocalSonic.AudioPlayer
 
             //Use WinForms Methods To Create A Tray Icon
             notify.Visible = true;
-            notify.Icon = new Icon(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "iv2runtime", "icon.ico"));   
+            notify.Icon = new Icon(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "iv2runtime", "favicon.ico"));   
             notify.Text = "FocalSonic";
             notify.DoubleClick += new EventHandler((_, _) => Program.CreateMainWindow());
             notify.ContextMenuStrip = menuStrip;

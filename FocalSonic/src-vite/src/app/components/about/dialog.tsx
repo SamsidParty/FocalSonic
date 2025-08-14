@@ -32,11 +32,11 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
             >
                 <DialogTitle className="sr-only">{t("menu.about")}</DialogTitle>
                 <DialogHeader>
-                    <div className="flex gap-2 items-center justify-center w-full py-4 bg-gradient-to-b from-accent to-background">
+                    <div className="flex gap-2 items-center justify-center w-full py-4">
                         <img
-                            src="/icon.svg"
+                            src="/favicon.png"
                             alt="FocalSonic"
-                            className="w-12 h-12 drop-shadow grayscale"
+                            className="w-12 h-12 drop-shadow"
                         />
                         <h1 className="font-semibold text-2xl drop-shadow">{name}</h1>
                     </div>
