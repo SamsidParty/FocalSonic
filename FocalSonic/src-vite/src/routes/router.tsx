@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { createMemoryRouter } from "react-router-dom";
+import { createHashRouter } from "react-router-dom";
 
 import {
     AlbumFallback,
@@ -40,7 +40,12 @@ const LatestEpisodes = lazy(
     () => import("@/app/pages/podcasts/latest-episodes"),
 );
 
-export const router = createMemoryRouter([
+let baseName = "/";
+if (window.location.pathname.startsWith("/FocalSonic")) {
+    baseName = "/FocalSonic/";
+}
+
+export const router = createHashRouter([
     {
         path: "/",
         element: <BaseLayout />,
@@ -201,4 +206,6 @@ export const router = createMemoryRouter([
             </Suspense>
         ),
     },
-]);
+], {
+    basename: baseName
+});
