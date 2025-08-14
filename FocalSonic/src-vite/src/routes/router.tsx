@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createMemoryRouter } from "react-router-dom";
 
 import {
     AlbumFallback,
@@ -45,7 +45,7 @@ if (window.location.pathname.startsWith("/FocalSonic")) {
     baseName = "/FocalSonic";
 }
 
-export const router = createBrowserRouter([
+export const router = createMemoryRouter([
     {
         path: "/",
         element: <BaseLayout />,
