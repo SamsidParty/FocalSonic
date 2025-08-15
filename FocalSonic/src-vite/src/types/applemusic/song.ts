@@ -55,11 +55,14 @@ export function convertAppleMusicSongToSubsonic(song: AppleMusicSong): Song {
     if (!song) { return; }
 
     return {
+        isDir: false,
         id: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
+        parent: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
+        albumId: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
         title: song.attributes?.name || "Unknown",
         artist: song.attributes?.artistName || "Unknown",
         album: song.attributes?.albumName || "Unknown",
-        duration: (song.attributes?.durationInMillis || 0) / 1000,
+        duration: Math.ceil((song.attributes?.durationInMillis || 0) / 1000),
         suffix: "m4a",
         coverArt: song.attributes?.artwork?.url || "",
     };

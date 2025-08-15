@@ -40,12 +40,20 @@ async function getAlbumList(params: Partial<AlbumListParams> = {}) {
 
 async function getOne(id: string) {
 
-    if (!parseInt(id)) { // If it's not a catalog id
+    if (!parseInt(id)) { // If it's not a catalog id, then it's a library id
         id = (await httpClient<AppleMusicAlbum[]>(`/applemusic/me/library/albums/${id}/catalog`, { method: "GET", }))?.data[0]?.id || null;
-        if (!id) { return; }
+        if (!id) return;
     }
 
-    const response = await httpClient<AppleMusicAlbum[]>(`/applemusic/catalog/{storefront}/albums/${id}`, { method: "GET", });
+    let response = await httpClient<AppleMusicAlbum[]>(`/applemusic/catalog/{storefront}/albums/${id}`, { method: "GET", });
+    
+    if (!(response?.data?.length > 0)) {
+        // Try again but with the song endpoint
+        id = (await httpClient<AppleMusicAlbum[]>(`/applemusic/catalog/{storefront}/songs/${id}/albums`, { method: "GET", }))?.data[0]?.id || null;
+        if (id) {
+            return await getOne(id);
+        }
+    }
 
     return convertAppleMusicAlbumToSubsonic(response?.data[0]);
 }

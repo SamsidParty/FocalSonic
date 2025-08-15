@@ -31,6 +31,7 @@ export interface AppleMusicAlbum extends Resource {
 export function convertAppleMusicAlbumToSubsonic(album: AppleMusicAlbum): SingleAlbum {
     if (!album) { return; }
     return {
+        isDir: true,
         id: album.id,
         name: album.attributes?.name || "",
         title: album.attributes?.name || "",

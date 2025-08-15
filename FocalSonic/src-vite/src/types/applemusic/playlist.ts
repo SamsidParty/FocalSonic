@@ -31,6 +31,7 @@ export interface AppleMusicPlaylist extends AppleMusicResource {
 export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist): Playlist {
     if (!playlist) { return; }
     return {
+        isDir: true,
         id: playlist.id,
         name: playlist.attributes?.name || "Playlist",
         comment: playlist.attributes?.description?.standard || "",
