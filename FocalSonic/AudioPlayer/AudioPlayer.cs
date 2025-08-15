@@ -113,7 +113,7 @@ namespace FocalSonic.AudioPlayer
                 // Modify the localStorage to reflect these changes
                 dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store", "default"));
                 playerStore.state.songlist.currentSongIndex = nextSongIndex;
-                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore), null);
+                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore), "default");
 
                 // Update presence
                 MediaPlaybackInfo.Instance.CurrentSongIndex = nextSongIndex;
