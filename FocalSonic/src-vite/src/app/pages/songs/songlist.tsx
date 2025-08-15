@@ -1,6 +1,3 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { InfinitySongListFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { HeaderTitle } from "@/app/components/header-title";
@@ -15,8 +12,11 @@ import { ColumnFilter } from "@/types/columnFilter";
 import { AlbumsFilters, AlbumsSearchParams } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
-const DEFAULT_OFFSET = 100;
+const DEFAULT_OFFSET = 25;
 
 export default function SongList() {
     const { t } = useTranslation();
@@ -41,6 +41,7 @@ export default function SongList() {
 
         return songsSearch({
             query: searchFilterIsSet ? query : "",
+            libraryOnly: true,
             songCount: DEFAULT_OFFSET,
             songOffset: pageParam,
         });

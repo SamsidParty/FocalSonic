@@ -10,6 +10,7 @@ export interface SearchQueryOptions {
     albumOffset?: number
     songCount?: number
     songOffset?: number
+    libraryOnly?: boolean // For apple music
 }
 
 async function get({

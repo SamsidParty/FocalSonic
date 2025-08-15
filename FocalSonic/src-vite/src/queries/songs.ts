@@ -4,7 +4,7 @@ import { SearchQueryOptions } from "@/service/subsonic/search";
 const emptyResponse = { songs: [], nextOffset: null };
 
 type SongSearchParams = Required<
-    Pick<SearchQueryOptions, "query" | "songCount" | "songOffset">
+    Pick<SearchQueryOptions, "query" | "songCount" | "songOffset" | "libraryOnly">
 >
 
 export async function songsSearch(params: SongSearchParams) {
