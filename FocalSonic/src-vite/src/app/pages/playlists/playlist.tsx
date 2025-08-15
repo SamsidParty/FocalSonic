@@ -12,6 +12,7 @@ import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
@@ -20,6 +21,7 @@ export default function Playlist() {
     const { playlistId } = useParams() as { playlistId: string };
     const { t } = useTranslation();
     const columns = songsColumns();
+    const { isAppleMusic } = checkServerType();
     const { setSongList } = usePlayerActions();
 
     const {
@@ -37,12 +39,11 @@ export default function Playlist() {
     const columnsToShow: ColumnFilter[] = [
         "index",
         "title",
-        // 'artist',
         "album",
         "duration",
-        "playCount",
-        "contentType",
-        "select",
+        (!isAppleMusic && "playCount"),
+        (!isAppleMusic && "contentType"),
+        (!isAppleMusic && "select")
     ];
 
     const hasSongs = playlist.songCount > 0;
