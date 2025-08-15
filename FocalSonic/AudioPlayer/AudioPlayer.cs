@@ -110,16 +110,13 @@ namespace FocalSonic.AudioPlayer
                 }
                 if (nextQueueItem == null) { return; }  // Playback finished, do nothing
 
-                // Modify the localStorage to reflect these changes
-                dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store", "default"));
-                playerStore.state.songlist.currentSongIndex = nextSongIndex;
-                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore), "default");
+                // Modify the player store to reflect these changes
+                var playerStore = JsonConvert.DeserializeObject<PlayerStore>(await PlayerStore.GetPlayerStore());
+                playerStore.State.SongList.CurrentSongIndex = nextSongIndex;
+                playerStore.State.SongList.CurrentSong = nextQueueItem;
+                await PlayerStore.SetPlayerStore(JsonConvert.SerializeObject(playerStore));
 
-                // Update presence
-                MediaPlaybackInfo.Instance.CurrentSongIndex = nextSongIndex;
-                MediaPlaybackInfo.Instance.CurrentSong = nextQueueItem;
-
-                var playbackURL = nextQueueItem.Path; // The client explicitly tells us what URL to stream from by overriding the path
+                var playbackURL = MediaPlaybackInfo.Instance.Store.ExtraProperties.GetStreamURLForSong(nextQueueItem.Id);
 
                 await SetSource(playbackURL, null);
                 await UpdatePlaybackParameters();
@@ -141,7 +138,7 @@ namespace FocalSonic.AudioPlayer
                 // Modify the localStorage to reflect these changes
                 dynamic playerStore = JsonConvert.DeserializeObject<ExpandoObject>(LocalStorage.GetItem("player_store", "default"));
                 playerStore.state.playerState.currentDuration = duration;
-                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore), null);
+                LocalStorage.SetItem("player_store", JsonConvert.SerializeObject(playerStore), "default");
             }
         }
 
@@ -176,7 +173,7 @@ namespace FocalSonic.AudioPlayer
 
         public virtual void Dispose()
         {
-            MediaPlaybackInfo.Instance = new MediaPlaybackInfo();
+            MediaPlaybackInfo.Instance = new MediaPlaybackInfo(null);
             ActivePlayers.TryRemove(ID, out _);
         }
     }

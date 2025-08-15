@@ -40,9 +40,11 @@ namespace FocalSonic.Windows
             smtc.DisplayUpdater.MusicProperties.AlbumTitle = song?.Album ?? "Unknown Album";
             smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song?.AlbumArtists?.Select((a) => a.Name) ?? new string[] { song?.DisplayAlbumArtist ?? "" });
 
+            var coverArt = playbackInfo.Store.ExtraProperties.GetCoverArtForSong(song?.CoverArt!);
+
             if (song?.Id != LastSongID || LastAlbumArt == null)
             {
-                if (string.IsNullOrEmpty(song?.CoverArt))
+                if (string.IsNullOrEmpty(coverArt))
                 {
                     using (var stream = Program.App.CurrentServerManager.Resolver.OpenFileStream("/default_album_art.png"))
                     {
@@ -51,7 +53,7 @@ namespace FocalSonic.Windows
                 }
                 else
                 {
-                    smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(song.CoverArt));
+                    smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(coverArt));
                 }
                 LastAlbumArt = smtc.DisplayUpdater.Thumbnail;
             }

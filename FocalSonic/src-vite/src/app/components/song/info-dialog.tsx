@@ -239,11 +239,6 @@ export function SongInfoDialog() {
                                             <XIcon className="w-4 h-4 -ml-0.5 text-red-500" />
                                         )}
                                     </InfoGridItem>
-                                    <InfoGridItem title="path">
-                                        <code className="font-mono text-xs bg-muted border px-2 py-1 rounded flex gap-2 items-center">
-                                            {song.path}
-                                        </code>
-                                    </InfoGridItem>
                                     <InfoGridItem title="size">
                                         {formatBytes(song.size ?? 0)}
                                     </InfoGridItem>

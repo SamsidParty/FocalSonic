@@ -12,51 +12,22 @@ namespace FocalSonic.Presence
 {
     public class MediaPlaybackInfo
     {
-        public static MediaPlaybackInfo Instance = new MediaPlaybackInfo();
+        public static MediaPlaybackInfo Instance = new MediaPlaybackInfo(null);
+        public PlayerStore Store;
+
+        public MediaPlaybackInfo(PlayerStore store)
+        {
+            Store = store;
+        }
+
+        public Song? CurrentSong => Store?.State?.SongList?.CurrentSong;
+        public int CurrentSongIndex => Store?.State?.SongList?.CurrentSongIndex ?? 0;
+        public List<Song> Queue => Store?.State?.SongList?.CurrentList;
+        public PlayerLoopState LoopState => Store?.State.PlayerState.LoopState ?? PlayerLoopState.Off;
+
 
         public bool IsPlaying = false;
-        [JsonIgnore] public TimeSpan Duration = TimeSpan.Zero;
-        [JsonIgnore] public TimeSpan Position = TimeSpan.Zero;
-
-        [JsonProperty("currentSong")]
-        public Song? CurrentSong;
-
-        [JsonProperty("currentSongIndex")]
-        public int CurrentSongIndex;
-
-        [JsonProperty("queue")]
-        public List<Song> Queue = new List<Song>();
-
-        // This is different than AudioPlayer.Looping
-        [JsonProperty("loopState")]
-        public PlayerLoopState LoopState = PlayerLoopState.Off;
-
-        [Command("setCurrentMediaInfo")]
-        public static async Task SetCurrentMediaInfo(string info)
-        {
-            if (string.IsNullOrEmpty(info)) { return; }
-
-            MediaPlaybackInfo newState;
-
-            try 
-            {
-                newState = JsonConvert.DeserializeObject<MediaPlaybackInfo>(info)!;
-            }
-            catch
-            {
-                // Discard the current info
-                Instance = new MediaPlaybackInfo();
-                return;
-            }
-
-            if (newState!.CurrentSong == null || string.IsNullOrEmpty(newState.CurrentSong.Id)) { newState.CurrentSong = null; }
-            if (newState!.Queue == null || newState!.Queue.Count > 0) { Instance.Queue = new List<Song>(); }
-
-            // Keep old values
-            newState.Position = Instance.Position;
-            newState.Duration = Instance.Duration;
-
-            Instance = newState;
-        }
+        public TimeSpan Duration = TimeSpan.Zero;
+        public TimeSpan Position = TimeSpan.Zero;
     }
 }

@@ -3,12 +3,13 @@ import { service } from "@/service/service";
 import { IPlayerContext, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
 import { areSongListsEqual } from "@/utils/compareSongLists";
+import { checkServerType } from "@/utils/servers";
 import { addNextSongList, shuffleSongList } from "@/utils/songListFunctions";
 import { produce } from "immer";
 import clamp from "lodash/clamp";
 import merge from "lodash/merge";
 import omit from "lodash/omit";
-import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
+import { createJSONStorage, devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
@@ -18,6 +19,30 @@ const blurSettings = {
     max: 100,
     step: 10,
 };
+
+const igniteViewPlayerStore = {
+    getItem: async (key: string) => {
+        if (key !== "player_store") { return; }
+        return await window.igniteView?.commandBridge.getPlayerStore();
+    },
+    setItem: async (key: string, value: any) => {
+        if (key !== "player_store") { return; }
+        value = JSON.parse(value);
+
+        // Insert extra properties to allow C# to have extra context
+        const { isAppleMusic } = checkServerType();
+        value.extraProperties = {
+            coverArtBaseURL: isAppleMusic ? "{id}" : getCoverArtUrl("{id}"),
+            streamBaseURL: isAppleMusic ? "{id}" : getSongStreamUrl("{id}"),
+        }
+
+        await window.igniteView?.commandBridge.setPlayerStore(JSON.stringify(value));
+    },
+    removeItem: async (key: string) => {
+        if (key !== "player_store") { return; }
+        await window.igniteView?.commandBridge.setPlayerStore("{}");
+    }
+}
 
 export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
     subscribeWithSelector(
@@ -844,6 +869,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 name: "player_store",
                 version: 1,
 
+                storage: createJSONStorage(() => !window.igniteView ? localStorage : igniteViewPlayerStore),
+
                 merge: (persistedState, currentState) => {
                     return merge(currentState, persistedState);
                 },
@@ -856,29 +883,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         "actions",
                         "playerState.audioPlayerRef",
                     ]);
-
-                    // We need to do some manipulation before sending to C#
-                    // The native code wants URLs instead of IDs
-                    const transformSongBeforeSending = (song: ISong) => {
-                        return Object.assign({}, song, {
-                            coverArt: getCoverArtUrl(song.coverArt),
-                            path: getSongStreamUrl(song.id),
-                        });
-                    }
-
-                    // Update the state in the C# code
-                    if (window.igniteView) {
-                        window.igniteView?.commandBridge.setCurrentMediaInfo(
-                            JSON.stringify({
-                                currentSong: transformSongBeforeSending(state.songlist.currentSong),
-                                currentSongIndex: state.songlist.currentSongIndex,
-                                isPlaying: state.playerState.isPlaying,
-                                queue: state.songlist.currentList.map(transformSongBeforeSending),
-                                LoopState: state.playerState.loopState,
-                            })
-                        );
-                    }
-
                     return appStore;
                 },
             },

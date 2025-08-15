@@ -5266,7 +5266,7 @@ namespace SamsidParty.Subsonic.Common
         /// <br/>* 60: The trial period for the Subsonic server is over. Please upgrade to Subsonic Premium. Visit subsonic.org for details.
         /// <br/>* 70: The requested data was not found.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("code", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("code", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public SubsonicErrorCode Code { get; set; }
 
         /// <summary>
@@ -5311,28 +5311,28 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The server supported Subsonic API version.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("version", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("version", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Version { get; set; }
 
         /// <summary>
         /// The server actual name. [Ex: Navidrome or gonic]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Type { get; set; }
 
         /// <summary>
         /// The server version.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("serverVersion", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("serverVersion", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string ServerVersion { get; set; }
 
         /// <summary>
         /// Must return true if the server support OpenSubsonic API v1
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("openSubsonic", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("openSubsonic", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool OpenSubsonic { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
@@ -5365,7 +5365,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The command result. `ok`
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public SubsonicSuccessResponseStatus Status { get; set; }
@@ -5391,12 +5391,12 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The command result. `failed`
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public SubsonicFailureResponseStatus Status { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("error", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("error", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public SubsonicError Error { get; set; } = new SubsonicError();
 
@@ -5457,7 +5457,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Genre name
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -5494,14 +5494,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The id of the artist
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// The artist name.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -5580,7 +5580,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The contributor role.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Role { get; set; }
 
@@ -5590,7 +5590,7 @@ namespace SamsidParty.Subsonic.Common
         [Newtonsoft.Json.JsonProperty("subRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string SubRole { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("artist", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("artist", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public ArtistID3 Artist { get; set; } = new ArtistID3();
 
@@ -5752,7 +5752,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The id of the media.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -5765,13 +5765,13 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The media is a directory
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("isDir", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("isDir", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool IsDir { get; set; }
 
         /// <summary>
         /// The media name.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("title", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("title", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Title { get; set; }
 
@@ -6086,14 +6086,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Id of the playlist
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// Name of the playlist
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -6118,26 +6118,26 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// number of songs
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("songCount", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("songCount", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int SongCount { get; set; }
 
         /// <summary>
         /// Playlist duration in seconds
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Duration { get; set; }
 
         /// <summary>
         /// Creation date [ISO 8601]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("created", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset Created { get; set; }
 
         /// <summary>
         /// Last changed date [ISO 8601]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("changed", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("changed", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset Changed { get; set; }
 
@@ -6204,7 +6204,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class CreatePlaylistSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("playlist", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("playlist", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public PlaylistWithSongs Playlist { get; set; }
 
@@ -6265,14 +6265,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The share Id
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// The share url
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Url { get; set; }
 
@@ -6285,14 +6285,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The username
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
         /// <summary>
         /// Creation date [ISO 8601]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("created", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset Created { get; set; }
 
@@ -6311,7 +6311,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Visit count
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("visitCount", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("visitCount", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int VisitCount { get; set; }
 
         /// <summary>
@@ -6383,7 +6383,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class CreateSharesSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("shares", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("shares", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Shares Shares { get; set; } = new Shares();
 
@@ -6441,7 +6441,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class RecordLabel
     {
 
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -6528,13 +6528,13 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The disc number.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("disc", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("disc", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Disc { get; set; }
 
         /// <summary>
         /// The name of the disc.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("title", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("title", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Title { get; set; }
 
@@ -6571,14 +6571,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The id of the album
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// The album name.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -6609,13 +6609,13 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Number of songs
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("songCount", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("songCount", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int SongCount { get; set; }
 
         /// <summary>
         /// Total duration of the album in seconds
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Duration { get; set; }
 
         /// <summary>
@@ -6627,7 +6627,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Date the album was added. [ISO 8601]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("created", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset Created { get; set; }
 
@@ -6774,7 +6774,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The list of songs
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("song", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("song", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<Child> Song { get; set; } = new System.Collections.Generic.List<Child>();
 
@@ -6796,7 +6796,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetAlbumSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("album", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("album", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public AlbumID3WithSongs Album { get; set; }
 
@@ -6917,7 +6917,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetAlbumInfoSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("albumInfo", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("albumInfo", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public AlbumInfo AlbumInfo { get; set; } = new AlbumInfo();
 
@@ -7047,7 +7047,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetAlbumListSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("albumList", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("albumList", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public AlbumList AlbumList { get; set; } = new AlbumList();
 
@@ -7135,7 +7135,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetAlbumList2SuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("albumList2", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("albumList2", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public AlbumList AlbumList2 { get; set; } = new AlbumList();
 
@@ -7193,7 +7193,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Artist albums
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("album", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("album", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<AlbumID3> Album { get; set; } = new System.Collections.Generic.List<AlbumID3>();
 
@@ -7215,7 +7215,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetArtistSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("artist", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("artist", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public ArtistWithAlbumsID3 Artist { get; set; }
 
@@ -7276,14 +7276,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Artist id
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// Artist name
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -7412,7 +7412,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetArtistInfoSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("artistInfo", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("artistInfo", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public ArtistInfo ArtistInfo { get; set; } = new ArtistInfo();
 
@@ -7539,7 +7539,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetArtistInfo2SuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("artistInfo2", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("artistInfo2", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public ArtistInfo2 ArtistInfo2 { get; set; } = new ArtistInfo2();
 
@@ -7636,7 +7636,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetArtistsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("artists", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("artists", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public ArtistsID3 Artists { get; set; } = new ArtistsID3();
 
@@ -7697,13 +7697,13 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Bookmark position in seconds
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("position", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("position", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Position { get; set; }
 
         /// <summary>
         /// Username
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
@@ -7716,21 +7716,21 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Bookmark creation date [ISO 8601]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("created", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset Created { get; set; }
 
         /// <summary>
         /// Bookmark last updated date [ISO 8601]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("changed", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("changed", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset Changed { get; set; }
 
         /// <summary>
         /// The bookmark file
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("entry", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("entry", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Child Entry { get; set; } = new Child();
 
@@ -7797,7 +7797,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetBookmarksSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("bookmarks", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("bookmarks", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Bookmarks Bookmarks { get; set; } = new Bookmarks();
 
@@ -7858,20 +7858,20 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Username
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
         /// <summary>
         /// Time in millis since Jan 1 1970
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("time", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("time", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Time { get; set; }
 
         /// <summary>
         /// The message
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("message", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("message", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Message { get; set; }
 
@@ -7938,7 +7938,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetChatMessagesSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("chatMessages", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("chatMessages", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public ChatMessages ChatMessages { get; set; } = new ChatMessages();
 
@@ -7999,20 +7999,20 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Genre name
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("value", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("value", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Value { get; set; }
 
         /// <summary>
         /// Genre song count
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("songCount", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("songCount", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int SongCount { get; set; }
 
         /// <summary>
         /// Genre album count
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("albumCount", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("albumCount", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AlbumCount { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
@@ -8078,7 +8078,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetGenresSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("genres", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("genres", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Genres Genres { get; set; } = new Genres();
 
@@ -8139,7 +8139,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Index name
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -8182,14 +8182,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The ignored articles
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("ignoredArticles", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("ignoredArticles", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string IgnoredArticles { get; set; }
 
         /// <summary>
         /// Last time the index was modified in milliseconds after January 1, 1970 UTC
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("lastModified", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("lastModified", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int LastModified { get; set; }
 
         /// <summary>
@@ -8237,7 +8237,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetIndexesSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("indexes", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("indexes", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Indexes Indexes { get; set; } = new Indexes();
 
@@ -8298,21 +8298,21 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The Id
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// The name
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
         /// <summary>
         /// The streamUrl
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("streamUrl", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("streamUrl", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string StreamUrl { get; set; }
 
@@ -8385,7 +8385,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetInternetRadioStationsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("internetRadioStations", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("internetRadioStations", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public InternetRadioStations InternetRadioStations { get; set; } = new InternetRadioStations();
 
@@ -8446,7 +8446,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The status of the license
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("valid", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("valid", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Valid { get; set; }
 
         /// <summary>
@@ -8494,7 +8494,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetLicenseSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("license", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("license", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public License License { get; set; } = new License();
 
@@ -8555,7 +8555,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The lyrics
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("value", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("value", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Value { get; set; }
 
@@ -8598,7 +8598,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetLyricsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("lyrics", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("lyrics", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Lyrics Lyrics { get; set; } = new Lyrics();
 
@@ -8659,7 +8659,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The actual text of this line
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("value", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("value", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Value { get; set; }
 
@@ -8704,20 +8704,20 @@ namespace SamsidParty.Subsonic.Common
         /// <br/>
         /// <br/>Furthermore, there is special behavior for the value xxx. While not an ISO code, it is commonly used by taggers and other parsing software. Clients should treat xxx as not having a specified language (equivalent to the und code).
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("lang", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("lang", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Lang { get; set; }
 
         /// <summary>
         /// True if the lyrics are synced, false otherwise
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("synced", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("synced", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Synced { get; set; }
 
         /// <summary>
         /// The actual lyrics. Ordered by start time (synced) or appearance order (unsynced)
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("line", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("line", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<Line> Line { get; set; } = new System.Collections.Generic.List<Line>();
 
@@ -8802,7 +8802,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetLyricsBySongIdSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("lyricsList", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("lyricsList", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public LyricsList LyricsList { get; set; } = new LyricsList();
 
@@ -8863,7 +8863,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The id
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -8876,7 +8876,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The directory name
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -8939,7 +8939,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetMusicDirectorySuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("directory", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("directory", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Directory Directory { get; set; } = new Directory();
 
@@ -9000,7 +9000,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The id
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Id { get; set; }
 
         /// <summary>
@@ -9072,7 +9072,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetMusicFoldersSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("musicFolders", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("musicFolders", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public MusicFolders MusicFolders { get; set; } = new MusicFolders();
 
@@ -9166,7 +9166,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// TID of the podcast channel
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("channelId", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("channelId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string ChannelId { get; set; }
 
@@ -9176,7 +9176,7 @@ namespace SamsidParty.Subsonic.Common
         [Newtonsoft.Json.JsonProperty("description", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Description { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public PodcastStatus Status { get; set; }
@@ -9238,7 +9238,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetNewestPodcastsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("newestPodcasts", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("newestPodcasts", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public NewestPodcasts NewestPodcasts { get; set; } = new NewestPodcasts();
 
@@ -9299,20 +9299,20 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The username
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
         /// <summary>
         /// Last update
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("minutesAgo", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("minutesAgo", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int MinutesAgo { get; set; }
 
         /// <summary>
         /// Player Id
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("playerId", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("playerId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int PlayerId { get; set; }
 
         /// <summary>
@@ -9345,7 +9345,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The now playing entries
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("entry", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("entry", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<NowPlayingEntry> Entry { get; set; } = new System.Collections.Generic.List<NowPlayingEntry>();
 
@@ -9376,7 +9376,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetNowPlayingSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("nowPlaying", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("nowPlaying", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public NowPlaying NowPlaying { get; set; } = new NowPlaying();
 
@@ -9437,14 +9437,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The name of the extension.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
         /// <summary>
         /// The list of supported versions of the this extension.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("versions", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("versions", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<int> Versions { get; set; } = new System.Collections.Generic.List<int>();
 
@@ -9475,7 +9475,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetOpenSubsonicExtensionsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("openSubsonicExtensions", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("openSubsonicExtensions", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<OpenSubsonicExtension> OpenSubsonicExtensions { get; set; } = new System.Collections.Generic.List<OpenSubsonicExtension>();
 
@@ -9530,7 +9530,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetPlaylistSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("playlist", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("playlist", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public PlaylistWithSongs Playlist { get; set; }
 
@@ -9621,7 +9621,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetPlaylistsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("playlists", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("playlists", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Playlists Playlists { get; set; } = new Playlists();
 
@@ -9694,21 +9694,21 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The user this queue belongs to
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
         /// <summary>
         /// Date modified [ISO 8601]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("changed", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("changed", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset Changed { get; set; }
 
         /// <summary>
         /// Name of client app
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("changedBy", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("changedBy", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string ChangedBy { get; set; }
 
@@ -9763,21 +9763,21 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The user this queue belongs to
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
         /// <summary>
         /// Date modified [ISO 8601]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("changed", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("changed", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset Changed { get; set; }
 
         /// <summary>
         /// Name of client app
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("changedBy", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("changedBy", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string ChangedBy { get; set; }
 
@@ -9814,7 +9814,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetPlayQueueSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("playQueue", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("playQueue", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public PlayQueue PlayQueue { get; set; } = new PlayQueue();
 
@@ -9869,7 +9869,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetPlayQueueByIndexSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("playQueueByIndex", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("playQueueByIndex", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public PlayQueueByIndex PlayQueueByIndex { get; set; } = new PlayQueueByIndex();
 
@@ -9924,7 +9924,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetPodcastEpisodeSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("podcastEpisode", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("podcastEpisode", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public PodcastEpisode PodcastEpisode { get; set; }
 
@@ -9985,14 +9985,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The channel ID
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// Podcast channel URL
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Url { get; set; }
 
@@ -10020,7 +10020,7 @@ namespace SamsidParty.Subsonic.Common
         [Newtonsoft.Json.JsonProperty("originalImageUrl", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string OriginalImageUrl { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public PodcastStatus Status { get; set; }
@@ -10100,7 +10100,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetPodcastsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("podcasts", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("podcasts", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Podcasts Podcasts { get; set; } = new Podcasts();
 
@@ -10191,7 +10191,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetRandomSongsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("randomSongs", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("randomSongs", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Songs RandomSongs { get; set; } = new Songs();
 
@@ -10252,7 +10252,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The status of the scan
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("scanning", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("scanning", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Scanning { get; set; }
 
         /// <summary>
@@ -10288,7 +10288,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetScanStatusSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("scanStatus", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("scanStatus", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public ScanStatus ScanStatus { get; set; } = new ScanStatus();
 
@@ -10343,7 +10343,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetSharesSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("shares", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("shares", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Shares Shares { get; set; } = new Shares();
 
@@ -10434,7 +10434,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetSimilarSongsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("similarSongs", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("similarSongs", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public SimilarSongs SimilarSongs { get; set; } = new SimilarSongs();
 
@@ -10525,7 +10525,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetSimilarSongs2SuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("similarSongs2", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("similarSongs2", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public SimilarSongs2 SimilarSongs2 { get; set; } = new SimilarSongs2();
 
@@ -10580,7 +10580,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetSongSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("song", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("song", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Child Song { get; set; } = new Child();
 
@@ -10635,7 +10635,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetSongsByGenreSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("songsByGenre", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("songsByGenre", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Songs SongsByGenre { get; set; } = new Songs();
 
@@ -10738,7 +10738,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetStarredSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("starred", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("starred", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Starred Starred { get; set; } = new Starred();
 
@@ -10841,7 +10841,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetStarred2SuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("starred2", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("starred2", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Starred2 Starred2 { get; set; } = new Starred2();
 
@@ -10932,7 +10932,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetTopSongsSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("topSongs", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("topSongs", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public TopSongs TopSongs { get; set; } = new TopSongs();
 
@@ -10993,14 +10993,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Username
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
         /// <summary>
         /// Scrobbling enabled
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("scrobblingEnabled", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("scrobblingEnabled", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool ScrobblingEnabled { get; set; }
 
         [Newtonsoft.Json.JsonProperty("maxBitRate", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
@@ -11009,73 +11009,73 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Whether the user is an admin
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("adminRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("adminRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool AdminRole { get; set; }
 
         /// <summary>
         /// Whether the user is can edit settings
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("settingsRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("settingsRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool SettingsRole { get; set; }
 
         /// <summary>
         /// Whether the user can download
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("downloadRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("downloadRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool DownloadRole { get; set; }
 
         /// <summary>
         /// Whether the user can upload
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("uploadRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("uploadRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool UploadRole { get; set; }
 
         /// <summary>
         /// Whether the user can create playlists
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("playlistRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("playlistRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool PlaylistRole { get; set; }
 
         /// <summary>
         /// Whether the user can get cover art
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("coverArtRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("coverArtRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool CoverArtRole { get; set; }
 
         /// <summary>
         /// Whether the user can create comments
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("commentRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("commentRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool CommentRole { get; set; }
 
         /// <summary>
         /// Whether the user can create/refresh podcasts
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("podcastRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("podcastRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool PodcastRole { get; set; }
 
         /// <summary>
         /// Whether the user can stream
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("streamRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("streamRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool StreamRole { get; set; }
 
         /// <summary>
         /// Whether the user can control the jukebox
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("jukeboxRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("jukeboxRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool JukeboxRole { get; set; }
 
         /// <summary>
         /// Whether the user can create a stream
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("shareRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("shareRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool ShareRole { get; set; }
 
         /// <summary>
         /// Whether the user can convert videos
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("videoConversionRole", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("videoConversionRole", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool VideoConversionRole { get; set; }
 
         /// <summary>
@@ -11117,7 +11117,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetUserSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public User User { get; set; } = new User();
 
@@ -11208,7 +11208,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetUsersSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("users", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("users", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Users Users { get; set; } = new Users();
 
@@ -11293,7 +11293,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetVideoInfoSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("videoInfo", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("videoInfo", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public VideoInfo VideoInfo { get; set; } = new VideoInfo();
 
@@ -11378,7 +11378,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetVideosSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("videos", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("videos", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public Videos Videos { get; set; } = new Videos();
 
@@ -11481,19 +11481,19 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The current index of the song being played
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("currentIndex", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("currentIndex", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int CurrentIndex { get; set; }
 
         /// <summary>
         /// Whether the queue is currently playing
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("playing", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("playing", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Playing { get; set; }
 
         /// <summary>
         /// Volume, in a range of [0.0, 1.0]
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("volume", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("volume", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Range(0F, 1F)]
         public int Volume { get; set; }
 
@@ -11644,7 +11644,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class SearchSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("searchResult", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("searchResult", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public SearchResult SearchResult { get; set; } = new SearchResult();
 
@@ -11747,7 +11747,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class Search2SuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("searchResult2", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("searchResult2", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public SearchResult2 SearchResult2 { get; set; } = new SearchResult2();
 
@@ -11850,7 +11850,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class Search3SuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("searchResult3", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("searchResult3", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public SearchResult3 SearchResult3 { get; set; } = new SearchResult3();
 
@@ -11905,7 +11905,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class StartScanSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("scanStatus", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("scanStatus", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public ScanStatus ScanStatus { get; set; } = new ScanStatus();
 
@@ -11966,7 +11966,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Username associated with token
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
@@ -11997,7 +11997,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class GetTokenInfoSuccessResponse : SubsonicSuccessResponse
     {
 
-        [Newtonsoft.Json.JsonProperty("tokenInfo", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("tokenInfo", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public TokenInfo TokenInfo { get; set; } = new TokenInfo();
 
@@ -12055,7 +12055,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The chat message.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("message", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("message", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Message { get; set; }
 
@@ -12089,14 +12089,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The name of the user which should change its password.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
         /// <summary>
         /// The new password of the new user, either in clear text of hex-encoded (see above).
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Password { get; set; }
 
@@ -12130,14 +12130,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// ID of the media file to bookmark. If a bookmark already exists for this file it will be overwritten.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// The position (in milliseconds) within the media file.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("position", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("position", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Position { get; set; }
 
         /// <summary>
@@ -12176,14 +12176,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The stream URL for the station.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("streamUrl", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("streamUrl", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string StreamUrl { get; set; }
 
         /// <summary>
         /// The station name.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -12268,7 +12268,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The URL of the Podcast to add.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Url { get; set; }
 
@@ -12302,7 +12302,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// ID of a song, album or video to share. Use one id parameter for each entry to share.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<string> Id { get; set; } = new System.Collections.Generic.List<string>();
 
@@ -12348,21 +12348,21 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The name of the new user.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
         /// <summary>
         /// The password of the new user, either in clear text or hex-encoded.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Password { get; set; }
 
         /// <summary>
         /// The email address of the new user.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("email", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("email", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Email { get; set; }
 
@@ -12480,7 +12480,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// ID of the media file for which to delete the bookmark. Other users’ bookmarks are not affected.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12514,7 +12514,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The ID for the station.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12548,7 +12548,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// ID of the playlist to delete, as obtained by `getPlaylists`.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12582,7 +12582,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The ID of the Podcast channel to delete.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12616,7 +12616,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The ID of the Podcast episode to delete.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12650,7 +12650,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// ID of the share to delete.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12684,7 +12684,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The name of the user to delete.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
@@ -12718,7 +12718,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// A string which uniquely identifies the file to download. Obtained by calls to getMusicDirectory.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12752,7 +12752,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The ID of the Podcast episode to download.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12786,7 +12786,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The album ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12820,7 +12820,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The album ID or song ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12854,7 +12854,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The album ID or song ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -12885,7 +12885,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class Body21
     {
 
-        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public AlbumListType Type { get; set; }
@@ -12955,7 +12955,7 @@ namespace SamsidParty.Subsonic.Common
     public partial class Body22
     {
 
-        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public AlbumListType Type { get; set; }
@@ -13028,7 +13028,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The artist ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13062,7 +13062,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The artist, album or song ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13109,7 +13109,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The artist, album or song ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13189,7 +13189,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The username for which to retrieve the avatar.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
@@ -13235,7 +13235,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The ID of the video.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13276,7 +13276,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The coverArt ID. Returned by most entities likes `Child` or `AlbumID3`
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13394,7 +13394,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The track ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13428,7 +13428,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// A string which uniquely identifies the music folder. Obtained by calls to `getIndexes` or `getMusicDirectory`.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13495,7 +13495,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// ID of the playlist to return, as obtained by `getPlaylists`.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13562,7 +13562,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The podcast episode ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13693,7 +13693,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The artist, album or song ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13734,7 +13734,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The artist, album or song ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13775,7 +13775,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The song ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13809,7 +13809,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The genre, as returned by `getGenres`.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("genre", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("genre", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Genre { get; set; }
 
@@ -13863,7 +13863,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The artist name.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13904,7 +13904,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The name of the user to retrieve. You can only retrieve your own user unless you have admin privileges.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
@@ -13938,7 +13938,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The video ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -13972,7 +13972,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// A string which uniquely identifies the media file to stream.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -14018,7 +14018,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The operation to perform. Must be one of: get, status (since 1.7.0), set (since 1.7.0), start, stop, skip, add, clear, remove, shuffle, setGain
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("action", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("action", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public Body48Action Action { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
@@ -14143,7 +14143,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// A string which uniquely identifies the file to scrobble.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -14262,7 +14262,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Search query.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("query", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("query", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Query { get; set; }
 
@@ -14344,7 +14344,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// Search query. Servers must support an empty query and return all the data to allow clients to properly access all the media information for offline sync.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("query", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("query", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Query { get; set; }
 
@@ -14426,14 +14426,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// A string which uniquely identifies the file (song) or folder (album/artist) to rate.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// The rating between 1 and 5 (inclusive), or 0 to remove the rating.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("rating", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("rating", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Range(0, 5)]
         public int Rating { get; set; }
 
@@ -14512,7 +14512,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// A string which uniquely identifies the file to stream. Obtained by calls to getMusicDirectory.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -14630,21 +14630,21 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The ID of the station.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
         /// <summary>
         /// The stream URL for the station.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("streamUrl", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("streamUrl", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string StreamUrl { get; set; }
 
         /// <summary>
         /// The user-defined name for the station.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Name { get; set; }
 
@@ -14684,7 +14684,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The playlist ID.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("playlistId", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("playlistId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string PlaylistId { get; set; }
 
@@ -14748,7 +14748,7 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// ID of the share to update.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Id { get; set; }
 
@@ -14831,14 +14831,14 @@ namespace SamsidParty.Subsonic.Common
         /// <summary>
         /// The name of the user.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
         /// <summary>
         /// The password of the user, either in clear text or hex-encoded.
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Password { get; set; }
 
