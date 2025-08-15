@@ -34,7 +34,8 @@ namespace FocalSonic.Windows
             smtc.IsEnabled = true;
             smtc.IsPlayEnabled = true;
             smtc.IsPauseEnabled = true;
-            smtc.IsNextEnabled = playbackInfo.Queue.Count > 1;
+            smtc.IsNextEnabled = playbackInfo.NextSongIndex != null;
+            smtc.IsPreviousEnabled = playbackInfo.PreviousSongIndex != null;
 
             smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
             
@@ -84,6 +85,10 @@ namespace FocalSonic.Windows
                     else if (args.Button == SystemMediaTransportControlsButton.Next)
                     {
                         playbackInfo?.NextSong();
+                    }
+                    else if (args.Button == SystemMediaTransportControlsButton.Previous)
+                    {
+                        playbackInfo?.PreviousSong();
                     }
                 };
             }

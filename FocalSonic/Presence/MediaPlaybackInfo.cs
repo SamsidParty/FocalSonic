@@ -31,27 +31,58 @@ namespace FocalSonic.Presence
         public TimeSpan Duration = TimeSpan.Zero;
         public TimeSpan Position = TimeSpan.Zero;
 
-        public async Task NextSong()
+        public int? NextSongIndex
         {
-            // Skip to the next song in the queue
-            var nextSongIndex = CurrentSongIndex + 1;
-            var nextQueueItem = Queue.ElementAtOrDefault(nextSongIndex);
-
-            if (nextQueueItem == null && LoopState == PlayerLoopState.All)
+            get
             {
-                nextQueueItem = Queue.FirstOrDefault(); // Loop back to the first song if looping is enabled
-                nextSongIndex = 0;
+                var nextSongIndex = CurrentSongIndex + 1;
+
+                if (nextSongIndex > Queue.Count - 1 && LoopState == PlayerLoopState.All)
+                {
+                    // Loop back to the first song if looping is enabled
+                    nextSongIndex = 0;
+                }
+                if (nextSongIndex > Queue.Count - 1) { return null; }  // Playback finished, no next song
+
+                return nextSongIndex;
             }
-            if (nextQueueItem == null) { return; }  // Playback finished, do nothing
+        }
+
+        public int? PreviousSongIndex
+        {
+            get
+            {
+                var previousSongIndex = CurrentSongIndex - 1;
+
+                if (previousSongIndex < 0 && LoopState == PlayerLoopState.All)
+                {
+                    // Loop back to the last song if looping is enabled
+                    previousSongIndex = Queue.Count - 1;
+                }
+                if (previousSongIndex < 0) { return null; }  // Looping is disabled
+
+                return previousSongIndex;
+            }
+        }
+
+        public Song? NextQueueItem => Queue?[NextSongIndex ?? -1];
+        public Song? PreviousQueueItem => Queue?[PreviousSongIndex ?? -1];
+
+        public async Task NextSong() => await PlaySong(NextQueueItem, NextSongIndex);
+        public async Task PreviousSong() => await PlaySong(PreviousQueueItem, PreviousSongIndex);
+
+        public async Task PlaySong(Song? song, int? index)
+        {
+            if (song == null) { return; }
 
             // Modify the player store to reflect these changes
             await PlayerStore.Mutate(async (s) =>
             {
-                s.State.SongList.CurrentSongIndex = nextSongIndex;
-                s.State.SongList.CurrentSong = nextQueueItem;
+                s.State.SongList.CurrentSongIndex = index ?? 0;
+                s.State.SongList.CurrentSong = song;
             });
 
-            var playbackURL = Store.ExtraProperties.GetStreamURLForSong(nextQueueItem.Id);
+            var playbackURL = Store.ExtraProperties.GetStreamURLForSong(song.Id);
 
             await AssociatedPlayer.SetSource(playbackURL, null);
             await AssociatedPlayer.UpdatePlaybackParameters();
