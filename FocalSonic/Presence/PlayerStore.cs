@@ -28,7 +28,7 @@ namespace FocalSonic.Presence
 
             try
             {
-                MediaPlaybackInfo.Instance = new MediaPlaybackInfo(JsonConvert.DeserializeObject<PlayerStore>(data));
+                MediaPlaybackInfo.Instance.Store = JsonConvert.DeserializeObject<PlayerStore>(data);
             }
             catch (Exception ex)
             {

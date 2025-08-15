@@ -21,17 +21,20 @@ namespace FocalSonic.Windows
         public static MediaPlayer HostPlayer = new MediaPlayer();
 
         private string? LastSongID;
+        private bool HasRegisteredEvents = false;
         private RandomAccessStreamReference LastAlbumArt; // Prevents refreshing album art every time which wastes resources
 
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
             var song = playbackInfo.CurrentSong;
             SystemMediaTransportControls smtc = HostPlayer.SystemMediaTransportControls;
+
             HostPlayer.CommandManager.IsEnabled = false;
             smtc.PlaybackStatus = playbackInfo.IsPlaying ? MediaPlaybackStatus.Playing : MediaPlaybackStatus.Paused;
             smtc.IsEnabled = true;
             smtc.IsPlayEnabled = true;
             smtc.IsPauseEnabled = true;
+            smtc.IsNextEnabled = playbackInfo.Queue.Count > 1;
 
             smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
             
@@ -65,17 +68,26 @@ namespace FocalSonic.Windows
                 EndTime = playbackInfo.Duration
             });
 
-            smtc.ButtonPressed += (sender, args) =>
+            if (!HasRegisteredEvents)
             {
-                if (args.Button == SystemMediaTransportControlsButton.Play)
+                HasRegisteredEvents = true;
+                smtc.ButtonPressed += (sender, args) =>
                 {
-                    AudioPlayer.AudioPlayer.Instance?.PlayAudio();
-                }
-                else if (args.Button == SystemMediaTransportControlsButton.Pause)
-                {
-                    AudioPlayer.AudioPlayer.Instance?.PauseAudio();
-                }
-            };
+                    if (args.Button == SystemMediaTransportControlsButton.Play)
+                    {
+                        playbackInfo?.Play();
+                    }
+                    else if (args.Button == SystemMediaTransportControlsButton.Pause)
+                    {
+                        playbackInfo?.Pause();
+                    }
+                    else if (args.Button == SystemMediaTransportControlsButton.Next)
+                    {
+                        playbackInfo?.NextSong();
+                    }
+                };
+            }
+
 
             smtc.DisplayUpdater.Update();
             LastSongID = song?.Id ?? null;

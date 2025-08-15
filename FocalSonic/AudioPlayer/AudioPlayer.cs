@@ -99,28 +99,7 @@ namespace FocalSonic.AudioPlayer
             }
             else
             {
-                // Skip to the next song in the queue
-                var nextSongIndex = MediaPlaybackInfo.Instance.CurrentSongIndex + 1;
-                var nextQueueItem = MediaPlaybackInfo.Instance.Queue.ElementAtOrDefault(nextSongIndex);
-
-                if (nextQueueItem == null && MediaPlaybackInfo.Instance.LoopState == PlayerLoopState.All)
-                {
-                    nextQueueItem = MediaPlaybackInfo.Instance.Queue.FirstOrDefault(); // Loop back to the first song if looping is enabled
-                    nextSongIndex = 0;
-                }
-                if (nextQueueItem == null) { return; }  // Playback finished, do nothing
-
-                // Modify the player store to reflect these changes
-                var playerStore = JsonConvert.DeserializeObject<PlayerStore>(await PlayerStore.GetPlayerStore());
-                playerStore.State.SongList.CurrentSongIndex = nextSongIndex;
-                playerStore.State.SongList.CurrentSong = nextQueueItem;
-                await PlayerStore.SetPlayerStore(JsonConvert.SerializeObject(playerStore));
-
-                var playbackURL = MediaPlaybackInfo.Instance.Store.ExtraProperties.GetStreamURLForSong(nextQueueItem.Id);
-
-                await SetSource(playbackURL, null);
-                await UpdatePlaybackParameters();
-                await PlayAudio();
+                MediaPlaybackInfo.Instance?.NextSong();
             }
         }
         

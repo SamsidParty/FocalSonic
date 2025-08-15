@@ -14,6 +14,7 @@ namespace FocalSonic.Presence
     {
         public static MediaPlaybackInfo Instance = new MediaPlaybackInfo(null);
         public PlayerStore Store;
+        public AudioPlayer.AudioPlayer AssociatedPlayer => AudioPlayer.AudioPlayer.Instance;
 
         public MediaPlaybackInfo(PlayerStore store)
         {
@@ -26,8 +27,44 @@ namespace FocalSonic.Presence
         public PlayerLoopState LoopState => Store?.State.PlayerState.LoopState ?? PlayerLoopState.Off;
 
 
-        public bool IsPlaying = false;
+        public bool IsPlaying { get { return Store?.State?.PlayerState?.IsPlaying ?? false; } set { if (Store != null) Store.State.PlayerState.IsPlaying = value; } }
         public TimeSpan Duration = TimeSpan.Zero;
         public TimeSpan Position = TimeSpan.Zero;
+
+        public async Task NextSong()
+        {
+            // Skip to the next song in the queue
+            var nextSongIndex = CurrentSongIndex + 1;
+            var nextQueueItem = Queue.ElementAtOrDefault(nextSongIndex);
+
+            if (nextQueueItem == null && LoopState == PlayerLoopState.All)
+            {
+                nextQueueItem = Queue.FirstOrDefault(); // Loop back to the first song if looping is enabled
+                nextSongIndex = 0;
+            }
+            if (nextQueueItem == null) { return; }  // Playback finished, do nothing
+
+            // Modify the player store to reflect these changes
+            var playerStore = JsonConvert.DeserializeObject<PlayerStore>(await PlayerStore.GetPlayerStore());
+            playerStore.State.SongList.CurrentSongIndex = nextSongIndex;
+            playerStore.State.SongList.CurrentSong = nextQueueItem;
+            await PlayerStore.SetPlayerStore(JsonConvert.SerializeObject(playerStore));
+
+            var playbackURL = Store.ExtraProperties.GetStreamURLForSong(nextQueueItem.Id);
+
+            await AssociatedPlayer.SetSource(playbackURL, null);
+            await AssociatedPlayer.UpdatePlaybackParameters();
+            await AssociatedPlayer.PlayAudio();
+        }
+
+        public async Task Play()
+        {
+            await AssociatedPlayer.PlayAudio();
+        }
+
+        public async Task Pause()
+        {
+            await AssociatedPlayer.PauseAudio();
+        }
     }
 }
