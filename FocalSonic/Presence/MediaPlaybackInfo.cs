@@ -45,10 +45,11 @@ namespace FocalSonic.Presence
             if (nextQueueItem == null) { return; }  // Playback finished, do nothing
 
             // Modify the player store to reflect these changes
-            var playerStore = JsonConvert.DeserializeObject<PlayerStore>(await PlayerStore.GetPlayerStore());
-            playerStore.State.SongList.CurrentSongIndex = nextSongIndex;
-            playerStore.State.SongList.CurrentSong = nextQueueItem;
-            await PlayerStore.SetPlayerStore(JsonConvert.SerializeObject(playerStore));
+            await PlayerStore.Mutate(async (s) =>
+            {
+                s.State.SongList.CurrentSongIndex = nextSongIndex;
+                s.State.SongList.CurrentSong = nextQueueItem;
+            });
 
             var playbackURL = Store.ExtraProperties.GetStreamURLForSong(nextQueueItem.Id);
 

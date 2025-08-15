@@ -41,5 +41,15 @@ namespace FocalSonic.Presence
         {
             return await PlatformManager.Instance.Storage.ReadAllText("focalsonic_player_store.json");
         }
+
+        /// <summary>
+        /// Easily modify the player store by passing a function that takes the PlayerStore as an argument.
+        /// </summary>
+        public static async Task Mutate(Func<PlayerStore, Task> mutateFn)
+        {
+            var playerStore = JsonConvert.DeserializeObject<PlayerStore>(await GetPlayerStore());
+            await mutateFn(playerStore);
+            await SetPlayerStore(JsonConvert.SerializeObject(playerStore));
+        }
     }
 }
