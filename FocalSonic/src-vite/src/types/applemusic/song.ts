@@ -1,7 +1,6 @@
 import { Resource } from "i18next";
 import { AppleMusicAlbum } from "./albums";
 import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
-import { AppleMusicPlaylist } from "./playlist";
 
 export interface AppleMusicLyricsResponse {
     data: AppleMusicLyrics[];
@@ -52,7 +51,7 @@ export interface AppleMusicSongRelationships {
     station?: { data: AppleMusicStation } | undefined;
 }
 
-export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: AppleMusicPlaylist | AppleMusicAlbum | undefined): Song {
+export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: any | undefined): Song {
     if (!song) { return; }
 
     return {

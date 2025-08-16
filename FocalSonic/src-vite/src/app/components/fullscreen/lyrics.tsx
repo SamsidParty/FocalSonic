@@ -97,18 +97,25 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
 function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number }) {
 
     const elrcRegex = /<(\d{2}):(\d{2})\.(\d{2})>([^<]+)/g;
-    const elrcTestRegex = /^\s*(<\d{2}:\d{2}\.\d+>[^<]+)+\s*$/;
-    
+    const elrcTestRegex = /^\s*(<\d{2}:\d{2}\.\d+>[^<]*)+\s*$/;
+    let subLyric: string = null;
+    let lyric = line?.content;
+
+    if (line?.content.split("\0").length > 1) {
+        subLyric = line.content.split("\0")[1];
+        lyric = line.content.split("\0")[0];
+    }
+
     const elrcValues = useMemo(() => {
         let values = {
-            isElrc: elrcTestRegex.exec(line?.content),
+            isElrc: elrcTestRegex.exec(lyric),
             elrcPortions: [] as any[]
         };
 
         if (values.isElrc) {
             let match;
 
-            while ((match = elrcRegex.exec(line?.content)) !== null) {
+            while ((match = elrcRegex.exec(lyric)) !== null) {
                 const minutes = parseInt(match[1], 10);
                 const seconds = parseInt(match[2], 10);
                 const fractionOfSeconds = parseInt(match[3], 10);
@@ -122,29 +129,34 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
         }
 
         return values;
-    }, [line?.content]);
+    }, [lyric]);
 
 
     if (elrcValues.isElrc) {
         return (
-            <p 
+            <p
                 key={line?.id}
                 onClick={() => skipToTime(line.startMillisecond)}
                 className={clsx(
-                    "drop-shadow-lg my-10 2xl:my-20 text-white cursor-pointer hover:opacity-100 duration-700",
+                    "drop-shadow-lg text-white cursor-pointer hover:opacity-100 duration-700",
                     "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left",
-                    active ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
+                    (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
+                    !subLyric ? "my-10 2xl:my-20" : "my-0",
+                    line?.isSubLyric && "text-xl 2xl:text-3xl opacity-100 mt-0 2xl:mt-0 mb-10 2xl:mb-20"
                 )}
             >
                 {elrcValues.elrcPortions.map((portion, index) => (
-                    <span 
-                        data-time={portion.Time} 
-                        key={index} 
+                    <span
+                        data-time={portion.Time}
+                        key={index}
                         className={(timestamp >= portion.Time - 0.2) ? "opacity-100 transition-opacity duration-200" : "opacity-40"}
-                    >
+                        >
                         {portion.Text}
                     </span>
                 ))}
+                {
+                    subLyric && <LrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} />
+                }
             </p>
         );
     }
@@ -152,8 +164,8 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
     // Regular LRC
     return (
         <p
-            key={line?.id} 
-            onClick={() => skipToTime(line.startMillisecond)} 
+            key={line?.id}
+            onClick={() => skipToTime(line.startMillisecond)}
             className={clsx(
                 "drop-shadow-lg my-10 2xl:my-20 text-white cursor-pointer hover:opacity-100 duration-700",
                 "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left",
@@ -238,10 +250,13 @@ function areLyricsTTML(lyrics: ILyric) {
 function convertTTMLToLRC(ttml: string): string {
     try {
         let parsedTTML = parseTTML(ttml);
-        console.log(parsedTTML);
+
         const enableELRC = true;
+        const enableTransliteration = true;
 
         let convertedELRC = parsedTTML.lyricLines.map((line) => {
+
+            let output = "";
 
             const convertMS = (ms, wrap?: boolean) => {
                 const minutes = Math.floor(ms / 60000);
@@ -260,10 +275,17 @@ function convertTTMLToLRC(ttml: string): string {
             };
 
             if (enableELRC) {
-                return `[${convertMS(line.startTime)}] ${line.words.map((word) => convertMS(word.startTime, true) + (word.word)).join("")}`;
+                output += `[${convertMS(line.startTime)}] ${line.words.map((word) => convertMS(word.startTime, true) + (word.word)).join("")}`;
+                if (enableTransliteration && line.words.filter((f) => f.word && f.romanWord).length > 0) {
+                    output += `\0${line.words.map((word) => convertMS(word.startTime, true) + (word.romanWord)).join(" ")}`;
+                }
+            }
+            else {
+                output += `[${convertMS(line.startTime)}]${line.words.map((word) => word.word).join("")}`;
             }
 
-            return `[${convertMS(line.startTime)}]${line.words.map((word) => word.word).join("")}`;
+            return output;
+
         }).join("\n");
 
         return convertedELRC;
