@@ -1,19 +1,19 @@
+import { ContextMenuItem } from "@/app/components/ui/context-menu";
+import { DropdownMenuItem } from "@/app/components/ui/dropdown-menu";
 import omit from "lodash/omit";
 import {
     CheckIcon,
     DownloadIcon,
     Info,
+    ListEnd,
     Pencil,
     PlayIcon,
     PlusCircle,
     PlusIcon,
-    PlusSquare,
     PodcastIcon,
-    Trash,
+    Trash
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { ContextMenuItem } from "@/app/components/ui/context-menu";
-import { DropdownMenuItem } from "@/app/components/ui/dropdown-menu";
 import { MenuItemFactory } from "./menu-item-factory";
 import { SubMenuFactory } from "./sub-menu-factory";
 
@@ -55,7 +55,7 @@ function PlayLast({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
     return (
         <MenuItemFactory
             variant={variant}
-            icon={<PlusSquare className="mr-2 h-4 w-4" />}
+            icon={<ListEnd className="mr-2 h-4 w-4" />}
             label={t("options.addLast")}
             {...props}
         />

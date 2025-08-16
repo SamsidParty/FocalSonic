@@ -439,7 +439,7 @@
   "options": {
     "play": "Play",
     "playNext": "Play next",
-    "addLast": "Add last",
+    "addLast": "Append to queue",
     "download": "Download",
     "playlist": {
       "add": "Add to playlist",
