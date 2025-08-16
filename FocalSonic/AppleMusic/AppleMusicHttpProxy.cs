@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -10,20 +13,46 @@ namespace FocalSonic.AppleMusic
 {
     public class AppleMusicHttpProxy
     {
+        public static Dictionary<WatsonWebserver.Core.HttpMethod, System.Net.Http.HttpMethod> MethodMapping = new()
+        {
+            { WatsonWebserver.Core.HttpMethod.GET, System.Net.Http.HttpMethod.Get },
+            { WatsonWebserver.Core.HttpMethod.POST, System.Net.Http.HttpMethod.Post },
+            { WatsonWebserver.Core.HttpMethod.DELETE, System.Net.Http.HttpMethod.Delete },
+        };
+
         public static async Task AppleMusicHttpProxyRoute(HttpContextBase ctx)
         {
-            if (ctx.Request.Url != null)
+            // CORS
+            if (!ctx.Request.HeaderExists("Origin") || ctx.Request.RetrieveHeaderValue("Origin") == "127.0.0.1" || ctx.Request.RetrieveHeaderValue("Origin") == "localhost")
+            {
+                ctx.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                ctx.Response.Headers.Add("Access-Control-Allow-Headers", "*");
+            }
+
+            var shouldForward = (ctx.Request.Method == WatsonWebserver.Core.HttpMethod.GET || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.POST || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.DELETE);
+            if (ctx.Request.Url != null && shouldForward)
             {
                 // The uri will be in the format /applemusic?me/etc
-                var response = await AppleMusicHttpClient.SendRequest<string>(HttpUtility.UrlDecode(ctx.Request.Query.Querystring));
+                var url = HttpUtility.UrlDecode(ctx.Request.Query.Querystring);
+                var message = new HttpRequestMessage(MethodMapping[ctx.Request.Method], url.Replace("{storefront}", AppleMusicKeys.Region));
+                
 
-                ctx.Response.StatusCode = response != null ? 200 : 404;
+                if (ctx.Request.Method == WatsonWebserver.Core.HttpMethod.POST)
+                {
+                    var body = ctx.Request.DataAsString;
+                    message.Content = new StringContent(body, Encoding.UTF8, "application/json");
+                }
+
+                var request = await AppleMusicHttpClient.Instance.SendAsync(message.WithMusicKitHeaders());
+                var content = await request.Content.ReadAsStringAsync();
+
+                ctx.Response.StatusCode = (int)request.StatusCode;
                 ctx.Response.ContentType = "application/json";
-                await ctx.Response.Send(response ?? "{}");
+                await ctx.Response.Send(content ?? "{}");
                 return;
             }
 
-            ctx.Response.StatusCode = 500;
+            ctx.Response.StatusCode = 201; // No content
         }
     }
 }

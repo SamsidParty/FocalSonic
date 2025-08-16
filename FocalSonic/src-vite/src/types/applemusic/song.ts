@@ -65,5 +65,9 @@ export function convertAppleMusicSongToSubsonic(song: AppleMusicSong): Song {
         duration: Math.ceil((song.attributes?.durationInMillis || 0) / 1000),
         suffix: "m4a",
         coverArt: song.attributes?.artwork?.url || "",
+        appleMusic: {
+            data: song,
+            libraryID: song.id
+        }
     };
 }

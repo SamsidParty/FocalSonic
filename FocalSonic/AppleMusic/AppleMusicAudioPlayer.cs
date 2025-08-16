@@ -146,7 +146,7 @@ namespace FocalSonic.AppleMusic
         {
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'setVolume', volume: {volume} }});" +
+                $"window.injectedQueue.push({{ type: 'setVolume', volume: {volume / 2d} }});" +
                 InjectionSuffix
             );
         }

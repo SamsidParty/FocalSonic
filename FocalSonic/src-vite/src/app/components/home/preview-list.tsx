@@ -126,7 +126,7 @@ export default function PreviewList({
                                 <PreviewCard.Root>
                                     <PreviewCard.ImageWrapper link={ROUTES[getResourceType(entry)]?.PAGE(entry.id)}>
                                         <PreviewCard.Image
-                                            src={getCoverArtUrl(entry.coverArt || (entry as AppleMusicRecommendationContent).attributes.artwork.url, "album")}
+                                            src={getCoverArtUrl(entry.coverArt || (entry as AppleMusicRecommendationContent).attributes?.artwork?.url, "album")}
                                             alt={title}
                                         />
                                         <PreviewCard.PlayButton

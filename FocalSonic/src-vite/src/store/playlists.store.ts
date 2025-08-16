@@ -1,7 +1,7 @@
+import { IPlaylistsContext, PlaylistData } from "@/types/playlistsContext";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createWithEqualityFn } from "zustand/traditional";
-import { IPlaylistsContext, PlaylistData } from "@/types/playlistsContext";
 
 export const usePlaylistsStore = createWithEqualityFn<IPlaylistsContext>()(
     subscribeWithSelector(

@@ -82,7 +82,10 @@ async function browserFetch<T>(
     try {
         const response = await fetch(url, options);
 
-        if (response.ok) {
+        if (response.status === 204) {
+            return null;
+        }
+        else if (response.ok) {
             const data = await response.json();
             return {
                 count: parseInt(response.headers.get("x-total-count") || "0", 10),

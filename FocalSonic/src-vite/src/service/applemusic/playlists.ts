@@ -70,33 +70,37 @@ async function update({
     songIndexToRemove,
     isPublic,
 }: UpdateParams) {
-    const query = new URLSearchParams({
-        playlistId,
-    });
-    if (name) query.append("name", name);
-    if (comment) query.append("comment", comment);
-    if (isPublic) query.append("public", isPublic);
 
     if (songIdToAdd) {
-        if (typeof songIdToAdd === "string") {
-            query.append("songIdToAdd", songIdToAdd);
+        if (typeof songIdToAdd === "string" || (Array.isArray(songIdToAdd)) && songIdToAdd.length === 1) {
+            let response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${playlistId}/tracks`,
+            { 
+                method: "POST",
+                body: JSON.stringify({
+                    id: Array.isArray(songIdToAdd) ? songIdToAdd[0] : songIdToAdd,
+                    type: "library-songs"
+                })
+            });
         } else {
-            songIdToAdd.forEach((songId) => query.append("songIdToAdd", songId));
+
         }
     }
-
     if (songIndexToRemove) {
-        if (typeof songIndexToRemove === "string") {
-            query.append("songIndexToRemove", songIndexToRemove);
-        } else {
-            songIndexToRemove.forEach((songIndex) =>
-                query.append("songIndexToRemove", songIndex),);
+        let response = await httpClient(`/applemusic/me/library/playlists/${playlistId}/tracks`,
+        { 
+            method: "DELETE",
+            query: {
+                "ids[library-songs]": Array.isArray(songIndexToRemove) ? songIndexToRemove[0] : songIndexToRemove,
+                "art[url]": "f",
+                mode: "all",
+            }
+        });
+
+        if (response === undefined) {
+            throw new Error();
         }
     }
 
-    await httpClient<SubsonicResponse>(`/updatePlaylist?${query.toString()}`, {
-        method: "GET",
-    });
 }
 
 export async function createWithDetails(data: CreateParams) {

@@ -236,8 +236,6 @@ export function parseTTML(ttmlText: string): TTMLLyric {
 		}
 	}
 
-	console.log(lyricLines);
-
 	return {
 		metadata,
 		lyricLines: lyricLines,

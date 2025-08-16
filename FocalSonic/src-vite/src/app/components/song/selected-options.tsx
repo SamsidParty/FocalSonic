@@ -1,6 +1,6 @@
+import { OptionsButtons } from "@/app/components/options/buttons";
 import { Table } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
-import { OptionsButtons } from "@/app/components/options/buttons";
 
 import {
     ContextMenuItem,
@@ -8,6 +8,7 @@ import {
 } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { ISong } from "@/types/responses/song";
+import { checkServerType } from "@/utils/servers";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
 
 interface SelectedSongsProps {
@@ -22,6 +23,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
     const isSingleSelected = rows.length === 1;
     const songs = rows.map((row) => row.original);
     const firstSong = songs[0];
+    const { isAppleMusic } = checkServerType();
 
     function reset(action: () => void) {
         action();
@@ -56,8 +58,9 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
 
     function handleRemoveSongsFromPlaylist() {
         const songIndexes = rows.map((row) => row.index.toString());
+        const appleMusicIds = rows.map((row) => row?.original.appleMusic?.libraryID?.toString());
 
-        reset(() => songOptions.removeSongFromPlaylist(songIndexes));
+        reset(() => songOptions.removeSongFromPlaylist(isAppleMusic ? appleMusicIds : songIndexes));
     }
 
     function handleSongInfoOption() {

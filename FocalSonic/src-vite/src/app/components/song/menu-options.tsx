@@ -2,6 +2,7 @@ import { OptionsButtons } from "@/app/components/options/buttons";
 import { ContextMenuSeparator } from "@/app/components/ui/context-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { ISong } from "@/types/responses/song";
+import { checkServerType } from "@/utils/servers";
 import { AddToPlaylistSubMenu } from "./add-to-playlist";
 
 interface SongMenuOptionsProps {
@@ -26,6 +27,7 @@ export function SongMenuOptions({
         isOnPlaylistPage,
     } = useOptions();
     const songIndexes = [index.toString()];
+    const { isAppleMusic } = checkServerType();
 
     return (
         <>
@@ -51,12 +53,12 @@ export function SongMenuOptions({
                     addToPlaylistFn={(id) => addToPlaylist(id, song.id)}
                 />
             </OptionsButtons.AddToPlaylistOption>
-            {isOnPlaylistPage && (
+            {isOnPlaylistPage && (isAppleMusic ? (!parseInt(song?.appleMusic?.libraryID)) : true) && (
                 <OptionsButtons.RemoveFromPlaylist
                     variant={variant}
                     onClick={(e) => {
                         e.stopPropagation();
-                        removeSongFromPlaylist(songIndexes);
+                        removeSongFromPlaylist(isAppleMusic ? [song.appleMusic?.libraryID] : songIndexes);
                     }}
                 />
             )}
