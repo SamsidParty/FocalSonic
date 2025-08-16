@@ -22,7 +22,7 @@ async function getOne(id: string) {
         }
     });
 
-    if (response?.data.length === 0) {
+    if (!response || response?.data.length === 0) {
         // Try again but this time in the catalog not the library
         response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/catalog/{storefront}/playlists/${id}`, {
             method: "GET",
