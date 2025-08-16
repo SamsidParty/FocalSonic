@@ -73,6 +73,24 @@ async function update({
 
     let response;
 
+    if (name || comment || isPublic) {
+        response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${playlistId}`,
+        { 
+            method: "PATCH",
+            body: JSON.stringify({
+                attributes: {
+                    name,
+                    description: comment,
+                    isPublic
+                }
+            }),
+            query: {
+                "art[url]": "f",
+                "format[resources]": "map",
+            }
+        });
+    }
+
     if (songIdToAdd) {
         response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${playlistId}/tracks`,
         { 
@@ -85,6 +103,7 @@ async function update({
             })
         });
     }
+
     if (songIndexToRemove) {
         response = await httpClient(`/applemusic/me/library/playlists/${playlistId}/tracks`,
         { 

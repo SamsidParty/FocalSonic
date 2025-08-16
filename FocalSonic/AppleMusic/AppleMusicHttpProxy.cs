@@ -18,6 +18,8 @@ namespace FocalSonic.AppleMusic
             { WatsonWebserver.Core.HttpMethod.GET, System.Net.Http.HttpMethod.Get },
             { WatsonWebserver.Core.HttpMethod.POST, System.Net.Http.HttpMethod.Post },
             { WatsonWebserver.Core.HttpMethod.DELETE, System.Net.Http.HttpMethod.Delete },
+            { WatsonWebserver.Core.HttpMethod.PATCH, System.Net.Http.HttpMethod.Patch },
+            { WatsonWebserver.Core.HttpMethod.PUT, System.Net.Http.HttpMethod.Put },
         };
 
         public static async Task AppleMusicHttpProxyRoute(HttpContextBase ctx)
@@ -29,7 +31,7 @@ namespace FocalSonic.AppleMusic
                 ctx.Response.Headers.Add("Access-Control-Allow-Headers", "*");
             }
 
-            var shouldForward = (ctx.Request.Method == WatsonWebserver.Core.HttpMethod.GET || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.POST || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.DELETE);
+            var shouldForward = (ctx.Request.Method != WatsonWebserver.Core.HttpMethod.OPTIONS && ctx.Request.Method != WatsonWebserver.Core.HttpMethod.HEAD);
             if (ctx.Request.Url != null && shouldForward)
             {
                 // The uri will be in the format /applemusic?me/etc
@@ -37,7 +39,7 @@ namespace FocalSonic.AppleMusic
                 var message = new HttpRequestMessage(MethodMapping[ctx.Request.Method], url.Replace("{storefront}", AppleMusicKeys.Region));
                 
 
-                if (ctx.Request.Method == WatsonWebserver.Core.HttpMethod.POST)
+                if (ctx.Request.Method == WatsonWebserver.Core.HttpMethod.POST || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.PUT || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.PATCH)
                 {
                     var body = ctx.Request.DataAsString;
                     message.Content = new StringContent(body, Encoding.UTF8, "application/json");
