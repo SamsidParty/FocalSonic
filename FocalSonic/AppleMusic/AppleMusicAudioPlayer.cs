@@ -142,6 +142,15 @@ namespace FocalSonic.AppleMusic
             );
         }
 
+        public override async Task SetVolume(double volume)
+        {
+            ProxyWindow?.ExecuteJavaScript(
+                InjectionPrefix +
+                $"window.injectedQueue.push({{ type: 'setVolume', volume: {volume} }});" +
+                InjectionSuffix
+            );
+        }
+
         #endregion
 
         #region Sign In

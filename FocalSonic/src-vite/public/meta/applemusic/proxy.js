@@ -53,6 +53,9 @@ window.executeInjectedQueue = async () => {
         else if (item.type === "setLoopMode") {
             window.proxyMusicInstance.repeatMode = item.loop ? MusicKit.PlayerRepeatMode.one : MusicKit.PlayerRepeatMode.none;
         }
+        else if (item.type === "setVolume") {
+            window.proxyMusicInstance.volume = item.volume;
+        }
         else if (item.type === "setSource") {
             await window.proxyMusicInstance.stop();
             await window.proxyMusicInstance.clearQueue();
