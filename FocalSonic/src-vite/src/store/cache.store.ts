@@ -1,5 +1,5 @@
 import { ICacheContext } from "@/types/cacheContext";
-import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
+import { createJSONStorage, devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createWithEqualityFn } from "zustand/traditional";
 
@@ -51,6 +51,7 @@ export const useCacheStore = createWithEqualityFn<ICacheContext>()(
             ),
             {
                 name: "cache_store",
+                storage: createJSONStorage(() => sessionStorage),
             },
         ),
     ),

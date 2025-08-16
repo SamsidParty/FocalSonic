@@ -37,12 +37,12 @@ namespace FocalSonic.Presence
             {
                 var nextSongIndex = CurrentSongIndex + 1;
 
-                if (nextSongIndex > Queue.Count - 1 && LoopState == PlayerLoopState.All)
+                if (nextSongIndex > Queue?.Count - 1 && LoopState == PlayerLoopState.All)
                 {
                     // Loop back to the first song if looping is enabled
                     nextSongIndex = 0;
                 }
-                if (nextSongIndex > Queue.Count - 1) { return null; }  // Playback finished, no next song
+                if (nextSongIndex > Queue?.Count - 1) { return null; }  // Playback finished, no next song
 
                 return nextSongIndex;
             }

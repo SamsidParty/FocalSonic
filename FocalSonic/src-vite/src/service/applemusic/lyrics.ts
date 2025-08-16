@@ -10,11 +10,16 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         return lyrics;
     }
 
-    const response = await httpClient<AppleMusicLyricsResponse>(`/applemusic/catalog/{storefront}/songs/${getLyricsData.id}/syllable-lyrics?l=en-US`, {
-        method: "GET"
+    const response = await httpClient<AppleMusicLyricsResponse>(`/applemusic/catalog/{storefront}/songs/${getLyricsData.id}/syllable-lyrics`, {
+        method: "GET",
+        query: {
+            // I spent 4 hours reverse engineering the Apple Music android app to find these parameters
+            extend: "ttmlLocalizations",
+            "l[script]": "en-Latn"
+        }
     });
 
-    (response && response?.data[0]?.attributes?.ttml) && (lyrics = response!.data[0].attributes.ttml);
+    lyrics = response?.data[0]?.attributes?.ttmlLocalizations || response?.data[0]?.attributes?.ttml;
 
     useCacheStore.getState().saveLyrics(getLyricsData.id!, lyrics);
     return lyrics;

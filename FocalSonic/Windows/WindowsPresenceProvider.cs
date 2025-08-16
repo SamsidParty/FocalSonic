@@ -44,7 +44,7 @@ namespace FocalSonic.Windows
             smtc.DisplayUpdater.MusicProperties.AlbumTitle = song?.Album ?? "Unknown Album";
             smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song?.AlbumArtists?.Select((a) => a.Name) ?? new string[] { song?.DisplayAlbumArtist ?? "" });
 
-            var coverArt = playbackInfo.Store.ExtraProperties.GetCoverArtForSong(song?.CoverArt!);
+            var coverArt = playbackInfo.Store?.ExtraProperties.GetCoverArtForSong(song?.CoverArt!);
 
             if (song?.Id != LastSongID || LastAlbumArt == null)
             {
