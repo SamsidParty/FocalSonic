@@ -238,6 +238,7 @@ function areLyricsTTML(lyrics: ILyric) {
 function convertTTMLToLRC(ttml: string): string {
     try {
         let parsedTTML = parseTTML(ttml);
+        console.log(parsedTTML);
         const enableELRC = true;
 
         let convertedELRC = parsedTTML.lyricLines.map((line) => {
@@ -259,7 +260,7 @@ function convertTTMLToLRC(ttml: string): string {
             };
 
             if (enableELRC) {
-                return `[${convertMS(line.startTime)}] ${line.words.map((word) => convertMS(word.startTime, true) + word.word).join("")}`;
+                return `[${convertMS(line.startTime)}] ${line.words.map((word) => convertMS(word.startTime, true) + (word.romanWord || word.word)).join("")}`;
             }
 
             return `[${convertMS(line.startTime)}]${line.words.map((word) => word.word).join("")}`;

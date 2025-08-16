@@ -12,6 +12,7 @@ export interface LyricWord {
 	startTime: number;
 	endTime: number;
 	word: string;
+	romanWord?: string;
 	emptyBeat?: number;
 }
 
@@ -19,6 +20,7 @@ export interface LyricLine {
 	words: LyricWord[];
 	translatedLyric: string;
 	romanLyric: string;
+	itunesKey?: string;
 	isBG: boolean;
 	isDuet: boolean;
 	startTime: number;

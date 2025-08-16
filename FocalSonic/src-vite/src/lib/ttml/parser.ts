@@ -72,6 +72,7 @@ export function parseTTML(ttmlText: string): TTMLLyric {
 		}
 	}
 
+	const transliterations: LyricLine[] = [];
 	const lyricLines: LyricLine[] = [];
 
 	function parseParseLine(lineEl: Element, isBG = false, isDuet = false) {
@@ -79,6 +80,7 @@ export function parseTTML(ttmlText: string): TTMLLyric {
 			words: [],
 			translatedLyric: "",
 			romanLyric: "",
+			itunesKey: lineEl.getAttribute("itunes:key") ?? "",
 			isBG,
 			isDuet:
 				!!lineEl.getAttribute("ttm:agent") &&
@@ -168,9 +170,73 @@ export function parseTTML(ttmlText: string): TTMLLyric {
 		}
 	}
 
+	function parseTransliteration(tlEl: Element, parent?: Element) {
+
+
+
+		for (const wordNode of tlEl.childNodes) {
+			if (wordNode.nodeName === "text") {
+				const tl = {
+					words: [],
+					translatedLyric: "",
+					romanLyric: wordNode.textContent ?? "",
+					itunesKey: wordNode.getAttribute("for") ?? "",
+					startTime: 0,
+					endTime: 0,
+					isBG: false,
+					isDuet: false
+				}
+				transliterations.push(tl);
+				parseTransliteration(wordNode, tl);
+			} else if (wordNode.nodeType === Node.ELEMENT_NODE) {
+				const wordEl = wordNode as Element;
+
+				if (wordEl.hasAttribute("begin") && wordEl.hasAttribute("end")) {
+					const word: LyricWord = {
+						word: wordNode.textContent ?? "",
+						romanWord: wordNode.textContent ?? "",
+						itunesKey: tlEl.getAttribute("for") ?? "",
+						startTime: parseTimespan(wordEl.getAttribute("begin") ?? ""),
+						endTime: parseTimespan(wordEl.getAttribute("end") ?? ""),
+					};
+	
+					parent?.words.push(word);
+				}
+			}
+		}
+
+	}
+
 	for (const lineEl of ttmlDoc.querySelectorAll("body p[begin][end]")) {
 		parseParseLine(lineEl);
 	}
+
+	for (const tlEl of ttmlDoc.querySelectorAll("transliteration")) {
+		parseTransliteration(tlEl);
+	}
+
+	if (transliterations.length > 0) {
+		for (const ll in lyricLines) {
+			const line = lyricLines[ll];
+			const transliteration = transliterations.find((tl) => tl.itunesKey === line.itunesKey);
+
+			if (transliteration?.romanLyric) {
+				line.romanLyric = transliteration.romanLyric;
+			}
+
+			for (const word of line.words) {
+				if (transliteration) {
+					word.romanWord = transliteration.words.find((w) => Math.abs(w.startTime - word.startTime) < 10 && Math.abs(w.endTime - word.endTime) < 10)?.romanWord || "";
+				}
+			}
+			
+			if (line.words.length === 1 && !line.words[0].romanWord) {
+				line.words[0].romanWord = transliteration?.romanLyric;
+			}
+		}
+	}
+
+	console.log(lyricLines);
 
 	return {
 		metadata,
