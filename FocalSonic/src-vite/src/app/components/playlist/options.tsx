@@ -5,6 +5,7 @@ import { service } from "@/service/service";
 import { usePlaylists, useRemovePlaylist } from "@/store/playlists.store";
 import { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
+import { checkServerType } from "@/utils/servers";
 
 interface PlaylistOptionsProps {
     playlist: PlaylistWithEntries | Playlist
@@ -30,6 +31,9 @@ export function PlaylistOptions({
     const { setPlaylistDialogState, setData } = usePlaylists();
     const { play, playNext, playLast, startDownload } = useOptions();
     const { setPlaylistId, setConfirmDialogState } = useRemovePlaylist();
+    const { isAppleMusic } = checkServerType();
+
+    console.log(playlist);
 
     function handleEdit() {
         setData({
@@ -123,23 +127,30 @@ export function PlaylistOptions({
                 }}
             />
             <DropdownMenuSeparator />
-            <OptionsButtons.EditPlaylist
-                variant={variant}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit();
-                }}
-                disabled={disableEdit}
-            />
-            <OptionsButtons.RemovePlaylist
-                variant={variant}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setPlaylistId(playlist.id);
-                    setConfirmDialogState(true);
-                }}
-                disabled={disableDelete}
-            />
+            {
+                (isAppleMusic ? (playlist.appleMusic?.data.canEdit) : true) && (
+                    <>
+                        <OptionsButtons.EditPlaylist
+                            variant={variant}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit();
+                            }}
+                            disabled={disableEdit}
+                        />
+                        <OptionsButtons.RemovePlaylist
+                            variant={variant}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setPlaylistId(playlist.id);
+                                setConfirmDialogState(true);
+                            }}
+                            disabled={disableDelete}
+                        />
+                    </>
+                )
+            }
+
         </>
     );
 }
