@@ -8,7 +8,9 @@ import { ISong } from "@/types/responses/song";
 import { queryKeys } from "@/utils/queryKeys";
 import { isTauri } from "@/utils/tauriTools";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { t } from "i18next";
 import { useMatches } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useDownload } from "./use-download";
 
 type SongIdToAdd = Pick<UpdateParams, "songIdToAdd">["songIdToAdd"]
@@ -54,6 +56,9 @@ export function useOptions() {
                     queryKey: [queryKeys.playlist.single, playlistId],
                 });
             }
+        },
+        onError: () => {
+            toast.error(t("playlist.form.edit.toast.error"));
         },
     });
 

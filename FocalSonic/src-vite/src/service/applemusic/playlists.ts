@@ -71,22 +71,22 @@ async function update({
     isPublic,
 }: UpdateParams) {
 
-    if (songIdToAdd) {
-        if (typeof songIdToAdd === "string" || (Array.isArray(songIdToAdd)) && songIdToAdd.length === 1) {
-            let response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${playlistId}/tracks`,
-            { 
-                method: "POST",
-                body: JSON.stringify({
-                    id: Array.isArray(songIdToAdd) ? songIdToAdd[0] : songIdToAdd,
-                    type: "library-songs"
-                })
-            });
-        } else {
+    let response;
 
-        }
+    if (songIdToAdd) {
+        response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${playlistId}/tracks`,
+        { 
+            method: "POST",
+            body: JSON.stringify({
+                data: (Array.isArray(songIdToAdd) ? songIdToAdd : [songIdToAdd]).map((id) => ({
+                    id,
+                    type: "library-songs"
+                }))
+            })
+        });
     }
     if (songIndexToRemove) {
-        let response = await httpClient(`/applemusic/me/library/playlists/${playlistId}/tracks`,
+        response = await httpClient(`/applemusic/me/library/playlists/${playlistId}/tracks`,
         { 
             method: "DELETE",
             query: {
@@ -95,12 +95,9 @@ async function update({
                 mode: "all",
             }
         });
-
-        if (response === undefined) {
-            throw new Error();
-        }
     }
 
+    if (response === undefined) { throw new Error(); }
 }
 
 export async function createWithDetails(data: CreateParams) {
