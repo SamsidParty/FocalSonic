@@ -93,7 +93,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
                     addToPlaylistFn={handleAddToPlaylist}
                 />
             </OptionsButtons.AddToPlaylistOption>
-            {songOptions.isOnPlaylistPage && (
+            {songOptions.isOnPlaylistPage && (isAppleMusic && firstSong?.appleMusic?.parent?.canEdit) && (
                 <OptionsButtons.RemoveFromPlaylist
                     variant="context"
                     onClick={(e) => {

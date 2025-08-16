@@ -42,7 +42,7 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
         owner: "",
         changed: new Date(playlist.attributes?.lastModifiedDate || "").toString() || Date.now().toString(),
         created: new Date(playlist.attributes?.lastModifiedDate || "").toString() || Date.now().toString(),
-        entry: playlist.relationships?.tracks?.data.map(convertAppleMusicSongToSubsonic) || [],
+        entry: playlist.relationships?.tracks?.data.map((s) => convertAppleMusicSongToSubsonic(s, playlist.attributes)) || [],
         appleMusic: {
             data: playlist
         }

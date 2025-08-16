@@ -136,7 +136,7 @@ function RemoveFromPlaylist({
     return (
         <MenuItemFactory
             variant={variant}
-            icon={<Trash className="mr-2 h-4 w-4 fill-red-300 text-red-500" />}
+            icon={<Trash className="mr-2 h-4 w-4 text-red-500" />}
             label={t("options.playlist.removeSong")}
             {...props}
         />

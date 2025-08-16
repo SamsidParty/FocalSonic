@@ -1,6 +1,7 @@
 import { Resource } from "i18next";
 import { AppleMusicAlbum } from "./albums";
 import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
+import { AppleMusicPlaylist } from "./playlist";
 
 export interface AppleMusicLyricsResponse {
     data: AppleMusicLyrics[];
@@ -51,7 +52,7 @@ export interface AppleMusicSongRelationships {
     station?: { data: AppleMusicStation } | undefined;
 }
 
-export function convertAppleMusicSongToSubsonic(song: AppleMusicSong): Song {
+export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: AppleMusicPlaylist | AppleMusicAlbum | undefined): Song {
     if (!song) { return; }
 
     return {
@@ -67,7 +68,8 @@ export function convertAppleMusicSongToSubsonic(song: AppleMusicSong): Song {
         coverArt: song.attributes?.artwork?.url || "",
         appleMusic: {
             data: song,
-            libraryID: song.id
+            libraryID: song.id,
+            parent: parent
         }
     };
 }

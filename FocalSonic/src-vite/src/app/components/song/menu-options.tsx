@@ -53,7 +53,7 @@ export function SongMenuOptions({
                     addToPlaylistFn={(id) => addToPlaylist(id, song.id)}
                 />
             </OptionsButtons.AddToPlaylistOption>
-            {isOnPlaylistPage && (isAppleMusic ? (!parseInt(song?.appleMusic?.libraryID)) : true) && (
+            {isOnPlaylistPage && (isAppleMusic && song?.appleMusic?.parent?.canEdit) && (
                 <OptionsButtons.RemoveFromPlaylist
                     variant={variant}
                     onClick={(e) => {
