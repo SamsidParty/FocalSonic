@@ -42,5 +42,8 @@ export function convertAppleMusicAlbumToSubsonic(album: AppleMusicAlbum): Single
         trackCount: album.attributes?.trackCount || 0,
         coverArt: album.attributes?.artwork?.url || "",
         song: album.relationships?.tracks?.data.map(convertAppleMusicSongToSubsonic) || [],
+        appleMusic: {
+            data: album
+        }
     };
 }

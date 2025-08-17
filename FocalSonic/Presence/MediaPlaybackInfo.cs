@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FocalSonic.AudioPlayer;
+using SamsidParty.Subsonic.Common;
 
 namespace FocalSonic.Presence
 {
@@ -91,11 +92,13 @@ namespace FocalSonic.Presence
 
         public async Task Play()
         {
+            await PlayerStore.Mutate(async (s) => s.State.PlayerState.IsPlaying = true);
             await AssociatedPlayer.PlayAudio();
         }
 
         public async Task Pause()
         {
+            await PlayerStore.Mutate(async (s) => s.State.PlayerState.IsPlaying = false);
             await AssociatedPlayer.PauseAudio();
         }
     }

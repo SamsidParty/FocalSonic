@@ -24,7 +24,7 @@ async function getAlbumList(params: Partial<AlbumListParams> = {}) {
         genre,
     } = params;
 
-    const response = await httpClient<AppleMusicAlbum[]>(`/applemusic/me/library/albums`, {
+    const response = await httpClient<AppleMusicAlbum[]>("/applemusic/me/library/albums", {
         method: "GET",
         query: {
             limit: size.toString(),
@@ -45,7 +45,15 @@ async function getOne(id: string) {
         if (!id) return;
     }
 
-    let response = await httpClient<AppleMusicAlbum[]>(`/applemusic/catalog/{storefront}/albums/${id}`, { method: "GET", });
+    let response = await httpClient<AppleMusicAlbum[]>(
+        `/applemusic/catalog/{storefront}/albums/${id}`, 
+        {
+            method: "GET",
+            query: {
+                views: "appears-on,more-by-artist,other-versions,you-might-also-like"
+            }
+        }
+    );
     
     if (!(response?.data?.length > 0)) {
         // Try again but with the song endpoint

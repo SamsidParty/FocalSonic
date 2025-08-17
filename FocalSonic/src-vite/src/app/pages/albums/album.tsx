@@ -29,18 +29,19 @@ export default function Album() {
     const { albumId } = useParams() as { albumId: string };
     const { setSongList } = usePlayerActions();
     const { t } = useTranslation();
-    const { isAppleMusic } = checkServerType()
+    const { isAppleMusic } = checkServerType();
 
     const {
         data: album,
         isLoading: albumIsLoading,
         isFetched,
     } = useGetAlbum(albumId);
-    const { data: artist, isLoading: moreAlbumsIsLoading } = useGetArtistAlbums(
+
+
+    const { data: artist, isLoading: moreAlbumsIsLoading } = isAppleMusic ? {} : useGetArtistAlbums(
         album?.artistId || "",
     );
-    const { data: randomAlbums, isLoading: randomAlbumsIsLoading } =
-    useGetGenreAlbums(album?.genre || "");
+    const { data: randomAlbums, isLoading: randomAlbumsIsLoading } = isAppleMusic ? {} : useGetGenreAlbums(album?.genre || "");
 
     const moreAlbums = artist?.album;
 
@@ -109,15 +110,17 @@ export default function Album() {
         : null;
 
     const randomGenreAlbums =
-    randomAlbums?.list && album.genre
-        ? removeCurrentAlbumFromList(randomAlbums.list)
-        : null;
+        randomAlbums?.list && album.genre
+            ? removeCurrentAlbumFromList(randomAlbums.list)
+            : null;
 
     const albumHasMoreThanOneDisc = album.discTitles
         ? album.discTitles.length > 1
         : false;
 
     const albumComment = album.song.length > 0 ? album.song[0].comment : null;
+
+    console.log(album);
 
     return (
         <div className="w-full">
@@ -150,29 +153,44 @@ export default function Album() {
 
                 <RecordLabelsInfo album={album} />
 
-                <div className="mt-4">
-                    {moreAlbumsIsLoading && <PreviewListFallback />}
-                    {artistAlbums && !moreAlbumsIsLoading && album.artistId && (
-                        <PreviewList
-                            list={artistAlbums}
-                            showMore={true}
-                            title={t("album.more.listTitle")}
-                            moreTitle={t("album.more.discography")}
-                            moreRoute={ROUTES.ALBUMS.ARTIST(album.artistId, album.artist)}
-                        />
-                    )}
+                {
+                    isAppleMusic ? (
+                        Object.entries(album?.appleMusic?.data?.views || {}).map(([key, view]) => 
+                            (view?.data && view.data?.length > 0) && <PreviewList
+                                key={key}
+                                list={view.data}
+                                title={view?.attributes?.title}
+                            />)
+                    ) :
+                        (
+                            <>
+                                <div className="mt-4">
+                                    {moreAlbumsIsLoading && <PreviewListFallback />}
+                                    {artistAlbums && !moreAlbumsIsLoading && album.artistId && (
+                                        <PreviewList
+                                            list={artistAlbums}
+                                            showMore={true}
+                                            title={t("album.more.listTitle")}
+                                            moreTitle={t("album.more.discography")}
+                                            moreRoute={ROUTES.ALBUMS.ARTIST(album.artistId, album.artist)}
+                                        />
+                                    )}
 
-                    {randomAlbumsIsLoading && <PreviewListFallback />}
-                    {!randomAlbumsIsLoading && randomGenreAlbums && (
-                        <PreviewList
-                            list={randomGenreAlbums}
-                            moreRoute={ROUTES.ALBUMS.GENRE(album.genre)}
-                            title={t("album.more.genreTitle", {
-                                genre: album.genre,
-                            })}
-                        />
-                    )}
-                </div>
+                                    {randomAlbumsIsLoading && <PreviewListFallback />}
+                                    {!randomAlbumsIsLoading && randomGenreAlbums && (
+                                        <PreviewList
+                                            list={randomGenreAlbums}
+                                            moreRoute={ROUTES.ALBUMS.GENRE(album.genre)}
+                                            title={t("album.more.genreTitle", {
+                                                genre: album.genre,
+                                            })}
+                                        />
+                                    )}
+                                </div>
+                            </>
+                        )
+                }
+
             </ListWrapper>
         </div>
     );
