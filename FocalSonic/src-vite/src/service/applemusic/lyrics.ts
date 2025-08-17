@@ -1,7 +1,7 @@
 import { httpClient } from "@/api/httpClient";
 import { useCacheStore } from "@/store/cache.store";
 import { AppleMusicLyricsResponse } from "@/types/applemusic/song";
-import { GetLyricsData } from "../subsonic/lyrics";
+import { GetLyricsData, getLyricsFromLRCLib } from "../subsonic/lyrics";
 
 async function getLyrics(getLyricsData: GetLyricsData) {
 
@@ -21,6 +21,16 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     });
 
     lyrics = response?.data[0]?.attributes?.ttmlLocalizations || response?.data[0]?.attributes?.ttml;
+    
+    // No point using unsynced lyrics from apple when we can find synced ones from other providers
+    if (lyrics?.includes("itunes:timing=\"None\"")) {
+        lyrics = null;
+    }
+
+    // Fetch from LRCLib
+    if (!lyrics) {
+        lyrics = (await getLyricsFromLRCLib(getLyricsData)).value;
+    }
 
     useCacheStore.getState().saveLyrics(getLyricsData.id!, lyrics);
     return lyrics;
@@ -28,4 +38,4 @@ async function getLyrics(getLyricsData: GetLyricsData) {
 
 export const lyrics = {
     getLyrics
-}
+};

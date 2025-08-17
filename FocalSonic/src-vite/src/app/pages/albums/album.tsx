@@ -120,8 +120,6 @@ export default function Album() {
 
     const albumComment = album.song.length > 0 ? album.song[0].comment : null;
 
-    console.log(album);
-
     return (
         <div className="w-full">
             <ImageHeader

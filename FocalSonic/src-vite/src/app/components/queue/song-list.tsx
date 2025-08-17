@@ -1,6 +1,3 @@
-import { ListXIcon } from "lucide-react";
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { DataTableList } from "@/app/components/ui/data-table-list";
 import { DialogTitle } from "@/app/components/ui/dialog";
@@ -13,6 +10,9 @@ import {
 } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
+import { ListXIcon } from "lucide-react";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 export function QueueSongList() {
     const { t } = useTranslation();
@@ -27,7 +27,7 @@ export function QueueSongList() {
         let minutes = 0;
         currentList.forEach((song) => (minutes += song.duration));
 
-        return convertSecondsToHumanRead(minutes);
+        return minutes && convertSecondsToHumanRead(minutes);
     }, [currentList]);
 
     const columnsToShow: ColumnFilter[] = [
@@ -50,9 +50,14 @@ export function QueueSongList() {
                         {t("playlist.songCount", { count: trackListCount })}
                     </p>
                     <p>{"•"}</p>
-                    <p className="text-sm">
-                        {t("playlist.duration", { duration: trackListDuration })}
-                    </p>
+                    {
+                        trackListDuration && (
+                            <p className="text-sm">
+                                {t("playlist.duration", { duration: trackListDuration })}
+                            </p>
+                        )
+                    }
+  
                 </div>
 
                 <div>

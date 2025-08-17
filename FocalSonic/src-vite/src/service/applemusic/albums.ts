@@ -50,7 +50,8 @@ async function getOne(id: string) {
         {
             method: "GET",
             query: {
-                views: "appears-on,more-by-artist,other-versions,you-might-also-like"
+                views: "appears-on,more-by-artist,other-versions,you-might-also-like",
+                extend: "inFavorites"
             }
         }
     );

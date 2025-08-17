@@ -47,12 +47,12 @@ export default function Playlist() {
     ];
 
     const hasSongs = playlist.songCount > 0;
-    const duration = convertSecondsToHumanRead(playlist.duration);
+    const duration = playlist.duration && convertSecondsToHumanRead(playlist.duration);
 
     const songCount = hasSongs
         ? t("playlist.songCount", { count: playlist.songCount })
         : null;
-    const playlistDuration = hasSongs
+    const playlistDuration = (hasSongs && duration)
         ? t("playlist.duration", { duration })
         : null;
 

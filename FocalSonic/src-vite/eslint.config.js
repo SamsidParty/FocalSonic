@@ -1,5 +1,5 @@
-import js from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
+import importPlugin from "eslint-plugin-import";
 import eslintPluginReact from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -7,11 +7,11 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-    globalIgnores(["dist"]),
+    globalIgnores(["dist", "eslint.config.js"]),
     {
         files: ["**/*.{js,jsx,ts,tsx}"],
         extends: [
-            js.configs.recommended,
+            tseslint.configs.recommended,
             reactHooks.configs["recommended-latest"],
         ],
         languageOptions: {
@@ -24,13 +24,18 @@ export default defineConfig([
             parserOptions: {
                 ecmaVersion: 2023,
                 ecmaFeatures: { jsx: true },
-                sourceType: "module"
+                sourceType: "module",
+                project: "./tsconfig.json"
             },
         },
         plugins: {
             "@typescript-eslint": tseslint.plugin,
             react: eslintPluginReact,
-            "@stylistic": stylistic
+            "@stylistic": stylistic,
+            import: importPlugin,
+        },
+        settings: {
+            "import/resolver": { typescript: {} }
         },
         rules: {
             "no-unused-vars": ["off", { varsIgnorePattern: "^[A-Z_]" }],
@@ -44,6 +49,6 @@ export default defineConfig([
                 when: "multiline",
             }],
             "function-paren-newline": ["error", "multiline-arguments"],
-        },
+        }
     },
 ]);

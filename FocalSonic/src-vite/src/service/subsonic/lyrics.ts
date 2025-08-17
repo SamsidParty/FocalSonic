@@ -61,7 +61,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     return lyrics;
 }
 
-async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
+export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
     const { lrcLibEnabled } = usePlayerStore.getState().settings.privacy;
     const { isLms } = checkServerType();
 

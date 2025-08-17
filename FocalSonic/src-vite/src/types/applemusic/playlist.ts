@@ -18,6 +18,7 @@ export interface AppleMusicPlaylist extends AppleMusicResource {
         name: string;
         playParams?: AppleMusicPlayParams | undefined;
         playlistType: "user-shared" | "editorial" | "external" | "personal-mix";
+        inFavorites: boolean;
         url: string;
     } | undefined;
 
@@ -40,9 +41,10 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
         duration: 0, // Duration is not provided in the Apple Music API
         public: playlist.attributes?.isChart || false,
         owner: "",
-        changed: new Date(playlist.attributes?.lastModifiedDate || "").toString() || Date.now().toString(),
-        created: new Date(playlist.attributes?.lastModifiedDate || "").toString() || Date.now().toString(),
+        changed: new Date(playlist.attributes?.lastModifiedDate || "").toString() || new Date().toISOString(),
+        created: new Date(playlist.attributes?.lastModifiedDate || "").toString() || new Date().toISOString(),
         entry: playlist.relationships?.tracks?.data.map((s) => convertAppleMusicSongToSubsonic(s, playlist.attributes)) || [],
+        starred: playlist.attributes?.inFavorites === true ? new Date().toISOString() : undefined,
         appleMusic: {
             data: playlist?.attributes
         }

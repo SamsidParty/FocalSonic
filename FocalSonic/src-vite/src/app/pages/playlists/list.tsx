@@ -14,12 +14,15 @@ import { playlistsColumns } from "@/app/tables/playlists-columns";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylists } from "@/store/playlists.store";
+import { ColumnFilter } from "@/types/columnFilter";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
 
 export default function PlaylistsPage() {
     const { setPlaylistDialogState } = usePlaylists();
     const { setSongList } = usePlayerActions();
     const { t } = useTranslation();
+    const { isAppleMusic } = checkServerType();
 
     const { data: playlists, isLoading } = useQuery({
         queryKey: [queryKeys.playlist.all],
@@ -27,6 +30,15 @@ export default function PlaylistsPage() {
     });
 
     const columns = playlistsColumns();
+
+    const columnsToShow: ColumnFilter[] = [
+        "index",
+        "name",
+        (!isAppleMusic && "songCount"),
+        (!isAppleMusic && "public"),
+        (!isAppleMusic && "duration"),
+        "actions"
+    ];
 
     async function handlePlayPlaylist(playlistId: string) {
         const playlist = await service.playlists.getOne(playlistId);
@@ -75,6 +87,7 @@ export default function PlaylistsPage() {
                         handlePlaySong={(row) => handlePlayPlaylist(row.original.id)}
                         allowRowSelection={false}
                         dataType="playlist"
+                        columnFilter={columnsToShow}
                         noRowsMessage={t("options.playlist.notFound")}
                     />
                 </ListWrapper>

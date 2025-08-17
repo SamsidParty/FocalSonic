@@ -13,20 +13,24 @@ async function getAll() {
 }
 
 async function getOne(id: string) {
-    let response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${id}`,
+    let response = await httpClient<AppleMusicPlaylist[]>(
+        `/applemusic/me/library/playlists/${id}`,
         {
             method: "GET",
             query: {
-                include: "tracks"
+                include: "tracks",
+                extend: "inFavorites"
             }
-        });
+        }
+    );
 
     if (!response || response?.data.length === 0) {
         // Try again but this time in the catalog not the library
         response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/catalog/{storefront}/playlists/${id}`, {
             method: "GET",
             query: {
-                include: "tracks"
+                include: "tracks",
+                extend: "inFavorites"
             }
         });
     }
@@ -47,7 +51,8 @@ async function remove(id: string) {
 
 async function create(name: string, songs?: string[]) {
 
-    const response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists`,
+    const response = await httpClient<AppleMusicPlaylist[]>(
+        "/applemusic/me/library/playlists",
         {
             method: "POST",
             body: JSON.stringify(
@@ -67,7 +72,8 @@ async function create(name: string, songs?: string[]) {
                     }
                 }
             )
-        });
+        }
+    );
 
     if (!response?.data[0]) { throw new Error("Failed to create playlist"); }
 
@@ -87,7 +93,8 @@ async function update({
     let response;
 
     if (name || comment || isPublic) {
-        response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${playlistId}`,
+        response = await httpClient<AppleMusicPlaylist[]>(
+            `/applemusic/me/library/playlists/${playlistId}`,
             {
                 method: "PATCH",
                 body: JSON.stringify({
@@ -101,11 +108,13 @@ async function update({
                     "art[url]": "f",
                     "format[resources]": "map",
                 }
-            });
+            }
+        );
     }
 
     if (songIdToAdd) {
-        response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlists/${playlistId}/tracks`,
+        response = await httpClient<AppleMusicPlaylist[]>(
+            `/applemusic/me/library/playlists/${playlistId}/tracks`,
             {
                 method: "POST",
                 body: JSON.stringify({
@@ -114,11 +123,13 @@ async function update({
                         type: "library-songs"
                     }))
                 })
-            });
+            }
+        );
     }
 
     if (songIndexToRemove) {
-        response = await httpClient(`/applemusic/me/library/playlists/${playlistId}/tracks`,
+        response = await httpClient(
+            `/applemusic/me/library/playlists/${playlistId}/tracks`,
             {
                 method: "DELETE",
                 query: {
@@ -126,7 +137,8 @@ async function update({
                     "art[url]": "f",
                     mode: "all",
                 }
-            });
+            }
+        );
     }
 
     if (response === undefined) { throw new Error(); }

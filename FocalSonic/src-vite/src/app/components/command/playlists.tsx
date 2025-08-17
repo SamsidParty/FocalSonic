@@ -6,6 +6,7 @@ import { service } from "@/service/service";
 import { Playlist } from "@/types/responses/playlist";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -44,13 +45,14 @@ function PlaylistItem({ playlist }: { playlist: Playlist }) {
     const { t } = useTranslation();
 
     const hasSongs = playlist.songCount > 0;
+    const { isAppleMusic } = checkServerType();
     const duration = convertSecondsToHumanRead(playlist.duration);
 
     const songCount = hasSongs
         ? t("playlist.songCount", { count: playlist.songCount })
         : null;
 
-    const playlistDuration = hasSongs
+    const playlistDuration = (hasSongs && !isAppleMusic)
         ? t("playlist.duration", { duration })
         : null;
 

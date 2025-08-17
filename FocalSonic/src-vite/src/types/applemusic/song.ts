@@ -37,6 +37,7 @@ export interface AppleMusicSong extends Resource {
         previews: AppleMusicPreview[];
         releaseDate: string;
         trackNumber: number;
+        inFavorites: boolean | undefined;
         url: string;
         workName?: string | undefined;
     } | undefined;
@@ -65,6 +66,7 @@ export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: an
         duration: Math.ceil((song.attributes?.durationInMillis || 0) / 1000),
         suffix: "m4a",
         coverArt: song.attributes?.artwork?.url || "",
+        starred: song.attributes?.inFavorites === true ? new Date().toISOString() : undefined,
         appleMusic: {
             data: song,
             libraryID: song.id,

@@ -22,6 +22,7 @@ export interface AppleMusicAlbum extends Resource {
         releaseDate: string;
         trackCount: number;
         url: string;
+        inFavorites: boolean;
         isMasteredForItunes: boolean;
     } | undefined;
     relationships?: AppleMusicRelationship<AppleMusicAlbum> | undefined;
@@ -42,6 +43,7 @@ export function convertAppleMusicAlbumToSubsonic(album: AppleMusicAlbum): Single
         trackCount: album.attributes?.trackCount || 0,
         coverArt: album.attributes?.artwork?.url || "",
         song: album.relationships?.tracks?.data.map(convertAppleMusicSongToSubsonic) || [],
+        starred: album.attributes?.inFavorites === true ? new Date().toISOString() : undefined,
         appleMusic: {
             data: album
         }
