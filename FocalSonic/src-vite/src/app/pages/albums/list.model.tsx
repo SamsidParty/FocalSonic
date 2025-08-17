@@ -62,9 +62,10 @@ export function useAlbumsListModel() {
 
         if (currentFilter === AlbumsFilters.Search && query !== "") {
             return albumSearch({
-                query: isAppleMusic ? `library:${query}` : query, // Tell apple music to search the library intead of the catalog
+                query: query,
                 count: defaultOffset,
                 offset: pageParam,
+                libraryOnly: true,
             });
         }
 

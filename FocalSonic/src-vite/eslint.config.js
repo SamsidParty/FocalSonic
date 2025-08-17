@@ -11,8 +11,9 @@ export default defineConfig([
     {
         files: ["**/*.{js,jsx,ts,tsx}"],
         extends: [
-            tseslint.configs.recommended,
+            ...tseslint.configs.recommended,
             reactHooks.configs["recommended-latest"],
+            importPlugin.flatConfigs.recommended,
         ],
         languageOptions: {
             ecmaVersion: 2023,
@@ -32,7 +33,6 @@ export default defineConfig([
             "@typescript-eslint": tseslint.plugin,
             react: eslintPluginReact,
             "@stylistic": stylistic,
-            import: importPlugin,
         },
         settings: {
             "import/resolver": { typescript: {} }
@@ -49,6 +49,9 @@ export default defineConfig([
                 when: "multiline",
             }],
             "function-paren-newline": ["error", "multiline-arguments"],
+            "@typescript-eslint/no-unused-expressions": ["off"],
+            "@typescript-eslint/no-unused-vars": ["off"],
+            "@typescript-eslint/no-explicit-any": ["warn"],
         }
     },
 ]);

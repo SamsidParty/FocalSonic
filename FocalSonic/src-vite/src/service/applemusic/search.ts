@@ -14,13 +14,13 @@ async function get({
     libraryOnly = false,
 }: SearchQueryOptions) {
 
-    let types = [];
+    const types = [];
     artistCount > 0 && types.push("artists");
     albumCount > 0 && types.push("albums");
     songCount > 0 && types.push("songs");
 
     if (libraryOnly && !query) {
-        let response = (await httpClient<AppleMusicSong[]>("/applemusic/me/library/songs", {
+        const response = (await httpClient<AppleMusicSong[]>("/applemusic/me/library/songs", {
             method: "GET",
             query: {
                 limit: songCount,
@@ -32,14 +32,14 @@ async function get({
             song: response?.map(convertAppleMusicSongToSubsonic) || [],
             artist: [],
             album: [],
-        }
+        };
     }
     else if (libraryOnly) {
-        let response = (await httpClient<any>("/applemusic/me/library/search", {
+        const response = (await httpClient<any>("/applemusic/me/library/search", {
             method: "GET",
             query: {
                 term: query,
-                limit: songCount,
+                limit: Math.min(25, Math.max(songCount, albumCount, artistCount)),
                 offset: songOffset,
                 types: types.map((type) => "library-" + type),
             },
@@ -49,7 +49,7 @@ async function get({
             song: response["library-songs"]?.data.map(convertAppleMusicSongToSubsonic) || [],
             artist: response["library-artists"]?.data.map(convertAppleMusicSongToSubsonic) || [],
             album: response["library-albums"]?.data.map(convertAppleMusicAlbumToSubsonic) || [],
-        }
+        };
     }
 }
 

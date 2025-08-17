@@ -29,6 +29,7 @@ export async function albumSearch({ query, count, offset }: AlbumSearch) {
         artistCount: 0,
         albumCount: count,
         albumOffset: offset,
+        libraryOnly: true,
     });
 
     if (!response) return emptyResponse;

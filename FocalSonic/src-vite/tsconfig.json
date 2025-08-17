@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
     "composite": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@/*": ["./*"],
+      "@/*": ["./src/*"],
       "src/*": ["./src/*"],
     }
   },
   "include": [
-    "src/manual-chunks.ts",
-    "vite.config.ts"
+    "vite.config.ts",
+    "src"
   ]
 }

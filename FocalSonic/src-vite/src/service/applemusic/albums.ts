@@ -45,7 +45,7 @@ async function getOne(id: string) {
         if (!id) return;
     }
 
-    let response = await httpClient<AppleMusicAlbum[]>(
+    const response = await httpClient<AppleMusicAlbum[]>(
         `/applemusic/catalog/{storefront}/albums/${id}`, 
         {
             method: "GET",
