@@ -1,18 +1,10 @@
 import { httpClient } from "@/api/httpClient";
 import { AppleMusicAlbum, convertAppleMusicAlbumToSubsonic } from "@/types/applemusic/albums";
 import {
-    AlbumInfoResponse,
-    AlbumListType
+    AlbumInfoResponse
 } from "@/types/responses/album";
+import { AlbumListParams } from "../subsonic/albums";
 
-export interface AlbumListParams {
-    type: AlbumListType
-    size?: number
-    offset?: number
-    fromYear?: string
-    toYear?: string
-    genre?: string
-}
 
 async function getAlbumList(params: Partial<AlbumListParams> = {}) {
     const {
@@ -24,13 +16,24 @@ async function getAlbumList(params: Partial<AlbumListParams> = {}) {
         genre,
     } = params;
 
+    const sortValues = {
+        "newest": "-dateAdded",
+        "alphabeticalByName": "name"
+    };
+
     const response = await httpClient<AppleMusicAlbum[]>("/applemusic/me/library/albums", {
         method: "GET",
         query: {
             limit: size.toString(),
             offset: offset.toString(),
+            sort: sortValues[type] || "-dateAdded",
+            extend: "inFavorites",
         },
     });
+
+    if (type === "starred" && response?.data?.length > 0) {
+        response.data = response.data.filter((album) => album?.attributes?.inFavorites);
+    }
 
     return {
         albumsCount: response?.count,

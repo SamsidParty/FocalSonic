@@ -22,7 +22,7 @@ import { useSearchParams } from "react-router-dom";
 export function useAlbumsListModel() {
     const [searchParams] = useSearchParams();
     const { getSearchParam } = new SearchParamsHandler(searchParams);
-    const defaultOffset = 25;
+    const defaultOffset = 100;
     const oldestYear = "0001";
     const currentYear = new Date().getFullYear().toString();
     const { isAppleMusic } = checkServerType();

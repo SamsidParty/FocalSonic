@@ -59,33 +59,6 @@ export async function getAlbumList(params: Required<AlbumListParams>) {
         nextOffset = params.offset + params.size;
     }
 
-    if (isAppleMusic) {
-        // Apple music doesn't support server side sort/filter, so do it client side
-        if (params.type === "byYear") {
-            response.list.sort((a, b) => {
-                return (b.year ?? 0) - (a.year ?? 0);
-            });
-            if (params.fromYear > params.toYear) {
-                response.list = response.list.reverse();
-            }
-        }
-        else if (params.type === "newest") {
-            response.list.sort((a, b) => {
-                return new Date(b.created).getTime() - new Date(a.created).getTime();
-            });
-        }
-        else if (params.type === "alphabeticalByName") {
-            response.list.sort((a, b) => {
-                return (b.name ?? "").localeCompare(a.name ?? "");
-            });
-        }
-        else if (params.type === "alphabeticalByArtist") {
-            response.list.sort((a, b) => {
-                return (b.artist ?? "").localeCompare(a.artist ?? "");
-            });
-        }
-    }
-
     return {
         albums: response.list,
         nextOffset,

@@ -24,13 +24,16 @@ export function AlbumsMainFilter() {
     const { t } = useTranslation();
     const [searchParams, setSearchParams] = useSearchParams();
     const { getSearchParam } = new SearchParamsHandler(searchParams);
-    let hiddenFilters = [AlbumsFilters.ByDiscography, AlbumsFilters.Search];
+    const hiddenFilters = [AlbumsFilters.ByDiscography, AlbumsFilters.Search];
     const { isAppleMusic } = checkServerType();
 
     if (isAppleMusic) {
         hiddenFilters.push(AlbumsFilters.MostPlayed);
         hiddenFilters.push(AlbumsFilters.Random);
         hiddenFilters.push(AlbumsFilters.RecentlyPlayed);
+        hiddenFilters.push(AlbumsFilters.ByArtist);
+        hiddenFilters.push(AlbumsFilters.ByYear);
+        hiddenFilters.push(AlbumsFilters.ByGenre);
     }
 
     const currentFilter = getSearchParam<AlbumListType>(
