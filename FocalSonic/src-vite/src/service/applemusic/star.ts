@@ -1,21 +1,22 @@
 import { httpClient } from "@/api/httpClient";
-import { SubsonicResponse } from "@/types/responses/subsonicResponse";
 
 async function starItem(id: string) {
-    await httpClient<SubsonicResponse>("/star", {
-        method: "GET",
-        query: {
-            id,
-        },
+    await httpClient<any>(`/applemusic/me/ratings/songs/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(
+            {
+                type: "rating",
+                attributes: {
+                    value: 1
+                }
+            }
+        )
     });
 }
 
 async function unstarItem(id: string) {
-    await httpClient<SubsonicResponse>("/unstar", {
-        method: "GET",
-        query: {
-            id,
-        },
+    await httpClient<any>(`/applemusic/me/ratings/songs/${id}`, {
+        method: "DELETE",
     });
 }
 
