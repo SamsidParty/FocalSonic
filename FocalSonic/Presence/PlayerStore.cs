@@ -24,8 +24,6 @@ namespace FocalSonic.Presence
         [Command("setPlayerStore")]
         public static async Task SetPlayerStore(string data)
         {
-            await PlatformManager.Instance.Storage.WriteAllText("focalsonic_player_store.json", data);
-
             try
             {
                 MediaPlaybackInfo.Instance.Store = JsonConvert.DeserializeObject<PlayerStore>(data);
@@ -39,7 +37,7 @@ namespace FocalSonic.Presence
         [Command("getPlayerStore")]
         public static async Task<string> GetPlayerStore()
         {
-            return await PlatformManager.Instance.Storage.ReadAllText("focalsonic_player_store.json");
+            return MediaPlaybackInfo.Instance.Store == null ? "{}" : JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.Store);
         }
 
         /// <summary>
