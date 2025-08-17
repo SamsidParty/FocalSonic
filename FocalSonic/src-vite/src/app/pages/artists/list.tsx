@@ -13,6 +13,7 @@ import { useAppArtistsViewType } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
 import { ISimilarArtist } from "@/types/responses/artist";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,6 +26,7 @@ const MemoListWrapper = memo(ListWrapper);
 
 export default function ArtistsList() {
     const { t } = useTranslation();
+    const { isAppleMusic } = checkServerType();
     const { getArtistAllSongs } = useSongList();
     const { setSongList } = usePlayerActions();
     const {
@@ -35,6 +37,13 @@ export default function ArtistsList() {
     } = useAppArtistsViewType();
 
     const columns = artistsColumns();
+
+    const columnFilter = [
+        "index",
+        "name",
+        (!isAppleMusic && "albumCount"),
+        (!isAppleMusic && "starred"),
+    ];
 
     const { data: artists, isLoading } = useQuery({
         queryKey: [queryKeys.artist.all],
@@ -65,6 +74,7 @@ export default function ArtistsList() {
                 <MemoListWrapper className="pt-shadow-header-distance">
                     <MemoDataTable
                         columns={columns}
+                        columnFilter={columnFilter}
                         data={artists}
                         showPagination={true}
                         showSearch={true}

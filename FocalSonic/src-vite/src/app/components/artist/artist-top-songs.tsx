@@ -1,5 +1,3 @@
-import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { DataTable } from "@/app/components/ui/data-table";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { ROUTES } from "@/routes/routesList";
@@ -7,6 +5,9 @@ import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { IArtist } from "@/types/responses/artist";
 import { ISong } from "@/types/responses/song";
+import { checkServerType } from "@/utils/servers";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 interface TopSongsProps {
     topSongs: ISong[]
@@ -16,6 +17,7 @@ interface TopSongsProps {
 export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
     const { t } = useTranslation();
     const { setSongList } = usePlayerActions();
+    const { isAppleMusic } = checkServerType();
     const columns = songsColumns();
     const topTenSongs = topSongs.length > 10 ? topSongs.slice(0, 10) : topSongs;
     const { id, name } = artist;
@@ -24,11 +26,11 @@ export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
         "index",
         "title",
         "album",
-        "year",
+        (!isAppleMusic && "year"),
         "duration",
-        "playCount",
-        "played",
-        "contentType",
+        (!isAppleMusic && "playCount"),
+        (!isAppleMusic && "played"),
+        (!isAppleMusic && "contentType"),
         "select",
     ];
 

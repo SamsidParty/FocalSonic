@@ -1,11 +1,11 @@
-import { memo, useCallback } from "react";
-import { useTranslation } from "react-i18next";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
 import { ISimilarArtist } from "@/types/responses/artist";
+import { memo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 type ArtistCardProps = {
     artist: ISimilarArtist
@@ -38,7 +38,7 @@ function ArtistCard({ artist }: ArtistCardProps) {
                     {artist.name}
                 </PreviewCard.Title>
                 <PreviewCard.Subtitle enableLink={false}>
-                    {t("artist.info.albumsCount", {
+                    {artist.albumCount && t("artist.info.albumsCount", {
                         count: artist.albumCount,
                     })}
                 </PreviewCard.Subtitle>

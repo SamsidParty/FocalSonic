@@ -1,3 +1,5 @@
+import { Resource } from "i18next";
+
 export interface AppleMusicResource {
     href?: string | undefined;
     id: string;
@@ -6,33 +8,33 @@ export interface AppleMusicResource {
 
 
 export interface AppleMusicArtwork {
-  bgColor: string;
-  hasP3: boolean;
-  height: number;
-  textColor1: string;
-  textColor2: string;
-  textColor3: string;
-  textColor4: string;
-  url: string;
-  width: number;
-  gradient?: object;
+    bgColor: string;
+    hasP3: boolean;
+    height: number;
+    textColor1: string;
+    textColor2: string;
+    textColor3: string;
+    textColor4: string;
+    url: string;
+    width: number;
+    gradient?: object;
 }
 
 export interface AppleMusicEditorialNotes {
-  name?: string;
-  short?: string;
-  standard?: string;
-  tagline?: string;
+    name?: string;
+    short?: string;
+    standard?: string;
+    tagline?: string;
 }
 
 export interface AppleMusicPlayParams {
-  id: string;
-  kind: string;
-  versionHash?: string;
-  format?: string;
-  hasDrm?: boolean;
-  mediaType?: number;
-  stationHash?: string;
+    id: string;
+    kind: string;
+    versionHash?: string;
+    format?: string;
+    hasDrm?: boolean;
+    mediaType?: number;
+    stationHash?: string;
 }
 
 export interface AppleMusicRelationship<ResourceType> {
@@ -40,4 +42,11 @@ export interface AppleMusicRelationship<ResourceType> {
     href: string;
     meta?: any;
     next?: string | undefined;
+}
+
+export interface AppleMusicGenre extends Resource {
+    attributes: {
+        name: string;
+    };
+    type: "genres";
 }

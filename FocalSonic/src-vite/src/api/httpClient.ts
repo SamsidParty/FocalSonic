@@ -48,7 +48,7 @@ function queryParams() {
 }
 
 function getUrl(path: string, options?: QueryType) {
-    let serverUrl = useAppStore.getState().data.url;
+    const serverUrl = useAppStore.getState().data.url;
 
     const params = new URLSearchParams(serverUrl !== "applemusic" ? queryParams() : []);
 
@@ -81,15 +81,16 @@ async function browserFetch<T>(
 ): Promise<{ count: number; data: T } | undefined> {
     try {
         const response = await fetch(url, options);
+        const { isAppleMusic } = checkServerType();
 
         if (response.status === 204) {
             return null;
         }
         else if (response.ok) {
             const data = await response.json();
-            return {
+            return isAppleMusic ? data : {
                 count: parseInt(response.headers.get("x-total-count") || "0", 10),
-                data: (data["subsonic-response"] as T) || (data["data"]) || data,
+                data: (data["subsonic-response"] as T),
             };
         }
     } catch (error) {
@@ -121,7 +122,7 @@ export function getCoverArtUrl(
 
     // No point proxying apple music cover art URLs, let it get served through the CDN directly
     if (id?.startsWith("https://")) {
-        return id.replaceAll("{w}", size).replaceAll("{h}", size);
+        return id.replaceAll("{w}", size).replaceAll("{h}", size).replaceAll("{f}", "webp");
     }
 
     if (!id) {
@@ -145,7 +146,7 @@ export function getSongStreamUrl(
     }
 
     // TODO: Fix flac support in native audio
-    let format = "mp3";
+    const format = "mp3";
 
     return getUrl("stream", {
         id,

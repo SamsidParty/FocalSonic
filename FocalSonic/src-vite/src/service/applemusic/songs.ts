@@ -1,9 +1,9 @@
 import { httpClient } from "@/api/httpClient";
+import { AppleMusicArtist } from "@/types/applemusic/artist";
 import { AppleMusicSong, convertAppleMusicSongToSubsonic } from "@/types/applemusic/song";
 import {
     GetSongResponse,
-    RandomSongsResponse,
-    TopSongsResponse,
+    RandomSongsResponse
 } from "@/types/responses/song";
 
 interface GetRandomSongsParams {
@@ -32,15 +32,15 @@ async function getRandomSongs({
     return response?.data.randomSongs.song;
 }
 
-async function getTopSongs(artistName: string) {
-    const response = await httpClient<TopSongsResponse>("/getTopSongs", {
+async function getTopSongs(artistID: string) {
+    const response = await httpClient<AppleMusicArtist[]>(`/applemusic/catalog/{storefront}/artists/${artistID}/view/top-songs`, {
         method: "GET",
         query: {
-            artist: artistName,
-        },
+            extend: "inFavorites",
+        }
     });
 
-    return response?.data.topSongs.song;
+    return response?.data?.map(convertAppleMusicSongToSubsonic);
 }
 
 async function getAllSongs(songCount: number) {

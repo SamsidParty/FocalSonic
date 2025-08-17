@@ -1,4 +1,5 @@
 import { albums } from "./applemusic/albums";
+import { artists } from "./applemusic/artists";
 import { lyrics } from "./applemusic/lyrics";
 import { ping } from "./applemusic/ping";
 import { playlists } from "./applemusic/playlists";
@@ -14,6 +15,7 @@ export const appleMusic = {
     star,
     songs,
     search,
+    artists,
     recommendations,
     lyrics
 };

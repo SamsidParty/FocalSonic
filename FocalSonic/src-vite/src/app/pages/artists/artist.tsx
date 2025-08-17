@@ -1,5 +1,3 @@
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
 import ImageHeader from "@/app/components/album/image-header";
 import ArtistTopSongs from "@/app/components/artist/artist-top-songs";
 import { ArtistInfo } from "@/app/components/artist/info";
@@ -18,10 +16,14 @@ import {
 import ErrorPage from "@/app/pages/error-page";
 import { ROUTES } from "@/routes/routesList";
 import { sortRecentAlbums } from "@/utils/album";
+import { checkServerType } from "@/utils/servers";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 
 export default function Artist() {
     const { t } = useTranslation();
     const { artistId } = useParams() as { artistId: string };
+    const { isAppleMusic } = checkServerType();
 
     const {
         data: artist,
@@ -31,7 +33,7 @@ export default function Artist() {
     const { data: artistInfo, isLoading: artistInfoIsLoading } =
     useGetArtistInfo(artistId);
     const { data: topSongs, isLoading: topSongsIsLoading } = useGetTopSongs(
-        artist?.name,
+        isAppleMusic ? artistId : artist?.name,
     );
 
     if (artistIsLoading) return <AlbumFallback />;
