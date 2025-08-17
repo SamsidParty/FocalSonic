@@ -4,6 +4,7 @@ import { useAppPages } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
 import { SingleAlbum } from "@/types/responses/album";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { AlbumOptions } from "./options";
@@ -17,6 +18,7 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
     const { t } = useTranslation();
     const { setSongList } = usePlayerActions();
     const { showInfoPanel, toggleShowInfoPanel } = useAppPages();
+    const { isAppleMusic } = checkServerType();
 
     const isAlbumStarred = album.starred !== undefined;
 
@@ -73,12 +75,16 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
                 </Actions.Button>
             )}
 
-            <Actions.Button
-                tooltip={buttonsTooltips.like()}
-                onClick={handleLikeButton}
-            >
-                <Actions.LikeIcon isStarred={isAlbumStarred} />
-            </Actions.Button>
+            {
+                !isAppleMusic && (
+                    <Actions.Button
+                        tooltip={buttonsTooltips.like()}
+                        onClick={handleLikeButton}
+                    >
+                        <Actions.LikeIcon isStarred={isAlbumStarred} />
+                    </Actions.Button>
+                )
+            }
 
             {showInfoButton && (
                 <Actions.Button
