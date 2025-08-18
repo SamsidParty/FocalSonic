@@ -6,6 +6,7 @@ import { SingleAlbum } from "@/types/responses/album";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlbumOptions } from "./options";
 
@@ -18,6 +19,7 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
     const { t } = useTranslation();
     const { setSongList } = usePlayerActions();
     const { showInfoPanel, toggleShowInfoPanel } = useAppPages();
+    const [isLikeLoading, setIsLikeLoading] = useState(false);
     const { isAppleMusic } = checkServerType();
 
     const isAlbumStarred = album.starred !== undefined;
@@ -30,11 +32,14 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.album.single, album.id],
             });
+            setIsLikeLoading(false);
         },
     });
 
     function handleLikeButton() {
         if (!album) return;
+
+        setIsLikeLoading(true);
 
         starMutation.mutate({
             id: album.id,
@@ -75,16 +80,13 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
                 </Actions.Button>
             )}
 
-            {
-                !isAppleMusic && (
-                    <Actions.Button
-                        tooltip={buttonsTooltips.like()}
-                        onClick={handleLikeButton}
-                    >
-                        <Actions.LikeIcon isStarred={isAlbumStarred} />
-                    </Actions.Button>
-                )
-            }
+            <Actions.Button
+                tooltip={buttonsTooltips.like()}
+                onClick={handleLikeButton}
+                disabled={isLikeLoading}
+            >
+                <Actions.LikeIcon isStarred={isAlbumStarred} />
+            </Actions.Button>
 
             {showInfoButton && (
                 <Actions.Button

@@ -37,7 +37,11 @@ namespace FocalSonic.Presence
         [Command("getPlayerStore")]
         public static async Task<string> GetPlayerStore()
         {
-            return MediaPlaybackInfo.Instance.Store == null ? "{}" : JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.Store);
+            return MediaPlaybackInfo.Instance.Store == null ? "{}" : JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.Store, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                DefaultValueHandling = DefaultValueHandling.Ignore
+            });
         }
 
         /// <summary>
