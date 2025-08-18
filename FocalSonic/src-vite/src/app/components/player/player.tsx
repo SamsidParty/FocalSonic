@@ -74,7 +74,7 @@ export function Player() {
     const radio = radioList[currentSongIndex];
     const podcast = podcastList[currentSongIndex];
 
-    const { isPlayerAtTop } = useTheme();
+    const { isPlayerAtTop, playerStyle } = useTheme();
 
     const getAudioRef = useCallback(() => {
         if (isRadio) return radioRef;
@@ -192,7 +192,11 @@ export function Player() {
                     {isPodcast && <MemoPodcastInfo podcast={podcast} />}
                 </div>
                 {/* Main Controls */}
-                <div className="col-span-2 flex flex-col justify-center items-center px-4 gap-1">
+                <div 
+                    className={clsx(
+                        playerStyle === "default" && "col-span-2 flex flex-col justify-center items-center px-4 gap-1",
+                        playerStyle === "slim" && "col-span-2 flex flex-row justify-center items-center px-4 gap-1"
+                    )}>
                     <MemoPlayerControls
                         song={song}
                         radio={radio}

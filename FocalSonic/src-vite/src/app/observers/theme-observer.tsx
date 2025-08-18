@@ -5,7 +5,7 @@ import { useLayoutEffect } from "react";
 export const appThemes: Theme[] = Object.values(Theme);
 
 export function ThemeObserver() {
-    const { theme, uiFont, lyricsFont } = useTheme();
+    const { theme, uiFont, lyricsFont, playerStyle } = useTheme();
 
     useLayoutEffect(() => {
         async function update() {
@@ -15,10 +15,11 @@ export function ThemeObserver() {
             root.classList.add(theme);
             root.style.setProperty("--theme-font", uiFont);
             root.style.setProperty("--theme-lyrics-font", lyricsFont);
+            root.setAttribute("player-style", playerStyle);
         }
 
         update();
-    }, [theme, uiFont, lyricsFont]);
+    }, [theme, uiFont, lyricsFont, playerStyle]);
 
     return null;
 }

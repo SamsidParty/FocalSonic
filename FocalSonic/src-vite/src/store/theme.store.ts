@@ -33,6 +33,12 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                             state.isPlayerAtTop = isAtTop;
                         });
                     },
+                    playerStyle: "default",
+                    setPlayerStyle(style) {
+                        set((state) => {
+                            state.playerStyle = style;
+                        });
+                    },
                 })),
                 {
                     name: "theme_store",

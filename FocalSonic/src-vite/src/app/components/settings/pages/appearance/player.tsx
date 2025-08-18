@@ -10,9 +10,9 @@ import { Switch } from "@/app/components/ui/switch";
 import { useTheme } from "@/store/theme.store";
 import { useTranslation } from "react-i18next";
 
-export function PlayerPosition() {
+export function PlayerSettings() {
     const { t } = useTranslation();
-    const { isPlayerAtTop, setIsPlayerAtTop } = useTheme();
+    const { isPlayerAtTop, setIsPlayerAtTop, playerStyle, setPlayerStyle } = useTheme();
 
     return (
         <Root>
@@ -25,6 +25,17 @@ export function PlayerPosition() {
                         <Switch
                             checked={isPlayerAtTop}
                             onCheckedChange={setIsPlayerAtTop}
+                        />
+                    </ContentItemForm>
+                </ContentItem>
+                <ContentItem>
+                    <ContentItemTitle>
+                        {t("settings.appearance.player.slimPlayer")}
+                    </ContentItemTitle>
+                    <ContentItemForm>
+                        <Switch
+                            checked={playerStyle === "slim"}
+                            onCheckedChange={(v) => setPlayerStyle(v ? "slim" : "default")}
                         />
                     </ContentItemForm>
                 </ContentItem>

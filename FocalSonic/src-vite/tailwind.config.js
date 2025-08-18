@@ -117,8 +117,7 @@ module.exports = {
                 "pop-in": "pop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1)"
             },
             gridTemplateColumns: {
-                player:
-          "minmax(250px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 1fr)",
+                player: "var(--grid-player)",
                 "table-fallback":
           "minmax(40px, 50px) minmax(0px, 3fr) minmax(0px, 2fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(60px, 70px) minmax(100px, 120px)",
                 header:

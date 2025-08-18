@@ -81,7 +81,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
     return (
         <Fragment>
             <div className="group relative">
-                <div className="min-w-[70px] max-w-[70px] aspect-square bg-cover bg-center bg-skeleton rounded overflow-hidden shadow-md">
+                <div className="min-h-[calc(var(--player-height)-1.5rem)] max-h-[calc(var(--player-height)-1.5rem)] aspect-square bg-cover bg-center bg-skeleton rounded overflow-hidden shadow-md">
                     <LazyLoadImage
                         key={song.id}
                         id="track-song-image"

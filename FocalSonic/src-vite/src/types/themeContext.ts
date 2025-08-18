@@ -31,4 +31,6 @@ export interface IThemeContext {
     setLyricsFont: (font: string) => void
     isPlayerAtTop: boolean
     setIsPlayerAtTop: (isAtTop: boolean) => void
+    playerStyle: "default" | "slim"
+    setPlayerStyle: (style: "default" | "slim") => void
 }

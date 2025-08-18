@@ -1,12 +1,12 @@
 import { FontSelect } from "./font";
-import { PlayerPosition } from "./player-position";
+import { PlayerSettings } from "./player";
 import { ThemeSettingsPicker } from "./theme";
 
 export function Appearance() {
     return (
         <div className="space-y-4">
             <FontSelect />
-            <PlayerPosition />
+            <PlayerSettings />
             <ThemeSettingsPicker />
         </div>
     );

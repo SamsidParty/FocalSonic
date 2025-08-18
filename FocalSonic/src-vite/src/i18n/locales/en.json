@@ -636,7 +636,8 @@
         }
       },
       "player": {
-        "showAtTop": "Integrate player in titlebar"
+        "showAtTop": "Integrate player in titlebar",
+        "slimPlayer": "Slim player"
       }
     },
     "audio": {

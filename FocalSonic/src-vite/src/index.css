@@ -16,11 +16,18 @@
   body.mac {
     @apply subpixel-antialiased;
   }
+  :root[player-style="default"] {
+    --player-height: 96px;
+    --grid-player: minmax(250px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 1fr);
+  }
+  :root[player-style="slim"] {
+    --player-height: 64px;
+    --grid-player: minmax(250px, 2.5fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 2.5fr);
+  }
   :root {
     --header-height: 44px;
     --sidebar-width: 280px;
     --mini-sidebar-width: 48px;
-    --player-height: 96px;
     --content-height: calc(100vh - var(--header-height) - var(--player-height));
     --drawer-height: calc(100vh - var(--header-height));
 
