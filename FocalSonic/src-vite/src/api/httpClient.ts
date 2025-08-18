@@ -117,7 +117,7 @@ export async function httpClient<T>(
 export function getCoverArtUrl(
     id?: string,
     type: CoverArt = "album",
-    size = "300",
+    size = "300"
 ): string {
 
     // No point proxying apple music cover art URLs, let it get served through the CDN directly

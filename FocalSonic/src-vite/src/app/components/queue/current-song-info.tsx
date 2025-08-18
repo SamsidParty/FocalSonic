@@ -6,8 +6,8 @@ import { ROUTES } from "@/routes/routesList";
 import { useMainDrawerState, usePlayerSonglist } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
+import CoverArtImage from "../cover-art";
 
 export function CurrentSongInfo() {
     const { currentSong } = usePlayerSonglist();
@@ -21,7 +21,7 @@ export function CurrentSongInfo() {
                 ratio={1 / 1}
                 className="shadow-header-image rounded-md overflow-hidden bg-accent"
             >
-                <LazyLoadImage
+                <CoverArtImage
                     id="song-info-image"
                     src={imageUrl}
                     effect="opacity"

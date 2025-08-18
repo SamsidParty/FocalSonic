@@ -5,6 +5,8 @@ import {
     UpdateParams
 } from "@/types/responses/playlist";
 import { SubsonicResponse } from "@/types/responses/subsonicResponse";
+import { merge } from "lodash";
+import { defaultAppleMusicQuery } from "./common";
 
 async function getAll() {
     const response = await httpClient<AppleMusicPlaylist[]>("/applemusic/me/library/playlists", { method: "GET", });
@@ -17,10 +19,9 @@ async function getOne(id: string) {
         `/applemusic/me/library/playlists/${id}`,
         {
             method: "GET",
-            query: {
+            query: merge({
                 include: "tracks",
-                extend: "inFavorites"
-            }
+            }, defaultAppleMusicQuery)
         }
     );
 
@@ -28,10 +29,9 @@ async function getOne(id: string) {
         // Try again but this time in the catalog not the library
         response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/catalog/{storefront}/playlists/${id}`, {
             method: "GET",
-            query: {
+            query: merge({
                 include: "tracks",
-                extend: "inFavorites"
-            }
+            }, defaultAppleMusicQuery)
         });
     }
 
@@ -39,7 +39,7 @@ async function getOne(id: string) {
 }
 
 async function remove(id: string) {
-    let response = await httpClient<SubsonicResponse>(`/applemusic/me/library/playlists/${id}`, {
+    const response = await httpClient<SubsonicResponse>(`/applemusic/me/library/playlists/${id}`, {
         method: "DELETE",
         query: {
             "art[url]": "f",

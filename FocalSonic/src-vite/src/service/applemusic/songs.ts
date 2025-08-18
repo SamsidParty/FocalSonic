@@ -3,6 +3,8 @@ import { AppleMusicSong, convertAppleMusicSongToSubsonic } from "@/types/applemu
 import {
     GetSongResponse
 } from "@/types/responses/song";
+import { merge } from "lodash";
+import { defaultAppleMusicQuery } from "./common";
 
 interface GetRandomSongsParams {
     size?: number
@@ -23,9 +25,7 @@ async function getRandomSongs({
 async function getTopSongs(artistID: string) {
     const response = await httpClient<AppleMusicSong[]>(`/applemusic/catalog/{storefront}/artists/${artistID}/view/top-songs`, {
         method: "GET",
-        query: {
-            extend: "inFavorites",
-        }
+        query: merge({}, defaultAppleMusicQuery)
     });
 
     return response?.data?.map(convertAppleMusicSongToSubsonic);
@@ -33,9 +33,9 @@ async function getTopSongs(artistID: string) {
 
 async function getAllSongs(songCount: number) {
     const response = await httpClient<AppleMusicSong[]>("/applemusic/me/library/songs", {
-        query: {
+        query: merge({
             limit: songCount,
-        }
+        }, defaultAppleMusicQuery)
     });
     return response?.data.map(convertAppleMusicSongToSubsonic) ?? [];
 }
@@ -43,9 +43,9 @@ async function getAllSongs(songCount: number) {
 async function getSong(id: string) {
     const response = await httpClient<GetSongResponse>("/getSong", {
         method: "GET",
-        query: {
+        query: merge({
             id,
-        },
+        }, defaultAppleMusicQuery),
     });
 
     return response?.data.song;

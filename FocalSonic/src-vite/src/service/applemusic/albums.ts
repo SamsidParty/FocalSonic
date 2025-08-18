@@ -3,7 +3,9 @@ import { AppleMusicAlbum, convertAppleMusicAlbumToSubsonic } from "@/types/apple
 import {
     AlbumInfoResponse
 } from "@/types/responses/album";
+import { merge } from "lodash";
 import { AlbumListParams } from "../subsonic/albums";
+import { defaultAppleMusicQuery } from "./common";
 
 
 async function getAlbumList(params: Partial<AlbumListParams> = {}) {
@@ -23,12 +25,11 @@ async function getAlbumList(params: Partial<AlbumListParams> = {}) {
 
     const response = await httpClient<AppleMusicAlbum[]>("/applemusic/me/library/albums", {
         method: "GET",
-        query: {
+        query: merge({
             limit: size.toString(),
             offset: offset.toString(),
-            sort: sortValues[type] || "-dateAdded",
-            extend: "inFavorites",
-        },
+            sort: sortValues[type] || "-dateAdded"
+        }, defaultAppleMusicQuery),
     });
 
     if (type === "starred" && response?.data?.length > 0) {
@@ -52,10 +53,9 @@ async function getOne(id: string) {
         `/applemusic/catalog/{storefront}/albums/${id}`, 
         {
             method: "GET",
-            query: {
-                views: "appears-on,more-by-artist,other-versions,you-might-also-like",
-                extend: "inFavorites"
-            }
+            query: merge({
+                views: "appears-on,more-by-artist,other-versions,you-might-also-like"
+            }, defaultAppleMusicQuery)
         }
     );
     
@@ -73,9 +73,9 @@ async function getOne(id: string) {
 async function getInfo(id: string) {
     const response = await httpClient<AlbumInfoResponse>("/getAlbumInfo2", {
         method: "GET",
-        query: {
+        query: merge({
             id,
-        },
+        }, defaultAppleMusicQuery),
     });
 
     return response?.data.albumInfo;

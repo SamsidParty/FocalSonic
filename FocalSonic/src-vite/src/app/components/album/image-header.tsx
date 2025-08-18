@@ -1,7 +1,6 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
 import { memo, useState } from "react";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 
 import { getCoverArtUrl } from "@/api/httpClient";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
@@ -14,6 +13,8 @@ import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import hexToCssFilter from "@/utils/hexToCssFilter.js";
 import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
 import { AlbumArtistInfo, AlbumMultipleArtistsInfo } from "./artists";
+import React from "react";
+import CoverArtImage from "../cover-art";
 
 const DarkVeilMemo = memo(DarkVeil, (o, n) => o.style?.opacity === n.style?.opacity);
 
@@ -67,7 +68,7 @@ export default function ImageHeader({
             );
         }
 
-        let style = "opacity(1) " + hexToCssFilter(color);
+        const style = "opacity(1) " + hexToCssFilter(color);
         setBgEffectStyle(style);
         setBgColor(color);
     }
@@ -103,7 +104,7 @@ export default function ImageHeader({
                         "hover:scale-[1.02] ease-linear duration-100",
                     )}
                 >
-                    <LazyLoadImage
+                    <CoverArtImage
                         key={coverArtId}
                         effect="opacity"
                         crossOrigin="anonymous"

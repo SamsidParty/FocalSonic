@@ -1,9 +1,9 @@
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Play } from "lucide-react";
-import { ComponentPropsWithoutRef } from "react";
-import { LazyLoadImage } from "react-lazy-load-image-component";
+import React, { ComponentPropsWithoutRef } from "react";
 import { Link } from "react-router-dom";
+import CoverArtImage from "../cover-art";
 
 interface Children {
     children: React.ReactNode
@@ -44,7 +44,7 @@ interface ImageProps {
 
 function Image({ src, alt }: ImageProps) {
     return (
-        <LazyLoadImage
+        <CoverArtImage
             src={src}
             alt={alt}
             effect="opacity"

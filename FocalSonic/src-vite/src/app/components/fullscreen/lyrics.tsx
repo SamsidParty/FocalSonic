@@ -63,7 +63,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
     }, [lyrics]);
 
     requestAnimationFrame(() => {
-        let newTimestamp = (playerRef?.currentTime || 0) * 1000;
+        const newTimestamp = (playerRef?.currentTime || 0) * 1000;
 
         if (newTimestamp !== timestamp) {
             setTimestamp(newTimestamp);
@@ -107,7 +107,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
     }
 
     const elrcValues = useMemo(() => {
-        let values = {
+        const values = {
             isElrc: elrcTestRegex.exec(lyric),
             elrcPortions: [] as any[]
         };
@@ -150,7 +150,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
                         data-time={portion.Time}
                         key={index}
                         className={(timestamp >= portion.Time - 0.2) ? "opacity-100 transition-opacity duration-200" : "opacity-40"}
-                        >
+                    >
                         {portion.Text}
                     </span>
                 ))}
@@ -249,12 +249,12 @@ function areLyricsTTML(lyrics: ILyric) {
 
 function convertTTMLToLRC(ttml: string): string {
     try {
-        let parsedTTML = parseTTML(ttml);
+        const parsedTTML = parseTTML(ttml);
 
         const enableELRC = true;
         const enableTransliteration = true;
 
-        let convertedELRC = parsedTTML.lyricLines.map((line) => {
+        const convertedELRC = parsedTTML.lyricLines.map((line) => {
 
             let output = "";
 
