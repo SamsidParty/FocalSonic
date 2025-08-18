@@ -1,3 +1,4 @@
+import removeUndefined from "@/utils/removeUndefined";
 import { Playlist } from "../responses/playlist";
 import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship, AppleMusicResource } from "./common";
 import { AppleMusicCurator } from "./recommendations";
@@ -31,7 +32,7 @@ export interface AppleMusicPlaylist extends AppleMusicResource {
 
 export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist): Playlist {
     if (!playlist) { return; }
-    return {
+    return removeUndefined({
         isDir: true,
         id: playlist.id,
         name: playlist.attributes?.name || "Playlist",
@@ -48,5 +49,5 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
         appleMusic: {
             data: playlist?.attributes
         }
-    };
+    });
 }

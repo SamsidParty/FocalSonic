@@ -34,7 +34,7 @@ const igniteViewPlayerStore = {
         value.extraProperties = {
             coverArtBaseURL: isAppleMusic ? "{id}" : getCoverArtUrl("{id}"),
             streamBaseURL: isAppleMusic ? "{id}" : getSongStreamUrl("{id}"),
-        }
+        };
 
         await window.igniteView?.commandBridge.setPlayerStore(JSON.stringify(value));
     },
@@ -42,7 +42,7 @@ const igniteViewPlayerStore = {
         if (key !== "player_store") { return; }
         await window.igniteView?.commandBridge.setPlayerStore("{}");
     }
-}
+};
 
 export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
     subscribeWithSelector(
@@ -593,6 +593,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             const { currentList, currentSongIndex } = get().songlist;
                             const { mediaType } = get().playerState;
                             const song = currentList[currentSongIndex];
+
 
                             if (mediaType === "song" && song) {
                                 const isStarred = typeof song.starred === "string";

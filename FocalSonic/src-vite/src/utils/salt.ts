@@ -1,7 +1,7 @@
-import { MD5 } from "crypto-js";
 import { AuthType } from "@/types/serverConfig";
+import { MD5 } from "crypto-js";
 
-export const saltWord = "40n50kuPl4y3r";
+export const saltWord = "samsidparty-0ff00ffd-4f81-4fa1-a314-cc2b0f29b4fb";
 
 const { SERVER_URL, HIDE_SERVER, APP_USER, APP_PASSWORD, APP_AUTH_TYPE } =
   window;

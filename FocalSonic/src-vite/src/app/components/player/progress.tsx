@@ -182,7 +182,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
                     tooltipTransformer={convertSecondsToTime}
                     max={currentDuration}
                     step={1}
-                    className="cursor-pointer w-[32rem]"
+                    className="cursor-pointer w-full"
                     onValueChange={([value]) => handleSeeking(value)}
                     onValueCommit={([value]) => handleSeeked(value)}
                     // Sometimes onValueCommit doesn't work properly
@@ -198,7 +198,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
                     max={100}
                     step={1}
                     disabled={true}
-                    className="cursor-pointer w-[32rem] pointer-events-none"
+                    className="cursor-pointer w-full pointer-events-none"
                 />
             )}
             <small

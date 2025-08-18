@@ -1,6 +1,8 @@
+import removeUndefined from "@/utils/removeUndefined";
 import { Resource } from "i18next";
 import { AppleMusicAlbum } from "./albums";
-import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
+import { AppleMusicArtist } from "./artist";
+import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicGenre, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
 
 export interface AppleMusicLyricsResponse {
     data: AppleMusicLyrics[];
@@ -55,7 +57,7 @@ export interface AppleMusicSongRelationships {
 export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: any | undefined): Song {
     if (!song) { return; }
 
-    return {
+    return removeUndefined({
         isDir: false,
         id: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
         parent: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
@@ -72,5 +74,5 @@ export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: an
             libraryID: song.id,
             parent: parent
         }
-    };
+    });
 }

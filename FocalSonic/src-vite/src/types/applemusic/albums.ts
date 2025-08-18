@@ -1,3 +1,4 @@
+import removeUndefined from "@/utils/removeUndefined";
 import { Resource } from "i18next";
 import { SingleAlbum } from "../responses/album";
 import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
@@ -31,7 +32,7 @@ export interface AppleMusicAlbum extends Resource {
 
 export function convertAppleMusicAlbumToSubsonic(album: AppleMusicAlbum): SingleAlbum {
     if (!album) { return; }
-    return {
+    return removeUndefined({
         isDir: true,
         id: album.id,
         name: album.attributes?.name || "",
@@ -47,5 +48,5 @@ export function convertAppleMusicAlbumToSubsonic(album: AppleMusicAlbum): Single
         appleMusic: {
             data: album
         }
-    };
+    });
 }
