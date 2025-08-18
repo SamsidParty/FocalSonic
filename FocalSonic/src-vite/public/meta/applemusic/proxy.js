@@ -33,6 +33,7 @@ async function checkAuthState() {
 
 window.checkAuthStateInterval = setInterval(checkAuthState, 500);
 
+window.isCurrentSongRadio = false;
 
 window.executeInjectedQueue = async () => {
     if (!window.proxyMusicInstance) { return; }
@@ -58,14 +59,26 @@ window.executeInjectedQueue = async () => {
         }
         else if (item.type === "setSource") {
             await window.proxyMusicInstance.stop();
-            await window.proxyMusicInstance.clearQueue();
+
+            if (!window.isCurrentSongRadio) {
+                await window.proxyMusicInstance.clearQueue();
+            }
 
             if (item.source.startsWith("ra.")) { // Radio station
+                window.isCurrentSongRadio = true;
                 await window.proxyMusicInstance.setQueue({ station: item.source });
+                await window.proxyMusicInstance.play();
             }
             else {
-                await window.proxyMusicInstance.playNext({ song: item.source }, true);
-                await window.proxyMusicInstance.skipToNextItem();
+                if (window.isCurrentSongRadio) {
+                    await window.proxyMusicInstance.setQueue({ song: item.source });
+                    await window.proxyMusicInstance.play();
+                }
+                else {
+                    await window.proxyMusicInstance.playNext({ song: item.source }, true);
+                    await window.proxyMusicInstance.skipToNextItem();
+                }
+                window.isCurrentSongRadio = false;
             }
 
         }

@@ -9,6 +9,8 @@ export function convertAppleMusicRadioToSubsonic(radio: AppleMusicSong, parent: 
         id: radio.id,
         streamUrl: radio.id,
         title: radio.attributes?.name || "Unknown",
+        name: radio.attributes?.name || "Unknown",
+        coverArt: radio.attributes?.artwork?.url || "",
         appleMusic: {
             data: radio,
             libraryID: radio.id,

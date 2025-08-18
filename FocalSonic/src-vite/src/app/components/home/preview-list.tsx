@@ -51,7 +51,6 @@ export default function PreviewList({
     async function handlePlay(entry: AppleMusicRecommendationContent | Albums) {
         
         if (entry.type === "stations") {
-            console.log(convertAppleMusicRadioToSubsonic(entry));
             setPlayRadio([convertAppleMusicRadioToSubsonic(entry)], 0);
             return;
         }
