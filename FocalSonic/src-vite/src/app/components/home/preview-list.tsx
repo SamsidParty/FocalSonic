@@ -10,12 +10,13 @@ import { CarouselButton } from "@/app/components/ui/carousel-button";
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
+import { convertAppleMusicRadioToSubsonic } from "@/types/applemusic/radios";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
 import { checkServerType } from "@/utils/servers";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface PreviewListProps {
     list: Albums[] | AppleMusicRecommendationContent[]
@@ -38,6 +39,8 @@ export default function PreviewList({
     const { setSongList } = usePlayerActions();
     const { t } = useTranslation();
     const { isAppleMusic } = checkServerType();
+    const navigate = useNavigate();
+    const { setPlayRadio } = usePlayerActions();
 
     moreTitle = moreTitle || t("generic.seeMore");
 
@@ -45,8 +48,15 @@ export default function PreviewList({
         list = list.slice(0, 16);
     }
 
-    async function handlePlayAlbum(album: Albums) {
-        const response = await service.albums.getOne(album.id);
+    async function handlePlay(entry: AppleMusicRecommendationContent | Albums) {
+        
+        if (entry.type === "stations") {
+            console.log(convertAppleMusicRadioToSubsonic(entry));
+            setPlayRadio([convertAppleMusicRadioToSubsonic(entry)], 0);
+            return;
+        }
+
+        const response = await service.albums.getOne(entry.id);
 
         if (response) {
             setSongList(response.song, 0);
@@ -68,9 +78,22 @@ export default function PreviewList({
     }, [api]);
 
     const getResourceType = (entry: AppleMusicRecommendationContent | Albums) => {
-        let type = (entry as AppleMusicRecommendationContent).type;
+        const type = (entry as AppleMusicRecommendationContent).type;
         return type?.slice(0, -1).toUpperCase() || "ALBUM";
-    }
+    };
+
+    const navigateToResource = (entry: AppleMusicRecommendationContent | Albums) => {
+
+        if (entry.type === "stations") {
+            handlePlay(entry); 
+            return;
+        }
+
+        const route = ROUTES[getResourceType(entry)]?.PAGE(entry.id);
+        if (route) {
+            navigate(route);
+        }
+    };
 
     return (
         <div className="w-full flex flex-col mt-4">
@@ -124,17 +147,17 @@ export default function PreviewList({
                                 data-testid={`preview-list-carousel-item-${index}`}
                             >
                                 <PreviewCard.Root>
-                                    <PreviewCard.ImageWrapper link={ROUTES[getResourceType(entry)]?.PAGE(entry.id)}>
+                                    <PreviewCard.ImageWrapper onClick={() => navigateToResource(entry)}>
                                         <PreviewCard.Image
                                             src={getCoverArtUrl(entry.coverArt || (entry as AppleMusicRecommendationContent).attributes?.artwork?.url, "album")}
                                             alt={title}
                                         />
                                         <PreviewCard.PlayButton
-                                            onClick={() => handlePlayAlbum(entry)}
+                                            onClick={() => handlePlay(entry)}
                                         />
                                     </PreviewCard.ImageWrapper>
                                     <PreviewCard.InfoWrapper>
-                                        <PreviewCard.Title link={ROUTES[getResourceType(entry)]?.PAGE(entry.id)}>
+                                        <PreviewCard.Title onClick={() => navigateToResource(entry)}>
                                             {entry.name || (entry as AppleMusicRecommendationContent).attributes.name}
                                         </PreviewCard.Title>
                                         <PreviewCard.Subtitle

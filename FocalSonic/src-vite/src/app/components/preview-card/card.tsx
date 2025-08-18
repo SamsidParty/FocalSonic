@@ -20,16 +20,18 @@ function Root({ className, children, ...props }: RootProps) {
 }
 
 interface ImageWrapperProps extends Children {
-    link: string
+    link: string,
+    onClick: () => void
 }
 
-function ImageWrapper({ children, link }: ImageWrapperProps) {
+function ImageWrapper({ children, link, onClick }: ImageWrapperProps) {
     return (
         <div className="group flex-1 aspect-square rounded bg-border relative overflow-hidden">
             <Link
                 to={link}
                 data-testid="card-image-link"
                 className="flex h-full w-full"
+                onClick={onClick}
             >
                 {children}
             </Link>
@@ -87,15 +89,17 @@ function InfoWrapper({ children }: InfoWrapperProps) {
 
 interface TitleProps {
     link: string
-    children: string
+    children: string,
+    onClick: () => void
 }
 
-function Title({ link, children }: TitleProps) {
+function Title({ link, children, onClick }: TitleProps) {
     return (
         <div className="w-full truncate" data-testid="card-title">
             <Link
                 to={link}
                 className="max-w-full truncate hover:underline leading-7 text-sm font-semibold"
+                onClick={onClick}
                 data-testid="card-title-link"
             >
                 {children}
@@ -105,7 +109,8 @@ function Title({ link, children }: TitleProps) {
 }
 
 interface SubtitleProps {
-    link?: string
+    link?: string,
+    onClick: () => void
     children: React.ReactNode
     enableLink?: boolean
     className?: string
@@ -116,10 +121,11 @@ function Subtitle({
     children,
     enableLink = true,
     className,
+    onClick
 }: SubtitleProps) {
     if (!enableLink || !link) {
         return (
-            <div className="w-full">
+            <div onClick={onClick} className="w-full">
                 <p
                     className={cn(
                         "leading-5 truncate text-xs text-muted-foreground -mt-1",
@@ -138,6 +144,7 @@ function Subtitle({
             <Link
                 to={link}
                 data-testid="card-subtitle-link"
+                onClick={onClick}
                 className={cn(
                     "max-w-full truncate text-xs text-muted-foreground hover:underline",
                     className,

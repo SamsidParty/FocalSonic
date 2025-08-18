@@ -135,6 +135,10 @@ class NativeVirtualAudioPlayer {
         await window.igniteView?.commandBridge.setAudioPlayerSource(this.id!, this._src);
     }
 
+    async load() {
+        await this.applySource();
+    }
+
     async play() {
         this.paused = false;
         await this.waitForCreation();
