@@ -23,7 +23,8 @@ const blurSettings = {
 const igniteViewPlayerStore = {
     getItem: async (key: string) => {
         if (key !== "player_store") { return; }
-        return await window.igniteView?.commandBridge.getPlayerStore();
+        const result = await window.igniteView?.commandBridge.getPlayerStore();
+        return result;
     },
     setItem: async (key: string, value: any) => {
         if (key !== "player_store") { return; }
@@ -793,6 +794,10 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             });
                         },
                         handleSongEnded: () => {
+                            
+                            // C# side will do the queue resolution
+                            if (window.igniteView) { return; }
+
                             const { loopState } = get().playerState;
                             const {
                                 hasNextSong,
@@ -861,7 +866,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             set((state) => {
                                 state.settings.colors.bigPlayer.blur.value = value;
                             });
-                        },
+                        }
                     },
                 })),
                 { name: "player_store" },
@@ -875,9 +880,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 merge: (persistedState, currentState) => {
                     return merge(currentState, persistedState);
                 },
-                onRehydrateStorage(state) {
-                    // Recalculate the current song incase the index changed
-                    return () => state.actions.setCurrentSong();
+                onRehydrateStorage(state) { 
+                    return () => { 
+                        // Recalculate the current song incase the index changed
+                        state.actions.setCurrentSong();
+                    };
                 },
                 partialize: (state) => {
                     const appStore = omit(state, [
@@ -891,6 +898,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
     ),
     shallow,
 );
+
+window.rehydratePlayerStore = async (newState) => {
+    const stateToSet = JSON.parse(newState).state;
+    const mergedState = merge({}, usePlayerStore.getState(), stateToSet);
+    usePlayerStore.setState(mergedState, true);
+};
 
 usePlayerStore.subscribe(
     (state) => [state.songlist.currentList, state.songlist.currentSongIndex],

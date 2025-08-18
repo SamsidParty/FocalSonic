@@ -93,14 +93,7 @@ namespace FocalSonic.AudioPlayer
 
         public async Task CallEndEvent()
         {
-            if (AssociatedWindow != null && Program.App.OpenWindows.Contains(AssociatedWindow))
-            {
-                AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "ended");
-            }
-            else
-            {
-                MediaPlaybackInfo.Instance?.NextSong();
-            }
+            MediaPlaybackInfo.Instance?.NextSong();
         }
         
         public async Task CallLoadEvent(double duration)

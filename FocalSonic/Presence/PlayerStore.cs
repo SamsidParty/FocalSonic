@@ -22,26 +22,33 @@ namespace FocalSonic.Presence
         public IDictionary<string, JToken> ExtensionData { get; set; }
 
         [Command("setPlayerStore")]
-        public static async Task SetPlayerStore(string data)
+        public static async Task SetPlayerStore(string data, WebWindow ctx)
         {
+            var store = JsonConvert.DeserializeObject<PlayerStore>(data);
+
             try
             {
-                MediaPlaybackInfo.Instance.Store = JsonConvert.DeserializeObject<PlayerStore>(data);
+                lock (MediaPlaybackInfo.Instance)
+                {
+                    MediaPlaybackInfo.Instance.Store = store;
+                }
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine("Failed to update music playback info: " + ex.Message);
             }
+
+            // If was not updated from the WebWindow, we need to tell it to rehydrate
+            if (ctx == null)
+            {
+                Program.MainWindow?.CallFunction("window.rehydratePlayerStore", JsonConvert.SerializeObject(store));
+            }
         }
 
         [Command("getPlayerStore")]
-        public static async Task<string> GetPlayerStore()
+        public static string GetPlayerStore()
         {
-            return MediaPlaybackInfo.Instance.Store == null ? "{}" : JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.Store, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                DefaultValueHandling = DefaultValueHandling.Ignore
-            });
+            return MediaPlaybackInfo.Instance.Store == null ? "{}" : JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.Store);
         }
 
         /// <summary>
@@ -49,9 +56,9 @@ namespace FocalSonic.Presence
         /// </summary>
         public static async Task Mutate(Func<PlayerStore, Task> mutateFn)
         {
-            var playerStore = JsonConvert.DeserializeObject<PlayerStore>(await GetPlayerStore());
+            var playerStore = JsonConvert.DeserializeObject<PlayerStore>(GetPlayerStore());
             await mutateFn(playerStore);
-            await SetPlayerStore(JsonConvert.SerializeObject(playerStore));
+            await SetPlayerStore(JsonConvert.SerializeObject(playerStore), null);
         }
     }
 }
