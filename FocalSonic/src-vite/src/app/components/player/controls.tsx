@@ -18,9 +18,9 @@ import { ISong } from "@/types/responses/song";
 import { manageMediaSession } from "@/utils/setMediaSession";
 import clsx from "clsx";
 import {
+    InfinityIcon,
     Pause,
     Play,
-    RadioIcon,
     Repeat,
     RotateCcwIcon,
     RotateCwIcon,
@@ -208,7 +208,7 @@ export function PlayerControls({
                         <RepeatOne className="text-primary" />
                     )}
                     {loopState === LoopState.InfiniteRadio && (
-                        <RadioIcon className="text-primary" />
+                        <InfinityIcon className="text-primary" />
                     )}
                 </PlayerButton>
             )}

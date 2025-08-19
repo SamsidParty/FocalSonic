@@ -919,8 +919,21 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
 
 window.rehydratePlayerStore = async (newState) => {
     const stateToSet = JSON.parse(newState).state;
-    const mergedState = merge({}, usePlayerStore.getState(), stateToSet);
-    usePlayerStore.setState(mergedState, true);
+    const current = usePlayerStore.getState();
+
+    console.log(stateToSet);
+
+    usePlayerStore.setState(
+        {
+            ...stateToSet,
+            actions: current.actions,
+            playerState: {
+                ...stateToSet.playerState,
+                audioPlayerRef: current.playerState?.audioPlayerRef,
+            },
+        },
+        true
+    );
 };
 
 usePlayerStore.subscribe(

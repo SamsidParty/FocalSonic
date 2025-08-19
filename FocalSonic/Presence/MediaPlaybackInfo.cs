@@ -37,8 +37,6 @@ namespace FocalSonic.Presence
         {
             get
             {
-                if (LoopState == PlayerLoopState.InfiniteRadio) return 0; // Radio loop mode always has a next song
-
                 var nextSongIndex = CurrentSongIndex + 1;
 
                 if (nextSongIndex > Queue?.Count - 1 && LoopState == PlayerLoopState.All)
@@ -46,7 +44,11 @@ namespace FocalSonic.Presence
                     // Loop back to the first song if looping is enabled
                     nextSongIndex = 0;
                 }
-                if (nextSongIndex > Queue?.Count - 1) { return null; }  // Playback finished, no next song
+                if (nextSongIndex > Queue?.Count - 1) {
+                    if (LoopState == PlayerLoopState.InfiniteRadio) return 0; // Radio loop mode always has a next song
+                    // Playback finished, no next song
+                    return null;
+                }  
 
                 return nextSongIndex;
             }
@@ -79,16 +81,22 @@ namespace FocalSonic.Presence
 
         public async Task PlaySong(Song? song, int? index)
         {
-            if (LoopState == PlayerLoopState.InfiniteRadio && !string.IsNullOrEmpty(Store.State.SongList.CurrentRadioID))
+            if (index == 0 && LoopState == PlayerLoopState.InfiniteRadio && !string.IsNullOrEmpty(Store.State.SongList.CurrentRadioID))
             {
                 // Ask apple servers what to play, ignore song and index params
                 song = await AppleMusicRadioResolver.GetNextTrack(Store.State.SongList.CurrentRadioID);
                 index = 0; // Always play the first song in radio mode
 
+                if (song == null) { return; }
+
                 // Overwrite the queue
                 await PlayerStore.Mutate(async (s) =>
                 {
                     s.State.SongList.CurrentList = new List<Song> { song };
+                    s.State.SongList.OriginalList = new List<Song> { song };
+                    s.State.SongList.ShuffledList = new List<Song> { song };
+                    s.State.SongList.CurrentSongIndex = 0;
+                    s.State.SongList.CurrentSong = song;
                 });
             }
 
@@ -105,7 +113,7 @@ namespace FocalSonic.Presence
 
             await AssociatedPlayer.SetSource(playbackURL, null);
             await AssociatedPlayer.UpdatePlaybackParameters();
-            await AssociatedPlayer.PlayAudio();
+            await Play();
         }
 
         public async Task Play()

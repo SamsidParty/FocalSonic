@@ -17,6 +17,12 @@ namespace FocalSonic.Presence
         [JsonProperty("currentList")]
         public List<Song> CurrentList;
 
+        [JsonProperty("shuffledList")]
+        public List<Song> ShuffledList;
+
+        [JsonProperty("originalList")]
+        public List<Song> OriginalList;
+
         [JsonProperty("currentSongIndex")]
         public int CurrentSongIndex;
 
