@@ -1,21 +1,3 @@
-import clsx from "clsx";
-import {
-    Pause,
-    Play,
-    Repeat,
-    RotateCcwIcon,
-    RotateCwIcon,
-    Shuffle,
-    SkipBack,
-    SkipForward,
-} from "lucide-react";
-import {
-    ComponentPropsWithoutRef,
-    RefObject,
-    useCallback,
-    useEffect,
-} from "react";
-import { useTranslation } from "react-i18next";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
@@ -26,14 +8,33 @@ import {
     usePlayerIsPlaying,
     usePlayerLoop,
     usePlayerMediaType,
-    usePlayerShuffle,
     usePlayerPrevAndNext,
+    usePlayerShuffle,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
 import { EpisodeWithPodcast } from "@/types/responses/podcasts";
 import { Radio } from "@/types/responses/radios";
 import { ISong } from "@/types/responses/song";
 import { manageMediaSession } from "@/utils/setMediaSession";
+import clsx from "clsx";
+import {
+    Pause,
+    Play,
+    RadioIcon,
+    Repeat,
+    RotateCcwIcon,
+    RotateCwIcon,
+    Shuffle,
+    SkipBack,
+    SkipForward
+} from "lucide-react";
+import {
+    ComponentPropsWithoutRef,
+    RefObject,
+    useCallback,
+    useEffect,
+} from "react";
+import { useTranslation } from "react-i18next";
 
 interface PlayerControlsProps {
     song: ISong
@@ -106,6 +107,7 @@ export function PlayerControls({
         0: t("player.tooltips.repeat.enable"),
         1: t("player.tooltips.repeat.enableOne"),
         2: t("player.tooltips.repeat.disable"),
+        3: t("player.tooltips.repeat.infinite"),
     };
     const repeatTooltip = repeatTooltips[loopState];
 
@@ -204,6 +206,9 @@ export function PlayerControls({
                     {loopState === LoopState.All && <Repeat className="text-primary" />}
                     {loopState === LoopState.One && (
                         <RepeatOne className="text-primary" />
+                    )}
+                    {loopState === LoopState.InfiniteRadio && (
+                        <RadioIcon className="text-primary" />
                     )}
                 </PlayerButton>
             )}

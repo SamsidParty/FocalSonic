@@ -20,6 +20,9 @@ namespace FocalSonic.Presence
         [JsonProperty("currentSongIndex")]
         public int CurrentSongIndex;
 
+        [JsonProperty("currentRadioID")]
+        public string? CurrentRadioID; // For apple music radio stations
+
         [JsonExtensionData]
         public IDictionary<string, JToken> ExtensionData { get; set; }
     }

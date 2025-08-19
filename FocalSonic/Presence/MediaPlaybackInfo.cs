@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FocalSonic.AudioPlayer;
 using SamsidParty.Subsonic.Common;
+using FocalSonic.AppleMusic;
 
 namespace FocalSonic.Presence
 {
@@ -36,6 +37,8 @@ namespace FocalSonic.Presence
         {
             get
             {
+                if (LoopState == PlayerLoopState.InfiniteRadio) return 0; // Radio loop mode always has a next song
+
                 var nextSongIndex = CurrentSongIndex + 1;
 
                 if (nextSongIndex > Queue?.Count - 1 && LoopState == PlayerLoopState.All)
@@ -53,6 +56,8 @@ namespace FocalSonic.Presence
         {
             get
             {
+                if (LoopState == PlayerLoopState.InfiniteRadio) return -1; // Disallow previous song selection in radio loop mode
+
                 var previousSongIndex = CurrentSongIndex - 1;
 
                 if (previousSongIndex < 0 && LoopState == PlayerLoopState.All)
@@ -74,6 +79,19 @@ namespace FocalSonic.Presence
 
         public async Task PlaySong(Song? song, int? index)
         {
+            if (LoopState == PlayerLoopState.InfiniteRadio && !string.IsNullOrEmpty(Store.State.SongList.CurrentRadioID))
+            {
+                // Ask apple servers what to play, ignore song and index params
+                song = await AppleMusicRadioResolver.GetNextTrack(Store.State.SongList.CurrentRadioID);
+                index = 0; // Always play the first song in radio mode
+
+                // Overwrite the queue
+                await PlayerStore.Mutate(async (s) =>
+                {
+                    s.State.SongList.CurrentList = new List<Song> { song };
+                });
+            }
+
             if (song == null) { return; }
 
             // Modify the player store to reflect these changes

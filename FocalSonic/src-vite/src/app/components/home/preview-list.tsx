@@ -10,7 +10,6 @@ import { CarouselButton } from "@/app/components/ui/carousel-button";
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
-import { convertAppleMusicRadioToSubsonic } from "@/types/applemusic/radios";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
 import { checkServerType } from "@/utils/servers";
@@ -22,6 +21,7 @@ interface PreviewListProps {
     list: Albums[] | AppleMusicRecommendationContent[]
     title: string
     showMore?: boolean
+    isLarge: boolean
     moreTitle?: string
     moreRoute?: string
 }
@@ -31,12 +31,13 @@ export default function PreviewList({
     title,
     showMore = true,
     moreTitle,
+    isLarge,
     moreRoute,
 }: PreviewListProps) {
     const [api, setApi] = useState<CarouselApi>();
     const [canScrollPrev, setCanScrollPrev] = useState<boolean>();
     const [canScrollNext, setCanScrollNext] = useState<boolean>();
-    const { setSongList } = usePlayerActions();
+    const { setSongList, setPlayAppleMusicRadio } = usePlayerActions();
     const { t } = useTranslation();
     const { isAppleMusic } = checkServerType();
     const navigate = useNavigate();
@@ -51,7 +52,8 @@ export default function PreviewList({
     async function handlePlay(entry: AppleMusicRecommendationContent | Albums) {
         
         if (entry.type === "stations") {
-            setPlayRadio([convertAppleMusicRadioToSubsonic(entry)], 0);
+            // Apple music radio
+            setPlayAppleMusicRadio(entry);
             return;
         }
 
@@ -142,7 +144,7 @@ export default function PreviewList({
                         {list.map((entry, index) => (
                             <CarouselItem
                                 key={entry.id}
-                                className="basis-1/6 2xl:basis-1/8"
+                                className={isLarge ? "basis-1/5 2xl:basis-1/7" : "basis-1/6 2xl:basis-1/8"}
                                 data-testid={`preview-list-carousel-item-${index}`}
                             >
                                 <PreviewCard.Root>

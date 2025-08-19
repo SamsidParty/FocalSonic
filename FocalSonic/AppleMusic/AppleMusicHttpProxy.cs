@@ -39,7 +39,7 @@ namespace FocalSonic.AppleMusic
                 var message = new HttpRequestMessage(MethodMapping[ctx.Request.Method], url.Replace("{storefront}", AppleMusicKeys.Region));
                 
 
-                if (ctx.Request.Method == WatsonWebserver.Core.HttpMethod.POST || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.PUT || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.PATCH)
+                if ((ctx.Request.Method == WatsonWebserver.Core.HttpMethod.POST || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.PUT || ctx.Request.Method == WatsonWebserver.Core.HttpMethod.PATCH) && ctx.Request.ContentLength > 0)
                 {
                     var body = ctx.Request.DataAsString;
                     message.Content = new StringContent(body, Encoding.UTF8, "application/json");

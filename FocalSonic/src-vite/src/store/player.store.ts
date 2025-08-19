@@ -315,6 +315,17 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.playerState.isPlaying = true;
                             });
                         },
+                        setPlayAppleMusicRadio: async (station) => {
+                            const firstSong = await service.radios.getNextSong(station.id);
+
+                            if (firstSong) {
+                                get().actions.setSongList([firstSong], 0);
+                                set((state) => {
+                                    state.songlist.currentRadioID = station.id;
+                                    state.playerState.loopState = LoopState.InfiniteRadio;
+                                });
+                            }
+                        },
                         setPlayPodcast: (list, index, progress) => {
                             const { mediaType } = get().playerState;
                             const { podcastList, currentSongIndex } = get().songlist;
@@ -428,8 +439,15 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             const { loopState } = get().playerState;
 
                             // Cycles to the next state
-                            const newState =
-                (loopState + 1) % (Object.keys(LoopState).length / 2);
+                            let newState = LoopState.Off;
+
+                            if (loopState === LoopState.Off) {
+                                newState = LoopState.All;
+                            } else if (loopState === LoopState.All) {
+                                newState = LoopState.One;
+                            } else if (loopState === LoopState.InfiniteRadio) {
+                                newState = LoopState.Off;
+                            }
 
                             set((state) => {
                                 state.playerState.loopState = newState;

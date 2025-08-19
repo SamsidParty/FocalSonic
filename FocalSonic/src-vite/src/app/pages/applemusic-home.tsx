@@ -20,12 +20,13 @@ export default function AppleMusicHome() {
                 )) : null
             }
 
-            {sections.map((section) => {
+            {sections.map((section, i) => {
                 return (
                     <PreviewList
                         key={section.id}
                         title={section.attributes.title.stringForDisplay}
                         showMore={false}
+                        isLarge={i === 0}
                         list={section.relationships.contents.data}
                     />
                 );

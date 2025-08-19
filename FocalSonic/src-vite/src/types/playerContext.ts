@@ -6,6 +6,7 @@ export enum LoopState {
     Off = 0,
     All = 1,
     One = 2,
+    InfiniteRadio = 3
 }
 
 export interface ISongList {
@@ -16,6 +17,7 @@ export interface ISongList {
     originalList: ISong[]
     originalSongIndex: number
     radioList: Radio[]
+    currentRadioID: string | null // For apple music stations
     podcastList: EpisodeWithPodcast[]
     podcastListProgresses: number[]
 }
@@ -139,6 +141,7 @@ export interface IPlayerActions {
     handleVolumeWheel: (isScrollingDown: boolean) => void
     setCurrentDuration: (duration: number) => void
     setPlayRadio: (list: Radio[], index: number) => void
+    setPlayAppleMusicRadio: (station: any) => void
     setAudioPlayerRef: (ref: HTMLAudioElement) => void
     setNextOnQueue: (songlist: ISong[]) => void
     setLastOnQueue: (songlist: ISong[]) => void

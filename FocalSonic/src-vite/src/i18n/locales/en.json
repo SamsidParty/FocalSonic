@@ -422,7 +422,8 @@
       "repeat": {
         "enable": "Enable repeat",
         "enableOne": "Enable repeat one",
-        "disable": "Disable repeat"
+        "disable": "Disable repeat",
+        "infinite": "Disable infinite radio"
       },
       "like": "Like {{song}} by {{artist}}",
       "dislike": "Remove like from {{song}} by {{artist}}",

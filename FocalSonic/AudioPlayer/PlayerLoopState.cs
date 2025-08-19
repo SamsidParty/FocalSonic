@@ -11,5 +11,6 @@ namespace FocalSonic.AudioPlayer
         Off = 0,
         All = 1,
         One = 2,
+        InfiniteRadio = 3 // Apple Music only, this is for (non-live) radio stations
     }
 }
