@@ -28,7 +28,6 @@ export interface IAppData extends IServerConfig {
     authType: AuthType | null
     isServerConfigured: boolean
     osType: string
-    logoutDialogState: boolean
     hideServer: boolean
     lockUser: boolean
     songCount: number | null
@@ -56,14 +55,16 @@ export interface IAppUpdate {
     setRemindOnNextBoot: (value: boolean) => void
 }
 
-interface IAppSettings {
-    openDialog: boolean
-    setOpenDialog: (value: boolean) => void
+export interface IAppRuntimeState {
+    settingsDialogState: boolean
+    setSettingsDialogState: (value: boolean) => void
     currentPage: SettingsOptions
     setCurrentPage: (page: SettingsOptions) => void
+    logoutDialogState: boolean
+    setLogoutDialogState: (value: boolean) => void
 }
 
-interface IPodcasts {
+export interface IPodcasts {
     active: boolean
     setActive: (value: boolean) => void
     serviceUrl: string
@@ -76,12 +77,18 @@ interface IPodcasts {
     setCustomUrl: (value: string) => void
 }
 
+export interface IAppSettings {
+    enableLRCLib: boolean
+    setEnableLRCLib: (value: boolean) => void
+}
+
 export interface IAppContext {
     data: IAppData
     podcasts: IPodcasts
+    settings: IAppSettings
     pages: IAppPages
     command: IAppCommand
     actions: IAppActions
     update: IAppUpdate
-    settings: IAppSettings
+    runtimeState: IAppRuntimeState
 }

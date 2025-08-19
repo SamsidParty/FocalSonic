@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -6,11 +5,12 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/app/components/ui/breadcrumb";
-import { useAppSettings } from "@/store/app.store";
+import { useAppRuntimeState } from "@/store/app.store";
+import { useTranslation } from "react-i18next";
 
 export function SettingsBreadcrumb() {
     const { t } = useTranslation();
-    const { currentPage } = useAppSettings();
+    const { currentPage } = useAppRuntimeState();
 
     return (
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">

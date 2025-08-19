@@ -1,6 +1,6 @@
 import { httpClient } from "@/api/httpClient";
+import { useAppStore } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";
-import { usePlayerStore } from "@/store/player.store";
 import { ILyricsList, LyricsResponse, OpenLyricsResponse } from "@/types/responses/song";
 import { lrclibClient } from "@/utils/appName";
 import { checkServerType } from "@/utils/servers";
@@ -62,7 +62,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
 }
 
 export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
-    const { lrcLibEnabled } = usePlayerStore.getState().settings.privacy;
+    const { enableLRCLib } = useAppStore.getState().settings;
     const { isLms } = checkServerType();
 
     const { title, album, duration } = getLyricsData;
@@ -74,7 +74,7 @@ export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
         ? getLyricsData.artist.split(",")[0]
         : getLyricsData.artist;
 
-    if (!lrcLibEnabled) {
+    if (!enableLRCLib) {
         return {
             artist,
             title,

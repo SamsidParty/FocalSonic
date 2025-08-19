@@ -1,11 +1,10 @@
-import { useAppStore } from "@/store/app.store";
+import { useAppRuntimeState } from "@/store/app.store";
+import React from "react";
 import { LogoutConfirmDialog } from "../components/logout-confirm";
 
 export function LogoutObserver() {
-    const logoutDialogState = useAppStore((state) => state.data.logoutDialogState);
-    const setLogoutDialogState = useAppStore(
-        (state) => state.actions.setLogoutDialogState,
-    );
+    const { setLogoutDialogState } = useAppRuntimeState();
+    const { logoutDialogState } = useAppRuntimeState();
 
     return (
         <LogoutConfirmDialog

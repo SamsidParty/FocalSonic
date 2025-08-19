@@ -33,7 +33,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                         authType: getAuthType(),
                         protocolVersion: "1.16.0",
                         serverType: SERVER_TYPE ?? "subsonic",
-                        logoutDialogState: false,
                         hideServer: HIDE_SERVER ?? false,
                         lockUser: hasValidConfig,
                         songCount: null,
@@ -115,16 +114,30 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                         },
                     },
                     settings: {
-                        openDialog: false,
-                        setOpenDialog: (value) => {
+                        enableLRCLib: true,
+                        setEnableLRCLib: (value) => {
                             set((state) => {
-                                state.settings.openDialog = value;
+                                state.settings.enableLRCLib = value;
+                            });
+                        },
+                    },
+                    runtimeState: {
+                        settingsDialogState: false,
+                        setSettingsDialogState: (value) => {
+                            set((state) => {
+                                state.runtimeState.settingsDialogState = value;
                             });
                         },
                         currentPage: "appearance",
                         setCurrentPage: (page) => {
                             set((state) => {
-                                state.settings.currentPage = page;
+                                state.runtimeState.currentPage = page;
+                            });
+                        },
+                        logoutDialogState: false,
+                        setLogoutDialogState: (value) => {
+                            set((state) => {
+                                state.runtimeState.logoutDialogState = value;
                             });
                         },
                     },
@@ -216,12 +229,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.podcasts.customUser = "";
                                 state.podcasts.customUrl = "";
                             });
-                        },
-                        setLogoutDialogState: (value) => {
-                            set((state) => {
-                                state.data.logoutDialogState = value;
-                            });
-                        },
+                        }
                     },
                 })),
                 {
@@ -291,11 +299,10 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                 partialize: (state) => {
                     const appStore = omit(
                         state,
-                        "data.logoutDialogState",
                         "data.hideServer",
                         "command.open",
                         "update",
-                        "settings",
+                        "runtimeState",
                     );
 
                     return appStore;
@@ -311,6 +318,7 @@ export const useAppPodcasts = () => useAppStore((state) => state.podcasts);
 export const useAppPages = () => useAppStore((state) => state.pages);
 export const useAppActions = () => useAppStore((state) => state.actions);
 export const useAppUpdate = () => useAppStore((state) => state.update);
+export const useAppRuntimeState = () => useAppStore((state) => state.runtimeState);
 export const useAppSettings = () => useAppStore((state) => state.settings);
 export const useAppArtistsViewType = () =>
     useAppStore((state) => {

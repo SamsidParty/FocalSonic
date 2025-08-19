@@ -609,7 +609,7 @@
       "language": "Language & Region",
       "audio": "Player & Audio",
       "content": "Content",
-      "privacy": "Privacy & Security"
+      "integrations": "Integrations"
     },
     "appearance": {
       "font": {
@@ -670,10 +670,10 @@
         }
       }
     },
-    "privacy": {
+    "integrations": {
       "services": {
-        "group": "External Services",
-        "description": "Manage the external services that FocalSonic can access.",
+        "group": "Integrations",
+        "description": "Manage integrations with other services.",
         "lrclib": {
           "info": "LRCLIB is used to find song lyrics.",
           "label": "LRCLIB"

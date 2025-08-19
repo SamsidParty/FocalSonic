@@ -1,27 +1,25 @@
 import {
-    EarthLock,
-    FileText,
-    Globe,
-    Headphones,
-    Paintbrush,
-} from "lucide-react";
-import { ComponentType } from "react";
-import { useTranslation } from "react-i18next";
-import {
     SidebarGroup,
     SidebarGroupContent,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/app/components/ui/sidebar";
-import { useAppSettings } from "@/store/app.store";
+import { useAppRuntimeState } from "@/store/app.store";
+import {
+    Globe,
+    LinkIcon,
+    Paintbrush
+} from "lucide-react";
+import { ComponentType } from "react";
+import { useTranslation } from "react-i18next";
 
 export type SettingsOptions =
   | "appearance"
   | "language"
   | "audio"
   | "content"
-  | "privacy"
+  | "integrations"
 
 interface OptionsData {
     id: SettingsOptions
@@ -31,14 +29,12 @@ interface OptionsData {
 const options: OptionsData[] = [
     { id: "appearance", icon: Paintbrush },
     { id: "language", icon: Globe },
-    { id: "audio", icon: Headphones },
-    { id: "content", icon: FileText },
-    { id: "privacy", icon: EarthLock },
+    { id: "integrations", icon: LinkIcon },
 ];
 
 export function SettingsOptions() {
     const { t } = useTranslation();
-    const { currentPage, setCurrentPage } = useAppSettings();
+    const { currentPage, setCurrentPage } = useAppRuntimeState();
 
     return (
         <SidebarGroup>

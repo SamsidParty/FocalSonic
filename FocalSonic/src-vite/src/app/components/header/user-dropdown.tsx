@@ -1,5 +1,5 @@
 import { Info, Keyboard, LogOut, User } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
@@ -18,14 +18,12 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { LogoutObserver } from "@/app/observers/logout-observer";
 import { logoutKeys, shortcutDialogKeys, stringifyShortcut } from "@/shortcuts";
-import { useAppData, useAppStore } from "@/store/app.store";
+import { useAppData, useAppRuntimeState } from "@/store/app.store";
 import { isMac } from "@/utils/osType";
 
 export function UserDropdown() {
     const { username, url, lockUser } = useAppData();
-    const setLogoutDialogState = useAppStore(
-        (state) => state.actions.setLogoutDialogState,
-    );
+    const { setLogoutDialogState } = useAppRuntimeState();
     const { t } = useTranslation();
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const [aboutOpen, setAboutOpen] = useState(false);

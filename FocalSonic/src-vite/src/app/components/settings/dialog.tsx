@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogTitle } from "@/app/components/ui/dialog";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import {
@@ -6,14 +5,15 @@ import {
     SidebarContent,
     SidebarProvider,
 } from "@/app/components/ui/sidebar";
-import { useAppSettings } from "@/store/app.store";
+import { useAppRuntimeState } from "@/store/app.store";
+import { useTranslation } from "react-i18next";
 import { SettingsBreadcrumb } from "./breadcrumb";
 import { SettingsOptions } from "./options";
 import { Pages } from "./pages";
 
 export function SettingsDialog() {
     const { t } = useTranslation();
-    const { openDialog, setOpenDialog } = useAppSettings();
+    const { settingsDialogState: openDialog, setSettingsDialogState: setOpenDialog } = useAppRuntimeState();
 
     return (
         <Dialog open={openDialog} onOpenChange={setOpenDialog}>

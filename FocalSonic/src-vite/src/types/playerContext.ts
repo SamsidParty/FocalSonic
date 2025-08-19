@@ -78,11 +78,6 @@ interface IFullscreen {
     setAutoFullscreenEnabled: (value: boolean) => void
 }
 
-export interface IPrivacySettings {
-    lrcLibEnabled: boolean
-    setLrcLibEnabled: (value: boolean) => void
-}
-
 interface IBlurSettings {
     value: number
     settings: {
@@ -112,7 +107,6 @@ export interface IPlayerSettings {
     volume: IVolumeSettings
     fullscreen: IFullscreen
     replayGain: IReplayGain
-    privacy: IPrivacySettings
     colors: IColorsSettings
 }
 

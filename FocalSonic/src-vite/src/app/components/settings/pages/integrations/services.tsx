@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import {
     Content,
     ContentItem,
@@ -6,34 +5,35 @@ import {
     ContentItemTitle,
     ContentSeparator,
     Header,
-    HeaderTitle,
     HeaderDescription,
+    HeaderTitle,
     Root,
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
-import { usePrivacySettings } from "@/store/player.store";
+import { useAppSettings } from "@/store/app.store";
+import { useTranslation } from "react-i18next";
 
 export function Services() {
     const { t } = useTranslation();
-    const { lrcLibEnabled, setLrcLibEnabled } = usePrivacySettings();
+    const { enableLRCLib, setEnableLRCLib } = useAppSettings();
 
     return (
         <Root>
             <Header>
-                <HeaderTitle>{t("settings.privacy.services.group")}</HeaderTitle>
+                <HeaderTitle>{t("settings.integrations.services.group")}</HeaderTitle>
                 <HeaderDescription>
-                    {t("settings.privacy.services.description")}
+                    {t("settings.integrations.services.description")}
                 </HeaderDescription>
             </Header>
             <Content>
                 <ContentItem>
-                    <ContentItemTitle info={t("settings.privacy.services.lrclib.info")}>
-                        {t("settings.privacy.services.lrclib.label")}
+                    <ContentItemTitle info={t("settings.integrations.services.lrclib.info")}>
+                        {t("settings.integrations.services.lrclib.label")}
                     </ContentItemTitle>
                     <ContentItemForm>
                         <Switch
-                            checked={lrcLibEnabled}
-                            onCheckedChange={setLrcLibEnabled}
+                            checked={enableLRCLib}
+                            onCheckedChange={setEnableLRCLib}
                         />
                     </ContentItemForm>
                 </ContentItem>

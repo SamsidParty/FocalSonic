@@ -1,20 +1,16 @@
-import { useAppSettings } from "@/store/app.store";
+import { useAppRuntimeState } from "@/store/app.store";
 import { Appearance } from "./appearance";
-import { Audio } from "./audio";
-import { Content } from "./content";
+import { Integrations } from "./integrations";
 import { Language } from "./language";
-import { Privacy } from "./privacy";
 
 const pages = {
     appearance: <Appearance />,
-    audio: <Audio />,
     language: <Language />,
-    content: <Content />,
-    privacy: <Privacy />,
+    integrations: <Integrations />,
 };
 
 export function Pages() {
-    const { currentPage } = useAppSettings();
+    const { currentPage } = useAppRuntimeState();
 
     return pages[currentPage];
 }
