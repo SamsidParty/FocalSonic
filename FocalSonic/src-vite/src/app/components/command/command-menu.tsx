@@ -8,6 +8,7 @@ import {
     CommandList,
 } from "@/app/components/ui/command";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
+import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
 import { useAppStore } from "@/store/app.store";
 import { byteLength } from "@/utils/byteLength";
@@ -15,9 +16,10 @@ import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
 import { useQuery } from "@tanstack/react-query";
 import { SearchIcon } from "lucide-react";
-import { KeyboardEvent, useCallback, useState } from "react";
+import React, { KeyboardEvent, useCallback, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { CommandAlbumResult } from "./album-result";
 import { CommandArtistResult } from "./artist-result";
@@ -67,9 +69,7 @@ export default function CommandMenu() {
     const showArtistGroup = Boolean(query && artists.length > 0);
     const showSongGroup = Boolean(query && songs.length > 0);
 
-    useHotkeys(["/", "mod+f", "mod+k"], () => setOpen(!open), {
-        preventDefault: true,
-    });
+    const navigate = useNavigate();
 
     const clear = useCallback(() => {
         setQuery("");
@@ -84,6 +84,10 @@ export default function CommandMenu() {
         },
         [clear, setOpen],
     );
+
+    useHotkeys(["/", "mod+f", "mod+k"], () => navigate(ROUTES.LIBRARY.SEARCH), {
+        preventDefault: true,
+    });
 
     const debounced = useDebouncedCallback((value: string) => {
         setQuery(value);
@@ -126,7 +130,7 @@ export default function CommandMenu() {
             <Button
                 variant="outline"
                 className="flex justify-start w-full px-2 gap-2 relative"
-                onClick={() => setOpen(true)}
+                onClick={() => navigate(ROUTES.LIBRARY.SEARCH)}
             >
                 <SearchIcon className="h-4 w-4 text-muted-foreground" />
                 <span className="inline-flex text-muted-foreground text-sm">

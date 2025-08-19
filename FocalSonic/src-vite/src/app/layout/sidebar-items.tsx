@@ -1,5 +1,5 @@
 import { ROUTES } from "@/routes/routesList";
-import { HomeIcon, LibraryIcon, ListMusicIcon, Mic2Icon, Music2Icon, PodcastIcon, RadioIcon } from "lucide-react";
+import { HomeIcon, LibraryIcon, ListMusicIcon, Mic2Icon, Music2Icon, PodcastIcon, RadioIcon, Search } from "lucide-react";
 import { memo } from "react";
 
 const ListMusic = memo(ListMusicIcon);
@@ -11,6 +11,7 @@ const Library = memo(LibraryIcon);
 const Podcast = memo(PodcastIcon);
 
 export enum SidebarItems {
+    Search = "search",
     Home = "home",
     Artists = "artists",
     Songs = "songs",
@@ -21,6 +22,12 @@ export enum SidebarItems {
 }
 
 export const mainMenuItems = [
+    {
+        id: SidebarItems.Search,
+        title: "sidebar.search",
+        route: ROUTES.LIBRARY.SEARCH,
+        icon: Search,
+    },
     {
         id: SidebarItems.Home,
         title: "sidebar.home",

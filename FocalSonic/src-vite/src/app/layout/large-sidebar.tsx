@@ -4,8 +4,8 @@ import { memo } from "react";
 import CommandMenu from "../components/command/command-menu";
 import { SectionTitle, SidebarPlaylists, SidebarSection } from "../components/playlist/sidebar-list";
 import { SidebarGenerator } from "../components/sidebar/sidebar-generator";
-import { libraryItems, mainMenuItems } from "./sidebar-items";
 import { useAppWindow } from "../hooks/use-app-window";
+import { libraryItems, mainMenuItems } from "./sidebar-items";
 
 
 const MemoSidebarGenerator = memo(SidebarGenerator);
@@ -23,7 +23,7 @@ export default function LargeSidebar() {
             <div className="space-y-4 py-4 pt-0">
                 <SidebarSection>
                     <div>
-                        <MemoSidebarGenerator list={mainMenuItems} />
+                        <MemoSidebarGenerator list={mainMenuItems.slice(1)} />
                     </div>
                 </SidebarSection>
                 <SidebarSection>
@@ -36,5 +36,5 @@ export default function LargeSidebar() {
 
             <SidebarPlaylists />
         </div>
-    )
+    );
 }

@@ -33,6 +33,7 @@ const Playlist = lazy(() => import("@/app/pages/playlists/playlist"));
 const Radios = lazy(() => import("@/app/pages/radios/radios-list"));
 const SongList = lazy(() => import("@/app/pages/songs/songlist"));
 const Home = lazy(() => import("@/app/pages/home"));
+const Search = lazy(() => import("@/app/pages/search"));
 const PodcastsList = lazy(() => import("@/app/pages/podcasts/list"));
 const Podcast = lazy(() => import("@/app/pages/podcasts/podcast"));
 const Episode = lazy(() => import("@/app/pages/podcasts/episode"));
@@ -53,6 +54,16 @@ export const router = createHashRouter([
                 element: (
                     <Suspense fallback={<HomeFallback />}>
                         <Home />
+                    </Suspense>
+                ),
+            },
+            {
+                id: "search",
+                path: ROUTES.LIBRARY.SEARCH,
+                errorElement: <ErrorPage />,
+                element: (
+                    <Suspense fallback={<HomeFallback />}>
+                        <Search />
                     </Suspense>
                 ),
             },

@@ -43,11 +43,6 @@ export interface IAppActions {
     setLogoutDialogState: (value: boolean) => void
 }
 
-export interface IAppCommand {
-    open: boolean
-    setOpen: (value: boolean) => void
-}
-
 export interface IAppUpdate {
     openDialog: boolean
     setOpenDialog: (value: boolean) => void
@@ -87,7 +82,6 @@ export interface IAppContext {
     podcasts: IPodcasts
     settings: IAppSettings
     pages: IAppPages
-    command: IAppCommand
     actions: IAppActions
     update: IAppUpdate
     runtimeState: IAppRuntimeState

@@ -1,5 +1,4 @@
 import { MiniSidebarItem } from "@/app/components/sidebar/mini-item";
-import { MiniSidebarSearch } from "@/app/components/sidebar/mini-search";
 import { useAppPages, useAppPodcasts } from "@/store/app.store";
 import { clsx } from "clsx";
 import { useAppWindow } from "../hooks/use-app-window";
@@ -12,8 +11,6 @@ export function MiniSidebar() {
 
     return (
         <div className={clsx(!isSidebarOpen ? "" : "hidden")}>
-            <MiniSidebarSearch />
-
             {menuItems.map((item) => {
                 // Setting to show/hide Radios section
                 if (!showRadiosSection && item.id === "radios") return null;

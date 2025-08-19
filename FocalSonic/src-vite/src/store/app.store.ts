@@ -91,14 +91,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                             });
                         },
                     },
-                    command: {
-                        open: false,
-                        setOpen: (value) => {
-                            set((state) => {
-                                state.command.open = value;
-                            });
-                        },
-                    },
                     update: {
                         openDialog: false,
                         setOpenDialog: (value) => {
@@ -300,7 +292,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                     const appStore = omit(
                         state,
                         "data.hideServer",
-                        "command.open",
                         "update",
                         "runtimeState",
                     );
