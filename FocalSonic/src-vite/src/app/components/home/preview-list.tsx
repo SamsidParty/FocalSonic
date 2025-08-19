@@ -165,6 +165,7 @@ export default function PreviewList({
                                         className={(isLarge && isAppleMusic) && "min-h-16 max-h-16 flex-col rounded-b overflow-hidden"}
                                         style={(isLarge && isAppleMusic) ? {
                                             backgroundImage: "url('" + getCoverArtUrl((entry as AppleMusicRecommendationContent).attributes?.artwork?.url) + "')",
+                                            backgroundPosition: "bottom",
                                             color: "#" + (entry as AppleMusicRecommendationContent).attributes?.artwork?.textColor1
                                         } : {}}
                                     >
