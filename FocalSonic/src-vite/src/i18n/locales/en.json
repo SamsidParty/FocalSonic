@@ -20,6 +20,7 @@
   },
   "menu": {
     "language": "Language",
+    "region": "Region: {{region}}",
     "server": "Server",
     "about": "About",
     "serverLogout": "Logout",

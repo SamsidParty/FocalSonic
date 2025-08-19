@@ -8,7 +8,9 @@ import favicon from "@/assets/favicon.png";
 import { service } from "@/service/service";
 import { getAppInfo } from "@/utils/appName";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 interface AboutDialogProps {
@@ -19,6 +21,7 @@ interface AboutDialogProps {
 export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
     const { t } = useTranslation();
     const { name, version, url } = getAppInfo();
+    const { isAppleMusic } = checkServerType();
 
     const { data: server, isLoading } = useQuery({
         queryKey: [queryKeys.update.serverInfo],
@@ -75,9 +78,9 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <div>{t("about.apiVersion")}</div>
+                                        <div>{t(isAppleMusic ? "menu.region" : "about.apiVersion", { region: "" })}</div>
                                         <div className="text-xs font-medium bg-primary/60 text-foreground px-2 rounded-full border border-primary flex items-center justify-center">
-                                            {server.version}
+                                            {isAppleMusic ? (localStorage.applemusic_region?.toUpperCase() || "US") : server.version}
                                         </div>
                                     </div>
                                 </div>
@@ -87,17 +90,17 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
 
                     <div>
                         <a
-                            className="w-full px-2 py-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center"
-                            href={url}
+                            className="w-full px-2 py-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center cursor-pointer"
+                            onClick={() => window.open(url)}
                             target="_blank"
                             rel="nofollow noreferrer"
                         >
                             <img
                                 src="/icons/github-mark-white.svg"
-                                alt="Github"
+                                alt="GitHub"
                                 className="w-4 h-4 mr-2"
                             />
-                            Github
+                            GitHub
                         </a>
                     </div>
                 </div>

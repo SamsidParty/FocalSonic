@@ -73,7 +73,7 @@ public class Program
 
     public static void CreateMainWindow()
     {
-        if (MainWindow != null) { return; }
+        if (MainWindow != null) { CleanUpUI(); } // Respawn the main window
 
         Performance.IsRunningInForeground = true;
         App.MainWindow =

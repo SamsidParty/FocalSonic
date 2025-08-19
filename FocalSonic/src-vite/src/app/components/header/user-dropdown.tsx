@@ -53,7 +53,7 @@ export function UserDropdown() {
                         <div className="flex flex-col space-y-2">
                             <p className="text-sm font-medium leading-none">{username}</p>
                             <p className="text-xs leading-none text-muted-foreground">
-                                {url}
+                                {url == "applemusic" ? t("menu.region", { region: localStorage.applemusic_region?.toUpperCase() || "US" }) : url}
                             </p>
                         </div>
                     </DropdownMenuLabel>
@@ -65,7 +65,6 @@ export function UserDropdown() {
                             {stringifyShortcut(shortcutDialogKeys)}
                         </DropdownMenuShortcut>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setAboutOpen(true)}>
                         <Info className="mr-2 h-4 w-4" />
                         <span>{t("menu.about")}</span>
