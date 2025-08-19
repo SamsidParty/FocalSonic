@@ -7,6 +7,7 @@ using FocalSonic.Windows;
 using IgniteView.Core;
 using IgniteView.Desktop;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System.Net.Http;
 
 public class Program
@@ -31,6 +32,13 @@ public class Program
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.DELETE);
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.PATCH);
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.PUT);
+
+        // JSON Setup
+        JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+        {
+            ContractResolver = new FocalSonicContractResolver(),
+            NullValueHandling = NullValueHandling.Ignore
+        };
 
         // Background setup
         PlayerThread.Start();

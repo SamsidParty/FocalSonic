@@ -127,5 +127,11 @@ namespace FocalSonic.Presence
             await PlayerStore.Mutate(async (s) => s.State.PlayerState.IsPlaying = false);
             await AssociatedPlayer.PauseAudio();
         }
+
+        [Command("nextButtonPressed")]
+        public static async Task NextButtonPressed() => await Instance.NextSong();
+
+        [Command("previousButtonPressed")]
+        public static async Task PreviousButtonPressed() => await Instance.PreviousSong();
     }
 }

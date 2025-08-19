@@ -488,6 +488,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             }
                         },
                         playNextSong: () => {
+
+                            if (window.igniteView) {
+                                igniteView.commandBridge.nextButtonPressed(); // Tell C# to do it instead
+                                return;
+                            }
+
                             const { loopState } = get().playerState;
                             const { hasNextSong, resetProgress, playFirstSongInQueue } =
                 get().actions;
@@ -503,6 +509,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             }
                         },
                         playPrevSong: () => {
+
+                            if (window.igniteView) {
+                                igniteView.commandBridge.previousButtonPressed(); // Tell C# to do it instead
+                                return;
+                            }
+
                             if (get().actions.hasPrevSong()) {
                                 get().actions.resetProgress();
                                 set((state) => {
