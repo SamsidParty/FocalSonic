@@ -921,8 +921,6 @@ window.rehydratePlayerStore = async (newState) => {
     const stateToSet = JSON.parse(newState).state;
     const current = usePlayerStore.getState();
 
-    console.log(stateToSet);
-
     usePlayerStore.setState(
         {
             ...stateToSet,

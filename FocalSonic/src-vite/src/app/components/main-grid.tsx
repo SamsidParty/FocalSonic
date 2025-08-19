@@ -1,7 +1,3 @@
-import { Settings2 } from "lucide-react";
-import { ComponentPropsWithoutRef } from "react";
-import { useTranslation } from "react-i18next";
-import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import {
     DropdownMenu,
@@ -13,6 +9,9 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PageViewType } from "@/types/serverConfig";
+import { Settings2 } from "lucide-react";
+import { ComponentPropsWithoutRef } from "react";
+import { useTranslation } from "react-i18next";
 
 type MainGridProps = ComponentPropsWithoutRef<"div">
 
@@ -62,9 +61,6 @@ export function MainViewTypeSelector({
                     onCheckedChange={() => setViewType("grid")}
                 >
                     <span>{t("generic.viewMode.modes.poster")}</span>
-                    <Badge className="ml-2" variant="beta">
-                        {t("generic.beta")}
-                    </Badge>
                 </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
         </DropdownMenu>

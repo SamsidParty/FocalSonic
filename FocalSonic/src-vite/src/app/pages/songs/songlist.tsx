@@ -12,7 +12,9 @@ import { ColumnFilter } from "@/types/columnFilter";
 import { AlbumsFilters, AlbumsSearchParams } from "@/utils/albumsFilter";
 import { queryKeys } from "@/utils/queryKeys";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+import { checkServerType } from "@/utils/servers";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
@@ -24,6 +26,7 @@ export default function SongList() {
     const [searchParams] = useSearchParams();
     const { getSearchParam } = new SearchParamsHandler(searchParams);
     const columns = songsColumns();
+    const { isAppleMusic } = checkServerType();
 
     const filter = getSearchParam<string>(AlbumsSearchParams.MainFilter, "");
     const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
@@ -75,10 +78,10 @@ export default function SongList() {
         // 'artist',
         "album",
         "duration",
-        "playCount",
-        "played",
-        "contentType",
-        "select",
+        (!isAppleMusic && "playCount"),
+        (!isAppleMusic && "played"),
+        (!isAppleMusic && "contentType"),
+        (!isAppleMusic && "select"),
     ];
 
     const title = filterByArtist

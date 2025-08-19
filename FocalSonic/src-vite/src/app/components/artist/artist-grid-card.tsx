@@ -26,7 +26,7 @@ function ArtistCard({ artist }: ArtistCardProps) {
 
     return (
         <PreviewCard.Root className="flex flex-col w-full h-full">
-            <PreviewCard.ImageWrapper link={ROUTES.ARTIST.PAGE(artist.id)}>
+            <PreviewCard.ImageWrapper link={ROUTES.ARTIST.PAGE(artist.id)} className="flex-none aspect-square">
                 <PreviewCard.Image
                     src={getCoverArtUrl(artist.coverArt, "artist")}
                     alt={artist.name}
