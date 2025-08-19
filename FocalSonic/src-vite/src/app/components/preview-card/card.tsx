@@ -21,12 +21,13 @@ function Root({ className, children, ...props }: RootProps) {
 
 interface ImageWrapperProps extends Children {
     link: string,
-    onClick: () => void
+    onClick: () => void,
+    className?: string
 }
 
-function ImageWrapper({ children, link, onClick }: ImageWrapperProps) {
+function ImageWrapper({ children, link, onClick, className }: ImageWrapperProps) {
     return (
-        <div className="group flex-1 aspect-square rounded bg-border relative overflow-hidden">
+        <div className={cn("group flex-1 aspect-square rounded bg-border relative overflow-hidden", className)}>
             <Link
                 to={link}
                 data-testid="card-image-link"
@@ -81,10 +82,13 @@ function PlayButton({ onClick }: PlayButtonProps) {
     );
 }
 
-interface InfoWrapperProps extends Children {}
+interface InfoWrapperProps extends Children {
+    className?: string,
+    style?: React.CSSProperties
+}
 
-function InfoWrapper({ children }: InfoWrapperProps) {
-    return <div className="flex flex-col cursor-default">{children}</div>;
+function InfoWrapper({ children, className, style }: InfoWrapperProps) {
+    return <div className={cn("flex flex-col cursor-default", className)} style={style}>{children}</div>;
 }
 
 interface TitleProps {
@@ -128,7 +132,7 @@ function Subtitle({
             <div onClick={onClick} className="w-full">
                 <p
                     className={cn(
-                        "leading-5 truncate text-xs text-muted-foreground -mt-1",
+                        "leading-5 truncate text-xs opacity-60 -mt-1",
                         className,
                     )}
                     data-testid="card-subtitle"

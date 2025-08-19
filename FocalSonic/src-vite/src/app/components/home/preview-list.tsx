@@ -144,11 +144,14 @@ export default function PreviewList({
                         {list.map((entry, index) => (
                             <CarouselItem
                                 key={entry.id}
-                                className={isLarge ? "basis-1/5 2xl:basis-1/7" : "basis-1/6 2xl:basis-1/8"}
+                                className={isLarge ? "basis-1/4 2xl:basis-1/6 " : "basis-1/6 2xl:basis-1/8"}
                                 data-testid={`preview-list-carousel-item-${index}`}
                             >
                                 <PreviewCard.Root>
-                                    <PreviewCard.ImageWrapper onClick={() => navigateToResource(entry)}>
+                                    <PreviewCard.ImageWrapper 
+                                        onClick={() => navigateToResource(entry)}
+                                        className={isLarge && "rounded-b-none rounded-t"}
+                                    >
                                         <PreviewCard.Image
                                             src={getCoverArtUrl(entry.coverArt || (entry as AppleMusicRecommendationContent).attributes?.artwork?.url, "album")}
                                             alt={title}
@@ -157,16 +160,24 @@ export default function PreviewList({
                                             onClick={() => handlePlay(entry)}
                                         />
                                     </PreviewCard.ImageWrapper>
-                                    <PreviewCard.InfoWrapper>
-                                        <PreviewCard.Title onClick={() => navigateToResource(entry)}>
-                                            {entry.name || (entry as AppleMusicRecommendationContent).attributes.name}
-                                        </PreviewCard.Title>
-                                        <PreviewCard.Subtitle
-                                            enableLink={entry.artistId !== undefined}
-                                            link={ROUTES.ARTIST.PAGE(entry.artistId ?? "")}
-                                        >
-                                            {entry.artist || (entry as AppleMusicRecommendationContent).attributes.artistName || (entry as AppleMusicRecommendationContent).attributes.curatorName}
-                                        </PreviewCard.Subtitle>
+                                    <PreviewCard.InfoWrapper
+                                        className={(isLarge && isAppleMusic) && "min-h-16 max-h-16 flex-col rounded-b overflow-hidden"}
+                                        style={(isLarge && isAppleMusic) ? {
+                                            backgroundImage: "url('" + getCoverArtUrl((entry as AppleMusicRecommendationContent).attributes?.artwork?.url) + "')",
+                                            color: "#" + (entry as AppleMusicRecommendationContent).attributes?.artwork?.textColor1
+                                        } : {}}
+                                    >
+                                        <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl px-4 grow text-center flex flex-col justify-center align-center"}>
+                                            <PreviewCard.Title onClick={() => navigateToResource(entry)}>
+                                                {entry.name || (entry as AppleMusicRecommendationContent).attributes.name}
+                                            </PreviewCard.Title>
+                                            <PreviewCard.Subtitle
+                                                enableLink={entry.artistId !== undefined}
+                                                link={ROUTES.ARTIST.PAGE(entry.artistId ?? "")}
+                                            >
+                                                {entry.artist || (entry as AppleMusicRecommendationContent).attributes.artistName || (entry as AppleMusicRecommendationContent).attributes.curatorName}
+                                            </PreviewCard.Subtitle>
+                                        </div>
                                     </PreviewCard.InfoWrapper>
                                 </PreviewCard.Root>
                             </CarouselItem>
