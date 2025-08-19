@@ -80,7 +80,7 @@ export default function PreviewList({
 
     const getResourceType = (entry: AppleMusicRecommendationContent | Albums) => {
         const type = (entry as AppleMusicRecommendationContent).type;
-        return type?.slice(0, -1).toUpperCase() || "ALBUM";
+        return type?.slice(0, -1).toUpperCase().replace("LIBRARY-", "") || "ALBUM";
     };
 
     const navigateToResource = (entry: AppleMusicRecommendationContent | Albums) => {
@@ -91,6 +91,7 @@ export default function PreviewList({
         }
 
         const route = ROUTES[getResourceType(entry)]?.PAGE(entry.id);
+
         if (route) {
             navigate(route);
         }
@@ -172,8 +173,8 @@ export default function PreviewList({
                                                 {entry.name || (entry as AppleMusicRecommendationContent).attributes.name}
                                             </PreviewCard.Title>
                                             <PreviewCard.Subtitle
-                                                enableLink={entry.artistId !== undefined}
-                                                link={ROUTES.ARTIST.PAGE(entry.artistId ?? "")}
+                                                enableLink={(entry.relationships?.artists.data[0]?.id || entry.artistId) !== undefined}
+                                                link={ROUTES.ARTIST.PAGE(entry.relationships?.artists.data[0]?.id || entry.artistId)}
                                             >
                                                 {entry.artist || (entry as AppleMusicRecommendationContent).attributes.artistName || (entry as AppleMusicRecommendationContent).attributes.curatorName}
                                             </PreviewCard.Subtitle>

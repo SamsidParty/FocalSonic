@@ -1,8 +1,8 @@
 import { Button } from "@/app/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/app/components/ui/popover";
 import { Separator } from "@/app/components/ui/separator";
 import { Slider } from "@/app/components/ui/slider";
@@ -108,7 +108,7 @@ function ColorIntensityOption(props: OptionProps) {
         >
             <Slider
                 defaultValue={[currentSongColorIntensity]}
-                min={0.3}
+                min={0}
                 max={1.0}
                 step={0.05}
                 tooltipValue={intensityTooltip}

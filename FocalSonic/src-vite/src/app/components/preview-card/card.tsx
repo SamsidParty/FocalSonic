@@ -2,7 +2,7 @@ import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Play } from "lucide-react";
 import React, { ComponentPropsWithoutRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CoverArtImage from "../cover-art";
 
 interface Children {
@@ -65,7 +65,7 @@ interface PlayButtonProps {
 
 function PlayButton({ onClick }: PlayButtonProps) {
     return (
-        <div className="w-full h-full flex items-center justify-center rounded bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 absolute inset-0 z-10">
+        <div className="w-full h-full flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 absolute inset-0 z-10">
             <Button
                 className="opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-full w-12 h-12 z-20"
                 variant="outline"
@@ -127,35 +127,21 @@ function Subtitle({
     className,
     onClick
 }: SubtitleProps) {
-    if (!enableLink || !link) {
-        return (
-            <div onClick={onClick} className="w-full">
-                <p
-                    className={cn(
-                        "leading-5 truncate text-xs opacity-60 -mt-1",
-                        className,
-                    )}
-                    data-testid="card-subtitle"
-                >
-                    {children}
-                </p>
-            </div>
-        );
-    }
+
+    const navigate = useNavigate();
 
     return (
-        <div className="flex w-full truncate -mt-1" data-testid="card-subtitle">
-            <Link
-                to={link}
-                data-testid="card-subtitle-link"
-                onClick={onClick}
+        <div onClick={() => { (onClick || (() => {}))(); link && enableLink && navigate(link); }} className="w-full">
+            <p
                 className={cn(
-                    "max-w-full truncate text-xs text-muted-foreground hover:underline",
+                    "leading-5 truncate text-xs opacity-60 -mt-1",
+                    link && enableLink && "hover:underline cursor-pointer",
                     className,
                 )}
+                data-testid="card-subtitle"
             >
                 {children}
-            </Link>
+            </p>
         </div>
     );
 }

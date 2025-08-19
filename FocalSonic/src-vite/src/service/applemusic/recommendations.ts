@@ -2,7 +2,7 @@ import { httpClient } from "@/api/httpClient";
 import { AppleMusicRecommendationsResponse } from "@/types/applemusic/recommendations";
 
 async function getHome() {
-    // The URL is very long
+
     const timezoneOffset = (() => {
         const offset = -new Date().getTimezoneOffset();
         const sign = offset >= 0 ? "+" : "-";
