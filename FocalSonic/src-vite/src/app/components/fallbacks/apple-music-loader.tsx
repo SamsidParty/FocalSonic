@@ -16,7 +16,7 @@ export default function AppleMusicLoader() {
     const resolveSignInIssues = async () => {
         await window.igniteView?.commandBridge.logOutOfAppleMusic();
         location.reload();
-    }
+    };
 
     return (
         <>
@@ -27,7 +27,7 @@ export default function AppleMusicLoader() {
                 loadingIsStuck ? (
                     <p className="text-md">{t("login.appleMusic.loadingStuck")} <a onClick={resolveSignInIssues} className="inline cursor-pointer text-[#FF0436]">{t("login.appleMusic.resolveIssues")}</a></p>
                 ) 
-                : (<p className="text-md">{t("login.appleMusic.loadingDescription")}</p>)
+                    : (<p className="text-md">{t("login.appleMusic.loadingDescription")}</p>)
             }
             
         </>

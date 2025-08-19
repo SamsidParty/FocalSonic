@@ -8,7 +8,7 @@ export async function protectedLoader() {
     const hasNoUrl = !url || url === "";
     const hasNoToken = !password || password === "";
 
-    if (serverType === "applemusic" && localStorage.applemusic_proxy_username) {
+    if (serverType === "applemusic") {
         const loadState = await window.igniteView?.commandBridge.waitUntilAppleMusicLoads();
         if (loadState !== "success") {
             return redirect(ROUTES.SERVER_CONFIG);

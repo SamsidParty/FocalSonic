@@ -142,8 +142,8 @@ export function LoginForm() {
 
         await queryClient.invalidateQueries();
         toast.success(t("toast.server.success"));
-        location.reload();
-    }
+        setTimeout(() => location.reload(), 500);
+    };
 
     return (
         <>

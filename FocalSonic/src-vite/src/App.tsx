@@ -7,6 +7,7 @@ import { UpdateObserver } from "@/app/observers/update-observer";
 import { Mobile } from "@/app/pages/mobile";
 import { router } from "@/routes/router";
 import { isTauri } from "@/utils/tauriTools";
+import React from "react";
 import { isDesktop } from "react-device-detect";
 import { RouterProvider } from "react-router-dom";
 import AppleMusicLoader from "./app/components/fallbacks/apple-music-loader";
@@ -42,7 +43,7 @@ function Loader() {
                 }
             </main>
         </div>
-    )
+    );
 }
 
 export default App;

@@ -11,8 +11,8 @@ export async function loginLoader() {
     const hasPassword = password || password !== "";
     const hasUser = username || username !== "";
 
-    if (hasUrl && hasPassword && hasUser && isServerConfigured) {
-        const isServerUp = await service.ping.pingView();
+    if ((hasUrl && hasPassword && hasUser && isServerConfigured) || url == "applemusic") {
+        const isServerUp = (url == "applemusic") || await service.ping.pingView();
         if (isServerUp) return redirect(ROUTES.LIBRARY.HOME);
     }
 

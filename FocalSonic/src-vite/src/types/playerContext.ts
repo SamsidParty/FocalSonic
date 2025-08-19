@@ -167,9 +167,11 @@ export interface IPlayerActions {
     setuseDynamicColorsOnQueue: (value: boolean) => void
     setuseDynamicColorsOnBigPlayer: (value: boolean) => void
     setBigPlayerBlurValue: (value: number) => void
+    setIsLoading: (value: boolean) => void
 }
 
 export interface IPlayerContext {
+    isLoading: boolean
     songlist: ISongList
     playerState: IPlayerState
     playerProgress: IPlayerProgress

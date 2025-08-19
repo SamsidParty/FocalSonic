@@ -50,6 +50,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
         persist(
             devtools(
                 immer((set, get) => ({
+                    isLoading: true,
                     songlist: {
                         shuffledList: [],
                         originalList: [],
@@ -888,6 +889,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             set((state) => {
                                 state.settings.colors.bigPlayer.blur.value = value;
                             });
+                        },
+                        setIsLoading: (value) => {
+                            set((state) => {
+                                state.isLoading = value;
+                            });
                         }
                     },
                 })),
@@ -906,6 +912,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     return () => { 
                         // Recalculate the current song incase the index changed
                         state.actions.setCurrentSong();
+                        state.actions.setIsLoading(false);
                     };
                 },
                 partialize: (state) => {
