@@ -51,7 +51,7 @@ export default function ArtistsList() {
     });
 
     async function handlePlayArtistRadio(artist: ISimilarArtist) {
-        const songList = await getArtistAllSongs(artist.name);
+        const songList = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
 
         if (songList) setSongList(songList, 0);
     }

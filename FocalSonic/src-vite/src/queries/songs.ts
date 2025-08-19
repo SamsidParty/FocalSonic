@@ -11,6 +11,7 @@ export async function songsSearch(params: SongSearchParams) {
     const response = await service.search.get({
         artistCount: 0,
         albumCount: 0,
+        libraryOnly: true,
         ...params,
     });
 

@@ -4,6 +4,7 @@ import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
 import { ISimilarArtist } from "@/types/responses/artist";
+import { checkServerType } from "@/utils/servers";
 import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -15,9 +16,10 @@ function ArtistCard({ artist }: ArtistCardProps) {
     const { t } = useTranslation();
     const { getArtistAllSongs } = useSongList();
     const { setSongList } = usePlayerActions();
+    const { isAppleMusic } = checkServerType();
 
     const handlePlayArtistRadio = useCallback(async () => {
-        const songList = await getArtistAllSongs(artist.name);
+        const songList = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
 
         if (songList) {
             setSongList(songList, 0);

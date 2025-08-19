@@ -8,6 +8,8 @@ import { queryKeys } from "@/utils/queryKeys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArtistOptions } from "./options";
+import { checkServerType } from "@/utils/servers";
+import React from "react";
 
 interface ArtistButtonsProps {
     artist: IArtist
@@ -24,6 +26,7 @@ export function ArtistButtons({
     const { setSongList } = usePlayerActions();
     const { showInfoPanel, toggleShowInfoPanel } = useAppPages();
     const { getArtistAllSongs } = useSongList();
+    const { isAppleMusic } = checkServerType();
 
     const isArtistStarred = artist.starred !== undefined;
 
@@ -47,7 +50,7 @@ export function ArtistButtons({
     }
 
     async function handlePlayArtistRadio(shuffle = false) {
-        const songList = await getArtistAllSongs(artist?.name || "");
+        const songList = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
 
         if (songList) {
             setSongList(songList, 0, shuffle);

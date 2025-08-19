@@ -1,4 +1,5 @@
 import { service } from "@/service/service";
+import { checkServerType } from "@/utils/servers";
 
 export function useSongList() {
     async function getArtistSongCount(id: string) {
@@ -14,9 +15,16 @@ export function useSongList() {
         return count;
     }
 
-    async function getArtistAllSongs(name: string) {
+    async function getArtistAllSongs(nameOrID: string) {
+
+        const { isAppleMusic } = checkServerType();
+
+        if (isAppleMusic) {
+            return service.songs.getTopSongs(nameOrID);
+        }
+
         const response = await service.search.get({
-            query: name,
+            query: nameOrID,
             songCount: 9999999,
             albumCount: 0,
             artistCount: 0,

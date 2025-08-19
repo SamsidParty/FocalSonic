@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import {
@@ -12,6 +11,9 @@ import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
 import { ISimilarArtist } from "@/types/responses/artist";
+import { checkServerType } from "@/utils/servers";
+import React from "react";
+import { useEffect, useState } from "react";
 
 interface RelatedArtistsListProps {
     title: string
@@ -28,13 +30,14 @@ export default function RelatedArtistsList({
     const [canScrollPrev, setCanScrollPrev] = useState<boolean>();
     const [canScrollNext, setCanScrollNext] = useState<boolean>();
     const { setSongList } = usePlayerActions();
+    const { isAppleMusic } = checkServerType();
 
     if (similarArtists.length > 16) {
         similarArtists = similarArtists.slice(0, 16);
     }
 
     async function handlePlayArtistRadio(artist: ISimilarArtist) {
-        const songList = await getArtistAllSongs(artist.name);
+        const songList = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
         if (songList) setSongList(songList, 0);
     }
 

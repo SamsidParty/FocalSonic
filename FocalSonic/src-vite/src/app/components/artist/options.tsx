@@ -7,6 +7,8 @@ import { useOptions } from "@/app/hooks/use-options";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { IArtist } from "@/types/responses/artist";
 import { ISong } from "@/types/responses/song";
+import { checkServerType } from "@/utils/servers";
+import React from "react";
 
 interface ArtistOptionsProps {
     artist: IArtist
@@ -15,9 +17,10 @@ interface ArtistOptionsProps {
 export function ArtistOptions({ artist }: ArtistOptionsProps) {
     const { getArtistAllSongs } = useSongList();
     const { playLast, playNext, startDownload } = useOptions();
+    const { isAppleMusic } = checkServerType();
 
     async function getSongsToQueue(callback: (songs: ISong[]) => void) {
-        const songs = await getArtistAllSongs(artist.name);
+        const songs = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
         if (!songs) return;
 
         callback(songs);

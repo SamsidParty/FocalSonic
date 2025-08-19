@@ -43,7 +43,7 @@ async function get({
                 offset: songOffset,
                 types: types.map((type) => "library-" + type),
             },
-        }))?.data?.results;
+        }))?.results;
 
         return {
             song: response["library-songs"]?.data.map(convertAppleMusicSongToSubsonic) || [],
