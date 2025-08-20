@@ -17,7 +17,9 @@ interface ArtistOptionsProps {
 export function ArtistOptions({ artist }: ArtistOptionsProps) {
     const { getArtistAllSongs } = useSongList();
     const { playLast, playNext, startDownload } = useOptions();
+
     const { isAppleMusic } = checkServerType();
+    const canDownload = !isAppleMusic;
 
     async function getSongsToQueue(callback: (songs: ISong[]) => void) {
         const songs = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
@@ -43,8 +45,14 @@ export function ArtistOptions({ artist }: ArtistOptionsProps) {
             <DropdownMenuGroup>
                 <OptionsButtons.PlayNext onClick={handlePlayNext} />
                 <OptionsButtons.PlayLast onClick={handlePlayLast} />
-                <DropdownMenuSeparator />
-                <OptionsButtons.Download onClick={handleDownload} />
+                {
+                    canDownload && (
+                        <>
+                            <DropdownMenuSeparator />
+                            <OptionsButtons.Download onClick={handleDownload} />
+                        </>
+                    )
+                }
             </DropdownMenuGroup>
         </>
     );

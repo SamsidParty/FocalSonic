@@ -28,6 +28,7 @@ export function SongMenuOptions({
     } = useOptions();
     const songIndexes = [index.toString()];
     const { isAppleMusic } = checkServerType();
+    const canDownload = !isAppleMusic;
 
     return (
         <>
@@ -63,14 +64,21 @@ export function SongMenuOptions({
                 />
             )}
             <ContextMenuSeparator />
-            <OptionsButtons.Download
-                variant={variant}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    startDownload(song.id);
-                }}
-            />
-            <ContextMenuSeparator />
+            {
+                canDownload && (
+                    <>
+                        <OptionsButtons.Download
+                            variant={variant}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                startDownload(song.id);
+                            }}
+                        />
+                        <ContextMenuSeparator />
+                    </>
+                )
+            }
+
             <OptionsButtons.SongInfo
                 variant={variant}
                 onClick={(e) => {

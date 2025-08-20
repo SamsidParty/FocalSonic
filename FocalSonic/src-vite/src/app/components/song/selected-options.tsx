@@ -24,6 +24,7 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
     const songs = rows.map((row) => row.original);
     const firstSong = songs[0];
     const { isAppleMusic } = checkServerType();
+    const canDownload = !isAppleMusic && isSingleSelected;
 
     function reset(action: () => void) {
         action();
@@ -102,16 +103,22 @@ export function SelectedSongsMenuOptions({ table }: SelectedSongsProps) {
                     }}
                 />
             )}
+            {
+                canDownload && (
+                    <>
+                        <ContextMenuSeparator />
+                        <OptionsButtons.Download
+                            variant="context"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload();
+                            }}
+                        />
+                    </>
+                )
+            }
             {isSingleSelected && (
                 <>
-                    <ContextMenuSeparator />
-                    <OptionsButtons.Download
-                        variant="context"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownload();
-                        }}
-                    />
                     <ContextMenuSeparator />
                     <OptionsButtons.SongInfo
                         variant="context"

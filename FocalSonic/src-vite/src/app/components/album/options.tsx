@@ -6,6 +6,8 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { useOptions } from "@/app/hooks/use-options";
 import { SingleAlbum } from "@/types/responses/album";
+import { checkServerType } from "@/utils/servers";
+import React from "react";
 
 interface AlbumOptionsProps {
     album: SingleAlbum
@@ -19,6 +21,9 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
         addToPlaylist,
         createNewPlaylist,
     } = useOptions();
+
+    const { isAppleMusic } = checkServerType();
+    const canDownload = !isAppleMusic;
 
     function handlePlayNext() {
         playNext(album.song);
@@ -58,10 +63,17 @@ export function AlbumOptions({ album }: AlbumOptionsProps) {
                     addToPlaylistFn={handleAddToPlaylist}
                 />
             </OptionsButtons.AddToPlaylistOption>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-                <OptionsButtons.Download onClick={handleDownload} />
-            </DropdownMenuGroup>
+
+            {
+                canDownload && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                            <OptionsButtons.Download onClick={handleDownload} />
+                        </DropdownMenuGroup>
+                    </>
+                )
+            }
         </>
     );
 }

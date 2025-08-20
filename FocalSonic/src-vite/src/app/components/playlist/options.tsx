@@ -32,8 +32,7 @@ export function PlaylistOptions({
     const { play, playNext, playLast, startDownload } = useOptions();
     const { setPlaylistId, setConfirmDialogState } = useRemovePlaylist();
     const { isAppleMusic } = checkServerType();
-
-    console.log(playlist);
+    const canDownload = !isAppleMusic;
 
     function handleEdit() {
         setData({
@@ -117,15 +116,22 @@ export function PlaylistOptions({
                     handlePlayLast();
                 }}
             />
-            <DropdownMenuSeparator />
-            <OptionsButtons.Download
-                variant={variant}
-                disabled={disableDownload}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleDownload();
-                }}
-            />
+
+            {
+                canDownload && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <OptionsButtons.Download
+                            variant={variant}
+                            disabled={disableDownload}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload();
+                            }}
+                        />
+                    </>
+                )
+            }
             <DropdownMenuSeparator />
             {
                 (isAppleMusic ? (playlist.appleMusic?.data.canEdit) : true) && (

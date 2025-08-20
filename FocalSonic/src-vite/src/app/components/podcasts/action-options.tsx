@@ -3,6 +3,8 @@ import { DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 import { usePodcastOptions } from "@/app/hooks/use-podcast-options";
 import { useEpisodeQueue } from "@/app/hooks/use-podcast-playing";
 import { Episode } from "@/types/responses/podcasts";
+import { checkServerType } from "@/utils/servers";
+import React from "react";
 
 interface ActionOptionsProps {
     episode: Episode
@@ -17,6 +19,9 @@ export function PodcastActionOptions({ episode, latest }: ActionOptionsProps) {
     function handleMarkAsPlayed() {
         markAsPlayedMutation.mutate();
     }
+
+    const { isAppleMusic } = checkServerType();
+    const canDownload = !isAppleMusic;
 
     return (
         <>
@@ -62,14 +67,21 @@ export function PodcastActionOptions({ episode, latest }: ActionOptionsProps) {
                     />
                 </>
             )}
-            <DropdownMenuSeparator />
-            <OptionsButtons.Download
-                variant="dropdown"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleDownload();
-                }}
-            />
+
+            {
+                canDownload && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <OptionsButtons.Download
+                            variant="dropdown"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload();
+                            }}
+                        />
+                    </>
+                )
+            }
         </>
     );
 }
