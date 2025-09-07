@@ -50,7 +50,7 @@ export default function PreviewList({
     }
 
     async function handlePlay(entry: AppleMusicRecommendationContent | Albums) {
-        
+
         if (entry.type === "stations") {
             // Apple music radio
             setPlayAppleMusicRadio(entry);
@@ -93,7 +93,7 @@ export default function PreviewList({
         const route = ROUTES[getResourceType(entry)]?.PAGE(entry.id);
 
         if (route) {
-            navigate(route);
+            setTimeout(() => navigate(route), 0);
         }
     };
 

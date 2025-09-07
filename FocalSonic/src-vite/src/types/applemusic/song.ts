@@ -63,6 +63,7 @@ export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: an
         parent: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
         albumId: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
         title: song.attributes?.name || "Unknown",
+        name: song.attributes?.name || "Unknown",
         artist: song.attributes?.artistName || "Unknown",
         album: song.attributes?.albumName || "Unknown",
         duration: Math.ceil((song.attributes?.durationInMillis || 0) / 1000),

@@ -1,9 +1,14 @@
 import { service } from "@/service/service";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
+import { t } from "i18next";
 import React from "react";
+import PreviewList from "../components/home/preview-list";
 
 export default function SearchResults({ query }: { query: string }) {
+
+    const { isAppleMusic } = checkServerType();
 
     const { data: searchResult } = useQuery({
         queryKey: [queryKeys.search, query],
@@ -16,12 +21,17 @@ export default function SearchResults({ query }: { query: string }) {
             })
     });
 
-    console.log(searchResult);
-
     return (
         <div className="p-4">
             <h2 className="text-lg font-semibold">Search results for "{query}"</h2>
-            <pre>{JSON.stringify(searchResult, null, 2)}</pre>
+            {
+                searchResult !== undefined && (
+                    <>
+                        <PreviewList title={t("sidebar.songs")} list={searchResult?.song} showMore={false} />
+                        <PreviewList title={t("sidebar.albums")} list={searchResult?.album} showMore={false} />
+                    </>
+                )
+            }
         </div>
     );
 }
