@@ -40,7 +40,7 @@ export function convertAppleMusicAlbumToSubsonic(album: AppleMusicAlbum): Single
         artist: album.attributes?.artistName || "",
         albumArt: album.attributes?.artwork?.url || "",
         releaseDate: album.attributes?.releaseDate || "",
-        genre: album.attributes?.genreNames[0] || "",
+        genre: album.attributes?.genreNames?.[0] || "",
         trackCount: album.attributes?.trackCount || 0,
         coverArt: album.attributes?.artwork?.url || "",
         song: album.relationships?.tracks?.data.map(convertAppleMusicSongToSubsonic) || [],

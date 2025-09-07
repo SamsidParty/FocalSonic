@@ -1,5 +1,6 @@
 import { httpClient } from "@/api/httpClient";
 import { convertAppleMusicAlbumToSubsonic } from "@/types/applemusic/albums";
+import { convertAppleMusicArtistToSubsonic } from "@/types/applemusic/artist";
 import { AppleMusicSong, convertAppleMusicSongToSubsonic } from "@/types/applemusic/song";
 import { SearchQueryOptions } from "../subsonic/search";
 
@@ -47,8 +48,37 @@ async function get({
 
         return {
             song: response["library-songs"]?.data.map(convertAppleMusicSongToSubsonic) || [],
-            artist: response["library-artists"]?.data.map(convertAppleMusicSongToSubsonic) || [],
+            artist: response["library-artists"]?.data.map(convertAppleMusicArtistToSubsonic) || [],
             album: response["library-albums"]?.data.map(convertAppleMusicAlbumToSubsonic) || [],
+        };
+    }
+    else {
+        const response = (await httpClient<any>("/applemusic/catalog/{storefront}/search", {
+            method: "GET",
+            query: {
+                "platform": "web",
+                "term": query,
+                "relate[editorial-items]": "contents",
+                "include[editorial-items]": "contents",
+                "include[albums]": "artists",
+                "include[artists]": "artists",
+                "include[songs]": "artists,albums",
+                "include[music-videos]": "artists",
+                "extend": "artistUrl",
+                "fields[artists]": "url,name,artwork,hero",
+                "fields[albums]": "artistName,artistUrl,artwork,contentRating,editorialArtwork,editorialVideo,name,playParams,releaseDate,url",
+                "with": "serverBubbles,lyricHighlights",
+                "omit[resource]": "autos",
+                "types": "activities,albums,apple-curators,artists,curators,editorial-items,music-movies,music-videos,playlists,songs,stations,tv-episodes,uploaded-videos,record-labels",
+                "limit": "25"
+            },
+        }))?.results;
+
+
+        return {
+            song: response["song"]?.data.map(convertAppleMusicSongToSubsonic) || [],
+            artist: response["artist"]?.data.map(convertAppleMusicArtistToSubsonic) || [],
+            album: response["album"]?.data.map(convertAppleMusicAlbumToSubsonic) || [],
         };
     }
 }

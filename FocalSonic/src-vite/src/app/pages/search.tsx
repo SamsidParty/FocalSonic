@@ -6,6 +6,7 @@ import React from "react";
 import { Form, useSearchParams } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { SearchInput } from "../components/ui/searchinput";
+import SearchResults from "./search-results";
 
 export default function Search() {
     // Get route params
@@ -18,11 +19,7 @@ export default function Search() {
     }
 
     // Render a simple results placeholder when a query is present
-    return (
-        <div className="p-4">
-            <h2 className="text-lg font-semibold">Search results for "{query}"</h2>
-        </div>
-    );
+    return <SearchResults query={query} />;
 }
 
 
