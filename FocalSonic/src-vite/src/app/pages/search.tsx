@@ -3,10 +3,30 @@ import clsx from "clsx";
 import { t } from "i18next";
 import { ArrowRightIcon } from "lucide-react";
 import React from "react";
+import { Form, useSearchParams } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { SearchInput } from "../components/ui/searchinput";
 
 export default function Search() {
+    // Get route params
+    const [searchParams] = useSearchParams();
+    const query = searchParams.get("q");
+
+    // Return search page if the query param is not present
+    if (!query) {
+        return <SearchPage />;
+    }
+
+    // Render a simple results placeholder when a query is present
+    return (
+        <div className="p-4">
+            <h2 className="text-lg font-semibold">Search results for "{query}"</h2>
+        </div>
+    );
+}
+
+
+function SearchPage() {
     const { isAppleMusic } = checkServerType();
 
     return (
@@ -18,16 +38,17 @@ export default function Search() {
                 )
             }
         >
-            <div className="w-full flex items-center justify-between gap-2 flex-row max-w-2xl">
+            <Form className="w-full flex items-center justify-between gap-2 flex-row max-w-2xl">
                 <SearchInput
                     placeholder={t("command.inputPlaceholder")}
                     className="w-full"
+                    name="q"
                     autoFocus
                 />
-                <Button>
+                <Button type="submit">
                     <ArrowRightIcon />
                 </Button>
-            </div>
+            </Form>
         </div>
     );
 }
