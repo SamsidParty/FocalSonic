@@ -171,13 +171,13 @@ export default function PreviewList({
                                     >
                                         <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl px-4 grow text-center flex flex-col justify-center align-center"}>
                                             <PreviewCard.Title onClick={() => navigateToResource(entry)}>
-                                                {entry.name || (entry as AppleMusicRecommendationContent).attributes.name}
+                                                {entry.name || (entry as AppleMusicRecommendationContent).attributes?.name}
                                             </PreviewCard.Title>
                                             <PreviewCard.Subtitle
                                                 enableLink={(entry.relationships?.artists.data[0]?.id || entry.artistId) !== undefined}
                                                 link={ROUTES.ARTIST.PAGE(entry.relationships?.artists.data[0]?.id || entry.artistId)}
                                             >
-                                                {entry.artist || (entry as AppleMusicRecommendationContent).attributes.artistName || (entry as AppleMusicRecommendationContent).attributes.curatorName}
+                                                {entry.artist || (entry as AppleMusicRecommendationContent).attributes?.artistName || (entry as AppleMusicRecommendationContent).attributes?.curatorName}
                                             </PreviewCard.Subtitle>
                                         </div>
                                     </PreviewCard.InfoWrapper>

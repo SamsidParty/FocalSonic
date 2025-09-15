@@ -24,7 +24,7 @@ export default function AppleMusicHome() {
                 return (
                     <PreviewList
                         key={section.id}
-                        title={section.attributes.title.stringForDisplay}
+                        title={section.attributes.title?.stringForDisplay}
                         showMore={false}
                         isLarge={i === 0}
                         list={section.relationships.contents.data}
