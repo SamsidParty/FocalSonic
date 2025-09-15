@@ -277,7 +277,10 @@ function convertTTMLToLRC(ttml: string): string {
             if (enableELRC) {
                 output += `[${convertMS(line.startTime)}] ${line.words.map((word) => convertMS(word.startTime, true) + (word.word)).join("")}`;
                 if (enableTransliteration && line.words.filter((f) => f.word && f.romanWord).length > 0) {
-                    output += `\0${line.words.map((word) => convertMS(word.startTime, true) + (word.romanWord)).join(" ")}`;
+                    output +=
+                        (line.words.map((word) => word.word?.replaceAll(" ", "").trim()).join("") !== line.words.map((word) => word.romanWord?.replaceAll(" ", "").trim()).join("")) // Skip if word and romanWord are same
+                            ? `\0${line.words.map((word) => convertMS(word.startTime, true) + (word.romanWord)).join(" ")}`
+                            : "";
                 }
             }
             else {

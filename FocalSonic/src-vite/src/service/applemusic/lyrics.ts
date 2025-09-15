@@ -16,7 +16,8 @@ async function getLyrics(getLyricsData: GetLyricsData) {
             // I spent 4 hours reverse engineering the Apple Music android app to find these parameters
             l: "en-US",
             extend: "ttmlLocalizations",
-            "l[script]": "en-Latn"
+            "l[script]": "en-Latn",
+            "l[lyrics]": "en-us"
         }
     });
 
