@@ -17,7 +17,7 @@
  Reason: Apple doesn't provide any legal method of playing DRM protected lossless files on Windows.
 
  - ❌ AutoMix / Sing / Apple Intelligence features  
- Reason: Windows PC's don't support Apple Intelligence
+ Reason: Windows PCs don't support Apple Intelligence
 
  - ❌ macOS support  
  Reason: A lot of work to put in with little demand, the official client for macOS is quite good already.

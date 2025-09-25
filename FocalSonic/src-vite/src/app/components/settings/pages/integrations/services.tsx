@@ -11,11 +11,14 @@ import {
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
 import { useAppSettings } from "@/store/app.store";
+import { checkServerType } from "@/utils/servers";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 export function Services() {
     const { t } = useTranslation();
     const { enableLRCLib, setEnableLRCLib } = useAppSettings();
+    const { isAppleMusic } = checkServerType();
 
     return (
         <Root>
@@ -27,7 +30,7 @@ export function Services() {
             </Header>
             <Content>
                 <ContentItem>
-                    <ContentItemTitle info={t("settings.integrations.services.lrclib.info")}>
+                    <ContentItemTitle info={t(isAppleMusic ? "settings.integrations.services.lrclib.info_apple" : "settings.integrations.services.lrclib.info")}>
                         {t("settings.integrations.services.lrclib.label")}
                     </ContentItemTitle>
                     <ContentItemForm>

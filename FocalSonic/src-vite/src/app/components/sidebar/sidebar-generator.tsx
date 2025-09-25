@@ -67,7 +67,7 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
                             size="sm"
                             className="w-full justify-start"
                         >
-                            <item.icon className="w-4 h-4 mr-2" />
+                            <item.icon color="var(--primary)" className="w-4 h-4 mr-2" />
                             {t(item.title)}
                         </Button>
                     </Link>
@@ -122,7 +122,7 @@ export function SidebarPlaylistGenerator({
                                     isActive(playlist.id) && "cursor-default hover:bg-accent",
                                 )}
                             >
-                                <ListMusic className="mr-2 min-h-4 min-w-4 h-4 w-4" />
+                                <ListMusic color="var(--primary)" className="mr-2 min-h-4 min-w-4 h-4 w-4" />
                                 <span className="w-full truncate text-left">
                                     {playlist.name}
                                 </span>
