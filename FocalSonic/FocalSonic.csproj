@@ -31,6 +31,7 @@
 	
 	<!-- IgniteView -->
 	<ItemGroup>
+		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="IgniteView.Desktop" Version="2.2.5" />
 		<PackageReference Include="IgniteView.Core" Version="*" />
 		<PackageReference Include="SoundFlow" Version="1.2.0" />

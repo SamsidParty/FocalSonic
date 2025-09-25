@@ -12,7 +12,7 @@ namespace FocalSonic.Presence
     {
         public static Presence Instance;
         public List<PresenceProvider> Providers = new List<PresenceProvider>();
-
+        public string LastPresenceHash = "";
 
         public static void Setup()
         {
@@ -20,6 +20,7 @@ namespace FocalSonic.Presence
             #if WINDOWS
             Instance.RegisterProvider(new WindowsPresenceProvider());
             #endif
+            Instance.RegisterProvider(new DiscordPresenceProvider());
         }
 
         public Presence() { Instance = this; }
@@ -34,6 +35,9 @@ namespace FocalSonic.Presence
 
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
+            if (LastPresenceHash == playbackInfo.PresenceHash) return;
+            LastPresenceHash = playbackInfo.PresenceHash;
+
             foreach (var provider in Providers)
             {
                 provider.UpdateMediaStatus(playbackInfo);

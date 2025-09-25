@@ -33,6 +33,17 @@ namespace FocalSonic.Presence
         public TimeSpan Duration = TimeSpan.Zero;
         public TimeSpan Position = TimeSpan.Zero;
 
+        // A combination of different values so that when this value changes, then the presence should be updated
+        public string PresenceHash
+        {
+            get
+            {
+                if (CurrentSong == null || string.IsNullOrEmpty(CurrentSong.Title)) return "no-song";
+
+                return $"song-{CurrentSong.Title}-{CurrentSong.Artist}-{CurrentSong.Album}-{IsPlaying}-{DateTime.UtcNow - Position}-{Duration.TotalSeconds}";
+            }
+        }
+
         public int? NextSongIndex
         {
             get
