@@ -9,7 +9,7 @@ import { ILyric } from "@/types/responses/song";
 import { isSafari } from "@/utils/osType";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { ComponentPropsWithoutRef, useEffect, useMemo, useRef, useState } from "react";
+import React, { ComponentPropsWithoutRef, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Lrc, LrcLine } from "react-lrc";
 
@@ -26,13 +26,28 @@ export function LyricsTab({ leftAlign }: { leftAlign?: boolean }) {
 
     const { data: lyrics, isLoading } = useQuery({
         queryKey: ["get-lyrics", artist, title, duration],
-        queryFn: () =>
-            service.lyrics.getLyrics({
+        queryFn: async () =>
+        {
+
+            if (window?.igniteView) {
+                // Check for overriden lyrics
+                const overriddenLyrics = await window?.igniteView?.commandBridge?.getLyricOverride(id);
+
+                if (overriddenLyrics) {
+                    return overriddenLyrics;
+                }
+            }
+
+            const foundLyrics = await service.lyrics.getLyrics({
                 artist,
                 title,
                 duration,
                 id,
-            }),
+            });
+
+
+            return foundLyrics;
+        },
     });
 
     const noLyricsFound = t("fullscreen.noLyrics");
@@ -244,7 +259,7 @@ function areLyricsSynced(lyrics: ILyric) {
 
 function areLyricsTTML(lyrics: ILyric) {
     const lyric = lyrics?.trim() ?? "";
-    return lyric.startsWith("<tt xmlns=");
+    return lyric.startsWith("<tt");
 }
 
 function convertTTMLToLRC(ttml: string): string {

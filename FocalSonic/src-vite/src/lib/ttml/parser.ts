@@ -6,11 +6,13 @@
  */
 
 import type {
-	LyricLine,
-	LyricWord,
-	TTMLLyric,
-	TTMLMetadata,
+    LyricLine,
+    LyricWord,
+    TTMLLyric,
+    TTMLMetadata,
 } from "./ttml-types";
+
+const trimLyric = (l: string) => l.replaceAll("\n", "");
 
 const timeRegexp =
 	/^(((?<hour>[0-9]+):)?(?<min>[0-9]+):)?(?<sec>[0-9]+([.:]([0-9]+))?)/;
@@ -94,7 +96,7 @@ export function parseTTML(ttmlText: string): TTMLLyric {
         for (const wordNode of lineEl.childNodes) {
             if (wordNode.nodeType === Node.TEXT_NODE) {
                 line.words?.push({
-                    word: wordNode.textContent ?? "",
+                    word: trimLyric(wordNode.textContent ?? ""),
                     startTime: 0,
                     endTime: 0
                 });
@@ -112,8 +114,9 @@ export function parseTTML(ttmlText: string): TTMLLyric {
                         line.romanLyric = wordEl.innerHTML;
                     }
                 } else if (wordEl.hasAttribute("begin") && wordEl.hasAttribute("end")) {
+
                     const word: LyricWord = {
-                        word: wordNode.textContent ?? "",
+                        word: trimLyric(wordNode.textContent ?? ""),
                         startTime: parseTimespan(wordEl.getAttribute("begin") ?? ""),
                         endTime: parseTimespan(wordEl.getAttribute("end") ?? ""),
                     };
@@ -176,7 +179,7 @@ export function parseTTML(ttmlText: string): TTMLLyric {
                 const tl = {
                     words: [],
                     translatedLyric: "",
-                    romanLyric: wordNode.textContent ?? "",
+                    romanLyric: trimLyric(wordNode.textContent ?? ""),
                     itunesKey: wordNode.getAttribute("for") ?? "",
                     startTime: 0,
                     endTime: 0,
@@ -187,9 +190,9 @@ export function parseTTML(ttmlText: string): TTMLLyric {
                 parseTransliteration(wordNode, tl);
             } else if (wordNode.nodeType === Node.ELEMENT_NODE || wordNode.nodeType === Node.TEXT_NODE) {
                 const word: LyricWord = {
-                    word: wordNode.textContent ?? "",
-                    romanWord: wordNode.textContent ?? "",
-                    itunesKey: tlEl?.getAttribute("for") ?? wordNode?.getAttribute("for") ?? "",
+                    word: trimLyric(wordNode.textContent ?? ""),
+                    romanWord: trimLyric(wordNode.textContent ?? ""),
+                    itunesKey: tlEl?.getAttribute("for") ?? wordNode?.getAttribute?.("for") ?? "",
                     startTime: (wordNode?.getAttribute?.("begin")) ? parseTimespan(wordNode?.getAttribute("begin") ?? "") : -1,
                     endTime: (wordNode?.getAttribute?.("end")) ? parseTimespan(wordNode?.getAttribute("end") ?? "") : -1,
                 };

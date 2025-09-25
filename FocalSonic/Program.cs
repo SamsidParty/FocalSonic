@@ -2,6 +2,7 @@
 using FocalSonic.AppleMusic;
 using FocalSonic.AudioPlayer;
 using FocalSonic.Helpers;
+using FocalSonic.OverrideSystem;
 using FocalSonic.Presence;
 using FocalSonic.Windows;
 using IgniteView.Core;
@@ -43,6 +44,7 @@ public class Program
         // Background setup
         PlayerThread.Start();
         Presence.Setup();
+        OverrideManager.Setup();
 
         #if WINDOWS
         WPFStyling.Setup();
