@@ -39,11 +39,16 @@ namespace FocalSonic.Presence
                 return;
             }
 
+            var limitStringLength = (string s) => s.Length > 128 ? s.Substring(0, 125) + "..." : s;
+
+            var artURL = playbackInfo.Store?.ExtraProperties.GetCoverArtForSong(playbackInfo.CurrentSong?.CoverArt!);
+
             Client.SetPresence(new RichPresence()
             {
                 Type = ActivityType.Listening,
-                Details = playbackInfo.CurrentSong?.Title,
-                State = string.Join(", ", playbackInfo.CurrentSong?.Artists?.Select((a) => a.Name) ?? new string[] { playbackInfo.CurrentSong?.Artist ?? "" }),
+                StatusDisplay = StatusDisplayType.State,
+                Details = limitStringLength(playbackInfo.CurrentSong?.Title),
+                State = limitStringLength(string.Join(", ", playbackInfo.CurrentSong?.Artists?.Select((a) => a.Name) ?? new string[] { playbackInfo.CurrentSong?.Artist ?? "" })),
                 Timestamps = playbackInfo.IsPlaying ? new DiscordRPC.Timestamps()
                 {
                     Start = DateTime.UtcNow - playbackInfo.Position,
@@ -51,8 +56,11 @@ namespace FocalSonic.Presence
                 } : null,
                 Assets = new Assets()
                 {
-                    LargeImageUrl = playbackInfo.Store?.ExtraProperties.GetCoverArtForSong(playbackInfo.CurrentSong?.CoverArt!),
-                    SmallImageUrl = playbackInfo.Store?.ExtraProperties.GetCoverArtForSong(playbackInfo.CurrentSong?.CoverArt!),
+                    LargeImageKey = artURL.Length > 256 ? "" : artURL,
+                    LargeImageText = limitStringLength(playbackInfo.CurrentSong?.Album),
+                    SmallImageKey = "https://github.com/SamsidParty/FocalSonic/blob/main/FocalSonic/src-vite/public/favicons/favicon-full.png?raw=true",
+                    SmallImageText = "FocalSonic",
+                    SmallImageUrl = "https://github.com/SamsidParty/FocalSonic"
                 }
             });
         }

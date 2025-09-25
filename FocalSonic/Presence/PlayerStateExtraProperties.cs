@@ -18,8 +18,8 @@ namespace FocalSonic.Presence
 
         public string GetCoverArtForSong(string coverArtID)
         {
-            if (string.IsNullOrEmpty(CoverArtBaseURL) || CoverArtBaseURL == "{id}") return string.Empty;
-            return CoverArtBaseURL.Replace("{id}", coverArtID).Replace("{w}", "300").Replace("{h}", "300").Replace("{f}", "webp");
+            if (string.IsNullOrEmpty(CoverArtBaseURL)) return string.Empty;
+            return CoverArtBaseURL.Replace("{id}", coverArtID).Replace("{w}", "300").Replace("{h}", "300").Replace("{f}", "jpg");
         }
 
         public string GetStreamURLForSong(string songID)
