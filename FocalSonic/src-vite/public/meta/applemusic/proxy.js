@@ -13,6 +13,18 @@ async function onMusicKitLoad() {
         }
     });
 
+    // This doesn't even work bruh and Apple has horrible documentation so I don't know how to fix it
+    window.proxyMusicInstance.addEventListener("mediaPlaybackError", (error) => {
+        console.error(`Apple music MKError: ${error}`);
+    });
+
+    window.addEventListener("unhandledrejection", function (e) {
+        if (e.reason.name === "MKError") {
+            window.igniteView?.commandBridge.displayError("Something went wrong with Apple Music", e.reason.reason);
+            e.preventDefault();
+        }
+    })
+
 };
 
 async function checkAuthState() {
@@ -60,7 +72,7 @@ window.executeInjectedQueue = async () => {
         }
         else if (item.type === "setSpeed") {
             window.proxyMusicInstance.playbackRate = item.speed;
-            findAudioElement().preservesPitch = false;
+            findAudioElement() && (findAudioElement().preservesPitch = false);
         }
         else if (item.type === "setSource") {
             await window.proxyMusicInstance.stop();
