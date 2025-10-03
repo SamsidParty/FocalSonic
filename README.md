@@ -4,7 +4,9 @@
 
 - 🎨 **Customization** - Easily customize the colors and fonts of the UI
 - 🔉 **Background Audio Playback** - Save resources by closing the player window
+- ⏩ **Speed Control** - Slow down or speed up your music
 - 🎤 **Lyrics** - Support for syllable-synced lyrics, including pronunciations for foreign languages
+- 📻 **Apple Music Radio** - (EXPERIMENTAL) Radio playback from personal radio stations 
 
 ## Future Plans 🚀
 
