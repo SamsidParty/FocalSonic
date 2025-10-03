@@ -28,6 +28,7 @@ export interface IPlayerState {
     isShuffleActive: boolean
     isSongStarred: boolean
     volume: number
+    speed: number
     currentDuration: number
     mediaType: "song" | "radio" | "podcast"
     currentPlaybackRate: number
@@ -44,6 +45,13 @@ export interface IPlayerProgress {
 }
 
 export interface IVolumeSettings {
+    min: number
+    max: number
+    step: number
+    wheelStep: number
+}
+
+export interface ISpeedSettings {
     min: number
     max: number
     step: number
@@ -105,6 +113,7 @@ interface IColorsSettings {
 
 export interface IPlayerSettings {
     volume: IVolumeSettings
+    speed: ISpeedSettings
     fullscreen: IFullscreen
     replayGain: IReplayGain
     colors: IColorsSettings
@@ -132,6 +141,7 @@ export interface IPlayerActions {
     resetProgress: () => void
     setProgress: (progress: number) => void
     setVolume: (volume: number) => void
+    setSpeed: (speed: number) => void
     handleVolumeWheel: (isScrollingDown: boolean) => void
     setCurrentDuration: (duration: number) => void
     setPlayRadio: (list: Radio[], index: number) => void

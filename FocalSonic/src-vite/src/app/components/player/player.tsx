@@ -21,7 +21,7 @@ import { hasPiPSupport } from "@/utils/browser";
 import { logger } from "@/utils/logger";
 import { ReplayGainParams } from "@/utils/replayGain";
 import clsx from "clsx";
-import { memo, useCallback, useEffect, useRef } from "react";
+import React, { memo, useCallback, useEffect, useRef } from "react";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
 import { PlayerControls } from "./controls";
@@ -31,6 +31,7 @@ import { PodcastInfo } from "./podcast-info";
 import { PodcastPlaybackRate } from "./podcast-playback-rate";
 import { PlayerProgress } from "./progress";
 import { PlayerQueueButton } from "./queue-button";
+import { PlayerSpeed } from "./speed";
 import { PlayerVolume } from "./volume";
 
 const MemoTrackInfo = memo(TrackInfo);
@@ -42,6 +43,7 @@ const MemoPlayerLikeButton = memo(PlayerLikeButton);
 const MemoPlayerQueueButton = memo(PlayerQueueButton);
 const MemoPlayerClearQueueButton = memo(PlayerClearQueueButton);
 const MemoPlayerVolume = memo(PlayerVolume);
+const MemoPlayerSpeed = memo(PlayerSpeed);
 const MemoPodcastPlaybackRate = memo(PodcastPlaybackRate);
 const MemoLyricsButton = memo(PlayerLyricsButton);
 const MemoMiniPlayerButton = memo(MiniPlayerButton);
@@ -224,6 +226,10 @@ export function Player() {
                         )}
 
                         <MemoPlayerVolume
+                            audioRef={getAudioRef()}
+                            disabled={!song && !radio && !podcast}
+                        />
+                        <MemoPlayerSpeed
                             audioRef={getAudioRef()}
                             disabled={!song && !radio && !podcast}
                         />

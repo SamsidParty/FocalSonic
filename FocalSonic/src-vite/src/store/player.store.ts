@@ -68,6 +68,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         isShuffleActive: false,
                         isSongStarred: false,
                         volume: 100,
+                        speed: 1,
                         currentDuration: 0,
                         mediaType: "song",
                         audioPlayerRef: null,
@@ -87,6 +88,12 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             max: 100,
                             step: 1,
                             wheelStep: 5,
+                        },
+                        speed: {
+                            min: 0.1,
+                            max: 3,
+                            step: 0.05,
+                            wheelStep: 0.1,
                         },
                         fullscreen: {
                             autoFullscreenEnabled: false,
@@ -558,6 +565,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.playerState.volume = volume;
                             });
                         },
+                        setSpeed: (speed) => {
+                            set((state) => {
+                                state.playerState.speed = speed;
+                            });
+                        },
                         handleVolumeWheel: (isScrollingDown) => {
                             const { min, max, wheelStep } = get().settings.volume;
                             const { volume } = get().playerState;
@@ -1018,8 +1030,16 @@ export const usePlayerVolume = () => ({
     handleVolumeWheel: usePlayerStore((state) => state.actions.handleVolumeWheel),
 });
 
+export const usePlayerSpeed = () => ({
+    speed: usePlayerStore((state) => state.playerState.speed),
+    setSpeed: usePlayerStore((state) => state.actions.setSpeed)
+});
+
 export const useVolumeSettings = () =>
     usePlayerStore((state) => state.settings.volume);
+
+export const useSpeedSettings = () =>
+    usePlayerStore((state) => state.settings.speed);
 
 export const useReplayGainState = () => {
     const { enabled, type, preAmp, error, defaultGain } = usePlayerStore(

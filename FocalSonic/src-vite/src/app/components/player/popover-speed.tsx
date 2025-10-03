@@ -5,9 +5,9 @@ import {
     PopoverTrigger,
 } from "@/app/components/ui/popover";
 import { ReactNode } from "react";
-import { VolumeSlider } from "./volume";
+import { SpeedSlider } from "./speed";
 
-export function PopoverVolume({ children }: { children: ReactNode }) {
+export function PopoverSpeed({ children }: { children: ReactNode }) {
     return (
         <Popover>
             <PopoverTrigger asChild>
@@ -23,7 +23,7 @@ export function PopoverVolume({ children }: { children: ReactNode }) {
                 side="left"
                 align="center"
             >
-                <VolumeSlider className="w-24" />
+                <SpeedSlider className="w-24" />
             </PopoverContent>
         </Popover>
     );
