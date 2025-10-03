@@ -77,6 +77,7 @@ namespace FocalSonic.AppleMusic
             {
                 owningPlayer.CallLoadEvent(currentPlaybackDuration);
             }
+            owningPlayer.UpdatePlaybackParameters();
         }
 
         [Command("appleMusicRecieveEndedEvent")]
@@ -99,6 +100,8 @@ namespace FocalSonic.AppleMusic
                 $"window.injectedQueue.push({{ type: 'setSource', source: '{src}' }});" +
                 InjectionSuffix
             );
+
+            await UpdatePlaybackParameters();
         }
 
         public override async Task PlayAudio()

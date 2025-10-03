@@ -20,6 +20,7 @@ import { LoopState } from "@/types/playerContext";
 import { hasPiPSupport } from "@/utils/browser";
 import { logger } from "@/utils/logger";
 import { ReplayGainParams } from "@/utils/replayGain";
+import { checkServerType } from "@/utils/servers";
 import clsx from "clsx";
 import React, { memo, useCallback, useEffect, useRef } from "react";
 import { AudioPlayer } from "./audio";
@@ -66,6 +67,7 @@ export function Player() {
     usePlayerSonglist();
     const isPlaying = usePlayerIsPlaying();
     const { isSong, isRadio, isPodcast } = usePlayerMediaType();
+    const { isAppleMusic } = checkServerType();
     const loopState = usePlayerLoop();
     const audioPlayerRef = usePlayerRef();
     const currentPlaybackRate = usePlayerStore().playerState.currentPlaybackRate;
@@ -225,11 +227,16 @@ export function Player() {
                             <MemoPlayerClearQueueButton disabled={!radio && !podcast} />
                         )}
 
+                        {
+                            isAppleMusic && (
+                                <MemoPlayerSpeed
+                                    audioRef={getAudioRef()}
+                                    disabled={!song && !radio && !podcast}
+                                />
+                            )
+                        }
+
                         <MemoPlayerVolume
-                            audioRef={getAudioRef()}
-                            disabled={!song && !radio && !podcast}
-                        />
-                        <MemoPlayerSpeed
                             audioRef={getAudioRef()}
                             disabled={!song && !radio && !podcast}
                         />

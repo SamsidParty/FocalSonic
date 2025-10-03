@@ -91,7 +91,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         speed: {
                             min: 0.1,
-                            max: 3,
+                            max: 2,
                             step: 0.05,
                             wheelStep: 0.1,
                         },

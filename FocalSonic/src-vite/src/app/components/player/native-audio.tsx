@@ -7,6 +7,7 @@ import { AudioPlayerProps } from "./audio";
 class NativeVirtualAudioPlayer {
     duration = NaN;
     _volume = 1;
+    _playbackRate = 1;
     _currentTime = 0;
     _currentTimeOffset = Date.now();
     _loop: boolean = false;
@@ -112,6 +113,15 @@ class NativeVirtualAudioPlayer {
         setTimeout(async () => {
             await this.waitForCreation();
             window.igniteView?.commandBridge.setAudioPlayerVolume(this.id!, this._volume);
+        }, 0);
+    }
+
+    set playbackRate(value: number) {
+        if (this._playbackRate === value) return;
+        this._playbackRate = value;
+        setTimeout(async () => {
+            await this.waitForCreation();
+            window.igniteView?.commandBridge.setAudioPlayerSpeed(this.id!, this._playbackRate);
         }, 0);
     }
 

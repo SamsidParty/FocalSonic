@@ -1,4 +1,3 @@
-
 async function onMusicKitLoad() {
     console.log("[FocalSonic][Apple Music Proxy] MusicKit available");
     console.log("[FocalSonic][Apple Music Proxy] Auth status: " + (window.proxyMusicInstance.isAuthorized ? "Authorized" : "Not Authorized"));
@@ -61,7 +60,7 @@ window.executeInjectedQueue = async () => {
         }
         else if (item.type === "setSpeed") {
             window.proxyMusicInstance.playbackRate = item.speed;
-            findAudioElement()?.preservesPitch = false;
+            findAudioElement().preservesPitch = false;
         }
         else if (item.type === "setSource") {
             await window.proxyMusicInstance.stop();
