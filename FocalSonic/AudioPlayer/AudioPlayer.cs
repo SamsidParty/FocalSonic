@@ -22,6 +22,7 @@ namespace FocalSonic.AudioPlayer
         public bool HasLoaded;
         public bool Looping;
         public float Volume = 1.0f;
+        public float Speed = 1.0f;
         internal int AssociatedWindowID;
         internal WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
 
@@ -90,6 +91,7 @@ namespace FocalSonic.AudioPlayer
         public virtual async Task SeekAudio(double time) { }
         public virtual async Task SetLoopMode(bool loop) { Looping = loop; }
         public virtual async Task SetVolume(double volume) { Volume = (float)volume; }
+        public virtual async Task SetSpeed(double speed) { Speed = (float)speed; }
 
         public async Task CallEndEvent()
         {
@@ -110,6 +112,7 @@ namespace FocalSonic.AudioPlayer
         {
             await SetLoopMode(Looping);
             await SetVolume(Volume);
+            await SetSpeed(Speed);
         }
 
         [Command("setAudioPlayerSource")] public static async Task SetSourceOnPlayer(string id, string src, WebWindow ctx) => RunOnPlayer(id, (p) => p.SetSource(src, ctx));
@@ -118,6 +121,7 @@ namespace FocalSonic.AudioPlayer
         [Command("seekAudio")] public static async Task SeekAudioOnPlayer(string id, double time) => RunOnPlayer(id, (p) => p.SeekAudio(time));
         [Command("setAudioPlayerLoopMode")] public static async Task SetLoopModeOnPlayer(string id, bool loop) => RunOnPlayer(id, (p) => p.SetLoopMode(loop));
         [Command("setAudioPlayerVolume")] public static async Task SetVolumeOnPlayer(string id, double volume) => RunOnPlayer(id, (p) => p.SetVolume(volume));
+        [Command("setAudioPlayerSpeed")] public static async Task SetSpeedOnPlayer(string id, double speed) => RunOnPlayer(id, (p) => p.SetSpeed(speed));
 
         [Command("disposeAudioPlayer")] 
         public static async Task DisposeAudioPlayer(string id)
