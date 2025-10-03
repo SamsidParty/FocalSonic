@@ -1,9 +1,5 @@
-/**
- * @fileoverview
- * 解析 TTML 歌词文档到歌词数组的解析器
- * 用于解析从 Apple Music 来的歌词文件，且扩展并支持翻译和音译文本。
- * @see https://www.w3.org/TR/2018/REC-ttml1-20181108/
- */
+// https://github.com/Steve-xmh/applemusic-like-lyrics/tree/main?tab=License-1-ov-file
+// Modified by SamsidParty to support translation/transliteration and fix some issues
 
 import type {
     LyricLine,
@@ -74,14 +70,12 @@ export function parseTTML(ttmlText: string): TTMLLyric {
         }
     }
 
-    const transliterations: LyricLine[] = [];
+    const alternateLyrics: { [key: string]: LyricLine[] } = {};
     const lyricLines: LyricLine[] = [];
 
     function parseParseLine(lineEl: Element, isBG = false, isDuet = false) {
         const line: LyricLine = {
             words: [],
-            translatedLyric: "",
-            romanLyric: "",
             itunesKey: lineEl.getAttribute("itunes:key") ?? "",
             isBG,
             isDuet:
@@ -109,9 +103,9 @@ export function parseTTML(ttmlText: string): TTMLLyric {
                         parseParseLine(wordEl, true, line.isDuet);
                         haveBg = true;
                     } else if (role === "x-translation") {
-                        line.translatedLyric = wordEl.innerHTML;
+                        line.altLyric_translation = wordEl.innerHTML;
                     } else if (role === "x-roman") {
-                        line.romanLyric = wordEl.innerHTML;
+                        line.altLyric_transliteration = wordEl.innerHTML;
                     }
                 } else if (wordEl.hasAttribute("begin") && wordEl.hasAttribute("end")) {
 
@@ -173,72 +167,76 @@ export function parseTTML(ttmlText: string): TTMLLyric {
         }
     }
 
-    function parseTransliteration(tlEl: Element, parent?: Element) {
+    function parseAlternateLyric(tlEl: Element, parent?: LyricLine, type: "transliteration" | "translation" = "transliteration") {
         for (const wordNode of tlEl.childNodes) {
             if (wordNode.nodeName === "text") {
                 const tl = {
                     words: [],
-                    translatedLyric: "",
-                    romanLyric: trimLyric(wordNode.textContent ?? ""),
                     itunesKey: wordNode.getAttribute("for") ?? "",
                     startTime: 0,
                     endTime: 0,
                     isBG: false,
                     isDuet: false
-                };
-                transliterations.push(tl);
-                parseTransliteration(wordNode, tl);
+                } as LyricLine;
+                
+                tl["altLyric_" + type] = trimLyric(wordNode.textContent ?? "");
+
+                alternateLyrics[type].push(tl);
+                parseAlternateLyric(wordNode, tl, type);
             } else if (wordNode.nodeType === Node.ELEMENT_NODE || wordNode.nodeType === Node.TEXT_NODE) {
                 const word: LyricWord = {
                     word: trimLyric(wordNode.textContent ?? ""),
-                    romanWord: trimLyric(wordNode.textContent ?? ""),
                     itunesKey: tlEl?.getAttribute("for") ?? wordNode?.getAttribute?.("for") ?? "",
                     startTime: (wordNode?.getAttribute?.("begin")) ? parseTimespan(wordNode?.getAttribute("begin") ?? "") : -1,
                     endTime: (wordNode?.getAttribute?.("end")) ? parseTimespan(wordNode?.getAttribute("end") ?? "") : -1,
                 };
+
+                word["altWord_" + type] = trimLyric(wordNode.textContent ?? "");
 	
                 parent?.words.push(word);
             }
         }
-
     }
 
-    for (const lineEl of ttmlDoc.querySelectorAll("body p[begin][end]")) {
-        parseParseLine(lineEl);
-    }
+    function applyAlternateLyric(type: "transliteration" | "translation") {
+        alternateLyrics[type] = [];
 
-    // TODO: Let the user choose between translation or transliteration
-    const romanMode = "transliteration"; // "transliteration" | "translation"
+        for (const tlEl of ttmlDoc.querySelectorAll(type)) {
+            parseAlternateLyric(tlEl, undefined, type);
+        }
 
-    for (const tlEl of ttmlDoc.querySelectorAll(romanMode)) {
-        parseTransliteration(tlEl);
-    }
+        if (alternateLyrics[type].length > 0) {
+            for (const ll in lyricLines) {
+                const line = lyricLines[ll];
+                const transliteration = alternateLyrics[type].find((tl) => tl.itunesKey === line.itunesKey);
 
-
-    if (transliterations.length > 0) {
-        for (const ll in lyricLines) {
-            const line = lyricLines[ll];
-            const transliteration = transliterations.find((tl) => tl.itunesKey === line.itunesKey);
-
-            if (transliteration?.romanLyric) {
-                line.romanLyric = transliteration.romanLyric;
-            }
-
-            for (const word of line.words) {
-                if (transliteration) {
-                    word.romanWord = 
-						transliteration.words.find((w) => (w.startTime > 0) && Math.abs(w.startTime - word.startTime) < 10 && Math.abs(w.endTime - word.endTime) < 10)?.romanWord || "";
+                if (transliteration?.["altLyric_" + type]) {
+                    line["altLyric_" + type] = transliteration["altLyric_" + type];
                 }
-            }
+
+                for (const word of line.words) {
+                    if (transliteration) {
+                        word["altWord_" + type] = transliteration.words.find((w) => (w.startTime > 0) && Math.abs(w.startTime - word.startTime) < 10 && Math.abs(w.endTime - word.endTime) < 10)?.["altWord_" + type] || "";
+                    }
+                }
 			
-            if (line.words.length === 1 && !line.words[0].romanWord) {
-                line.words[0].romanWord = transliteration?.romanLyric;
-            }
-            else if (!line.words[0].romanWord) {
-                line.words[0].romanWord = transliteration?.words.find((w) => line.itunesKey === w.itunesKey && w.romanWord)?.romanWord || "";
+                if (line.words.length === 1 && !line.words[0]?.["altWord_" + type]) {
+                    line.words[0]["altWord_" + type] = transliteration?.["altLyric_" + type];
+                }
+                else if (!line.words[0]?.["altWord_" + type]) {
+                    line.words[0]["altWord_" + type] = transliteration?.words.find((w) => line.itunesKey === w.itunesKey && w["altWord_" + type])?.["altWord_" + type] || "";
+                }
             }
         }
     }
+
+    
+    for (const lineEl of ttmlDoc.querySelectorAll("body p[begin][end]")) {
+        parseParseLine(lineEl);
+    }
+    
+    applyAlternateLyric("transliteration");
+    applyAlternateLyric("translation");
 
     return {
         metadata,

@@ -272,6 +272,7 @@ function convertTTMLToLRC(ttml: string): string {
         const convertedELRC = parsedTTML.lyricLines.map((line) => {
 
             let output = "";
+            const alternateType = "transliteration" as "transliteration" | "translation";
 
             const convertMS = (ms, wrap?: boolean) => {
                 const minutes = Math.floor(ms / 60000);
@@ -291,10 +292,11 @@ function convertTTMLToLRC(ttml: string): string {
 
             if (enableELRC) {
                 output += `[${convertMS(line.startTime)}] ${line.words.map((word) => convertMS(word.startTime, true) + (word.word)).join("")}`;
-                if (enableTransliteration && line.words.filter((f) => f.word && f.romanWord).length > 0) {
+
+                if (enableTransliteration && line.words.filter((f) => f.word && f["altWord_" + alternateType]).length > 0) {
                     output +=
-                        (line.words.map((word) => word.word?.replaceAll(" ", "").trim()).join("") !== line.words.map((word) => word.romanWord?.replaceAll(" ", "").trim()).join("")) // Skip if word and romanWord are same
-                            ? `\0${line.words.map((word) => convertMS(word.startTime, true) + (word.romanWord)).join(" ")}`
+                        (line.words.map((word) => word.word?.replaceAll(" ", "").trim()).join("") !== line.words.map((word) => word["altWord_" + alternateType]?.replaceAll(" ", "").trim()).join("")) // Skip if word and alternate word are same
+                            ? `\0${line.words.map((word) => convertMS(word.startTime, true) + (word["altWord_" + alternateType])).join(" ")}`
                             : "";
                 }
             }
