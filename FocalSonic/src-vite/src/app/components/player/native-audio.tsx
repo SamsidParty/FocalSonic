@@ -83,7 +83,7 @@ class NativeVirtualAudioPlayer {
     get currentTime() {
         if (this.readyState === 0) { return 0; }
         if (this.paused || this._currentTimeOffset < 1) { return this._currentTime; }
-        return Math.min(((Date.now() - this._currentTimeOffset) / 1000) + this._currentTime, this._currentTime + 1);
+        return Math.min((((Date.now() - this._currentTimeOffset) / 1000) * this._playbackRate) + this._currentTime, this._currentTime + this._playbackRate);
     }
   
     set currentTime(value: number) {
