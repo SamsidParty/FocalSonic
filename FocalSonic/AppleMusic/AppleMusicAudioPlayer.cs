@@ -152,6 +152,16 @@ namespace FocalSonic.AppleMusic
             );
         }
 
+        public override async Task SetSpeed(double speed)
+        {
+            await base.SetSpeed(speed);
+            ProxyWindow?.ExecuteJavaScript(
+                InjectionPrefix +
+                $"window.injectedQueue.push({{ type: 'setSpeed', speed: {speed} }});" +
+                InjectionSuffix
+            );
+        }
+
         #endregion
 
         #region Sign In
