@@ -49,7 +49,7 @@ namespace FocalSonic.Presence
                 StatusDisplay = StatusDisplayType.State,
                 Details = limitStringLength(playbackInfo.CurrentSong?.Title),
                 State = limitStringLength(string.Join(", ", playbackInfo.CurrentSong?.Artists?.Select((a) => a.Name) ?? new string[] { playbackInfo.CurrentSong?.Artist ?? "" })),
-                Timestamps = playbackInfo.IsPlaying ? new DiscordRPC.Timestamps()
+                Timestamps = (playbackInfo.IsPlaying && playbackInfo.AssociatedPlayer?.Speed == 1) ? new DiscordRPC.Timestamps()
                 {
                     Start = DateTime.UtcNow - playbackInfo.Position,
                     End = playbackInfo.Duration == TimeSpan.Zero ? (DateTime?)null : DateTime.UtcNow + (playbackInfo.Duration - playbackInfo.Position)

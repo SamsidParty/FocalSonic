@@ -40,7 +40,14 @@ namespace FocalSonic.Presence
             {
                 if (CurrentSong == null || string.IsNullOrEmpty(CurrentSong.Title)) return "no-song";
 
-                return $"song-{CurrentSong.Title}-{CurrentSong.Artist}-{CurrentSong.Album}-{IsPlaying}-{DateTime.UtcNow - Position}-{Duration.TotalSeconds}";
+                var timeHash = $"{DateTime.UtcNow - Position}-{Duration.TotalSeconds}";
+                if (AssociatedPlayer?.Speed != 1)
+                {
+                    // Custom speed will mess up calculations for position and duration, so just override the hash
+                    timeHash = "speed-" + AssociatedPlayer?.Speed;
+                }
+
+                return $"song-{CurrentSong.Title}-{CurrentSong.Artist}-{CurrentSong.Album}-{IsPlaying}-{timeHash}";
             }
         }
 
