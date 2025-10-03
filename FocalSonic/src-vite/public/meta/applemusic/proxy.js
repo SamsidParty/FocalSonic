@@ -31,6 +31,8 @@ async function checkAuthState() {
     }
 }
 
+const findAudioElement = () => document.getElementById("apple-music-player");
+
 window.checkAuthStateInterval = setInterval(checkAuthState, 500);
 
 window.isCurrentSongRadio = false;
@@ -56,6 +58,10 @@ window.executeInjectedQueue = async () => {
         }
         else if (item.type === "setVolume") {
             window.proxyMusicInstance.volume = item.volume;
+        }
+        else if (item.type === "setSpeed") {
+            window.proxyMusicInstance.playbackRate = item.speed;
+            findAudioElement()?.preservesPitch = false;
         }
         else if (item.type === "setSource") {
             await window.proxyMusicInstance.stop();
@@ -84,7 +90,7 @@ window.executeInjectedQueue = async () => {
         }
     }
 
-    await window.igniteView?.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, document.getElementById("apple-music-player")?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
+    await window.igniteView?.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, findAudioElement()?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
 };
 
 setInterval(window.executeInjectedQueue, 250);
