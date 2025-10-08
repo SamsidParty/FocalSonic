@@ -12,6 +12,12 @@ namespace FocalSonic.Presence
     {
         public DiscordRpcClient Client;
 
+
+        /// <summary>
+        /// Set to false if the initialization fails because discord is either closed or not installed
+        /// </summary>
+        public bool IsAvailable;
+
         //TODO: Allow the user to use their own app ID
         public static string DiscordAppID = "1332231131336282125";
 
@@ -22,18 +28,31 @@ namespace FocalSonic.Presence
 
         public void Initialize()
         {
-            if (Client != null)
+            try
             {
-                Client.Dispose();
-            }
+                if (Client != null)
+                {
+                    Client.Dispose();
+                }
 
-            Client = new DiscordRpcClient(DiscordAppID);
-            Client.Initialize();
+                Client = new DiscordRpcClient(DiscordAppID);
+                Client.Initialize();
+
+                if (!Client.IsInitialized) throw new Exception("Discord isn't available");
+
+                IsAvailable = true;
+            }
+            catch
+            {
+                IsAvailable = false;    
+            }
         }
 
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
-            if (playbackInfo?.CurrentSong == null || string.IsNullOrEmpty(playbackInfo.CurrentSong?.Title))
+            if (!IsAvailable) { return; }
+
+            if (playbackInfo?.CurrentSong == null || string.IsNullOrEmpty(playbackInfo.CurrentSong?.Title) || !playbackInfo.IsPlaying)
             {
                 Client.ClearPresence();
                 return;
