@@ -13,6 +13,7 @@ import { createJSONStorage, devtools, persist, subscribeWithSelector } from "zus
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
+import { useAppStore } from "./app.store";
 
 const blurSettings = {
     min: 20,
@@ -32,10 +33,13 @@ const igniteViewPlayerStore = {
 
         // Insert extra properties to allow C# to have extra context
         const { isAppleMusic } = checkServerType();
+        const appStore = useAppStore.getState();
         value.extraProperties = {
             coverArtBaseURL: isAppleMusic ? "{id}" : getCoverArtUrl("{id}"),
             streamBaseURL: isAppleMusic ? "{id}" : getSongStreamUrl("{id}"),
         };
+
+        value.extraProperties = { ...value.extraProperties, ...appStore?.settings };
 
         await window.igniteView?.commandBridge.setPlayerStore(JSON.stringify(value));
     },
@@ -154,6 +158,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             },
                         },
                     },
+                    presenceNonce: 0,
                     actions: {
                         setSongList: (songlist, index, shuffle = false) => {
                             const { currentList, currentSongIndex } = get().songlist;
@@ -906,6 +911,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             set((state) => {
                                 state.isLoading = value;
                             });
+                        },
+                        setPresenceNonce: (value) => {
+                            set((state) => {
+                                state.presenceNonce = value;
+                            }); 
                         }
                     },
                 })),

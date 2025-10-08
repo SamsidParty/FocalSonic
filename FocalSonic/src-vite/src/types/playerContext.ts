@@ -178,6 +178,7 @@ export interface IPlayerActions {
     setuseDynamicColorsOnBigPlayer: (value: boolean) => void
     setBigPlayerBlurValue: (value: number) => void
     setIsLoading: (value: boolean) => void
+    setPresenceNonce: (value: number) => void
 }
 
 export interface IPlayerContext {
@@ -187,4 +188,5 @@ export interface IPlayerContext {
     playerProgress: IPlayerProgress
     settings: IPlayerSettings
     actions: IPlayerActions
+    presenceNonce: number
 }

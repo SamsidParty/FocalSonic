@@ -16,6 +16,9 @@ namespace FocalSonic.Presence
         [JsonProperty("streamBaseURL")]
         public string StreamBaseURL;
 
+        [JsonProperty("enableDiscordPresence")]
+        public bool EnableDiscordPresence;
+
         public string GetCoverArtForSong(string coverArtID)
         {
             if (string.IsNullOrEmpty(CoverArtBaseURL)) return string.Empty;

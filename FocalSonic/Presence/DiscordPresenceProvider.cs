@@ -37,6 +37,7 @@ namespace FocalSonic.Presence
 
                 Client = new DiscordRpcClient(DiscordAppID);
                 Client.Initialize();
+                Client.SkipIdenticalPresence = true;
 
                 if (!Client.IsInitialized) throw new Exception("Discord isn't available");
 
@@ -50,11 +51,16 @@ namespace FocalSonic.Presence
 
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
-            if (!IsAvailable) { return; }
 
-            if (playbackInfo?.CurrentSong == null || string.IsNullOrEmpty(playbackInfo.CurrentSong?.Title) || !playbackInfo.IsPlaying)
+            if (
+                !IsAvailable || 
+                playbackInfo?.CurrentSong == null || 
+                string.IsNullOrEmpty(playbackInfo.CurrentSong?.Title) || 
+                !playbackInfo.IsPlaying ||
+                (!playbackInfo?.Store?.ExtraProperties?.EnableDiscordPresence ?? true)
+            )
             {
-                Client.ClearPresence();
+                if (Client?.CurrentPresence != null) Client.ClearPresence();
                 return;
             }
 

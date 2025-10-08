@@ -16,6 +16,7 @@ import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
+import { usePlayerStore } from "./player.store";
 
 const { SERVER_URL, HIDE_SERVER, SHOW_RADIOS_SECTION, SERVER_TYPE } = window;
 
@@ -112,6 +113,18 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.settings.enableLRCLib = value;
                             });
                         },
+                        enableDiscordPresence: false,
+                        setEnableDiscordPresence: (value) => {
+                            set((state) => {
+                                state.settings.enableDiscordPresence = value;
+                            });
+
+                            // Try to update the presence nonce on the player store, which will trigger the change instantly
+                            const playerStore = usePlayerStore?.getState();
+                            if (playerStore) {
+                                playerStore.actions.setPresenceNonce(Date.now());
+                            }
+                        }
                     },
                     runtimeState: {
                         settingsDialogState: false,

@@ -679,6 +679,10 @@
           "info": "LRCLIB is used to find song lyrics.",
           "info_apple": "If Apple Music doesn't have the lyrics for a song, LRCLIB will be used as a backup source.",
           "label": "LRCLIB"
+        },
+        "discord": {
+          "info": "Display what you're listening to publicly on Discord.",
+          "label": "Discord Rich Presence"
         }
       }
     },

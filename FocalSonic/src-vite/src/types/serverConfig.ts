@@ -75,6 +75,8 @@ export interface IPodcasts {
 export interface IAppSettings {
     enableLRCLib: boolean
     setEnableLRCLib: (value: boolean) => void
+    enableDiscordPresence: boolean
+    setEnableDiscordPresence: (value: boolean) => void
 }
 
 export interface IAppContext {

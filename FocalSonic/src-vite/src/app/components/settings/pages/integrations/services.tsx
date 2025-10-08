@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 
 export function Services() {
     const { t } = useTranslation();
-    const { enableLRCLib, setEnableLRCLib } = useAppSettings();
+    const { enableLRCLib, setEnableLRCLib, enableDiscordPresence, setEnableDiscordPresence } = useAppSettings();
     const { isAppleMusic } = checkServerType();
 
     return (
@@ -37,6 +37,17 @@ export function Services() {
                         <Switch
                             checked={enableLRCLib}
                             onCheckedChange={setEnableLRCLib}
+                        />
+                    </ContentItemForm>
+                </ContentItem>
+                <ContentItem>
+                    <ContentItemTitle info={t("settings.integrations.services.discord.info")}>
+                        {t("settings.integrations.services.discord.label")}
+                    </ContentItemTitle>
+                    <ContentItemForm>
+                        <Switch
+                            checked={enableDiscordPresence}
+                            onCheckedChange={setEnableDiscordPresence}
                         />
                     </ContentItemForm>
                 </ContentItem>

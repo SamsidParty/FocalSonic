@@ -47,7 +47,7 @@ namespace FocalSonic.Presence
                     timeHash = "speed-" + AssociatedPlayer?.Speed;
                 }
 
-                return $"song-{CurrentSong.Title}-{CurrentSong.Artist}-{CurrentSong.Album}-{IsPlaying}-{timeHash}";
+                return $"song-{CurrentSong.Title}-{CurrentSong.Artist}-{CurrentSong.Album}-{IsPlaying}-{timeHash}-{Store?.State?.PresenceNonce}";
             }
         }
 
