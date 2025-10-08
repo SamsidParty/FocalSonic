@@ -89,6 +89,7 @@ namespace FocalSonic.AppleMusic
 
         public override async Task SetSource(string src, WebWindow ctx)
         {
+            await base.SetSource(src, ctx);
             if (Source == src) { return; } // Already set
 
             Source = src;
@@ -106,6 +107,7 @@ namespace FocalSonic.AppleMusic
 
         public override async Task PlayAudio()
         {
+            await base.PlayAudio();
             if (IsPlaying) { return; }
             IsPlaying = true;
             ProxyWindow?.ExecuteJavaScript(
@@ -117,6 +119,7 @@ namespace FocalSonic.AppleMusic
 
         public override async Task PauseAudio()
         {
+            await base.PauseAudio();
             if (!IsPlaying) { return; }
             IsPlaying = false;
             ProxyWindow?.ExecuteJavaScript(
@@ -128,6 +131,7 @@ namespace FocalSonic.AppleMusic
 
         public override async Task SeekAudio(double time)
         {
+            await base.SeekAudio(time);
             AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", time);
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
@@ -138,6 +142,7 @@ namespace FocalSonic.AppleMusic
 
         public override async Task SetLoopMode(bool loop)
         {
+            await base.SetLoopMode(loop);
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
                 $"window.injectedQueue.push({{ type: 'setLoopMode', loop: {loop.ToString().ToLower()} }});" +
