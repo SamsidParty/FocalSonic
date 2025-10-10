@@ -81,8 +81,7 @@ function DynamicColorBackdrop(props: BackdropProps) {
         <div
             className={clsx(
                 "absolute inset-0 w-full h-full -z-1",
-                "transition-[background-image,background-color] duration-1000",
-                currentSongColor && "default-gradient",
+                "transition-[background-image,background-color] duration-1000"
             )}
             style={{ backgroundColor }}
         />

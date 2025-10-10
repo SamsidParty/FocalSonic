@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils";
 import { usePlayerSpeed, useSpeedSettings } from "@/store/player.store";
 import clsx from "clsx";
 import { Gauge } from "lucide-react";
-import React from "react";
-import {
+import React, {
     ComponentPropsWithoutRef,
     RefObject,
     useEffect
 } from "react";
+
 import { useTranslation } from "react-i18next";
 import { PopoverSpeed } from "./popover-speed";
 
@@ -31,14 +31,10 @@ export function PlayerSpeed({ disabled, audioRef }: PlayerSpeedProps) {
 
     return (
         <div className={clsx(disabled && "opacity-50")}>
-            <div className="flex 2xl:hidden">
+            <div className="flex">
                 <PopoverSpeed>
                     <Gauge size={18} />
                 </PopoverSpeed>
-            </div>
-
-            <div className="hidden 2xl:flex gap-2 pr-2 items-center">
-                <SpeedSlider disabled={disabled} />
             </div>
         </div>
     );
