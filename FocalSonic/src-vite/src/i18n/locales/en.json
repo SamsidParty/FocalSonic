@@ -362,8 +362,8 @@
   },
   "login": {
     "form": {
-      "server": "Server",
-      "description": "Connect to your Subsonic server.",
+      "server": "Sign In",
+      "description": "Sign In to use FocalSonic",
       "url": "URL",
       "urlDescription": "This is your server URL",
       "username": "Username",
