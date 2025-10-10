@@ -74,6 +74,9 @@ window.executeInjectedQueue = async () => {
             window.proxyMusicInstance.playbackRate = item.speed;
             findAudioElement() && (findAudioElement().preservesPitch = false);
         }
+        else if (item.type === "setReverb") {
+            findAudioElement() && getAudioEffectController(findAudioElement()).setWetLevel(item.reverb);
+        }
         else if (item.type === "setSource") {
             await window.proxyMusicInstance.stop();
 

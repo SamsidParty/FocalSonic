@@ -37,8 +37,9 @@ namespace FocalSonic.AppleMusic
                 ProxyWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
                 ProxyWindow.ExecuteJavaScript(new JSAssignment("window.injectedUserToken", AppleMusicKeys.MediaUserToken!));
                 ProxyWindow.ExecuteJavaScript(
-                    InjectionPrefix +
-                    Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/proxy.js") +
+                    InjectionPrefix + "\n" +
+                    Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/common/audio-effects.js") + "\n" +
+                    Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/proxy.js") + "\n" +
                     InjectionSuffix
                 );
             });
