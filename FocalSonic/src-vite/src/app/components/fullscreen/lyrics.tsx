@@ -4,6 +4,7 @@ import {
 } from "@/app/components/ui/scroll-area";
 import { parseTTML } from "@/lib/ttml/parser";
 import { service } from "@/service/service";
+import { useAppStore } from "@/store/app.store";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
 import { ILyric } from "@/types/responses/song";
 import { isSafari } from "@/utils/osType";
@@ -69,13 +70,14 @@ export function LyricsTab({ leftAlign }: { leftAlign?: boolean }) {
 function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
     const playerRef = usePlayerRef();
     const [timestamp, setTimestamp] = useState<number>(0);
+    const { altLyricsMode } = useAppStore().settings;
 
     const formattedLyrics = useMemo(() => {
         if (areLyricsTTML(lyrics)) {
-            return convertTTMLToLRC(lyrics!);
+            return convertTTMLToLRC(lyrics!, altLyricsMode);
         }
         return lyrics || "";
-    }, [lyrics]);
+    }, [lyrics, altLyricsMode]);
 
     requestAnimationFrame(() => {
         const newTimestamp = (playerRef?.currentTime || 0) * 1000;
@@ -262,17 +264,16 @@ function areLyricsTTML(lyrics: ILyric) {
     return lyric.startsWith("<tt");
 }
 
-function convertTTMLToLRC(ttml: string): string {
+function convertTTMLToLRC(ttml: string, altMode: "off" | "transliteration" | "translation"): string {
     try {
         const parsedTTML = parseTTML(ttml);
 
         const enableELRC = true;
-        const enableTransliteration = true;
+        const enableAltLyrics = altMode != "off";
 
         const convertedELRC = parsedTTML.lyricLines.map((line) => {
 
             let output = "";
-            const alternateType = "transliteration" as "transliteration" | "translation";
 
             const convertMS = (ms, wrap?: boolean) => {
                 const minutes = Math.floor(ms / 60000);
@@ -293,10 +294,10 @@ function convertTTMLToLRC(ttml: string): string {
             if (enableELRC) {
                 output += `[${convertMS(line.startTime)}] ${line.words.map((word) => convertMS(word.startTime, true) + (word.word)).join("")}`;
 
-                if (enableTransliteration && line.words.filter((f) => f.word && f["altWord_" + alternateType]).length > 0) {
+                if (enableAltLyrics && line.words.filter((f) => f.word && f["altWord_" + altMode]).length > 0) {
                     output +=
-                        (line.words.map((word) => word.word?.replaceAll(" ", "").trim()).join("") !== line.words.map((word) => word["altWord_" + alternateType]?.replaceAll(" ", "").trim()).join("")) // Skip if word and alternate word are same
-                            ? `\0${line.words.map((word) => convertMS(word.startTime, true) + (word["altWord_" + alternateType])).join(" ")}`
+                        (line.words.map((word) => word.word?.replaceAll(" ", "").trim()).join("") !== line.words.map((word) => word["altWord_" + altMode]?.replaceAll(" ", "").trim()).join("")) // Skip if word and alternate word are same
+                            ? `\0${line.words.map((word) => convertMS(word.startTime, true) + (word["altWord_" + altMode])).join(" ")}`
                             : "";
                 }
             }

@@ -114,6 +114,12 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                             });
                         },
                         enableDiscordPresence: false,
+                        altLyricsMode: "off",
+                        setAltLyricsMode: (value) => {
+                            set((state) => {
+                                state.settings.altLyricsMode = value;
+                            });
+                        },
                         setEnableDiscordPresence: (value) => {
                             set((state) => {
                                 state.settings.enableDiscordPresence = value;

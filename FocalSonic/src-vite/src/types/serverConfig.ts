@@ -75,6 +75,8 @@ export interface IPodcasts {
 export interface IAppSettings {
     enableLRCLib: boolean
     setEnableLRCLib: (value: boolean) => void
+    altLyricsMode: "off" | "transliteration" | "translation"
+    setAltLyricsMode: (value: "off" | "transliteration" | "translation") => void
     enableDiscordPresence: boolean
     setEnableDiscordPresence: (value: boolean) => void
 }

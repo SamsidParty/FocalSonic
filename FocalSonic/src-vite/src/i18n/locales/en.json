@@ -630,7 +630,7 @@
         "description": "Select whether the app should use the dominant color from the currently playing album art as the background.",
         "queue": {
           "label": "Queue and Lyrics",
-          "intensity": "Color Intensity Level"
+          "intensity": "Color Intensity"
         },
         "bigPlayer": {
           "label": "Big Player",
@@ -639,7 +639,8 @@
       },
       "player": {
         "showAtTop": "Integrate player in titlebar",
-        "slimPlayer": "Slim player"
+        "slimPlayer": "Slim player",
+        "alternateLyric": "Alternate Lyrics"
       }
     },
     "audio": {
@@ -668,6 +669,11 @@
         "preferSynced": {
           "label": "Prefer synced lyrics",
           "info": "When enabled, synced lyrics will be prioritized over unsynced lyrics."
+        },
+        "altLyric": {
+          "translation": "Translation",
+          "transliteration": "Pronunciation",
+          "off": "None"
         }
       }
     },
