@@ -80,22 +80,22 @@
       <dsig:DigestValue>qvf//jjTkj3ygM7yPBJq/70iR/MwEORIYI+NdZohGVY=</dsig:DigestValue>
     </hash>
   </file>
-  <file name="FocalSonic.dll" size="99840">
+  <file name="FocalSonic.dll" size="100352">
     <hash>
       <dsig:Transforms>
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>7xUSbF1CntSAEkOk8sjlNgIwZqajoTpwkk1Vk97a0nc=</dsig:DigestValue>
+      <dsig:DigestValue>kJsHUrFcEhcwG/vDjMbTnO+qhX5eGHIUKKrJ5+wuEFw=</dsig:DigestValue>
     </hash>
   </file>
-  <file name="FocalSonic.exe" size="155648">
+  <file name="FocalSonic.exe" size="156160">
     <hash>
       <dsig:Transforms>
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>bByhJov/x7w0ayHmNAhuuQNshA7wnS3toOgaOyXwqd0=</dsig:DigestValue>
+      <dsig:DigestValue>YH5hMiciA3QpYVR4oYeieqYdz8PhpHBNt90Jhkh9zvw=</dsig:DigestValue>
     </hash>
   </file>
   <file name="FocalSonic.runtimeconfig.json" size="608">
@@ -158,7 +158,7 @@
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>h7Z5CZpVRNYQAeBzCX9HYCefR+tL6njUH0JEsfwvbgk=</dsig:DigestValue>
+      <dsig:DigestValue>gfm6ZSgtUZoI422Jb6LFIeUqJO/qSvtOgnhWT0G5eHM=</dsig:DigestValue>
     </hash>
   </file>
   <file name="iv2runtime\IgniteView.Core.igniteview" size="15360">
