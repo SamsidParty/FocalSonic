@@ -21,6 +21,7 @@ public class Program
     [STAThread]
     static void Main(string[] args)
     {
+
         // Needed for background playback with Apple Music
         Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--autoplay-policy=no-user-gesture-required --disable-features=HardwareMediaKeyHandling");
 
