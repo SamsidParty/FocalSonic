@@ -1,8 +1,5 @@
 import { httpClient } from "@/api/httpClient";
 import { AppleMusicSong, convertAppleMusicSongToSubsonic } from "@/types/applemusic/song";
-import {
-    GetSongResponse
-} from "@/types/responses/song";
 import { merge } from "lodash";
 import { defaultAppleMusicQuery } from "./common";
 
@@ -41,14 +38,27 @@ async function getAllSongs(songCount: number) {
 }
 
 async function getSong(id: string) {
-    const response = await httpClient<GetSongResponse>("/getSong", {
-        method: "GET",
-        query: merge({
-            id,
-        }, defaultAppleMusicQuery),
-    });
+    let response: AppleMusicSong[];
 
-    return response?.data.song;
+    if (!parseInt(id)) { // If it's not a catalog id, then it's a library id
+        response = (await httpClient<AppleMusicSong[]>(
+            `/applemusic/me/library/songs/${id}`, 
+            {
+                method: "GET"
+            }
+        ))?.data;
+    }
+    else {
+        response = (await httpClient<AppleMusicSong[]>(
+            `/applemusic/catalog/{storefront}/songs/${id}`, 
+            {
+                method: "GET"
+            }
+        ))?.data;
+    }
+
+
+    return convertAppleMusicSongToSubsonic(response?.[0], null);
 }
 
 export const songs = {
