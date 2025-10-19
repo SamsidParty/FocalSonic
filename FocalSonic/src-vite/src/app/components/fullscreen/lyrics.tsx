@@ -7,7 +7,9 @@ import { service } from "@/service/service";
 import { useAppStore } from "@/store/app.store";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
 import { ILyric } from "@/types/responses/song";
+import { stripLRCLine } from "@/utils/lyricUtils";
 import { isSafari } from "@/utils/osType";
+import { translateText } from "@/utils/translate";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import React, { ComponentPropsWithoutRef, useEffect, useMemo, useRef, useState } from "react";
@@ -72,12 +74,66 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
     const [timestamp, setTimestamp] = useState<number>(0);
     const { altLyricsMode } = useAppStore().settings;
 
+
+    const { data: convertedLyrics, isLoading } = useQuery({
+        queryKey: ["convert-and-translate-lyrics", lyrics, altLyricsMode],
+        queryFn: async () =>
+        {
+            if (areLyricsTTML(lyrics)) {
+                lyrics = convertTTMLToLRC(lyrics!, altLyricsMode);
+            }
+
+            // Determine if auto translation is needed
+            // When altLyricsMode is 'translation', each LRC line has two parts separated by a '\x1D' character.
+            // For every line, check if it's non-latin. If it is, check if the second part is empty
+            // If all non-latin lines have empty second parts, we need to translate
+            if (altLyricsMode === "translation") {
+                const lines = lyrics!.split("\n");
+                let needsTranslation = false;
+
+                for (const line of lines) {
+                    const parts = line.split("\x1D");
+                    const mainLyric = parts[0] || "";
+                    const altLyric = parts[1] || "";
+
+                    // Check if mainLyric has non-latin characters
+                    if (/[^\u0000-\u007F]/.test(mainLyric)) {
+                        if (altLyric.trim() === "") {
+                            needsTranslation = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (needsTranslation) {
+                    let translatedMonolith = "";
+                    for (const line of lines) {
+                        const strippedLine = stripLRCLine(line);
+                        translatedMonolith += strippedLine + "\n";
+                    }
+
+
+                    // Translate as one block because multiple requests can get throttled
+                    translatedMonolith = (await translateText(translatedMonolith.trim(), "en")) || "";
+
+                    // Reintegrate translated lines back into LRC format
+                    const translatedLines = translatedMonolith.split("\n");
+                    const finalLyricsLines = lyrics!.split("\n").map((line, index) => {
+                        const altLyric = translatedLines[index] || "";
+                        return line.split("\x1D")[0] + "\x1D<00:00.00>" + altLyric + "<00:00.00>"; // Append dummy ELRC tag to translated part
+                    });
+
+                    lyrics = finalLyricsLines.join("\n");
+                }
+            }
+
+            return lyrics;
+        },
+    });
+
     const formattedLyrics = useMemo(() => {
-        if (areLyricsTTML(lyrics)) {
-            return convertTTMLToLRC(lyrics!, altLyricsMode);
-        }
-        return lyrics || "";
-    }, [lyrics, altLyricsMode]);
+        return convertedLyrics || "";
+    }, [altLyricsMode, convertedLyrics]);
 
     requestAnimationFrame(() => {
         const newTimestamp = (playerRef?.currentTime || 0) * 1000;
@@ -118,9 +174,9 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
     let subLyric: string = null;
     let lyric = line?.content;
 
-    if (line?.content.split("\0").length > 1) {
-        subLyric = line.content.split("\0")[1];
-        lyric = line.content.split("\0")[0];
+    if (line?.content.split("\x1D").length > 1) {
+        subLyric = line.content.split("\x1D")[1];
+        lyric = line.content.split("\x1D")[0];
     }
 
     const elrcValues = useMemo(() => {
@@ -297,7 +353,7 @@ function convertTTMLToLRC(ttml: string, altMode: "off" | "transliteration" | "tr
                 if (enableAltLyrics && line.words.filter((f) => f.word && f["altWord_" + altMode]).length > 0) {
                     output +=
                         (line.words.map((word) => word.word?.replaceAll(" ", "").trim()).join("") !== line.words.map((word) => word["altWord_" + altMode]?.replaceAll(" ", "").trim()).join("")) // Skip if word and alternate word are same
-                            ? `\0${line.words.map((word) => convertMS(word.startTime, true) + (word["altWord_" + altMode])).join(" ")}`
+                            ? `\x1D${line.words.map((word) => convertMS(word.startTime, true) + (word["altWord_" + altMode])).join(" ")}`
                             : "";
                 }
             }
