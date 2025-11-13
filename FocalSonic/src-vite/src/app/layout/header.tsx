@@ -8,6 +8,8 @@ import { useAppWindow } from "@/app/hooks/use-app-window";
 import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { isLinux, isMac, isWindows } from "@/utils/osType";
 import clsx from "clsx";
+import React from "react";
+import { LicenseDialog } from "../components/license";
 
 export function Header() {
     const { isFullscreen } = useAppWindow();
@@ -25,6 +27,7 @@ export function Header() {
             </div>
             <HeaderSongInfo />
             <div {...igniteViewDragRegion} className="flex justify-end items-center gap-2">
+                <LicenseDialog />
                 <SettingsButton />
                 <UserDropdown />
                 {isWindows && <Windows />}

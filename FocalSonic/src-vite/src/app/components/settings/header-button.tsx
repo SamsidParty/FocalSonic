@@ -20,7 +20,7 @@ export function SettingsButton() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setOpenDialog(true)}
-                className="h-8 w-8 p-0 rounded-md"
+                className="h-8 w-8 min-w-8 p-0 rounded-md"
             >
                 <Settings className="w-4 h-4" />
             </Button>

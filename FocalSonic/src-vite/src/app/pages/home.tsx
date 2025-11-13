@@ -1,4 +1,5 @@
 import { checkServerType } from "@/utils/servers";
+import React from "react";
 import AppleMusicHome from "./applemusic-home";
 import SubsonicHome from "./subsonic-home";
 

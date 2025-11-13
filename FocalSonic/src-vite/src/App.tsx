@@ -15,6 +15,7 @@ import DefaultTitlebar from "./app/components/header/default-titlebar";
 import { useAppStore } from "./store/app.store";
 
 function App() {
+
     if (!isDesktop && window.innerHeight > window.innerWidth) return <Mobile />; // Support tablets but not phones
 
     return (

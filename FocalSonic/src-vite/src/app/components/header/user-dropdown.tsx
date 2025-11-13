@@ -42,8 +42,8 @@ export function UserDropdown() {
 
             <DropdownMenu>
                 <DropdownMenuTrigger className="user-dropdown-trigger">
-                    <Avatar className="w-8 h-8 rounded-full cursor-pointer">
-                        <AvatarFallback className="text-sm bg-transparent hover:bg-accent">
+                    <Avatar className="w-8 h-8 rounded-md cursor-pointer">
+                        <AvatarFallback className="text-sm bg-transparent hover:bg-accent rounded-md">
                             <User className="w-4 h-4" />
                         </AvatarFallback>
                     </Avatar>

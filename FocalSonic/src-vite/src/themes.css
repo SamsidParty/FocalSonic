@@ -59,7 +59,7 @@
     --input: hsl(220 13% 91%);
     --body: var(--background-foreground);
     --bar: var(--background);
-    --ring: hsl(161 94% 30%);
+    --ring: hsl(256, 93%, 30%);
   }
 
   .dark {
@@ -84,7 +84,7 @@
     --input: hsl(215 27.9% 19.9%);
     --body: var(--background-foreground);
     --bar: var(--background);
-    --ring: hsl(160 84% 39%);
+    --ring: hsl(261, 84%, 39%);
   }
 
   .black {

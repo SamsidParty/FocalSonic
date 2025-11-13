@@ -256,7 +256,7 @@ export function LoginForm() {
                                 )
                             }
 
-
+                            <img src="/screenshots/screenshot-home.webp" alt="FocalSonic Preview" className="w-full h-auto rounded-lg overflow-hidden" />
                             <Button type="button" onClick={signInToAppleMusic} className="w-full bg-[#FC3C44]" disabled={loading}>
                                 <Music className="mr-2 h-4 w-4" />
                                 {t("login.appleMusic.connect")}
