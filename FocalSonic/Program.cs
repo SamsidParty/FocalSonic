@@ -10,6 +10,7 @@ using IgniteView.Desktop;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Net.Http;
+using Windows.Services.Store;
 
 public class Program
 {
@@ -54,6 +55,7 @@ public class Program
 
         CreateMainWindow();
 
+
         while (true)
         {
             App.Run();
@@ -86,6 +88,9 @@ public class Program
             .WithSharedContext("MainWindow", "")
             .WithPlatformBasedAdditions()
             .Show();
+
+        Licensing.Context = StoreContext.GetDefault();
+        WinRT.Interop.InitializeWithWindow.Initialize(Licensing.Context, App.MainWindow.NativeHandle);
     }
 
 

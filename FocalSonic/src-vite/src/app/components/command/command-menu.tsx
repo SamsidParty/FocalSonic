@@ -10,7 +10,6 @@ import {
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
-import { useAppStore } from "@/store/app.store";
 import { byteLength } from "@/utils/byteLength";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
@@ -36,7 +35,7 @@ export type CommandItemProps = {
 
 export default function CommandMenu() {
     const { t } = useTranslation();
-    const { open, setOpen } = useAppStore((state) => state.command);
+    const { open, setOpen } = { open: false, setOpen: () => {} };
 
     const [query, setQuery] = useState("");
     const [pages, setPages] = useState<CommandPages[]>(["HOME"]);
