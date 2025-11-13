@@ -10,6 +10,7 @@ import { getAppInfo } from "@/utils/appName";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
+import { DollarSign, Info } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -72,12 +73,6 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <div>{t("about.version")}</div>
-                                        <div className="text-xs font-medium bg-primary/60 text-foreground px-2 rounded-full border border-primary flex items-center justify-center">
-                                            {server.serverVersion}
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
                                         <div>{t(isAppleMusic ? "menu.region" : "about.apiVersion", { region: "" })}</div>
                                         <div className="text-xs font-medium bg-primary/60 text-foreground px-2 rounded-full border border-primary flex items-center justify-center">
                                             {isAppleMusic ? (localStorage.applemusic_region?.toUpperCase() || "US") : server.version}
@@ -88,19 +83,24 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                         </div>
                     </div>
 
-                    <div>
+                    <div className="flex flex-col gap-2">
                         <a
-                            className="w-full px-2 py-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center cursor-pointer"
-                            onClick={() => window.open(url)}
+                            className="w-full px-2 py-1 gap-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center cursor-pointer"
+                            onClick={() => window.open("mailto://support@samsidparty.com")}
                             target="_blank"
                             rel="nofollow noreferrer"
                         >
-                            <img
-                                src="/icons/github-mark-white.svg"
-                                alt="GitHub"
-                                className="w-4 h-4 mr-2"
-                            />
-                            GitHub
+                            <Info className="min-w-4"/>
+                            Support
+                        </a>                        
+                        <a
+                            className="w-full px-2 py-1 gap-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center cursor-pointer"
+                            onClick={() => window.igniteView?.commandBridge?.purchaseLicense()}
+                            target="_blank"
+                            rel="nofollow noreferrer"
+                        >
+                            <DollarSign className="min-w-4"/>
+                            Restore Purchase
                         </a>
                     </div>
                 </div>

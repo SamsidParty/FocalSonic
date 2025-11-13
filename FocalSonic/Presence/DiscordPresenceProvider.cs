@@ -83,9 +83,9 @@ namespace FocalSonic.Presence
                 {
                     LargeImageKey = artURL.Length > 256 ? "" : artURL,
                     LargeImageText = limitStringLength(playbackInfo.CurrentSong?.Album),
-                    SmallImageKey = "https://github.com/SamsidParty/FocalSonic/blob/main/FocalSonic/src-vite/public/favicons/favicon-full.png?raw=true",
+                    SmallImageKey = "https://ipcdn-web.apple.com/assets/v2/web/0c7ea4c6-228d-4fae-a2c4-c36027c6075a",
                     SmallImageText = "FocalSonic",
-                    SmallImageUrl = "https://github.com/SamsidParty/FocalSonic"
+                    SmallImageUrl = "https://music.apple.com/"
                 }
             });
         }

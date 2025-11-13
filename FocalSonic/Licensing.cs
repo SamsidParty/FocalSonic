@@ -10,7 +10,7 @@ namespace FocalSonic
 {
     public class Licensing
     {
-        public static string ProductID = "9P92HZT8QC8R";
+        public static string ProductID = "9P92HZT8QC8R"; // 9PMT4RKHPXCR
         public static StoreContext Context => StoreContext.GetDefault();
         public static bool HasPurchasedLicense = false;
 
