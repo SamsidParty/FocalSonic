@@ -244,10 +244,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 originalList,
                             } = get().songlist;
 
+
                             const currentListIds = new Set(currentList.map((song) => song.id));
-                            const uniqueList = list.filter(
-                                (song) => !currentListIds.has(song.id),
-                            );
+                            const uniqueList = list;
 
                             const newCurrentList = addNextSongList(
                                 currentSongIndex,
@@ -279,9 +278,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             const { currentList, originalList } = get().songlist;
 
                             const currentListIds = new Set(currentList.map((song) => song.id));
-                            const uniqueList = list.filter(
-                                (song) => !currentListIds.has(song.id),
-                            );
+                            const uniqueList = list;
 
                             const newCurrentList = [...currentList, ...uniqueList];
                             const newOriginalList = [...originalList, ...uniqueList];
