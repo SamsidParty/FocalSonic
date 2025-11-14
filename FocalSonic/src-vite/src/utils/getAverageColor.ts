@@ -3,7 +3,7 @@ import { Palette, rgbToHex } from "@vibrant/color";
 import { Vibrant } from "node-vibrant/browser";
 
 
-export async function getAverageColor(img: HTMLImageElement | null, mode: string = "Vibrant") {
+export async function getAverageColor(img: HTMLImageElement | null, mode: string = "LightMuted") {
     if (!img.src) { return "#b9fde9ff"; }
 
     let cachedColor: Palette = useCacheStore.getState().tryGetImageDominantColor(img?.src);

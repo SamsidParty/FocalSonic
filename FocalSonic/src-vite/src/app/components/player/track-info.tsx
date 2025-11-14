@@ -81,10 +81,10 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
         <Fragment>
             <div className="group relative">
                 <div className="min-h-[calc(var(--player-height)-1.5rem)] max-h-[calc(var(--player-height)-1.5rem)] aspect-square bg-cover bg-center bg-skeleton rounded overflow-hidden shadow-md">
-                    <div
+                    <img
                         key={song.id}
                         id="track-song-image"
-                        style={{ backgroundImage: `url('${getCoverArtUrl(song.coverArt, "song", "400")}')` }}
+                        src={getCoverArtUrl(song.coverArt, "song", "400")}
                         width="100%"
                         height="100%"
                         crossOrigin="anonymous"
