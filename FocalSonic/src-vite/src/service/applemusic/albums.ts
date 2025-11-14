@@ -44,13 +44,19 @@ async function getAlbumList(params: Partial<AlbumListParams> = {}) {
 
 async function getOne(id: string) {
 
+    let response;
     if (!parseInt(id)) { // If it's not a catalog id, then it's a library id
-        id = (await httpClient<AppleMusicAlbum[]>(`/applemusic/me/library/albums/${id}/catalog`, { method: "GET", }))?.data[0]?.id || null;
-        if (!id) return;
+        id = (await httpClient<AppleMusicAlbum[]>(`/applemusic/me/library/albums/${id}/catalog`, { method: "GET", }))?.data[0]?.id || id;
     }
 
-    const response = await httpClient<AppleMusicAlbum[]>(
-        `/applemusic/catalog/{storefront}/albums/${id}`, 
+    let baseURL = "/applemusic/catalog/{storefront}";
+
+    if (!parseInt(id)) { // If not resolved to a catalog id successfully
+        baseURL = "/applemusic/me/library";
+    }
+
+    response = await httpClient<AppleMusicAlbum[]>(
+        `${baseURL}/albums/${id}`, 
         {
             method: "GET",
             query: merge({
@@ -61,7 +67,7 @@ async function getOne(id: string) {
     
     if (!(response?.data?.length > 0)) {
         // Try again but with the song endpoint
-        id = (await httpClient<AppleMusicAlbum[]>(`/applemusic/catalog/{storefront}/songs/${id}/albums`, { method: "GET", }))?.data[0]?.id || null;
+        id = (await httpClient<AppleMusicAlbum[]>(`${baseURL}/songs/${id}/albums`, { method: "GET", }))?.data[0]?.id || null;
         if (id) {
             return await getOne(id);
         }
