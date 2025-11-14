@@ -1,8 +1,8 @@
-import clsx from "clsx";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import useNavigationHistory from "@/app/hooks/use-navigation-history";
 import { useMainDrawerState } from "@/store/player.store";
+import clsx from "clsx";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export function NavigationButtons() {
     const { canGoBack, canGoForward, goBack, goForward } = useNavigationHistory();
@@ -19,6 +19,7 @@ export function NavigationButtons() {
                 <Button
                     variant="ghost"
                     size="sm"
+                    data-webview-ignore={""}
                     className="h-8 w-8 p-0 rounded-md"
                     disabled={!canGoBack || mainDrawerState}
                     onClick={goBack}
@@ -35,6 +36,7 @@ export function NavigationButtons() {
                 <Button
                     variant="ghost"
                     size="sm"
+                    data-webview-ignore={""}
                     className="h-8 w-8 p-0 rounded-md"
                     disabled={!canGoForward || mainDrawerState}
                     onClick={goForward}
