@@ -29,6 +29,7 @@ interface ImageHeaderProps {
     coverArtAlt: string
     badges: BadgesData
     isPlaylist?: boolean
+    albumId?: string
 }
 
 export default function ImageHeader({
@@ -37,6 +38,7 @@ export default function ImageHeader({
     subtitle,
     artistId,
     artists,
+    albumId,
     coverArtId,
     coverArtType,
     coverArtSize,
@@ -107,6 +109,8 @@ export default function ImageHeader({
                         key={coverArtId}
                         effect="opacity"
                         animated
+                        animationCatalogID={albumId}
+                        animationCatalogType="albums"
                         crossOrigin="anonymous"
                         id="cover-art-image"
                         src={getCoverArtUrl(coverArtId, coverArtType, coverArtSize)}

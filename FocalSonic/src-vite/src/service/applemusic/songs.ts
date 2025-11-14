@@ -64,7 +64,7 @@ async function getSong(id: string) {
     return convertAppleMusicSongToSubsonic(response?.[0], null);
 }
 
-async function getAnimatedCoverArt(id: string) {
+async function getAnimatedCoverArt(id: string, type: "songs" | "albums" = "songs") : Promise<string | null> {
 
     if (window?.igniteView?.commandBridge?.getCustomOverride) {
         const cachedURL = await window.igniteView.commandBridge.getCustomOverride("AppleEditorialVideos", id);
@@ -74,7 +74,7 @@ async function getAnimatedCoverArt(id: string) {
     }
 
     const response = (await httpClient<any>(
-        `/applemusic/catalog/{storefront}/songs/${id}`, 
+        `/applemusic/catalog/{storefront}/${type}/${id}`, 
         {
             method: "GET",
             query: {
@@ -96,7 +96,7 @@ async function getAnimatedCoverArt(id: string) {
         }
     ))?.resources?.albums;
 
-    const firstAlbum = Object.values(response)[0] as AppleMusicAlbum;
+    const firstAlbum = response[id] as AppleMusicAlbum;
     const editorialVideo = firstAlbum?.attributes.editorialVideo;
     const url = editorialVideo?.motionDetailSquare?.video || "none"; // Save as none instead of null so that we can cache the asset as none existent
 

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@chriscodesthings/random-css-hex-color": "^1.1.0",
+    "@gumlet/react-hls-player": "^1.0.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",

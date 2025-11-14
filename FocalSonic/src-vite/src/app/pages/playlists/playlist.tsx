@@ -70,6 +70,7 @@ export default function Playlist() {
         <div className="w-full" key={playlist.id}>
             <ImageHeader
                 type={t("playlist.headline")}
+                albumId={playlist.id}
                 title={playlist.name}
                 subtitle={playlist.comment}
                 coverArtId={coverArt}

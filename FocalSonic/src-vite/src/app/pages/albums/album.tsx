@@ -125,6 +125,7 @@ export default function Album() {
             <ImageHeader
                 type={t("album.headline")}
                 title={album.name}
+                albumId={album.id}
                 subtitle={album.artist}
                 artistId={album.artistId}
                 artists={album.artists}
