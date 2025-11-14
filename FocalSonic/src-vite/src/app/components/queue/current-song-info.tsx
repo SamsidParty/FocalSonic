@@ -16,7 +16,7 @@ export function CurrentSongInfo() {
     const imageUrl = getCoverArtUrl(currentSong.coverArt, "song", "900");
 
     return (
-        <div className="mr-12 hidden lg:block w-[260px] lg:w-[320px] 2xl:w-[500px]">
+        <div className="mr-12 xxs:mr-2 lg:block w-[260px] lg:w-[320px] 2xl:w-[500px]">
             <AspectRatio
                 ratio={1 / 1}
                 className="shadow-header-image rounded-md overflow-hidden bg-accent"
@@ -33,7 +33,7 @@ export function CurrentSongInfo() {
             </AspectRatio>
 
             <div className="flex flex-col items-center justify-center mt-6 px-1">
-                <h4 className="scroll-m-20 text-xl font-bold tracking-tight text-center text-balance text-white drop-shadow-md">
+                <h4 className="scroll-m-20 text-xl xxs:hidden font-bold tracking-tight text-center text-balance text-white drop-shadow-md">
                     {currentSong.albumId ? (
                         <Link
                             to={ROUTES.ALBUM.PAGE(currentSong.albumId)}
@@ -47,7 +47,7 @@ export function CurrentSongInfo() {
                     )}
                 </h4>
 
-                <p className="leading-5 mt-1 drop-shadow-md flex items-center text-white opacity-60 justify-center flex-wrap gap-1">
+                <p className="leading-5 mt-1 xxs:hidden drop-shadow-md flex items-center text-white opacity-60 justify-center flex-wrap gap-1">
                     <QueueArtistsLinks song={currentSong} />
                 </p>
             </div>

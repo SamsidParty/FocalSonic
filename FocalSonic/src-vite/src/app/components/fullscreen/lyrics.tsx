@@ -214,7 +214,8 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
                 "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left",
                 (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
                 !subLyric ? "my-10 2xl:my-20" : "my-0",
-                line?.isSubLyric && "text-xl 2xl:text-3xl opacity-100 mt-0 2xl:mt-0 mb-10 2xl:mb-20"
+                line?.isSubLyric && "text-xl 2xl:text-3xl xxs:text-sm opacity-100 mt-0 2xl:mt-0 mb-10 2xl:mb-20 xxs:mb-5",
+                !line?.isSubLyric && "xxs:text-[25px]",
             )}
         >
             {elrcValues.elrcPortions.map((portion, index) => (

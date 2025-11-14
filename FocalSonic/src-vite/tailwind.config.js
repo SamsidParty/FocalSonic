@@ -11,7 +11,7 @@ module.exports = {
             center: true,
             padding: "2rem",
             screens: {
-                "2xl": "1400px",
+                "2xl": "1400px"
             },
         },
         extend: {
@@ -150,6 +150,7 @@ module.exports = {
             screens: {
                 "mid-player": { raw: "(min-height: 133px) and (max-height: 170px)" },
                 "mini-player": { raw: "(max-height: 132px)" },
+                "xxs": { raw: "(max-width: 780px)" },
             },
         },
     },

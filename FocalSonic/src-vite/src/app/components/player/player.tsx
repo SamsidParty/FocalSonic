@@ -190,7 +190,7 @@ export function Player() {
         )}>
             <div className="w-full h-full grid grid-cols-player gap-2 px-3">
                 {/* Track Info */}
-                <div className="flex items-center gap-2 w-full">
+                <div className="flex items-center gap-2 w-full xxs:hidden">
                     {isSong && <MemoTrackInfo song={song} />}
                     {isRadio && <MemoRadioInfo radio={radio} />}
                     {isPodcast && <MemoPodcastInfo podcast={podcast} />}
@@ -198,8 +198,8 @@ export function Player() {
                 {/* Main Controls */}
                 <div 
                     className={clsx(
-                        playerStyle === "default" && "col-span-2 flex flex-col justify-center items-center px-4 gap-1",
-                        playerStyle === "slim" && "col-span-2 flex flex-row justify-center items-center px-4 gap-1"
+                        playerStyle === "default" && "col-span-2 xxs:col-span-4 flex flex-col justify-center items-center px-4 gap-1",
+                        playerStyle === "slim" && "col-span-2 xxs:col-span-4 flex flex-row justify-center items-center px-4 gap-1"
                     )}>
                     <MemoPlayerControls
                         song={song}
@@ -213,7 +213,7 @@ export function Player() {
                     )}
                 </div>
                 {/* Remain Controls and Volume */}
-                <div className="flex items-center w-full justify-end">
+                <div className="flex items-center w-full justify-end xxs:hidden">
                     <div className="flex items-center gap-1">
                         {isSong && (
                             <>
