@@ -593,14 +593,14 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             });
                         },
                         hasNextSong: () => {
-                            const { mediaType } = get().playerState;
+                            const { mediaType, loopState } = get().playerState;
                             const { currentList, currentSongIndex, radioList, podcastList } =
                 get().songlist;
 
                             const nextIndex = currentSongIndex + 1;
 
                             if (mediaType === "song") {
-                                return nextIndex < currentList.length;
+                                return (nextIndex < currentList.length) || loopState === LoopState.InfiniteRadio;
                             }
                             if (mediaType === "radio") {
                                 return nextIndex < radioList.length;

@@ -111,7 +111,7 @@ export function PlayerControls({
     };
     const repeatTooltip = repeatTooltips[loopState];
 
-    const cannotGotoNextSong = !hasNext && loopState !== LoopState.All;
+    const cannotGotoNextSong = !hasNext && loopState !== LoopState.All && loopState !== LoopState.InfiniteRadio;
     const disableButtons = !song && !radio && !podcast;
 
     return (
