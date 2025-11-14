@@ -14,14 +14,13 @@ async function getAll() {
     return response?.data.map(convertAppleMusicPlaylistToSubsonic) ?? [];
 }
 
-async function getOne(id: string) {
+async function getOne(id: string, offset?: number) {
+
     let response = await httpClient<AppleMusicPlaylist[]>(
         `/applemusic/me/library/playlists/${id}`,
         {
             method: "GET",
-            query: merge({
-                include: "tracks",
-            }, defaultAppleMusicQuery)
+            query: merge({ include: "tracks" }, defaultAppleMusicQuery)
         }
     );
 
@@ -29,13 +28,35 @@ async function getOne(id: string) {
         // Try again but this time in the catalog not the library
         response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/catalog/{storefront}/playlists/${id}`, {
             method: "GET",
-            query: merge({
-                include: "tracks",
-            }, defaultAppleMusicQuery)
+            query: merge({ include: "tracks" }, defaultAppleMusicQuery)
         });
     }
 
-    return convertAppleMusicPlaylistToSubsonic(response?.data[0]) || null;
+    const playlistData = response?.data[0];
+
+    if (playlistData.attributes.trackCount > 99) {
+        const resolvedTracks = await resolveTracks(playlistData.relationships?.tracks?.href || "");
+        playlistData.relationships!.tracks!.data = resolvedTracks.data;
+    }
+
+    const tracks = convertAppleMusicPlaylistToSubsonic(playlistData) || null;
+
+    return tracks;
+}
+
+async function resolveTracks(href: string) {
+    const targetURL = href.replace("/v1/", "/applemusic/");
+
+    const response = await httpClient<any>(targetURL, {
+        method: "GET",
+        query: merge({}, defaultAppleMusicQuery)
+    });
+
+    if (response?.next) {
+        response.data.push(...(await resolveTracks(response.next)).data); // Recursively fetch next pages
+    }
+
+    return response;
 }
 
 async function remove(id: string) {

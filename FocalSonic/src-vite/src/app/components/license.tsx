@@ -58,7 +58,7 @@ export function LicenseDialog() {
             }
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} >
                 <DialogContent
-                    className="overflow-hidden p-0 max-h-[600px] max-w-2xl 2xl:h-[600px] 2xl:max-h-[700px] 2xl:max-w-3xl flex flex-col"
+                    className="overflow-hidden p-0 max-h-[600px] max-w-2xl 2xl:max-h-[700px] 2xl:max-w-3xl flex flex-col"
                     aria-describedby={undefined}
                 >
                     <CardHeader className="flex flex-none">
