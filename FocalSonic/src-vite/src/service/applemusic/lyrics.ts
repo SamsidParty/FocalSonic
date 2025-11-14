@@ -1,13 +1,14 @@
 import { httpClient } from "@/api/httpClient";
-import { useCacheStore } from "@/store/cache.store";
 import { AppleMusicLyricsResponse } from "@/types/applemusic/song";
 import { GetLyricsData, getLyricsFromLRCLib } from "../subsonic/lyrics";
 
 async function getLyrics(getLyricsData: GetLyricsData) {
 
-    let lyrics = useCacheStore.getState().tryGetLyrics(getLyricsData.id!);
-    if (lyrics) {
-        return lyrics;
+    if (window?.igniteView?.commandBridge?.getCustomOverride) {
+        const cachedLyrics = await window.igniteView.commandBridge.getCustomOverride("AppleLyrics", getLyricsData.id!);
+        if (cachedLyrics) {
+            return cachedLyrics !== "none" ? cachedLyrics : null;
+        }
     }
 
     const response = await httpClient<AppleMusicLyricsResponse>(`/applemusic/catalog/{storefront}/songs/${getLyricsData.id}/syllable-lyrics`, {
@@ -21,7 +22,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         }
     });
 
-    lyrics = response?.data[0]?.attributes?.ttmlLocalizations || response?.data[0]?.attributes?.ttml;
+    let lyrics = response?.data[0]?.attributes?.ttmlLocalizations || response?.data[0]?.attributes?.ttml;
     
     // No point using unsynced lyrics from apple when we can find synced ones from other providers
     if (lyrics?.includes("itunes:timing=\"None\"")) {
@@ -33,7 +34,10 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         lyrics = (await getLyricsFromLRCLib(getLyricsData)).value;
     }
 
-    useCacheStore.getState().saveLyrics(getLyricsData.id!, lyrics);
+    if (window?.igniteView?.commandBridge?.saveCustomOverride && lyrics) {
+        await window.igniteView.commandBridge.saveCustomOverride("AppleLyrics", getLyricsData.id!, lyrics);
+    }
+
     return lyrics;
 }
 

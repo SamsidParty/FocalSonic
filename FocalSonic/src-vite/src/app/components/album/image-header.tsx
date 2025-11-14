@@ -1,6 +1,6 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
-import { memo, useState } from "react";
+import React, { memo, useState } from "react";
 
 import { getCoverArtUrl } from "@/api/httpClient";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
@@ -11,10 +11,9 @@ import { IFeaturedArtist } from "@/types/responses/artist";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import hexToCssFilter from "@/utils/hexToCssFilter.js";
+import CoverArtImage from "../cover-art";
 import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
 import { AlbumArtistInfo, AlbumMultipleArtistsInfo } from "./artists";
-import React from "react";
-import CoverArtImage from "../cover-art";
 
 const DarkVeilMemo = memo(DarkVeil, (o, n) => o.style?.opacity === n.style?.opacity);
 
@@ -107,6 +106,7 @@ export default function ImageHeader({
                     <CoverArtImage
                         key={coverArtId}
                         effect="opacity"
+                        animated
                         crossOrigin="anonymous"
                         id="cover-art-image"
                         src={getCoverArtUrl(coverArtId, coverArtType, coverArtSize)}

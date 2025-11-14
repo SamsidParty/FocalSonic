@@ -2,7 +2,6 @@ import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import { AudioLines, Maximize2 } from "lucide-react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
 import { Fragment } from "react/jsx-runtime";
 
@@ -82,14 +81,14 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
         <Fragment>
             <div className="group relative">
                 <div className="min-h-[calc(var(--player-height)-1.5rem)] max-h-[calc(var(--player-height)-1.5rem)] aspect-square bg-cover bg-center bg-skeleton rounded overflow-hidden shadow-md">
-                    <LazyLoadImage
+                    <div
                         key={song.id}
                         id="track-song-image"
-                        src={getCoverArtUrl(song.coverArt, "song", "400")}
+                        style={{ backgroundImage: `url('${getCoverArtUrl(song.coverArt, "song", "400")}')` }}
                         width="100%"
                         height="100%"
                         crossOrigin="anonymous"
-                        className="aspect-square object-cover w-full h-full cursor-pointer bg-skeleton text-transparent"
+                        className="aspect-square object-cover w-full h-full cursor-pointer album-art-animation bg-skeleton text-transparent bg-contain"
                         data-testid="track-image"
                         alt={`${song.artist} - ${song.title}`}
                         onLoad={getImageColor}

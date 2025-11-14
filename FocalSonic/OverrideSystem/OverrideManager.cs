@@ -42,6 +42,28 @@ namespace FocalSonic.OverrideSystem
             return null;
         }
 
+        [Command("saveCustomOverride")]
+        public static async Task SaveCustomOverride(string overrideType, string trackId, string content)
+        {
+            var overrideDirectory = Path.Join(OverridesDirectory, overrideType);
+            Directory.CreateDirectory(overrideDirectory);
+            var filePath = Path.Join(overrideDirectory, $"{trackId}.txt");
+            await File.WriteAllTextAsync(filePath, content);
+        }
+
+        [Command("getCustomOverride")]
+        public static async Task<string?> GetCustomOverride(string overrideType, string trackId)
+        {
+            var overrideDirectory = Path.Join(OverridesDirectory, overrideType);
+            Directory.CreateDirectory(overrideDirectory);
+            var filePath = Path.Join(overrideDirectory, $"{trackId}.txt");
+            if (File.Exists(filePath))
+            {
+                return await File.ReadAllTextAsync(filePath);
+            }
+            return null;
+        }
+
         [Command("openOverridesDirectory")]
         public static void ShowInExplorer(string? subPath)
         {

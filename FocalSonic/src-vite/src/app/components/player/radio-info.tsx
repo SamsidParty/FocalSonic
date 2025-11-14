@@ -20,7 +20,7 @@ export function RadioInfo({ radio }: { radio: Radio | undefined }) {
                             width="100%"
                             height="100%"
                             crossOrigin="anonymous"
-                            className="aspect-square object-cover w-full h-full cursor-pointer bg-skeleton text-transparent"
+                            className="aspect-square object-cover w-full h-full cursor-pointer bg-skeleton image-transition text-transparent"
                             data-testid="track-image"
                         />
                     </div>

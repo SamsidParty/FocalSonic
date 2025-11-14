@@ -23,7 +23,10 @@ export function CurrentSongInfo() {
             >
                 <CoverArtImage
                     id="song-info-image"
+                    animated
                     src={imageUrl}
+                    key={imageUrl}
+                    animationCatalogID={currentSong.id}
                     effect="opacity"
                     alt={`${currentSong.artist} - ${currentSong.title}`}
                     className="rounded-md aspect-square object-cover text-transparent"
