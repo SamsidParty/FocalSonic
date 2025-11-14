@@ -120,7 +120,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
                     const translatedLines = translatedMonolith.split("\n");
                     const finalLyricsLines = lyrics!.split("\n").map((line, index) => {
                         const altLyric = translatedLines[index] || "";
-                        return line.split("\x1D")[0] + "\x1D<00:00.00>" + altLyric + "<00:00.00>"; // Append dummy ELRC tag to translated part
+                        return line.split("\x1D")[0] + `\x1D<00:00.00>${altLyric}<00:00.00>`; // Append dummy ELRC tag to translated part
                     });
 
                     lyrics = finalLyricsLines.join("\n");
@@ -185,69 +185,53 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
             elrcPortions: [] as any[]
         };
 
-        if (values.isElrc) {
-            let match;
+        const displayLyric = values.isElrc ? lyric : `\x1D<00:00.00>${lyric}<00:00.00>`;
 
-            while ((match = elrcRegex.exec(lyric)) !== null) {
-                const minutes = parseInt(match[1], 10);
-                const seconds = parseInt(match[2], 10);
-                const fractionOfSeconds = parseInt(match[3], 10);
-                const totalSeconds = minutes * 60 + seconds + fractionOfSeconds / 100;
+        let match;
 
-                values.elrcPortions.push({
-                    Time: totalSeconds,
-                    Text: match[4],
-                });
-            }
+        while ((match = elrcRegex.exec(displayLyric)) !== null) {
+            const minutes = parseInt(match[1], 10);
+            const seconds = parseInt(match[2], 10);
+            const fractionOfSeconds = parseInt(match[3], 10);
+            const totalSeconds = minutes * 60 + seconds + fractionOfSeconds / 100;
+
+            values.elrcPortions.push({
+                Time: totalSeconds,
+                Text: match[4],
+            });
         }
-
+        
         return values;
     }, [lyric]);
 
 
-    if (elrcValues.isElrc) {
-        return (
-            <p
-                key={line?.id}
-                onClick={() => skipToTime(line.startMillisecond)}
-                className={clsx(
-                    "drop-shadow-lg text-white cursor-pointer hover:opacity-100 duration-700",
-                    "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left",
-                    (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
-                    !subLyric ? "my-10 2xl:my-20" : "my-0",
-                    line?.isSubLyric && "text-xl 2xl:text-3xl opacity-100 mt-0 2xl:mt-0 mb-10 2xl:mb-20"
-                )}
-            >
-                {elrcValues.elrcPortions.map((portion, index) => (
-                    <span
-                        data-time={portion.Time}
-                        key={index}
-                        className={(timestamp >= portion.Time - 0.2) ? "opacity-100 transition-opacity duration-200" : "opacity-40"}
-                    >
-                        {portion.Text}
-                    </span>
-                ))}
-                {
-                    subLyric && <LrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} />
-                }
-            </p>
-        );
-    }
-
-    // Regular LRC
     return (
         <p
             key={line?.id}
             onClick={() => skipToTime(line.startMillisecond)}
             className={clsx(
-                "drop-shadow-lg my-10 2xl:my-20 text-white cursor-pointer hover:opacity-100 duration-700",
+                "drop-shadow-lg text-white cursor-pointer hover:opacity-100 duration-700",
                 "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left",
-                active ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
+                (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
+                !subLyric ? "my-10 2xl:my-20" : "my-0",
+                line?.isSubLyric && "text-xl 2xl:text-3xl opacity-100 mt-0 2xl:mt-0 mb-10 2xl:mb-20"
             )}
         >
-            {line?.content}
+            {elrcValues.elrcPortions.map((portion, index) => (
+                <span
+                    data-time={portion.Time}
+                    key={index}
+                    className={(timestamp >= portion.Time - 0.2) ? "opacity-100 transition-opacity duration-200" : "opacity-40"}
+                >
+                    {portion.Text}
+                </span>
+            ))}
+            {
+                subLyric && <LrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} />
+            }
         </p>
     );
+
 }
 
 function UnsyncedLyrics({ lyrics }: LyricProps) {
