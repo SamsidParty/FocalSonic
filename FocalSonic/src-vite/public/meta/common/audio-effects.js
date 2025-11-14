@@ -1,4 +1,8 @@
 
+function swing(p) {
+    return 0.5 - Math.cos(p * Math.PI) / 2;
+}
+
 const _effectInstances = new WeakMap();
 
 /**
@@ -19,6 +23,9 @@ function getAudioEffectController(source) {
 }
 
 class AudioEffectController {
+
+    baseVolume = 1.0;
+
     /**
      * @param {HTMLAudioElement|AudioNode} source - The audio element or web audio source node
      * @param {String|null} impulseUrl - Optional URL of the impulse response
@@ -28,6 +35,7 @@ class AudioEffectController {
 
         console.log("[FocalSonic] Initializing AudioEffectController");
 
+        this.rawSource = source;
         this.isAudioElement = source instanceof HTMLAudioElement;
 
         this.audioCtx = this.isAudioElement
@@ -37,6 +45,8 @@ class AudioEffectController {
         this.sourceNode = this.isAudioElement
             ? this.audioCtx.createMediaElementSource(source)
             : source;
+
+        this.fadeGain = 1.0;
 
         // Reverb nodes
         this.convolver = this.audioCtx.createConvolver();
@@ -135,4 +145,58 @@ class AudioEffectController {
         this.setMidGain(midDb);
         this.setHighGain(highDb);
     }
+
+    setBaseVolume(level) {
+        this.baseVolume = level;
+        this.updateVolume();
+    }
+
+    updateVolume() {
+        this.rawSource.volume = this.baseVolume * this.fadeGain;
+    }
+
+    adjustVolume(
+        newVolume,
+        duration = 400,
+        easing = swing,
+        interval = 13,
+    ) {
+
+        if (window.fadeTimer) { 
+            clearInterval(window.fadeTimer);
+            window.fadeTimer = null; 
+            this.fadeGain = newVolume;
+            this.updateVolume();
+            return;
+        }
+
+        const originalVolume = this.fadeGain;
+        const delta = newVolume - originalVolume;
+
+        if (!delta || !duration || !easing || !interval) {
+            this.fadeGain = newVolume;
+            this.updateVolume();
+            return Promise.resolve();
+        }
+
+        const ticks = Math.floor(duration / interval);
+        let tick = 1;
+
+        return new Promise(resolve => {
+            const timer = setInterval(() => {
+                this.fadeGain = originalVolume + (
+                    easing(tick / ticks) * delta
+                );
+                this.updateVolume();
+
+                if (++tick === ticks + 1) {
+                    clearInterval(timer);
+                    window.fadeTimer = null;
+                    resolve();
+                }
+            }, interval);
+            window.fadeTimer = timer;
+        });
+    }
+
 }

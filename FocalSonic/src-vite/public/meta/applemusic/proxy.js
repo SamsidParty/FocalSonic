@@ -56,10 +56,16 @@ window.executeInjectedQueue = async () => {
         console.log("[FocalSonic][Apple Music Proxy] Executing item:", item);
         
         if (item.type === "play") {
-            await window.proxyMusicInstance.play();
+            if (window.pauseTimeout) { clearTimeout(window.pauseTimeout); window.pauseTimeout = null; }
+            findAudioElement() && getAudioEffectController(findAudioElement()).adjustVolume(1);
+            if (!window.proxyMusicInstance.isPlaying) {
+                await window.proxyMusicInstance.play();
+            }
         }
         else if (item.type === "pause") {
-            await window.proxyMusicInstance.pause();
+            if (window.pauseTimeout) { clearTimeout(window.pauseTimeout); window.pauseTimeout = null; }
+            findAudioElement() && getAudioEffectController(findAudioElement()).adjustVolume(0);
+            window.pauseTimeout = setTimeout(() => window.proxyMusicInstance.pause(), 420);
         }
         else if (item.type === "seek") {
             !!window.proxyMusicInstance.nowPlayingItem && await window.proxyMusicInstance.seekToTime(item.time);
@@ -68,7 +74,7 @@ window.executeInjectedQueue = async () => {
             window.proxyMusicInstance.repeatMode = item.loop ? MusicKit.PlayerRepeatMode.one : MusicKit.PlayerRepeatMode.none;
         }
         else if (item.type === "setVolume") {
-            window.proxyMusicInstance.volume = item.volume;
+            findAudioElement() && getAudioEffectController(findAudioElement()).setBaseVolume(item.volume);
         }
         else if (item.type === "setSpeed") {
             window.proxyMusicInstance.playbackRate = item.speed;
