@@ -45,6 +45,31 @@ namespace FocalSonic.Presence
             }
         }
 
+        [Command("setPlayerStoreMini")]
+        public static async Task SetPlayerStoreMini(string data, WebWindow ctx)
+        {
+            var store = JsonConvert.DeserializeObject<PlayerStore>(data);
+
+            try
+            {
+                lock (MediaPlaybackInfo.Instance)
+                {
+                    store.State.SongList = MediaPlaybackInfo.Instance.Store.State.SongList; // Preserve song list
+                    MediaPlaybackInfo.Instance.Store = store;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Failed to update music playback info: " + ex.Message);
+            }
+
+            // If was not updated from the WebWindow, we need to tell it to rehydrate
+            if (ctx == null)
+            {
+                Program.MainWindow?.CallFunction("window.rehydratePlayerStore", JsonConvert.SerializeObject(store));
+            }
+        }
+
         [Command("getPlayerStore")]
         public static string GetPlayerStore()
         {

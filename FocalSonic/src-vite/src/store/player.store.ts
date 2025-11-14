@@ -21,8 +21,11 @@ const blurSettings = {
     step: 10,
 };
 
+let lastSongList = null;
+
 const igniteViewPlayerStore = {
     getItem: async (key: string) => {
+        console.log("[Player Bridge] Downstream sync triggered");
         if (key !== "player_store") { return; }
         const result = await window.igniteView?.commandBridge.getPlayerStore();
         return result;
@@ -41,7 +44,22 @@ const igniteViewPlayerStore = {
 
         value.extraProperties = { ...value.extraProperties, ...appStore?.settings };
 
-        await window.igniteView?.commandBridge.setPlayerStore(JSON.stringify(value));
+        const songListCompare = JSON.stringify(value.state.songlist ?? {});
+
+        if (songListCompare === lastSongList) {
+            // Do a mini sync without the songlist to avoid large data transfers
+            //console.log("[Player Bridge] Mini sync triggered");
+            value.state.songlist = {};
+            await window.igniteView?.commandBridge.setPlayerStoreMini(JSON.stringify(value));
+        }
+        else {
+            // Do a full sync
+            lastSongList = songListCompare;
+            //console.log("[Player Bridge] Full sync triggered");
+            await window.igniteView?.commandBridge.setPlayerStore(JSON.stringify(value));
+        }
+
+
     },
     removeItem: async (key: string) => {
         if (key !== "player_store") { return; }
