@@ -68,6 +68,7 @@ window.executeInjectedQueue = async () => {
             window.pauseTimeout = setTimeout(() => window.proxyMusicInstance.pause(), 420);
         }
         else if (item.type === "seek") {
+            findAudioElement() && getAudioEffectController(findAudioElement()).resetFade();
             !!window.proxyMusicInstance.nowPlayingItem && await window.proxyMusicInstance.seekToTime(item.time);
         }
         else if (item.type === "setLoopMode") {
@@ -84,6 +85,7 @@ window.executeInjectedQueue = async () => {
             findAudioElement() && getAudioEffectController(findAudioElement()).setWetLevel(item.reverb);
         }
         else if (item.type === "setSource") {
+            findAudioElement() && getAudioEffectController(findAudioElement()).resetFade();
             await window.proxyMusicInstance.stop();
 
             if (!window.isCurrentSongRadio) {

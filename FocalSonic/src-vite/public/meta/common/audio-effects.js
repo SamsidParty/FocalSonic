@@ -155,6 +155,15 @@ class AudioEffectController {
         this.rawSource.volume = this.baseVolume * this.fadeGain;
     }
 
+    resetFade() {
+        if (window.fadeTimer) { 
+            clearInterval(window.fadeTimer);
+            window.fadeTimer = null; 
+        }
+        this.fadeGain = 1;
+        this.updateVolume();
+    }
+
     adjustVolume(
         newVolume,
         duration = 400,
