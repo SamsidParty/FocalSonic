@@ -12,7 +12,7 @@ import {
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
 import clsx from "clsx";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, Maximize2Icon } from "lucide-react";
 import React, { ComponentPropsWithoutRef } from "react";
 import { useFullscreenBackdrop } from "../fullscreen/backdrop";
 
@@ -49,7 +49,14 @@ export function MainDrawerPage() {
                         "default-gradient",
                     )}
                 >
-                    <div className="absolute text-white flex w-full h-14 min-h-14 px-[6%] items-center justify-end gap-2" {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }>
+                    <div 
+                        className={clsx(
+                            "absolute text-white flex w-full h-14 min-h-14 items-center justify-end gap-2",
+                            !isMiniPlayer && "px-[6%]",
+                            isMiniPlayer && "px-2"
+                        )}
+                        {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }
+                    >
                         { !isMiniPlayer && <QueueSettings /> }
                         <Button
                             variant="ghost"
@@ -57,7 +64,10 @@ export function MainDrawerPage() {
                             className="w-10 h-10 rounded-full p-0 hover:bg-foreground/20"
                             onClick={closeDrawer}
                         >
-                            <ChevronDownIcon />
+                            {
+                                isMiniPlayer ? <Maximize2Icon /> : <ChevronDownIcon />
+                            }
+                            
                         </Button>
                     </div>
                     <div className="flex items-center w-full h-full mt-12 px-[6%] mb-0">
