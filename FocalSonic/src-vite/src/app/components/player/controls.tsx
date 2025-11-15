@@ -72,7 +72,7 @@ export function PlayerControls({
     useAudioHotkeys("mod+left", playPrevSong);
     useAudioHotkeys("mod+right", playNextSong);
     useAudioHotkeys("mod+s", toggleShuffle);
-    useAudioHotkeys("mod+r", toggleLoop);
+    useAudioHotkeys("mod+t", toggleLoop);
 
     const handleSeekAction = useCallback(
         (value: number) => {

@@ -1,5 +1,5 @@
-import { isMacOs } from "react-device-detect";
 import { IShortcut } from "@/types/shortcuts";
+import { isMacOs } from "react-device-detect";
 
 const JOIN_SHORTCUTS_KEY = !isMacOs ? "+" : "";
 
@@ -26,7 +26,7 @@ const playbackShortcuts: IShortcut[] = [
     },
     {
         label: "shortcuts.playback.repeat",
-        shortcuts: [META_KEY, "R"],
+        shortcuts: [META_KEY, "T"],
     },
     {
         label: "shortcuts.playback.previous",

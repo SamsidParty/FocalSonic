@@ -60,7 +60,7 @@ namespace FocalSonic
             ctx.Bounds = PreviousBounds ?? Program.DefaultBounds;
 
             #if WINDOWS
-            SetWindowPos(ctx.NativeHandle, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+            SetWindowPos(ctx.NativeHandle, -2, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
             int exStyle = GetWindowLong(ctx.NativeHandle, GWL_EXSTYLE);
             SetWindowLong(ctx.NativeHandle, GWL_EXSTYLE, exStyle & ~WS_EX_TOOLWINDOW);
             #endif
