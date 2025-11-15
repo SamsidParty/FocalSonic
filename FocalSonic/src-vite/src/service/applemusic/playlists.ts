@@ -184,5 +184,6 @@ export const playlists = {
     remove,
     create,
     createWithDetails,
+    resolveTracks,
     update,
 };
