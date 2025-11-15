@@ -1,13 +1,3 @@
-import clsx from "clsx";
-import {
-    EllipsisVertical,
-    Heart,
-    Info,
-    Pause,
-    Play,
-    Shuffle,
-} from "lucide-react";
-import { ButtonHTMLAttributes, ComponentPropsWithoutRef } from "react";
 import { Button as ComponentButton } from "@/app/components/ui/button";
 import {
     DropdownMenu,
@@ -16,6 +6,16 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
+import clsx from "clsx";
+import {
+    EllipsisVertical,
+    Info,
+    Pause,
+    Play,
+    Shuffle,
+    Star
+} from "lucide-react";
+import { ButtonHTMLAttributes, ComponentPropsWithoutRef } from "react";
 
 type ActionsContainerProps = ComponentPropsWithoutRef<"div">
 
@@ -120,10 +120,10 @@ interface LikeIconProps {
 
 function LikeIcon({ isStarred }: LikeIconProps) {
     return (
-        <Heart
+        <Star
             className={clsx(
                 "w-5 h-5 drop-shadow-md",
-                isStarred && "text-red-500 fill-red-500",
+                isStarred && "text-yellow-500 fill-yellow-500",
             )}
             strokeWidth={2}
         />

@@ -96,7 +96,12 @@ async function getAnimatedCoverArt(id: string, type: "songs" | "albums" = "songs
         }
     ))?.resources?.albums;
 
-    const firstAlbum = response?.[id] as AppleMusicAlbum;
+    let firstAlbum = response?.[id] as AppleMusicAlbum;
+
+    if (!firstAlbum) {
+        firstAlbum = Object.values(response || {})?.[0] as AppleMusicAlbum;
+    }
+
     const editorialVideo = firstAlbum?.attributes.editorialVideo;
     const url = editorialVideo?.motionDetailSquare?.video || "none"; // Save as none instead of null so that we can cache the asset as none existent
 

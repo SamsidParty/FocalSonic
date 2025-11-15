@@ -439,8 +439,8 @@
         "disable": "Disable repeat",
         "infinite": "Disable infinite radio"
       },
-      "like": "Like {{song}} by {{artist}}",
-      "dislike": "Remove like from {{song}} by {{artist}}",
+      "like": "Star {{song}}",
+      "dislike": "Remove star",
       "miniPlayer": {
         "open": "Open Miniplayer",
         "close": "Close Miniplayer"

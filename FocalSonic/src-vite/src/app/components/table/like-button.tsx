@@ -1,6 +1,5 @@
 import { clsx } from "clsx";
-import { Heart } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Button } from "@/app/components/ui/button";
 import { service } from "@/service/service";
@@ -10,6 +9,7 @@ import {
     usePlayerSongStarred,
     usePlayerSonglist,
 } from "@/store/player.store";
+import { Star } from "lucide-react";
 
 interface TableLikeButtonProps {
     type: "song" | "artist"
@@ -64,8 +64,8 @@ export function TableLikeButton({
                 handleStarred();
             }}
         >
-            <Heart
-                className={clsx("w-4 h-4", isStarred && "text-red-500 fill-red-500")}
+            <Star
+                className={clsx("w-4 h-4", isStarred && "text-yellow-500 fill-yellow-500")}
                 strokeWidth={2}
             />
         </Button>

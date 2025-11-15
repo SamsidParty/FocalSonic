@@ -1,13 +1,3 @@
-import { clsx } from "clsx";
-import {
-    Heart,
-    Pause,
-    Play,
-    Repeat,
-    Shuffle,
-    SkipBack,
-    SkipForward,
-} from "lucide-react";
 import RepeatOne from "@/app/components/icons/repeat-one";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +10,17 @@ import {
     usePlayerSongStarred,
 } from "@/store/player.store";
 import { LoopState } from "@/types/playerContext";
+import { clsx } from "clsx";
+import {
+    Pause,
+    Play,
+    Repeat,
+    Shuffle,
+    SkipBack,
+    SkipForward,
+    Star
+} from "lucide-react";
+import React from "react";
 
 export function MiniPlayerControls() {
     const isPlaying = usePlayerIsPlaying();
@@ -141,8 +142,8 @@ export function MiniPlayerLikeButton() {
             onClick={starCurrentSong}
             style={{ ...buttonsStyle.style }}
         >
-            <Heart
-                className={clsx(isSongStarred && "text-red-500 fill-red-500")}
+            <Star
+                className={clsx(isSongStarred && "text-yellow-500 fill-yellow-500")}
                 size={18}
             />
         </Button>

@@ -1,5 +1,7 @@
 import { usePlayerStore } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
+import { beforeEach, describe, it } from "node:test";
+import React from "react";
 import { Player } from "./player";
 
 describe("Player Component", () => {
@@ -228,8 +230,8 @@ describe("Player Component", () => {
 
             cy.getByTestId("player-like-icon")
                 .should("be.visible")
-                .and("not.have.class", "text-red-500")
-                .and("not.have.class", "fill-red-500");
+                .and("not.have.class", "text-yellow-500")
+                .and("not.have.class", "fill-yellow-500");
 
             cy.getByTestId("player-like-button").click();
 
@@ -240,8 +242,8 @@ describe("Player Component", () => {
 
             cy.getByTestId("player-like-icon")
                 .should("be.visible")
-                .and("have.class", "text-red-500")
-                .and("have.class", "fill-red-500");
+                .and("have.class", "text-yellow-500")
+                .and("have.class", "fill-yellow-500");
         });
     });
 });

@@ -20,7 +20,7 @@ export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
     const { queueState } = useQueueState();
     const { lyricsState } = useLyricsState();
-    const { isPlayerAtTop } = usePlayerStyle();
+    const { isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
 
     return (
@@ -49,10 +49,11 @@ export function MainDrawerPage() {
                         "default-gradient",
                     )}
                 >
-                    <div className="absolute text-white flex w-full h-14 min-h-14 px-[6%] items-center justify-end gap-2">
-                        <QueueSettings />
+                    <div className="absolute text-white flex w-full h-14 min-h-14 px-[6%] items-center justify-end gap-2" {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }>
+                        { !isMiniPlayer && <QueueSettings /> }
                         <Button
                             variant="ghost"
+                            data-webview-ignore={""}
                             className="w-10 h-10 rounded-full p-0 hover:bg-foreground/20"
                             onClick={closeDrawer}
                         >

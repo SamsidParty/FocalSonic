@@ -783,10 +783,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         setMainDrawerState: (status) => {
 
-                            if (status) {
-                                window.igniteView?.commandBridge?.enterMiniPlayer();
-                            }
-
                             set((state) => {
                                 state.playerState.mainDrawerState = status;
                             });

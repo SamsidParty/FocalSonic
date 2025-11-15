@@ -1,5 +1,5 @@
-import { ClockIcon, HeartIcon } from "lucide-react";
-import { memo } from "react";
+import { ClockIcon, StarIcon } from "lucide-react";
+import React, { memo } from "react";
 import { Link } from "react-router-dom";
 
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
@@ -265,7 +265,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
             },
             header: () => (
                 <MemoSimpleTooltip text={i18n.t("table.columns.favorite")}>
-                    <HeartIcon className="w-4 h-4 mr-2" />
+                    <StarIcon className="w-4 h-4 mr-2" />
                 </MemoSimpleTooltip>
             ),
             cell: ({ row }) => <MemoSongTableActions row={row} />,

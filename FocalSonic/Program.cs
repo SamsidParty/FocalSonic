@@ -18,7 +18,7 @@ public class Program
     public static HttpClient Http = new HttpClient();
     public static WebWindow? MainWindow => App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault();
 
-    public static WindowBounds DefaultBounds = new WindowBounds(1280, 820) { MinWidth = 780, MinHeight = 450 };
+    public static WindowBounds DefaultBounds = new WindowBounds(1280, 820) { MinWidth = 800, MinHeight = 450 };
 
     [STAThread]
     static void Main(string[] args)

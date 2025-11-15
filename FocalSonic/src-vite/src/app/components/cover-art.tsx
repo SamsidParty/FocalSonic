@@ -24,6 +24,7 @@ export default function CoverArtImage(props: ImageProps) {
     const fetchAnimatedArtwork = async () => {
         if (isAnimationValid) {
             const artURL = await service.songs.getAnimatedCoverArt(props.animationCatalogID, props.animationCatalogType);
+
             if (artURL) {
                 setHlsArtworkURL(artURL);
             }
