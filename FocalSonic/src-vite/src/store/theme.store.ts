@@ -1,5 +1,6 @@
 import { IThemeContext, Theme } from "@/types/themeContext";
 import merge from "lodash/merge";
+import { useEffect, useState } from "react";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createWithEqualityFn } from "zustand/traditional";
@@ -59,12 +60,29 @@ export const useTheme = () => useThemeStore((state) => state);
 
 export const usePlayerStyle = () => {
 
-    const { playerStyle } = useThemeStore((state) => ({ playerStyle: state.playerStyle }));
+    const { playerStyle, isPlayerAtTop } = useTheme();
+    const [isMiniPlayer, setIsMiniPlayer] = useState(window.matchMedia("(max-width: 780px)").matches);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMiniPlayer(window.matchMedia("(max-width: 780px)").matches);
+        };
+
+        // Add event listener when the component mounts
+        window.addEventListener("resize", handleResize);
+
+        // Clean up the event listener when the component unmounts
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, []);
+
+
 
     // Force slim style in mini player
-    if (window.matchMedia("(max-width: 780px)").matches) {
-        return "slim";
+    if (isMiniPlayer) {
+        return { playerStyle: "slim", isPlayerAtTop: false };
     }
 
-    return playerStyle;
+    return { playerStyle, isPlayerAtTop };
 };

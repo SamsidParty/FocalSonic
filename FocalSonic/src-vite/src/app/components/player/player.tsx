@@ -15,7 +15,7 @@ import {
     usePlayerStore,
     useReplayGainState,
 } from "@/store/player.store";
-import { usePlayerStyle, useTheme } from "@/store/theme.store";
+import { usePlayerStyle } from "@/store/theme.store";
 import { LoopState } from "@/types/playerContext";
 import { hasPiPSupport } from "@/utils/browser";
 import { logger } from "@/utils/logger";
@@ -78,8 +78,7 @@ export function Player() {
     const radio = radioList[currentSongIndex];
     const podcast = podcastList[currentSongIndex];
 
-    const { isPlayerAtTop } = useTheme();
-    const playerStyle = usePlayerStyle();
+    const { playerStyle, isPlayerAtTop } = usePlayerStyle();
 
     const getAudioRef = useCallback(() => {
         if (isRadio) return radioRef;

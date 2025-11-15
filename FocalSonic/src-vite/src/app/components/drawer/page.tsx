@@ -10,17 +10,17 @@ import {
     useMainDrawerState,
     useQueueState
 } from "@/store/player.store";
-import { useTheme } from "@/store/theme.store";
+import { usePlayerStyle } from "@/store/theme.store";
 import clsx from "clsx";
 import { ChevronDownIcon } from "lucide-react";
-import { ComponentPropsWithoutRef } from "react";
+import React, { ComponentPropsWithoutRef } from "react";
 import { useFullscreenBackdrop } from "../fullscreen/backdrop";
 
 export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
     const { queueState } = useQueueState();
     const { lyricsState } = useLyricsState();
-    const { isPlayerAtTop } = useTheme();
+    const { isPlayerAtTop } = usePlayerStyle();
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
 
     return (

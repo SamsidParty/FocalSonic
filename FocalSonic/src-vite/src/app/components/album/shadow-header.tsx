@@ -1,6 +1,6 @@
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/store/theme.store";
+import { usePlayerStyle } from "@/store/theme.store";
 import { ComponentProps } from "react";
 
 type ShadowHeaderProps = ComponentProps<"div"> & {
@@ -17,7 +17,7 @@ export function ShadowHeader({
 }: ShadowHeaderProps) {
 
     const { isSidebarOpen } = useAppWindow();
-    const { isPlayerAtTop } = useTheme();
+    const { isPlayerAtTop } = usePlayerStyle();
 
     return (
         <div
