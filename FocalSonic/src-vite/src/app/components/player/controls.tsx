@@ -11,6 +11,7 @@ import {
     usePlayerPrevAndNext,
     usePlayerShuffle,
 } from "@/store/player.store";
+import { usePlayerStyle } from "@/store/theme.store";
 import { LoopState } from "@/types/playerContext";
 import { EpisodeWithPodcast } from "@/types/responses/podcasts";
 import { Radio } from "@/types/responses/radios";
@@ -65,6 +66,8 @@ export function PlayerControls({
     } = usePlayerActions();
     const { useAudioHotkeys } = usePlayerHotkeys();
 
+    const { isMiniPlayer } = usePlayerStyle();
+
     useAudioHotkeys("space", togglePlayPause);
     useAudioHotkeys("mod+left", playPrevSong);
     useAudioHotkeys("mod+right", playNextSong);
@@ -115,7 +118,7 @@ export function PlayerControls({
     const disableButtons = !song && !radio && !podcast;
 
     return (
-        <div className="flex w-full gap-1 justify-center items-center mb-1">
+        <div className="flex w-full xxs:w-fit gap-1 xxs:gap-0 justify-center items-center mb-1">
             {isSong && (
                 <PlayerButton
                     className={clsx(isShuffleActive && "player-button-active")}
@@ -193,7 +196,7 @@ export function PlayerControls({
             {isSong && (
                 <PlayerButton
                     className={clsx(
-                        loopState !== LoopState.Off && "player-button-active",
+                        loopState !== LoopState.Off && "player-button-active"
                     )}
                     disabled={!song}
                     onClick={toggleLoop}

@@ -188,7 +188,7 @@ export function Player() {
             "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-bar xxs:bg-transparent",
             isPlayerAtTop ? "top-header" : "bottom-0"
         )}>
-            <div className="w-full h-full grid grid-cols-player gap-2 px-3">
+            <div className="w-full h-full grid grid-cols-player xxs:flex xxs:flex-col xxs:justify-center gap-2 px-3">
                 {/* Track Info */}
                 <div className="flex items-center gap-2 w-full xxs:hidden">
                     {isSong && <MemoTrackInfo song={song} />}
@@ -198,8 +198,8 @@ export function Player() {
                 {/* Main Controls */}
                 <div 
                     className={clsx(
-                        playerStyle === "default" && "col-span-2 xxs:col-span-4 flex flex-col justify-center items-center px-4 gap-1",
-                        playerStyle === "slim" && "col-span-2 xxs:col-span-4 flex flex-row justify-center items-center px-4 gap-1"
+                        playerStyle === "default" && "col-span-2 xxs:w-full flex flex-col justify-center items-center px-4 gap-1",
+                        playerStyle === "slim" && "col-span-2 xxs:w-full flex flex-row justify-center items-center px-4 xxs:px-0 gap-1"
                     )}>
                     <MemoPlayerControls
                         song={song}

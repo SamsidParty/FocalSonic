@@ -6,6 +6,7 @@ import { parseTTML } from "@/lib/ttml/parser";
 import { service } from "@/service/service";
 import { useAppStore } from "@/store/app.store";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
+import { usePlayerStyle } from "@/store/theme.store";
 import { ILyric } from "@/types/responses/song";
 import { stripLRCLine } from "@/utils/lyricUtils";
 import { isSafari } from "@/utils/osType";
@@ -73,6 +74,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
     const playerRef = usePlayerRef();
     const [timestamp, setTimestamp] = useState<number>(0);
     const { altLyricsMode } = useAppStore().settings;
+    const { isMiniPlayer } = usePlayerStyle();
 
 
     const { data: convertedLyrics, isLoading } = useQuery({
@@ -159,7 +161,7 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
                 recoverAutoScrollInterval={1000}
                 currentMillisecond={timestamp}
                 id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
-                className={clsx("h-full overflow-y-auto", !isSafari && "scroll-smooth")}
+                className={clsx("h-full overflow-y-auto z-40", !isSafari && "scroll-smooth")}
                 verticalSpace={true}
                 lineRenderer={(props) => <LrcLineRenderer {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />}
             />
@@ -210,12 +212,12 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
             key={line?.id}
             onClick={() => skipToTime(line.startMillisecond)}
             className={clsx(
-                "drop-shadow-lg text-white cursor-pointer hover:opacity-100 duration-700",
+                "drop-shadow-lg z-40 text-white cursor-pointer hover:opacity-100 duration-700",
                 "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left xxs:leading-normal",
                 (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
-                !subLyric ? "my-10 2xl:my-20" : "my-0",
-                line?.isSubLyric && "text-xl 2xl:text-3xl xxs:text-sm opacity-100 mt-0 2xl:mt-0 mb-10 2xl:mb-20 xxs:mb-5",
-                !line?.isSubLyric && "xxs:text-[25px]",
+                !subLyric ? "my-10 2xl:my-20 xxs:my-5" : "my-0",
+                line?.isSubLyric && "text-xl 2xl:text-3xl xxs:text-xs opacity-100 mt-0 mb-10 2xl:mb-20 xxs:mb-2",
+                !line?.isSubLyric && "xxs:text-[18px]",
             )}
         >
             {elrcValues.elrcPortions.map((portion, index) => (

@@ -19,12 +19,12 @@ namespace FocalSonic
             IsMiniPlayer = true;
 
             // Prevent overwriting previous bounds with the mini player bounds
-            if (ctx.Bounds.MaxWidth != 715)
+            if (ctx.Bounds.MaxWidth != 500)
             {
                 PreviousBounds = ctx.Bounds;
             }
 
-            ctx.Bounds = new LockedWindowBounds(715, 455);
+            ctx.Bounds = new LockedWindowBounds(500, 300);
         }
 
         [Command("exitMiniPlayer")]

@@ -161,13 +161,13 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
     return (
         <div
             className={clsx(
-                "flex w-full justify-center items-center gap-2",
+                "flex w-full xxs:w-40 justify-center items-center gap-2",
                 isEmpty && "opacity-50",
             )}
         >
             <small
                 className={clsx(
-                    "text-xs text-muted-foreground text-right",
+                    "text-xs text-muted-foreground text-right xxs:hidden",
                     isProgressLarge ? "min-w-14" : "min-w-10",
                 )}
                 data-testid="player-current-time"

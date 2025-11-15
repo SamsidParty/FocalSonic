@@ -19,9 +19,13 @@ import { useFullscreenBackdrop } from "../fullscreen/backdrop";
 export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
     const { queueState } = useQueueState();
-    const { lyricsState } = useLyricsState();
+    let { lyricsState } = useLyricsState();
     const { isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
+
+    if (!lyricsState && !queueState) {
+        lyricsState = true;
+    }
 
     return (
         <Drawer
