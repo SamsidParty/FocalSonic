@@ -17,6 +17,7 @@ import {
     InfinitySongListFallback,
     SongListFallback,
 } from "@/app/components/fallbacks/song-fallbacks";
+import PinsPage from "@/app/pages/pins";
 import { loginLoader } from "@/routes/loginLoader";
 import { podcastsLoader, protectedLoader } from "@/routes/protectedLoader";
 import { ROUTES } from "@/routes/routesList";
@@ -84,6 +85,16 @@ export const router = createHashRouter([
                 element: (
                     <Suspense fallback={<InfinitySongListFallback />}>
                         <SongList />
+                    </Suspense>
+                ),
+            },
+            {
+                id: "pins",
+                path: ROUTES.LIBRARY.PINS,
+                errorElement: <ErrorPage />,
+                element: (
+                    <Suspense fallback={<AlbumsFallback />}>
+                        <PinsPage />
                     </Suspense>
                 ),
             },

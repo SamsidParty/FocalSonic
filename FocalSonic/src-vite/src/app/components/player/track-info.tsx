@@ -48,8 +48,9 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
         }
 
         
+        document.documentElement.style.setProperty("--song-match-vibrant", color);
+        
         if (color !== currentSongColor) {
-            document.documentElement.style.setProperty("--song-match-vibrant", color);
             setCurrentSongColor(color);
         }
     }, [currentSongColor, setCurrentSongColor]);

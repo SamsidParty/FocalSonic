@@ -9,7 +9,8 @@ export default function AppleMusicHome() {
     const { t } = useTranslation();
 
     const { data, isLoading, isFetching } = useGetAppleMusicHome();
-    const sections = data?.data || [];
+    const hideSections = ["replay", "recently played"];
+    const sections = data?.data.filter((s) => !hideSections.some(h => s.attributes?.title?.stringForDisplay.toLowerCase().includes(h))) || [];
 
     return (
         <div className="w-full px-8 py-6">

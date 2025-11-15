@@ -169,15 +169,15 @@ export default function PreviewList({
                                             color: "#" + (entry as AppleMusicRecommendationContent).attributes?.artwork?.textColor1
                                         } : {}}
                                     >
-                                        <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl px-4 grow text-center flex flex-col justify-center align-center"}>
+                                        <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl backdrop-brightness-[80%] px-4 grow text-center flex flex-col rounded-b-sm overflow-hidden justify-center align-center"}>
                                             <PreviewCard.Title onClick={() => navigateToResource(entry)}>
                                                 {entry.name || (entry as AppleMusicRecommendationContent).attributes?.name}
                                             </PreviewCard.Title>
                                             <PreviewCard.Subtitle
-                                                enableLink={(entry.relationships?.artists.data[0]?.id || entry.artistId) !== undefined}
-                                                link={ROUTES.ARTIST.PAGE(entry.relationships?.artists.data[0]?.id || entry.artistId)}
+                                                enableLink={(entry.relationships?.artists?.data[0]?.id || entry.artistId) !== undefined}
+                                                link={ROUTES.ARTIST.PAGE(entry.relationships?.artists?.data[0]?.id || entry.artistId)}
                                             >
-                                                {entry.artist || (entry as AppleMusicRecommendationContent).attributes?.artistName || (entry as AppleMusicRecommendationContent).attributes?.curatorName}
+                                                {entry.artist || (entry as AppleMusicRecommendationContent)?.attributes?.artistName || (entry as AppleMusicRecommendationContent)?.attributes?.curatorName}
                                             </PreviewCard.Subtitle>
                                         </div>
                                     </PreviewCard.InfoWrapper>

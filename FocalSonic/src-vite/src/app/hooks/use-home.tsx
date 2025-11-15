@@ -16,7 +16,15 @@ export const useGetAppleMusicHome = () => {
         queryKey: [queryKeys.appleMusic.recommendations],
         queryFn: () => appleMusic.recommendations.getHome(),
     });
-}
+};
+
+export const useGetAppleMusicPins = () => {
+    return useQuery({
+        queryKey: [queryKeys.appleMusic.pins],
+        queryFn: () => appleMusic.recommendations.getPins(),
+    });
+};
+
 
 export const useGetRecentlyAdded = () => {
     return useQuery({

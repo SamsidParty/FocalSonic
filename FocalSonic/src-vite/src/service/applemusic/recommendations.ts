@@ -25,6 +25,7 @@ async function getHome() {
             "meta[stations]": "inflectionPoints",
             "name": "listen-now",
             "omit[resource]": "autos",
+            "l": "en-US",
             "timezone": timezoneOffset,
             "types": "activities,albums,apple-curators,artists,curators,editorial-items,library-albums,library-playlists,playlists,songs,stations,uploaded-audios,uploaded-videos",
             "with": "friendsMix,library,social"
@@ -34,6 +35,19 @@ async function getHome() {
     return response;
 }
 
+async function getPins() {
+
+    const response = await httpClient<any>("/applemusic/me/library/pins", {
+        method: "GET",
+        query: {
+            "include[library-songs]": "albums,playlists,artists"
+        }
+    });
+
+    return response;
+}
+
 export const recommendations = {
-    getHome
+    getHome,
+    getPins
 };

@@ -18,6 +18,7 @@
   "sidebar": {
     "home": "Home",
     "search": "Search",
+    "pins": "Quick Access",
     "miniSearch": "Search",
     "library": "Library",
     "artists": "Artists",
@@ -79,6 +80,7 @@
     "classic": "Zune Classic"
   },
   "playlist": {
+    "pinned": "Pinned",
     "headline": "Playlist",
     "songCount_one": "{{count}} song",
     "songCount_other": "{{count}} songs",

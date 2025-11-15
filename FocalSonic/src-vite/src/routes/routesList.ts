@@ -9,6 +9,7 @@ const LIBRARY = {
     PLAYLISTS: "/library/playlists",
     PODCASTS: "/library/podcasts",
     EPISODES: "/library/episodes",
+    PINS: "/library/pins",
     RADIOS: "/library/radios",
 };
 
