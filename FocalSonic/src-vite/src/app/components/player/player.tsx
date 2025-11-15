@@ -15,7 +15,7 @@ import {
     usePlayerStore,
     useReplayGainState,
 } from "@/store/player.store";
-import { useTheme } from "@/store/theme.store";
+import { usePlayerStyle, useTheme } from "@/store/theme.store";
 import { LoopState } from "@/types/playerContext";
 import { hasPiPSupport } from "@/utils/browser";
 import { logger } from "@/utils/logger";
@@ -78,7 +78,8 @@ export function Player() {
     const radio = radioList[currentSongIndex];
     const podcast = podcastList[currentSongIndex];
 
-    const { isPlayerAtTop, playerStyle } = useTheme();
+    const { isPlayerAtTop } = useTheme();
+    const playerStyle = usePlayerStyle();
 
     const getAudioRef = useCallback(() => {
         if (isRadio) return radioRef;
@@ -185,7 +186,7 @@ export function Player() {
 
     return (
         <footer className={clsx(
-            "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-bar",
+            "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-bar xxs:bg-transparent",
             isPlayerAtTop ? "top-header" : "bottom-0"
         )}>
             <div className="w-full h-full grid grid-cols-player gap-2 px-3">
@@ -212,7 +213,7 @@ export function Player() {
                         <MemoPlayerProgress audioRef={getAudioRef()} />
                     )}
                 </div>
-                {/* Remain Controls and Volume */}
+                {/* Remaining Controls and Volume */}
                 <div className="flex items-center w-full justify-end xxs:hidden">
                     <div className="flex items-center gap-1">
                         {isSong && (

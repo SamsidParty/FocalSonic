@@ -17,7 +17,8 @@ public class Program
     public static ViteAppManager App;
     public static HttpClient Http = new HttpClient();
     public static WebWindow? MainWindow => App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault();
-    
+
+    public static WindowBounds DefaultBounds = new WindowBounds(1280, 820);
 
     [STAThread]
     static void Main(string[] args)
@@ -84,7 +85,7 @@ public class Program
         App.MainWindow =
             WebWindow.Create()
             .WithTitle("FocalSonic")
-            .WithBounds(new WindowBounds(1280, 820))
+            .WithBounds(DefaultBounds)
             .WithSharedContext("MainWindow", "")
             .WithPlatformBasedAdditions()
             .Show();

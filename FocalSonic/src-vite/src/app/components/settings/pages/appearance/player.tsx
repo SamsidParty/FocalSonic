@@ -7,12 +7,14 @@ import {
     Root
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
-import { useTheme } from "@/store/theme.store";
+import { usePlayerStyle, useTheme } from "@/store/theme.store";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 export function PlayerSettings() {
     const { t } = useTranslation();
-    const { isPlayerAtTop, setIsPlayerAtTop, playerStyle, setPlayerStyle } = useTheme();
+    const { isPlayerAtTop, setIsPlayerAtTop, setPlayerStyle } = useTheme();
+    const playerStyle = usePlayerStyle();
 
     return (
         <Root>

@@ -782,6 +782,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             });
                         },
                         setMainDrawerState: (status) => {
+
+                            if (status) {
+                                window.igniteView?.commandBridge?.enterMiniPlayer();
+                            }
+
                             set((state) => {
                                 state.playerState.mainDrawerState = status;
                             });
@@ -837,6 +842,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             });
                         },
                         closeDrawer: () => {
+
+                            window.igniteView?.commandBridge?.exitMiniPlayer();
+
                             set((state) => {
                                 state.playerState.mainDrawerState = false;
                                 state.playerState.queueState = false;

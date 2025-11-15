@@ -211,7 +211,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
             onClick={() => skipToTime(line.startMillisecond)}
             className={clsx(
                 "drop-shadow-lg text-white cursor-pointer hover:opacity-100 duration-700",
-                "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left",
+                "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left xxs:leading-normal",
                 (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
                 !subLyric ? "my-10 2xl:my-20" : "my-0",
                 line?.isSubLyric && "text-xl 2xl:text-3xl xxs:text-sm opacity-100 mt-0 2xl:mt-0 mb-10 2xl:mb-20 xxs:mb-5",

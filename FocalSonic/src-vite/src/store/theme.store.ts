@@ -56,3 +56,15 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
 );
 
 export const useTheme = () => useThemeStore((state) => state);
+
+export const usePlayerStyle = () => {
+
+    const { playerStyle } = useThemeStore((state) => ({ playerStyle: state.playerStyle }));
+
+    // Force slim style in mini player
+    if (window.matchMedia("(max-width: 780px)").matches) {
+        return "slim";
+    }
+
+    return playerStyle;
+};
