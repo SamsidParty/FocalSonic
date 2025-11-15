@@ -55,6 +55,8 @@
     "label": "Theme",
     "light": "Light",
     "dark": "Dark",
+    "match-dark": "Song Match Dark",
+    "match-light": "Song Match Light",
     "system": "System",
     "black": "Black and White",
     "one-dark": "One Dark",

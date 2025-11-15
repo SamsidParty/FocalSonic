@@ -47,7 +47,9 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
             logger.error("[TrackInfo] - Unable to get image average color.", { ex });
         }
 
+        
         if (color !== currentSongColor) {
+            document.documentElement.style.setProperty("--song-match-vibrant", color);
             setCurrentSongColor(color);
         }
     }, [currentSongColor, setCurrentSongColor]);

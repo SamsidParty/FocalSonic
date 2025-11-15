@@ -87,6 +87,58 @@
     --ring: hsl(261, 84%, 39%);
   }
 
+  .match-dark {
+    --matched-color: var(--song-match-vibrant,  hsl(0, 0%, 49%));
+    --background: color-mix(in hsl, hsl(0, 0%, 0%), var(--matched-color) 15%);
+    --background-foreground: color-mix(in hsl, hsl(0, 0%, 10%), var(--matched-color) 10%);
+    --foreground: hsl(210 20% 95%);
+    --card: color-mix(in hsl, hsl(0, 0%, 10%), var(--matched-color) 5%);
+    --card-foreground: hsl(210 20% 95%);
+    --popover: color-mix(in hsl, hsl(0, 0%, 10%), var(--matched-color) 5%);
+    --popover-foreground: hsl(210 20% 95%);
+    --primary: var(--matched-color);
+    --primary-foreground: hsl(210 20% 95%);
+    --secondary: color-mix(in hsl, hsl(0, 0%, 10%), var(--matched-color) 15%);
+    --secondary-foreground: hsl(210 20% 95%);
+    --muted: color-mix(in hsl, hsl(0, 0%, 10%), var(--matched-color) 15%);
+    --muted-foreground: hsl(217.9 10.6% 64.9%);
+    --accent: color-mix(in hsl, hsl(0, 0%, 10%), var(--matched-color) 15%);
+    --accent-foreground: hsl(210 20% 95%);
+    --destructive: hsl(0 62.8% 30.6%);
+    --destructive-foreground: hsl(210 20% 95%);
+    --border: color-mix(in hsl, hsl(0, 0%, 10%), var(--matched-color) 15%);
+    --input: color-mix(in hsl, hsl(0, 0%, 10%), var(--matched-color) 15%);
+    --body: var(--background-foreground);
+    --bar: var(--background);
+    --ring: var(--matched-color);
+  }
+
+  .match-light {
+    --matched-color: var(--song-match-vibrant,  hsl(0, 0%, 49%));
+    --background: color-mix(in hsl, hsl(0, 0%, 100%), var(--matched-color) 25%);
+    --background-foreground: color-mix(in hsl, hsl(0, 0%, 100%), var(--matched-color) 30%);
+    --foreground: hsl(224 10% 15%);
+    --card: color-mix(in hsl, hsl(0, 0%, 100%), var(--matched-color) 40%);
+    --card-foreground: hsl(224 10% 15%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(224 10% 15%);
+    --primary: var(--matched-color);
+    --primary-foreground: hsl(210 20% 98%);
+    --secondary: color-mix(in hsl, hsl(0, 0%, 100%), var(--matched-color) 40%);
+    --secondary-foreground: hsl(220.9 39.3% 11%);
+    --muted: color-mix(in hsl, hsl(0, 0%, 100%), var(--matched-color) 40%);
+    --muted-foreground: hsl(220 8.9% 46.1%);
+    --accent: color-mix(in hsl, hsl(0, 0%, 100%), var(--matched-color) 40%);
+    --accent-foreground: hsl(220.9 39.3% 11%);
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: hsl(210 20% 98%);
+    --border: hsl(220 13% 91%);
+    --input: hsl(220 13% 91%);
+    --body: var(--background-foreground);
+    --bar: var(--background);
+    --ring: var(--song-matched-color);
+  }
+
   .black {
     --background: hsl(240 10% 3.9%);
     --background-foreground: hsl(240 5.9% 10%);
