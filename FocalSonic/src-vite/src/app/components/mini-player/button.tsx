@@ -1,6 +1,6 @@
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
-import { useMainDrawerState, usePlayerCurrentList } from "@/store/player.store";
+import { useLyricsState, useMainDrawerState, usePlayerCurrentList, useQueueState } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
 import clsx from "clsx";
 import { PictureInPicture2Icon } from "lucide-react";
@@ -17,12 +17,16 @@ export function MiniPlayerButton() {
     const currentList = usePlayerCurrentList();
     const { isMiniPlayer } = usePlayerStyle();
     const { setMainDrawerState } = useMainDrawerState();
+    const { queueState, setQueueState } = useQueueState();
+    const { lyricsState, setLyricsState } = useLyricsState();
 
     const handleClick = useCallback(async () => {
         if (isMiniPlayer) {
             window.igniteView?.commandBridge?.exitMiniPlayer();
         } else {
             window.igniteView?.commandBridge?.enterMiniPlayer();
+            setQueueState(false);
+            setLyricsState(true);
             setMainDrawerState(true);
         }
     }, [isMiniPlayer]);
