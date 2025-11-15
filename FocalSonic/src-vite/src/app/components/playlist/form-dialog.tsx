@@ -113,7 +113,7 @@ export function CreatePlaylistDialog() {
             await updateMutation.mutateAsync({
                 playlistId: data.id,
                 name,
-                comment,
+                ,
                 isPublic: isPublic ? "true" : "false",
             });
         }

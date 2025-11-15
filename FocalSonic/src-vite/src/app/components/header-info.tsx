@@ -1,5 +1,5 @@
-import { Fragment } from "react/jsx-runtime";
 import { Link } from "react-router-dom";
+import { Fragment } from "react/jsx-runtime";
 import { Dot } from "./dot";
 
 type TextBadge = {
@@ -13,12 +13,24 @@ type LinkBadge = {
     link: string
 }
 
-export type BadgesData = Array<TextBadge | LinkBadge>
+type ChipBadge = {
+    content: string | null
+    type: "chip"
+    link: string
+}
+
+export type BadgesData = Array<TextBadge | LinkBadge | ChipBadge>
 
 interface HeaderInfoProps {
     showFirstDot?: boolean
     badges: BadgesData
 }
+
+const renderBadge = {
+    text: (props) => <p className="opacity-80 drop-shadow">{props.item.content}</p>,
+    chip: (props) => <p className="opacity-80 drop-shadow rounded-sm px-1 bg-primary text-primary-foreground">{props.item.content}</p>,
+    link: (props) => <Link to={props.item.link} className="flex opacity-80 drop-shadow hover:opacity-100 hover:underline"> {props.item.content}</Link>
+};
 
 export function HeaderInfoGenerator({
     showFirstDot = true,
@@ -32,16 +44,12 @@ export function HeaderInfoGenerator({
                     .map((item, index, array) => (
                         <Fragment key={index}>
                             {showFirstDot && index === 0 && <Dot />}
-                            {item.type === "link" ? (
-                                <Link
-                                    to={item.link}
-                                    className="flex opacity-80 drop-shadow hover:opacity-100 hover:underline"
-                                >
-                                    {item.content}
-                                </Link>
-                            ) : (
-                                <p className="opacity-80 drop-shadow">{item.content}</p>
-                            )}
+                            {
+                                (() => {
+                                    const Badge = renderBadge[item.type] || renderBadge.text;
+                                    return <Badge item={item} />;
+                                })()
+                            }
                             {index < array.length - 1 && <Dot />}
                         </Fragment>
                     ))}

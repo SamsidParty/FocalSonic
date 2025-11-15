@@ -43,13 +43,19 @@ function ImageWrapper({ children, link, onClick, className }: ImageWrapperProps)
 interface ImageProps {
     src: string
     alt: string
+    animationCatalogID?: string
+    animationCatalogType?: "songs" | "albums"
+    animated?: boolean
 }
 
-function Image({ src, alt }: ImageProps) {
+function Image({ src, alt, animationCatalogID, animationCatalogType, animated }: ImageProps) {
     return (
         <CoverArtImage
             src={src}
             alt={alt}
+            animationCatalogID={animationCatalogID}
+            animationCatalogType={animationCatalogType}
+            animated={animated}
             effect="opacity"
             width="100%"
             height="100%"

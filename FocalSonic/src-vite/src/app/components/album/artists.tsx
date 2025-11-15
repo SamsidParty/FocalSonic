@@ -1,11 +1,11 @@
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Link } from "react-router-dom";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { Dot } from "@/app/components/dot";
 import { ROUTES } from "@/routes/routesList";
 import { IFeaturedArtist } from "@/types/responses/artist";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { checkServerType } from "@/utils/servers";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import { Link } from "react-router-dom";
 
 type AlbumArtistProps = {
     id: string
@@ -15,7 +15,7 @@ type AlbumArtistProps = {
 export function AlbumArtistInfo({ id, name }: AlbumArtistProps) {
     return (
         <div className="flex items-center gap-2">
-            <ArtistImage id={id} name={name} />
+            
             <ArtistLink id={id} name={name} />
         </div>
     );
@@ -74,7 +74,7 @@ function ArtistImage({ id, name }: AlbumArtistProps) {
 function ArtistLink({ id, name }: AlbumArtistProps) {
     return (
         <Link
-            className="flex items-center hover:underline text-sm font-medium drop-shadow"
+            className="flex items-center text-primary hover:underline text-sm font-medium drop-shadow"
             to={ROUTES.ARTIST.PAGE(id)}
         >
             {name}

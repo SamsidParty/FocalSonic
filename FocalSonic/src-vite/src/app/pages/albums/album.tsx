@@ -58,11 +58,9 @@ export default function Album() {
         : null;
 
     const badges: BadgesData = [
-        { content: album.year?.toString() ?? null, type: "text" },
         {
             content: album.genre ?? null,
-            type: "link",
-            link: ROUTES.ALBUMS.GENRE(album.genre),
+            type: "text"
         },
         {
             content: album.songCount
@@ -77,6 +75,19 @@ export default function Album() {
             type: "text",
         },
     ];
+
+    // Add new or year badge
+    if (album.isNew) {
+        badges.unshift({
+            content: t("album.new"),
+            type: "chip",
+        });
+    } else if (album.year) {
+        badges.unshift({
+            content: album.year.toString(),
+            type: "text",
+        });
+    }
 
     const columnsToShow: ColumnFilter[] = [
         "trackNumber",
@@ -118,7 +129,7 @@ export default function Album() {
         ? album.discTitles.length > 1
         : false;
 
-    const albumComment = album.song.length > 0 ? album.song[0].comment : null;
+    const albumComment = album.comment || (album.song.length > 0 ? album.song[0].comment : null);
 
     return (
         <div className="w-full">

@@ -52,7 +52,7 @@ export function PlaylistOptions({
     }
 
     async function handlePlay() {
-        if ("entry" in playlist) {
+        if (playlist.entry?.length > 0) {
             play(playlist.entry);
         } else {
             await getSongsToQueue(play);
@@ -60,7 +60,7 @@ export function PlaylistOptions({
     }
 
     async function handlePlayNext() {
-        if ("entry" in playlist) {
+        if (playlist.entry?.length > 0) {
             playNext(playlist.entry);
         } else {
             await getSongsToQueue(playNext);
@@ -68,7 +68,7 @@ export function PlaylistOptions({
     }
 
     async function handlePlayLast() {
-        if ("entry" in playlist) {
+        if (playlist.entry?.length > 0) {
             playLast(playlist.entry);
         } else {
             await getSongsToQueue(playLast);

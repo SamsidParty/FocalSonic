@@ -13,7 +13,7 @@ import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import hexToCssFilter from "@/utils/hexToCssFilter.js";
 import CoverArtImage from "../cover-art";
 import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
-import { AlbumArtistInfo, AlbumMultipleArtistsInfo } from "./artists";
+import { AlbumArtistInfo } from "./artists";
 
 const DarkVeilMemo = memo(DarkVeil, (o, n) => o.style?.opacity === n.style?.opacity);
 
@@ -125,7 +125,6 @@ export default function ImageHeader({
                 </div>
 
                 <div className="flex w-full max-w-[calc(100%-216px)] 2xl:max-w-[calc(100%-266px)] flex-col justify-end z-10">
-                    <p className="text-xs 2xl:text-sm font-medium drop-shadow">{type}</p>
                     <h1
                         className={clsx(
                             "max-w-full scroll-m-20 font-bold tracking-tight antialiased drop-shadow-md break-words line-clamp-2",
@@ -135,40 +134,16 @@ export default function ImageHeader({
                         {title}
                     </h1>
 
-                    {!isPlaylist && artists && hasMultipleArtists && (
-                        <div className="flex items-center mt-2">
-                            <AlbumMultipleArtistsInfo artists={artists} />
-                            <HeaderInfoGenerator badges={badges} />
-                        </div>
-                    )}
+                    {
+                        artistId && (
+                            <AlbumArtistInfo id={artistId} name={subtitle} />
+                        )
+                    }
 
-                    {!isPlaylist && subtitle && !hasMultipleArtists && (
-                        <>
-                            {artistId ? (
-                                <div className="flex items-center mt-2">
-                                    <AlbumArtistInfo id={artistId} name={subtitle} />
-                                    <HeaderInfoGenerator badges={badges} />
-                                </div>
-                            ) : (
-                                <p className="opacity-80 text-sm font-medium">{subtitle}</p>
-                            )}
-                        </>
-                    )}
+                    <div className="flex items-center mt-2">
+                        <HeaderInfoGenerator badges={badges} showFirstDot={false} />
+                    </div>
 
-                    {isPlaylist && subtitle && (
-                        <>
-                            <p className="text-sm opacity-80 drop-shadow line-clamp-2 mt-1 mb-2">
-                                {subtitle}
-                            </p>
-                            <HeaderInfoGenerator badges={badges} showFirstDot={false} />
-                        </>
-                    )}
-
-                    {!subtitle && (
-                        <div className="mt-1">
-                            <HeaderInfoGenerator badges={badges} showFirstDot={false} />
-                        </div>
-                    )}
                 </div>
             </div>
 
