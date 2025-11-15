@@ -11,6 +11,7 @@ namespace FocalSonic
     public class Licensing
     {
         public static string ProductID = "9PMT4RKHPXCR"; // 9PMT4RKHPXCR
+
         public static StoreContext Context;
         public static bool HasPurchasedLicense = false;
 
@@ -21,7 +22,7 @@ namespace FocalSonic
 
             try
             {
-                var licenses = await Context.GetStoreProductsAsync(new string[] { "Durable", "Consumable" }, new string[] { ProductID });
+                var licenses = await Context.GetStoreProductsAsync(["Durable", "Consumable"], [ProductID, "9PDC6NWKV4H6"]); // Product ID as well as trial IDs
                 foreach (var license in licenses.Products)
                 {
                     if (license.Value.IsInUserCollection)
