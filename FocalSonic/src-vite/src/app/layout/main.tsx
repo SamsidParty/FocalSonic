@@ -25,12 +25,14 @@ export function MainRoutes() {
             )
         }
         >
-            <ScrollArea
-                id="main-scroll-area"
-                className="w-full bg-body"
-            >
-                <Outlet />
-            </ScrollArea>
+            <div className="bg-bar relative overflow-hidden flex h-full w-full pr-3">
+                <ScrollArea
+                    id="main-scroll-area"
+                    className="w-full bg-body rounded-md"
+                >
+                    <Outlet />
+                </ScrollArea>
+            </div>
         </main>
     );
 }

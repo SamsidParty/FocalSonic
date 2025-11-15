@@ -11,7 +11,7 @@ type ShadowHeaderProps = ComponentProps<"div"> & {
 export function ShadowHeader({
     children,
     className,
-    showGlassEffect = true,
+    showGlassEffect = false,
     fixed = true,
     ...rest
 }: ShadowHeaderProps) {
@@ -22,8 +22,8 @@ export function ShadowHeader({
     return (
         <div
             className={cn(
-                "flex items-center justify-start px-8 h-[--shadow-header-height] border-b bg-background",
-                fixed && "fixed right-0 z-30",
+                "flex items-center justify-start px-8 h-[--shadow-header-height] border-b bg-background mr-3 rounded-t-md",
+                fixed && "fixed right-0 z-[30]",
                 showGlassEffect && "backdrop-blur-lg supports-[backdrop-filter]:bg-background/80",
                 "transition-[left] duration-500 ease-long",
                 (fixed && isSidebarOpen) ? " left-sidebar" : (fixed && " left-mini-sidebar"),
