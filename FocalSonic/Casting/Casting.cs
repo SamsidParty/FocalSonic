@@ -46,15 +46,7 @@ namespace FocalSonic.Casting
 
             Client = new ChromecastClient( );
             await Client.ConnectChromecast(chromecast);
-            await Client.LaunchApplicationAsync("8A86881D");
-
-            var media = new Media
-            {
-                ContentType = "loc",
-                ContentUrl = "https://apps.mzstatic.com/content/chromecast-music-app"
-            };
-            var channel = Client.GetChannel<MediaChannel>();
-            var status = await channel.LoadAsync(media);
+            await Client.LaunchApplicationAsync("D0792F6F");
 
             var appleMusicChannel = Client;
         }
