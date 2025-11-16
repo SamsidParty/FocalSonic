@@ -13,7 +13,7 @@ type RootProps = ComponentPropsWithoutRef<"div">
 
 function Root({ className, children, ...props }: RootProps) {
     return (
-        <div className={cn("cursor-pointer", className)} {...props}>
+        <div className={cn("cursor-default", className)} {...props}>
             {children}
         </div>
     );
@@ -31,7 +31,7 @@ function ImageWrapper({ children, link, onClick, className }: ImageWrapperProps)
             <Link
                 to={link}
                 data-testid="card-image-link"
-                className="flex h-full w-full"
+                className="flex h-full w-full cursor-default"
                 onClick={onClick}
             >
                 {children}
@@ -71,10 +71,11 @@ interface PlayButtonProps {
 
 function PlayButton({ onClick }: PlayButtonProps) {
     return (
-        <div className="w-full h-full flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 absolute inset-0 z-10">
+        <div className="w-full h-full p-2 flex justify-start items-end transition-all duration-300 absolute inset-0 z-10">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#00000090] to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"/>
             <Button
-                className="opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-full w-12 h-12 z-20"
-                variant="outline"
+                className="opacity-0 p-2 group-hover:opacity-75 transition-all duration-300 rounded-full w-8 h-8 z-20"
+                variant="secondary"
                 onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -82,7 +83,7 @@ function PlayButton({ onClick }: PlayButtonProps) {
                 }}
                 data-testid="card-play-button"
             >
-                <Play className="fill-foreground" />
+                <Play className="fill-foreground hover:scale-125 transition-transform duration-300" />
             </Button>
         </div>
     );
