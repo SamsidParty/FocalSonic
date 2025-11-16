@@ -14,7 +14,9 @@ function App() {
     const setCurrentStatus = (status: Status) => _setCurrentStatus(Object.assign({}, status));
 
     useEffect(() => {
-        playbackInterface.initialize().then(() => setCurrentStatus({ statusCode: "ready", statusMessage: "Ready for playback" }));
+        playbackInterface.initialize()
+            .then(() => setCurrentStatus({ statusCode: "ready", statusMessage: "Ready for playback" }))
+            .catch(() => setCurrentStatus({ statusCode: "init-failed", isError: true, statusMessage: "Initialization failed" }));
     }, []);
 
     return (
