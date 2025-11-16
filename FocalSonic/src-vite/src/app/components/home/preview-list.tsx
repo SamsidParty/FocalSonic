@@ -51,7 +51,6 @@ export default function PreviewList({
 
     async function handlePlay(entry: AppleMusicRecommendationContent | Albums) {
 
-        console.log(entry);
 
         if (entry.type === "stations") {
             // Apple music radio
@@ -111,7 +110,10 @@ export default function PreviewList({
             return;
         }
 
-        const route = ROUTES[getResourceType(entry)]?.PAGE(entry.id);
+        let resourceType = getResourceType(entry);
+        resourceType == "SONG" && (resourceType = "ALBUM");
+
+        const route = ROUTES[resourceType]?.PAGE(entry.id);
 
         if (route) {
             setTimeout(() => navigate(route), 0);
