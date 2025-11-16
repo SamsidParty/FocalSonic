@@ -22,7 +22,7 @@
   }
   :root[player-style="slim"] {
     --player-height: 64px;
-    --grid-player: minmax(250px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 1fr);
+    --grid-player: minmax(250px, 1fr) fit-content(200px) minmax(0px, 1fr) minmax(250px, 1fr);
   }
   :root {
     --header-height: 44px;
