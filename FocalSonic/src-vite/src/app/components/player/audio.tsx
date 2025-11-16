@@ -3,13 +3,12 @@ import {
     usePlayerActions,
     usePlayerIsPlaying,
     usePlayerMediaType,
-    usePlayerVolume,
     useReplayGainActions,
-    useReplayGainState,
+    useReplayGainState
 } from "@/store/player.store";
 import { logger } from "@/utils/logger";
 import { isLinux } from "@/utils/osType";
-import { calculateReplayGain, ReplayGainParams } from "@/utils/replayGain";
+import { ReplayGainParams } from "@/utils/replayGain";
 import {
     ComponentPropsWithoutRef,
     RefObject,
@@ -38,33 +37,12 @@ export function AudioPlayer({
     const { isSong, isRadio, isPodcast } = usePlayerMediaType();
     const { setPlayingState } = usePlayerActions();
     const { setReplayGainEnabled, setReplayGainError } = useReplayGainActions();
-    const { volume } = usePlayerVolume();
     const useNativeAudio = window.igniteView;
     const isPlaying = usePlayerIsPlaying();
 
-    const gainValue = useMemo(() => {
-        const audioVolume = volume / 100;
 
-        if (!replayGain || !replayGainEnabled) {
-            return audioVolume * 1;
-        }
-        const gain = calculateReplayGain(replayGain);
+    const { resumeContext } = useAudioContext(audioRef.current);
 
-        return audioVolume * gain;
-    }, [replayGain, replayGainEnabled, volume]);
-
-    const { resumeContext, setupGain } = useAudioContext(audioRef.current);
-
-    const ignoreGain = !isSong || replayGainError || isLinux;
-
-    useEffect(() => {
-        if (ignoreGain || !audioRef.current) return;
-
-        if (gainValue === previousGain) return;
-
-        setupGain(gainValue, replayGain);
-        setPreviousGain(gainValue);
-    }, [audioRef, ignoreGain, gainValue, previousGain, replayGain, setupGain]);
 
     const handleSongError = useCallback(() => {
         const audio = audioRef.current;
