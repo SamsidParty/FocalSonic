@@ -81,8 +81,8 @@ export const usePlayerStyle = () => {
 
     // Force slim style in mini player
     if (isMiniPlayer) {
-        return { playerStyle: "slim", isPlayerAtTop: false, isMiniPlayer };
+        return { playerStyle: "slim", isPlayerAtTop: false, isMiniPlayer, useSlimButtons: true };
     }
 
-    return { playerStyle, isPlayerAtTop, isMiniPlayer };
+    return { playerStyle, isPlayerAtTop, isMiniPlayer, useSlimButtons: playerStyle === "slim" };
 };

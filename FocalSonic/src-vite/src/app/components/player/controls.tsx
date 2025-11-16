@@ -66,7 +66,7 @@ export function PlayerControls({
     } = usePlayerActions();
     const { useAudioHotkeys } = usePlayerHotkeys();
 
-    const { isMiniPlayer } = usePlayerStyle();
+    const { isMiniPlayer, playerStyle, useSlimButtons } = usePlayerStyle();
 
     useAudioHotkeys("space", togglePlayPause);
     useAudioHotkeys("mod+left", playPrevSong);
@@ -118,7 +118,7 @@ export function PlayerControls({
     const disableButtons = !song && !radio && !podcast;
 
     return (
-        <div className="flex w-full xxs:w-fit gap-1 xxs:gap-0 justify-center items-center mb-1">
+        <div className={cn("flex w-full xxs:w-fit xxs:gap-0 justify-center items-center mb-1", useSlimButtons ? "gap-0" : "gap-1")}>
             {isSong && (
                 <PlayerButton
                     className={clsx(isShuffleActive && "player-button-active")}
@@ -158,16 +158,17 @@ export function PlayerControls({
             )}
 
             <PlayerButton
-                variant="default"
+                variant={useSlimButtons ? "ghost" : "default"}
                 disabled={!song && !radio && !isPodcast}
                 onClick={togglePlayPause}
                 data-testid={`player-button-${isPlaying ? "pause" : "play"}`}
+                className={useSlimButtons ? "p-2 size-10" : undefined}
                 tooltip={playTooltip}
             >
                 {isPlaying ? (
-                    <Pause className="fill-primary-foreground" />
+                    <Pause className={useSlimButtons ? "fill-secondary-foreground stroke-secondary-foreground !w-full !h-full" : "fill-primary-foreground"} />
                 ) : (
-                    <Play className="fill-primary-foreground" />
+                    <Play className={useSlimButtons ? "fill-secondary-foreground stroke-secondary-foreground !w-full !h-full" : "fill-primary-foreground"} />
                 )}
             </PlayerButton>
 
@@ -224,12 +225,16 @@ type PlayerButtonProps = ComponentPropsWithoutRef<typeof Button> & {
 }
 
 function PlayerButton({ className, tooltip, ...props }: PlayerButtonProps) {
+
+    const { isMiniPlayer, playerStyle, useSlimButtons } = usePlayerStyle();
+
     return (
         <SimpleTooltip text={tooltip}>
             <Button
                 variant="ghost"
                 className={cn(
                     "relative rounded-full size-10 p-0 [&_svg]:pointer-events-none [&_svg]:size-[18px] [&_svg]:shrink-0",
+                    useSlimButtons && "size-8 [&_svg]:size-[16px]",
                     className,
                 )}
                 {...props}
