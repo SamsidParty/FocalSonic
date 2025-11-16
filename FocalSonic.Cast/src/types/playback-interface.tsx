@@ -1,3 +1,5 @@
+import type { ControlInterfaceInitializeResult } from "./control-interface";
+
 export default interface PlaybackInterface {
-    initialize(): Promise<void>;
+    initialize(initData: ControlInterfaceInitializeResult): Promise<void>;
 }
