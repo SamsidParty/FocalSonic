@@ -118,7 +118,7 @@ export function PlayerControls({
     const disableButtons = !song && !radio && !podcast;
 
     return (
-        <div className={cn("flex w-full xxs:w-fit xxs:gap-0 justify-center items-center mb-1", useSlimButtons ? "gap-0" : "gap-1")}>
+        <div className={cn("flex w-full xxs:w-fit xxs:gap-0  items-center mb-1", useSlimButtons ? "gap-0" : "gap-1", (playerStyle == "slim") ? "justify-end pr-4" : "justify-center")}>
             {isSong && (
                 <PlayerButton
                     className={clsx(isShuffleActive && "player-button-active")}

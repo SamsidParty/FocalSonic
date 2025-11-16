@@ -9,6 +9,7 @@ import {
     usePlayerProgress,
     usePlayerSonglist,
 } from "@/store/player.store";
+import { usePlayerStyle } from "@/store/theme.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { logger } from "@/utils/logger";
 import clsx from "clsx";
@@ -158,6 +159,8 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
         return currentDuration >= 3600;
     }, [currentDuration]);
 
+    const { useSlimButtons } = usePlayerStyle();
+
     return (
         <div
             className={clsx(
@@ -168,6 +171,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
             <small
                 className={clsx(
                     "text-xs text-muted-foreground text-right xxs:hidden",
+                    useSlimButtons && "hidden",
                     isProgressLarge ? "min-w-14" : "min-w-10",
                 )}
                 data-testid="player-current-time"
