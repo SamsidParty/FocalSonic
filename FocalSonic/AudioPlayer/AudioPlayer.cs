@@ -85,7 +85,9 @@ namespace FocalSonic.AudioPlayer
                 AssociatedWindowID = ctx.ID;
             }
 
-            await Casting.Casting.LoadMedia();
+            if (Source == src) { return; } // Already set
+
+            await Casting.Casting.LoadMedia(src);
         }
 
         public virtual async Task PlayAudio() { }

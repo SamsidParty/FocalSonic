@@ -1,4 +1,6 @@
-﻿using Sharpcaster.Channels;
+﻿using GoogleCast;
+using GoogleCast.Channels;
+using GoogleCast.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,15 +9,18 @@ using System.Threading.Tasks;
 
 namespace FocalSonic.Casting
 {
-    public class FocalSonicChannel : ChromecastChannel
+    public class FocalSonicChannel : IApplicationChannel
     {
-        public FocalSonicChannel() : base(Casting.Namespace, null)
-        {
-        }
 
-        public override void OnMessageReceived(string messagePayload, string type)
+        public string ApplicationId => "D0792F6F";
+
+        public ISender? Sender { get; set; }
+
+        public string Namespace => "urn:x-cast:com.samsidparty.focalsonic";
+
+        public async Task OnMessageReceivedAsync(IMessage message)
         {
-            base.OnMessageReceived(messagePayload, type);
+            Console.WriteLine(message.Type);
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using Sharpcaster.Models;
+﻿using GoogleCast;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,25 +14,23 @@ namespace FocalSonic.Casting
         public static ConcurrentDictionary<string, CastDeviceReference> DiscoveredDevices = new();
 
         [JsonIgnore]
-        public ChromecastReceiver Receiver;
+        public IReceiver Receiver;
 
         public string Name;
         public string DeviceUri;
-        public int Port;
         public string ReferenceID;
 
-        public static CastDeviceReference Get(ChromecastReceiver recv)
+        public static CastDeviceReference Get(IReceiver recv)
         {
-            var referenceID = recv.DeviceUri.ToString() + "_" + recv.Name + "_" + recv.Port;
+            var referenceID = recv.IPEndPoint.ToString() + "_" + recv.FriendlyName;
 
             if (!DiscoveredDevices.ContainsKey(referenceID))
             {
                 DiscoveredDevices[referenceID] = new CastDeviceReference()
                 {
                     Receiver = recv,
-                    Name = recv.Name,
-                    DeviceUri = recv.DeviceUri.ToString(),
-                    Port = recv.Port,
+                    Name = recv.FriendlyName,
+                    DeviceUri = recv.IPEndPoint.ToString(),
                     ReferenceID = referenceID
                 };
             }

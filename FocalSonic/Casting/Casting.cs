@@ -1,14 +1,15 @@
 ﻿using FocalSonic.AppleMusic;
 using FocalSonic.Presence;
+using GoogleCast;
+using GoogleCast.Channels;
+using GoogleCast.Models.Media;
 using IgniteView.Core;
 using Newtonsoft.Json;
 using SamsidParty.Subsonic.Common;
-using Sharpcaster;
-using Sharpcaster.Channels;
-using Sharpcaster.Models.Media;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Media.Protection.PlayReady;
@@ -20,26 +21,58 @@ namespace FocalSonic.Casting
     {
         public const string Namespace = "urn:x-cast:com.samsidparty.focalsonic";
 
-        static ChromecastLocator _Locator;
-        static ChromecastLocator Locator
+        static string LastSongID = "";
+
+        static DeviceLocator _Locator;
+        static DeviceLocator Locator
         {
             get
             {
                 if (_Locator == null)
                 {
-                    _Locator = new ChromecastLocator();
+                    _Locator = new DeviceLocator();
                 }
                 return _Locator;
             }
         }
 
-        static ChromecastClient Client;
+        static Sender Client;
 
         [Command("getCastDevices")]
         public static async Task<List<CastDeviceReference>> GetAvailableDevices()
         {
-            var chromecasts = await Locator.FindReceiversAsync((TimeSpan.FromSeconds(5)));
-            return chromecasts.Select((d) => CastDeviceReference.Get(d)).ToList();
+            try
+            {
+                var interfaces = NetworkInterface.GetAllNetworkInterfaces();
+                NetworkInterface primaryInterface = null;
+
+                foreach (var ni in interfaces)
+                {
+                    if (ni.OperationalStatus != OperationalStatus.Up) continue;
+                    if (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+                    if (ni.NetworkInterfaceType == NetworkInterfaceType.Tunnel) continue;
+                    if (ni.IsReceiveOnly) continue;
+
+                    IPInterfaceProperties adapterProperties = ni.GetIPProperties();
+                    GatewayIPAddressInformationCollection gatewayAddresses = adapterProperties.GatewayAddresses;
+
+                    if (gatewayAddresses.Where((addr) => addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Count() > 0)
+                    {
+                        primaryInterface = ni;
+                        break;
+                    }
+                }
+
+                if (primaryInterface == null) primaryInterface = interfaces.FirstOrDefault();
+                if (primaryInterface == null) return new List<CastDeviceReference>();
+
+                var chromecasts = await Locator.FindReceiversAsync(primaryInterface);
+                return chromecasts.Select((d) => CastDeviceReference.Get(d)).ToList();
+            }
+            catch
+            {
+                return new List<CastDeviceReference>();
+            }
         }
 
         [Command("startCasting")]
@@ -50,12 +83,12 @@ namespace FocalSonic.Casting
 
             try
             {
-                Client = new ChromecastClient();
+                Client = new Sender();
 
-                await Client.ConnectChromecast(chromecast.Receiver);
-                await Client.LaunchApplicationAsync("D0792F6F", false);
+                await Client.ConnectAsync(chromecast.Receiver);
+                await Client.LaunchAsync(new FocalSonicChannel());
 
-                await LoadMedia();
+                await LoadMedia(null);
 
                 return "success";
             }
@@ -65,22 +98,29 @@ namespace FocalSonic.Casting
         }
 
         [Command("loadMedia")]
-        public static async Task LoadMedia()
+        public static async Task LoadMedia(string? songID)
         {
-            var currentSongID = MediaPlaybackInfo.Instance?.Store?.State?.SongList?.CurrentSong?.Id;
-
-            if (string.IsNullOrEmpty(currentSongID)) return;
-            if (Client == null) return;
-
-            var media = new Media()
+            if (string.IsNullOrEmpty(songID))
             {
-                ContentId = currentSongID,
-                ContentType = "applemusic",
-                CustomData = JsonConvert.SerializeObject(new CastInitMessage(AppleMusicKeys.MediaUserToken!))
+                songID = MediaPlaybackInfo.Instance?.Store?.State?.SongList?.CurrentSong?.Id;
+            }
+
+            if (string.IsNullOrEmpty(songID)) return;
+            if (Client == null) return;
+            if (songID == LastSongID) return;
+            LastSongID = songID;
+
+            var media = new MediaInformation()
+            {
+                ContentId = songID,
+                ContentType = "applemusic:" + AppleMusicKeys.MediaUserToken,
             };
 
-
-            var mediaStatus = await Client.MediaChannel.LoadAsync(media);
+            try
+            {
+                var mediaStatus = await Client.GetChannel<IMediaChannel>().LoadAsync(media);
+            }
+            catch { }
         }
     }
 }
