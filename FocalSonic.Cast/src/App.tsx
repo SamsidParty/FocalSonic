@@ -6,12 +6,12 @@ import SplashScreen from './components/splashscreen';
 import appleMusicPlaybackInterface from './lib/apple-music';
 import chromecastControlInterface from './lib/chromecast';
 import type ControlInterface from './types/control-interface';
-import type { ControlInterfaceInitializeResult } from './types/control-interface';
+import type { ControlInterfacePacket, MediaSourceData } from './types/control-interface';
 import type PlaybackInterface from './types/playback-interface';
 import type { Status } from './types/status';
 
-let playbackInterface: PlaybackInterface;
-let controlInterface: ControlInterface;
+let playbackInterface: PlaybackInterface | null = null;
+let controlInterface: ControlInterface | null = null;
 
 function App() {
 
@@ -28,35 +28,53 @@ function App() {
     const [currentStatus, _setCurrentStatus] = useState<Status>({ isLoading: true, statusCode: "default", statusMessage: "Initializing..." });
     const setCurrentStatus = (status: Status) => _setCurrentStatus(Object.assign({}, status));
 
+    const handleEvent = async (event: ControlInterfacePacket) => {
+        if (event.type === "setSource") {
+            const data = event.data as MediaSourceData;
+            // Set the media source
+            if (!playbackInterface) {
+                // Determine and assign the appropriate playback interface
+                if (data.playbackInterface === "applemusic") {
+                    playbackInterface = appleMusicPlaybackInterface;
+                }
+            }
+
+            try {
+                await playbackInterface?.setSource(data);
+            }
+            catch (err: any) {
+                console.error(err);
+                setCurrentStatus({ isError: true, statusCode: "playback-set-source-failed", statusMessage: `Playback interface initialization failed: ${err?.message}` });
+                return;
+            }
+        }
+    };
+
     useEffect(() => {
 
-        if (!controlInterface.initialize) {
+        if (!controlInterface?.initialize) {
             setCurrentStatus({ isError: true, statusCode: "no-control-interface", statusMessage: "No control interface available" });
             return;
         }
 
         const initialize = async () => {
-            let result: ControlInterfaceInitializeResult = {} as ControlInterfaceInitializeResult;
+
+            // Prevent multiple initializations
+            if (window.initializeCalled) return;
+            window.initializeCalled = true;
+
+
             try {
-                result = await controlInterface.initialize();
+                await controlInterface.initialize(handleEvent);
             }
-            catch { setCurrentStatus({ isError: true, statusCode: "init-failed", statusMessage: "Control interface initialization failed" }); return; }
+            catch (err: any) { 
+                console.error(err);
+                setCurrentStatus({ isError: true, statusCode: "init-failed", statusMessage: `Control interface initialization failed: ${err.toString()}` });
+                return;
+            }
  
             setCurrentStatus({ isLoading: true, statusCode: "loading-playback", statusMessage: "Loading playback interface..." })
 
-            // Determine and assign the appropriate playback interface
-            if (result?.playbackInterfaceName === "applemusic") {
-                playbackInterface = appleMusicPlaybackInterface;
-            }
-            else {
-                setCurrentStatus({ isError: true, statusCode: "no-playback-interface", statusMessage: "No playback interface available" });
-                return;
-            }
-
-            try {
-                await playbackInterface.initialize(result);
-            }
-            catch { setCurrentStatus({ isError: true, statusCode: "init-failed", statusMessage: "Playback interface initialization failed" });  return;  }
 
             setCurrentStatus({ statusCode: "ready", statusMessage: "Ready for playback" });
         };

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -34,11 +34,16 @@
 		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="IgniteView.Desktop" Version="2.2.5" />
 		<PackageReference Include="IgniteView.Core" Version="*" />
-		<PackageReference Include="Sharpcaster" Version="3.0.0" />
 		<PackageReference Include="SoundFlow" Version="1.2.0" />
 		<PackageReference Include="System.Drawing.Common" Version="9.0.8" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
 		<PackageReference Include="System.Security.Permissions" Version="8.0.0" />
+
+		<PackageReference Include="Google.Protobuf" Version="3.32.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
+		<PackageReference Include="Zeroconf" Version="3.7.16" />
 	</ItemGroup>
 	<PropertyGroup>
 		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
@@ -67,6 +72,11 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\SamsidParty.Subsonic.Common\SamsidParty.Subsonic.Common.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="Sharpcaster">
+	    <HintPath>Sharpcaster.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 	
 

@@ -1,8 +1,14 @@
 export default interface ControlInterface {
-    initialize(): Promise<ControlInterfaceInitializeResult>;
+    initialize(eventHandler: (event: ControlInterfacePacket) => void): Promise<void>;
 }
 
-export interface ControlInterfaceInitializeResult {
-    playbackInterfaceName: string;
-    playbackInterfaceToken: string;
+export interface MediaSourceData {
+    playbackInterface: string;
+    credentials?: string;
+    songId?: string;
+}
+
+export interface ControlInterfacePacket {
+    type: string;
+    data: any;
 }

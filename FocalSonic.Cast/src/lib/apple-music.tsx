@@ -1,6 +1,7 @@
+/* eslint-disable no-async-promise-executor */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { ControlInterfaceInitializeResult } from "../types/control-interface";
+import type { MediaSourceData } from "../types/control-interface";
 import type PlaybackInterface from "../types/playback-interface";
 
 declare global {
@@ -8,6 +9,8 @@ declare global {
         musicKitInstance?: any;
         MusicKit?: any;
         appleMusicDeveloperToken?: string;
+        appleMusicReady?: boolean;
+        appleMusicReadyPromise?: Promise<void>;
     }
 }
 
@@ -23,38 +26,61 @@ function getDeveloperToken(): string {
     return "";
 }
 
+async function authenticate(initData: MediaSourceData) {
+    if (!window.musicKitInstance) {
+        window.musicKitInstance = {};
+        window.appleMusicReadyPromise = new Promise(async (resolve) => {
 
+            const developerToken = getDeveloperToken();
+            if (!developerToken) throw new Error("No developer token found");
+
+            const music = await window.MusicKit.configure({
+                    developerToken: developerToken,
+                    app: {
+                        name: 'FocalSonic',
+                        build: 'cast-1.0.0',
+                    },
+                });
+
+            // MusicKit instance is available
+            console.log('MusicKit configured successfully:', music);
+
+            // Authorize the user
+            const userToken = initData?.credentials || getUserToken();
+            if (!userToken) throw new Error("No user token found");
+            music.musicUserToken = userToken;
+            
+            await music.authorize();
+            console.log('User authorized successfully!');
+            
+            alert(music.storefrontCountryCode);
+            window.musicKitInstance = music;
+            window.appleMusicReady = true;
+            resolve();
+        });
+    }
+    else if (!window.musicKitInstance.setQueue || !window.appleMusicReady) {
+        await window.appleMusicReadyPromise;
+    }
+
+    // If window.musicKitInstance.setQueue is still not available, wait until it is
+    if (!window.musicKitInstance.setQueue) {
+        await new Promise<void>((resolve) => {
+            const checkInterval = setInterval(() => {
+                if (window.musicKitInstance.setQueue) {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 100);
+        });
+    }
+}
 
 const appleMusicPlaybackInterface: PlaybackInterface = {
-    initialize: async (initData: ControlInterfaceInitializeResult) => {
-        if (window.musicKitInstance || !window.MusicKit) throw new Error("No MusicKit available");
+    setSource: async (initData: MediaSourceData) => {
+        await authenticate(initData);
 
-        window.musicKitInstance = {};
-
-        const developerToken = getDeveloperToken();
-        if (!developerToken) throw new Error("No developer token found");
-
-        window.musicKitInstance = await window.MusicKit.configure({
-                developerToken: developerToken,
-                app: {
-                    name: 'FocalSonic',
-                    build: 'cast-1.0.0',
-                },
-            });
-
-        // MusicKit instance is available
-        console.log('MusicKit configured successfully:', window.musicKitInstance);
-
-        // Authorize the user
-        const userToken = initData?.playbackInterfaceToken || getUserToken();
-        if (!userToken) throw new Error("No user token found");
-
-        window.musicKitInstance.musicUserToken = userToken;
-
-        await window.musicKitInstance.authorize();
-        console.log('User authorized successfully!');
-
-        window.musicKitInstance.setQueue({ song: "1679278167" });
+        window.musicKitInstance.setQueue({ song: initData.songId });
         setTimeout(() => window.musicKitInstance.play(), 2000);
     }
 }

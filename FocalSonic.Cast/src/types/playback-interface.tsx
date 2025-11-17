@@ -1,5 +1,5 @@
-import type { ControlInterfaceInitializeResult } from "./control-interface";
+import type { MediaSourceData } from "./control-interface";
 
 export default interface PlaybackInterface {
-    initialize(initData: ControlInterfaceInitializeResult): Promise<void>;
+    setSource(initialMediaSource: MediaSourceData): Promise<void>;
 }
