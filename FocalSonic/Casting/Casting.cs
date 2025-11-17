@@ -82,38 +82,5 @@ namespace FocalSonic.Casting
 
             var mediaStatus = await Client.MediaChannel.LoadAsync(media);
         }
-
-        [Command("chromeCast")]
-        public static async Task Test()
-        {
-
-            var chromecasts = await Locator.FindReceiversAsync((TimeSpan.FromSeconds(5)));
-
-            if (!chromecasts.Any())
-            {
-                Console.WriteLine("No Chromecast devices found");
-                return;
-            }
-
-            // Connect to first found samsung device (testing)
-            var chromecast = chromecasts.Where((d) => d.Name.Contains("SM")).First();
-
-            Client = new ChromecastClient();
-
-            await Client.ConnectChromecast(chromecast);
-            await Client.LaunchApplicationAsync("D0792F6F", false);
-
-            var media = new Media()
-            {
-                ContentId = "1679278167",
-                ContentType = "applemusic",
-                CustomData = JsonConvert.SerializeObject(new CastInitMessage(AppleMusicKeys.MediaUserToken!))
-            };
-
-
-            var mediaStatus = await Client.MediaChannel.LoadAsync(media);
-
-            var appleMusicChannel = Client;
-        }
     }
 }
