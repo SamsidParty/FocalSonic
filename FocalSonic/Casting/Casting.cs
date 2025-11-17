@@ -1,4 +1,5 @@
 ﻿using FocalSonic.AppleMusic;
+using FocalSonic.Presence;
 using IgniteView.Core;
 using Newtonsoft.Json;
 using SamsidParty.Subsonic.Common;
@@ -34,9 +35,56 @@ namespace FocalSonic.Casting
 
         static ChromecastClient Client;
 
+        [Command("getCastDevices")]
+        public static async Task<List<CastDeviceReference>> GetAvailableDevices()
+        {
+            var chromecasts = await Locator.FindReceiversAsync((TimeSpan.FromSeconds(5)));
+            return chromecasts.Select((d) => CastDeviceReference.Get(d)).ToList();
+        }
+
+        [Command("startCasting")]
+        public static async Task<string> StartCasting(string referenceID)
+        {
+            var chromecast = CastDeviceReference.GetByID(referenceID);
+            if (chromecast == null) return "device-not-found";
+
+            try
+            {
+                Client = new ChromecastClient();
+
+                await Client.ConnectChromecast(chromecast.Receiver);
+                await Client.LaunchApplicationAsync("D0792F6F", false);
+
+                await LoadMedia();
+
+                return "success";
+            }
+            catch { }
+
+            return "failed";
+        }
+
+        [Command("loadMedia")]
+        public static async Task LoadMedia()
+        {
+            var currentSongID = MediaPlaybackInfo.Instance?.Store?.State?.SongList?.CurrentSong?.Id;
+
+            if (string.IsNullOrEmpty(currentSongID)) return;
+            if (Client == null) return;
+
+            var media = new Media()
+            {
+                ContentId = currentSongID,
+                ContentType = "applemusic",
+                CustomData = JsonConvert.SerializeObject(new CastInitMessage(AppleMusicKeys.MediaUserToken!))
+            };
+
+
+            var mediaStatus = await Client.MediaChannel.LoadAsync(media);
+        }
 
         [Command("chromeCast")]
-        public static async Task GetCastDevices()
+        public static async Task Test()
         {
 
             var chromecasts = await Locator.FindReceiversAsync((TimeSpan.FromSeconds(5)));

@@ -54,7 +54,6 @@ async function authenticate(initData: MediaSourceData) {
             await music.authorize();
             console.log('User authorized successfully!');
             
-            alert(music.storefrontCountryCode);
             window.musicKitInstance = music;
             window.appleMusicReady = true;
             resolve();
