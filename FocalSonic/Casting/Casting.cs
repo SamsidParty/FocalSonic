@@ -1,8 +1,9 @@
 ﻿using FocalSonic.AppleMusic;
-using FocalSonic.Presence;
 using FocalSonic.AudioPlayer;
+using FocalSonic.Presence;
 using GoogleCast;
 using GoogleCast.Channels;
+using GoogleCast.Messages;
 using GoogleCast.Models.Media;
 using IgniteView.Core;
 using Newtonsoft.Json;
@@ -13,7 +14,9 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using Windows.Media.Protection.PlayReady;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace FocalSonic.Casting
 {
@@ -23,6 +26,7 @@ namespace FocalSonic.Casting
         public const string Namespace = "urn:x-cast:com.samsidparty.focalsonic";
 
         static string LastSongID = "";
+        static long LastSessionID = -1;
 
         static DeviceLocator _Locator;
         static DeviceLocator Locator
@@ -38,6 +42,7 @@ namespace FocalSonic.Casting
         }
 
         static Sender? Client;
+        static IMediaChannel? MediaChannel;
 
         public static void HandleDisconnect()
         {
@@ -46,6 +51,7 @@ namespace FocalSonic.Casting
             LastSongID = "";
             Client = null;
         }
+
 
         [Command("getCastDevices")]
         public static async Task<List<CastDeviceReference>> GetAvailableDevices()
@@ -87,6 +93,8 @@ namespace FocalSonic.Casting
         [Command("startCasting")]
         public static async Task<string> StartCasting(string referenceID)
         {
+            HandleDisconnect();
+
             var chromecast = CastDeviceReference.GetByID(referenceID);
             if (chromecast == null) return "device-not-found";
 
@@ -96,11 +104,16 @@ namespace FocalSonic.Casting
 
                 Client.Disconnected += (_, _) => HandleDisconnect();
 
+                MediaChannel = Client?.GetChannel<IMediaChannel>();
+
                 await Client.ConnectAsync(chromecast.Receiver);
                 await Client.LaunchAsync(new FocalSonicChannel());
 
                 AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("chromecast");
-                await LoadMedia(null);
+
+                await LoadMedia(null); 
+
+                await AudioPlayer.AudioPlayer.Instance?.PlayAudio();
 
                 return "success";
             }
@@ -109,7 +122,6 @@ namespace FocalSonic.Casting
             return "failed";
         }
 
-        [Command("loadMedia")]
         public static async Task LoadMedia(string? songID)
         {
             if (string.IsNullOrEmpty(songID))
@@ -117,10 +129,12 @@ namespace FocalSonic.Casting
                 songID = MediaPlaybackInfo.Instance?.Store?.State?.SongList?.CurrentSong?.Id;
             }
 
+
             if (string.IsNullOrEmpty(songID)) return;
             if (Client == null) return;
             if (songID == LastSongID) return;
             LastSongID = songID;
+
 
             var media = new MediaInformation()
             {
@@ -130,9 +144,37 @@ namespace FocalSonic.Casting
 
             try
             {
-                var mediaStatus = await Client.GetChannel<IMediaChannel>().LoadAsync(media);
+                var mediaStatus = await MediaChannel!.LoadAsync(media);
+                LastSessionID = mediaStatus.MediaSessionId;
             }
             catch { HandleDisconnect(); }
+        }
+
+        public static async Task PauseMedia()
+        {
+            if (Client == null) return;
+
+            try
+            {
+                var status = await MediaChannel.GetStatusAsync();
+                if (status.MediaSessionId > 0)
+                {
+                    await MediaChannel.PauseAsync();
+                }
+            }
+            catch (Exception ex) { Console.WriteLine(ex); }
+        }
+
+        public static async Task PlayMedia()
+        {
+            if (Client == null) return;
+
+            try
+            {
+                
+                
+            }
+            catch (Exception ex) {  }
         }
     }
 }

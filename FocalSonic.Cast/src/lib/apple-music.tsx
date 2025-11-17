@@ -4,6 +4,8 @@
 import type { MediaSourceData } from "../types/control-interface";
 import type PlaybackInterface from "../types/playback-interface";
 
+
+
 declare global {
     interface Window {
         musicKitInstance?: any;
@@ -12,6 +14,7 @@ declare global {
         appleMusicReady?: boolean;
         appleMusicReadyPromise?: Promise<void>;
         isCurrentSongRadio?: boolean;
+        lastSongID?: string;
     }
 }
 
@@ -26,6 +29,13 @@ function getDeveloperToken(): string {
     }
     return "";
 }
+
+const findAudioElement = () => document.getElementById("apple-music-player") as HTMLMediaElement;
+
+function debug() {
+    
+}
+setInterval(debug, 500);
 
 async function authenticate(initData: MediaSourceData) {
     if (!window.musicKitInstance) {
@@ -74,34 +84,21 @@ async function authenticate(initData: MediaSourceData) {
             }, 100);
         });
     }
+
+    window.musicKitInstance.addEventListener("mediaElementCreated", window.assignAudioElement);
 }
 
 const appleMusicPlaybackInterface: PlaybackInterface = {
     setSource: async (initData: MediaSourceData) => {
         await authenticate(initData);
 
+        if (!initData.songId) return;
+
+        window.lastSongID = initData.songId;
+
         await window.musicKitInstance.stop();
-
-        if (!window.isCurrentSongRadio) {
-            await window.musicKitInstance.clearQueue();
-        }
-
-        if (initData.songId!.startsWith("ra.")) { // Radio station
-            window.isCurrentSongRadio = true;
-            await window.musicKitInstance.setQueue({ station: initData.songId });
-            await window.musicKitInstance.play();
-        }
-        else {
-            if (window.isCurrentSongRadio) {
-                await window.musicKitInstance.setQueue({ song: initData.songId });
-                await window.musicKitInstance.play();
-            }
-            else {
-                await window.musicKitInstance.playNext({ song: initData.songId }, true);
-                await window.musicKitInstance.skipToNextItem();
-            }
-            window.isCurrentSongRadio = false;
-        }
+        await window.musicKitInstance.playNext({ song: initData.songId }, true);
+        await window.musicKitInstance.skipToNextItem();
     }
 }
 

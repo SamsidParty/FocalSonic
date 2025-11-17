@@ -93,8 +93,14 @@ namespace FocalSonic.AudioPlayer
             await Casting.Casting.LoadMedia(src);
         }
 
-        public virtual async Task PlayAudio() { }
-        public virtual async Task PauseAudio() { }
+        public virtual async Task PlayAudio() {
+            await Casting.Casting.PlayMedia();
+        }
+
+        public virtual async Task PauseAudio() {
+            await Casting.Casting.PauseMedia();
+        }
+
         public virtual async Task SeekAudio(double time) { }
         public virtual async Task SetLoopMode(bool loop) { Looping = loop; }
         public virtual async Task SetOutputDevice(string outputDevice) { OutputDevice = outputDevice; }

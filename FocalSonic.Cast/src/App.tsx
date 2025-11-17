@@ -27,6 +27,8 @@ function App() {
 
     const [currentStatus, _setCurrentStatus] = useState<Status>({ isLoading: true, statusCode: "default", statusMessage: "Initializing..." });
     const setCurrentStatus = (status: Status) => _setCurrentStatus(Object.assign({}, status));
+    window.setCurrentStatus = setCurrentStatus;
+    window.debugMsg = (msg: string) => setCurrentStatus({ statusCode: "debug", statusMessage: msg });
 
     const handleEvent = async (event: ControlInterfacePacket) => {
         if (event.type === "setSource") {

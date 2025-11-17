@@ -7,10 +7,13 @@ declare global {
         cast: any;
         castInstance: any;
         playerManager: any;
+        assignAudioElement?: (element: HTMLMediaElement) => void;
     }
 }
 
 const focalsonicNamespace = 'urn:x-cast:com.samsidparty.focalsonic';
+
+
 
 const chromecastControlInterface: ControlInterface = {
     initialize(eventHandler: (event: ControlInterfacePacket) => void): Promise<void> {
@@ -22,6 +25,11 @@ const chromecastControlInterface: ControlInterface = {
             window.playerManager = window.castInstance.getPlayerManager();
 
             const castDebugLogger = window.cast.debug.CastDebugLogger.getInstance();
+            window.castDebugLogger = castDebugLogger;
+
+            window.playerManager.setMediaElement(new Promise<HTMLMediaElement>((res) => {
+                window.assignAudioElement = res;
+            }));
 
             window.castInstance.addEventListener(window.cast.framework.system.EventType.READY, () => {
                 if (!castDebugLogger.debugOverlayElement_) {
@@ -63,16 +71,24 @@ const chromecastControlInterface: ControlInterface = {
                 eventHandler({
                     type: "setSource",
                     data: packetData
-                })
-                
+                });
+
+                window.playerManager.broadcastStatus(true);
+
+                return null; // Prevent default load handling
+            });
+
+            
+            window.playerManager.setMessageInterceptor(window.cast.framework.messages.MessageType.PAUSE, () => {
+                alert("pause");
+            });
+
+            window.playerManager.setMessageInterceptor(window.cast.framework.messages.MessageType.PLAY, () => {
+                alert("play");
             });
 
             // Start the cast receiver
-            const receiverOptions = new window.cast.framework.CastReceiverOptions();
-            receiverOptions.customNamespaces = {
-                'urn:x-cast:com.samsidparty.focalsonic': window.cast.framework.system.MessageType.JSON
-            };
-            window.castInstance.start(receiverOptions);
+            window.castInstance.start();
         });
     }
 }
