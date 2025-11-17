@@ -48,9 +48,11 @@ const chromecastControlInterface: ControlInterface = {
                     loadRequestData.media.entity = loadRequestData.media.contentId;
                 }
 
+                const customData = JSON.parse(loadRequestData.media.customData);
+
                 const packetData: MediaSourceData = {
                     playbackInterface: loadRequestData.media.contentType,
-                    credentials: loadRequestData.media.customData?.credentials,
+                    credentials: customData?.credentials,
                     songId: loadRequestData.media.entity,
                 };
 

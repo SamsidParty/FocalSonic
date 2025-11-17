@@ -31,6 +31,7 @@ function App() {
     const handleEvent = async (event: ControlInterfacePacket) => {
         if (event.type === "setSource") {
             const data = event.data as MediaSourceData;
+        
             // Set the media source
             if (!playbackInterface) {
                 // Determine and assign the appropriate playback interface
@@ -41,6 +42,7 @@ function App() {
 
             try {
                 await playbackInterface?.setSource(data);
+                setCurrentStatus({ statusCode: "playing", statusMessage: "" });
             }
             catch (err: any) {
                 console.error(err);

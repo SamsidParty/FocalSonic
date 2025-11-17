@@ -1,6 +1,7 @@
 ﻿using FocalSonic.AppleMusic;
 using IgniteView.Core;
 using Newtonsoft.Json;
+using SamsidParty.Subsonic.Common;
 using Sharpcaster;
 using Sharpcaster.Channels;
 using Sharpcaster.Models.Media;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Media.Protection.PlayReady;
 
 namespace FocalSonic.Casting
 {
@@ -50,17 +52,18 @@ namespace FocalSonic.Casting
 
             Client = new ChromecastClient();
 
-            var channelToForceAdd = new FocalSonicChannel();
-            var newChannelList = Client.Channels.ToList();
-            newChannelList.Add(channelToForceAdd);
-            Client.Channels = newChannelList;
-
             await Client.ConnectChromecast(chromecast);
             await Client.LaunchApplicationAsync("D0792F6F", false);
 
+            var media = new Media()
+            {
+                ContentId = "1679278167",
+                ContentType = "applemusic",
+                CustomData = JsonConvert.SerializeObject(new CastInitMessage(AppleMusicKeys.MediaUserToken!))
+            };
 
 
-            await Client.SendAsync(null, Namespace, JsonConvert.SerializeObject(new CastInitMessage("applemusic", AppleMusicKeys.MediaUserToken)), "receiver-0");
+            var mediaStatus = await Client.MediaChannel.LoadAsync(media);
 
             var appleMusicChannel = Client;
         }

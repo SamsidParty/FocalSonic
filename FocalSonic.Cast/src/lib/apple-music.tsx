@@ -11,6 +11,7 @@ declare global {
         appleMusicDeveloperToken?: string;
         appleMusicReady?: boolean;
         appleMusicReadyPromise?: Promise<void>;
+        isCurrentSongRadio?: boolean;
     }
 }
 
@@ -80,8 +81,28 @@ const appleMusicPlaybackInterface: PlaybackInterface = {
     setSource: async (initData: MediaSourceData) => {
         await authenticate(initData);
 
-        window.musicKitInstance.setQueue({ song: initData.songId });
-        setTimeout(() => window.musicKitInstance.play(), 2000);
+        await window.musicKitInstance.stop();
+
+        if (!window.isCurrentSongRadio) {
+            await window.musicKitInstance.clearQueue();
+        }
+
+        if (initData.songId!.startsWith("ra.")) { // Radio station
+            window.isCurrentSongRadio = true;
+            await window.musicKitInstance.setQueue({ station: initData.songId });
+            await window.musicKitInstance.play();
+        }
+        else {
+            if (window.isCurrentSongRadio) {
+                await window.musicKitInstance.setQueue({ song: initData.songId });
+                await window.musicKitInstance.play();
+            }
+            else {
+                await window.musicKitInstance.playNext({ song: initData.songId }, true);
+                await window.musicKitInstance.skipToNextItem();
+            }
+            window.isCurrentSongRadio = false;
+        }
     }
 }
 

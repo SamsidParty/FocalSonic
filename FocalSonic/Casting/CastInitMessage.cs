@@ -9,16 +9,12 @@ namespace FocalSonic.Casting
 {
     public class CastInitMessage
     {
-        [JsonProperty("playbackInterfaceName")]
-        public string PlaybackInterfaceName;
+        [JsonProperty("credentials")]
+        public string Credentials;
 
-        [JsonProperty("playbackInterfaceToken")]
-        public string PlaybackInterfaceToken;
-
-        public CastInitMessage(string playbackInterfaceName, string playbackInterfaceToken)
+        public CastInitMessage(string credentials)
         {
-            PlaybackInterfaceName = playbackInterfaceName;
-            PlaybackInterfaceToken = playbackInterfaceToken;
+            Credentials = credentials;
         }
     }
 }
