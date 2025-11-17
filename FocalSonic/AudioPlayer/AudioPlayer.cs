@@ -19,12 +19,15 @@ namespace FocalSonic.AudioPlayer
 
         public string ID;
         public string Source;
+        public string OutputDevice = "local";
         public bool HasLoaded;
         public bool Looping;
         public float Volume = 1.0f;
         public float Speed = 1.0f;
         internal int AssociatedWindowID;
         internal WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
+
+        public virtual string ChromecastCredential => "";
 
         public AudioPlayer(string id)
         {
@@ -94,6 +97,7 @@ namespace FocalSonic.AudioPlayer
         public virtual async Task PauseAudio() { }
         public virtual async Task SeekAudio(double time) { }
         public virtual async Task SetLoopMode(bool loop) { Looping = loop; }
+        public virtual async Task SetOutputDevice(string outputDevice) { OutputDevice = outputDevice; }
         public virtual async Task SetVolume(double volume) { Volume = (float)volume; }
         public virtual async Task SetSpeed(double speed) { Speed = (float)speed; }
 
@@ -126,6 +130,7 @@ namespace FocalSonic.AudioPlayer
         [Command("setAudioPlayerLoopMode")] public static async Task SetLoopModeOnPlayer(string id, bool loop) => RunOnPlayer(id, (p) => p.SetLoopMode(loop));
         [Command("setAudioPlayerVolume")] public static async Task SetVolumeOnPlayer(string id, double volume) => RunOnPlayer(id, (p) => p.SetVolume(volume));
         [Command("setAudioPlayerSpeed")] public static async Task SetSpeedOnPlayer(string id, double speed) => RunOnPlayer(id, (p) => p.SetSpeed(speed));
+        [Command("setAudioPlayerOutputDevice")] public static async Task SetOutputDeviceOnPlayer(string id, string outputDevice) => RunOnPlayer(id, (p) => p.SetOutputDevice(outputDevice));
 
         [Command("disposeAudioPlayer")] 
         public static async Task DisposeAudioPlayer(string id)

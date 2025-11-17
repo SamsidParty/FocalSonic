@@ -1,6 +1,7 @@
 ﻿using FocalSonic.Helpers;
 using FocalSonic.Presence;
 using IgniteView.Core;
+using Newtonsoft.Json;
 using System.Dynamic;
 using System.Web;
 
@@ -19,6 +20,8 @@ namespace FocalSonic.AppleMusic
 
         public bool IsPlaying = false;
         public string LoadStatus = "loading";
+
+        public override string ChromecastCredential => "applemusic:" + AppleMusicKeys.MediaUserToken;
 
         public AppleMusicAudioPlayer(string id) : base(id) {
 
@@ -99,7 +102,20 @@ namespace FocalSonic.AppleMusic
 
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'setSource', source: '{src}' }});" +
+                $"window.injectedQueue.push({{ type: 'setSource', source: {JsonConvert.SerializeObject(src)} }});" +
+                InjectionSuffix
+            );
+
+            await UpdatePlaybackParameters();
+        }
+
+        public override async Task SetOutputDevice(string outputDevice)
+        {
+            await base.SetOutputDevice(outputDevice);
+
+            ProxyWindow?.ExecuteJavaScript(
+                InjectionPrefix +
+                $"window.injectedQueue.push({{ type: 'setOutputDevice', outputDevice: {JsonConvert.SerializeObject(outputDevice)} }});" +
                 InjectionSuffix
             );
 

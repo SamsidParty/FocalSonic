@@ -1,5 +1,6 @@
 ﻿using FocalSonic.AppleMusic;
 using FocalSonic.Presence;
+using FocalSonic.AudioPlayer;
 using GoogleCast;
 using GoogleCast.Channels;
 using GoogleCast.Models.Media;
@@ -36,7 +37,15 @@ namespace FocalSonic.Casting
             }
         }
 
-        static Sender Client;
+        static Sender? Client;
+
+        public static void HandleDisconnect()
+        {
+            try { Client?.Disconnect(); } catch { }
+            AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("local");
+            LastSongID = "";
+            Client = null;
+        }
 
         [Command("getCastDevices")]
         public static async Task<List<CastDeviceReference>> GetAvailableDevices()
@@ -85,9 +94,12 @@ namespace FocalSonic.Casting
             {
                 Client = new Sender();
 
+                Client.Disconnected += (_, _) => HandleDisconnect();
+
                 await Client.ConnectAsync(chromecast.Receiver);
                 await Client.LaunchAsync(new FocalSonicChannel());
 
+                AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("chromecast");
                 await LoadMedia(null);
 
                 return "success";
@@ -113,14 +125,14 @@ namespace FocalSonic.Casting
             var media = new MediaInformation()
             {
                 ContentId = songID,
-                ContentType = "applemusic:" + AppleMusicKeys.MediaUserToken,
+                ContentType = AudioPlayer.AudioPlayer.Instance?.ChromecastCredential ?? "",
             };
 
             try
             {
                 var mediaStatus = await Client.GetChannel<IMediaChannel>().LoadAsync(media);
             }
-            catch { }
+            catch { HandleDisconnect(); }
         }
     }
 }
