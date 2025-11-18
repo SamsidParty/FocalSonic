@@ -238,6 +238,20 @@ export function parseTTML(ttmlText: string): TTMLLyric {
     applyAlternateLyric("transliteration");
     applyAlternateLyric("translation");
 
+    // The lyric lines are already in order by start time
+    // However, in some cases, the background vocals may appear before the main vocals
+    // If 2 lines have the same start time, make sure the main vocal line appears first by adding a slight offset
+    // Do this by checking the end time
+    for (let i = 1; i < lyricLines.length; i++) {
+        const prevLine = lyricLines[i - 1];
+        const currLine = lyricLines[i];
+        if (prevLine.startTime === currLine.startTime) {
+            if (prevLine.endTime > currLine.endTime) {
+                prevLine.startTime += 10;
+            }
+        }
+    }
+
     return {
         metadata,
         lyricLines: lyricLines,
