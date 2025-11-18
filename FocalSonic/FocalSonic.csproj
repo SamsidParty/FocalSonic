@@ -73,6 +73,9 @@
 	    <HintPath>Sharpcaster.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="ExtraFeatures\" />
+	</ItemGroup>
 	
 
 </Project>

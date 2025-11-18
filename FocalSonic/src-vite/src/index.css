@@ -39,7 +39,39 @@
 
     --windows-red: hsl(5, 75%, 44%);
   }
+  :root .fullscreen {
+    --header-height: 0px;
+    --drawer-height: 100vh;
+    --content-height: 100vh;
+    --vertical-shift: var(--player-height);
+  }
+  :root .fullscreen.idle {
+    --vertical-shift: 0px;
+  }
 }
+
+.fullscreen .app-header {
+  display: none;
+}
+
+.idle .player-idle-hide {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.fullscreen .hide-in-fullscreen {
+  display: none;
+}
+
+.idle.fullscreen .hide-in-fullscreen-idle {
+  opacity: 0;
+}
+
+.idle .hide-on-idle {
+  display: none;
+}
+
 
 @media screen and (max-width: 780px) {
   :root {

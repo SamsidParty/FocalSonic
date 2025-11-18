@@ -11,9 +11,9 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
-import { useDynamicColors, useLyricsState } from "@/store/player.store";
+import { useDynamicColors, useLyricsState, useMainDrawerState } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
-import { enterFullscreen } from "@/utils/browser";
+import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
@@ -23,13 +23,14 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
     const { t } = useTranslation();
     const { setCurrentSongColor, currentSongColor } = useDynamicColors();
     const { toggleLyricsAction } = useLyricsState(); 
+    const { mainDrawerState, closeDrawer } = useMainDrawerState();
 
     function getImageElement() {
         return document.getElementById("track-song-image") as HTMLImageElement;
     }
 
     function openFullscreen() {
-        enterFullscreen();
+        !mainDrawerState ? enterFullscreen() : exitFullscreen();
         toggleLyricsAction();
     }
 

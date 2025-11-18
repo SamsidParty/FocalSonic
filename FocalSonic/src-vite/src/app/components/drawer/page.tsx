@@ -11,6 +11,8 @@ import {
     useQueueState
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
+import { isFullscreen } from "@/utils/browser";
+import "@/utils/idle"; // for idle detection
 import clsx from "clsx";
 import { ChevronDownIcon, Maximize2Icon } from "lucide-react";
 import React, { ComponentPropsWithoutRef } from "react";
@@ -48,16 +50,17 @@ export function MainDrawerPage() {
                 {FullscreenBackdrop}
                 <div
                     className={clsx(
-                        "flex flex-col w-full h-content",
-                        "transition-[background-image,background-color] duration-1000",
+                        "flex flex-col w-full h-content transition-[margin]",
+                        "transition-[background-image,background-color] ease-long duration-1000",
                         "default-gradient",
+                        isPlayerAtTop ? "mt-vertical-shift" : "mb-vertical-shift"
                     )}
                 >
                     <div 
                         className={clsx(
-                            "absolute text-white flex w-full h-14 min-h-14 items-center justify-end gap-2",
+                            "absolute text-white hide-in-fullscreen-idle transition-opacity duration-600 ease-long flex w-full h-14 min-h-14 items-center justify-end gap-2",
                             !isMiniPlayer && "px-[6%]",
-                            isMiniPlayer && "px-2"
+                            (isMiniPlayer || isFullscreen()) && "px-2"
                         )}
                         {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }
                     >
@@ -65,7 +68,7 @@ export function MainDrawerPage() {
                         <Button
                             variant="ghost"
                             data-webview-ignore={""}
-                            className="w-10 h-10 rounded-full p-0 hover:bg-foreground/20"
+                            className="w-10 h-10 hide-in-fullscreen rounded-full p-0 hover:bg-foreground/20"
                             onClick={closeDrawer}
                         >
                             {

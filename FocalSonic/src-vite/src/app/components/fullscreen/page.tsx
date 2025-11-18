@@ -23,7 +23,6 @@ export default function FullscreenMode({ children }: FullscreenModeProps) {
     const { autoFullscreenEnabled } = useFullscreenPlayerSettings();
 
     function handleFullscreen(open: boolean) {
-        if (!autoFullscreenEnabled) return;
         open ? enterFullscreen() : exitFullscreen();
     }
 

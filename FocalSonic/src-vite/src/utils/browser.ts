@@ -9,8 +9,8 @@ export enum MouseButton {
 
 export const isChromeOrFirefox = ["Blink", "Gecko"].includes(engineName);
 
-// Enable only for browsers
-export const hasPiPSupport = (window.igniteView);
+// Enable only if enterMiniPlayer is defined
+export const hasPiPSupport = (window.igniteView && window.igniteView.commandBridge?.enterMiniPlayer);
 
 function preventContextMenu() {
     document.addEventListener("contextmenu", (e) => {
@@ -60,7 +60,17 @@ function preventAltBehaviour() {
     });
 }
 
+export function isFullscreen() {
+    return document.body.classList.contains("fullscreen");
+}
+
 export function enterFullscreen() {
+    document.body.classList.add("fullscreen");
+    if (window.igniteView?.commandBridge?.enterFullScreen) {
+        window.igniteView.commandBridge.enterFullScreen();
+        return;
+    }
+
     const element = document.documentElement;
     if (element.requestFullscreen) {
         element.requestFullscreen();
@@ -72,6 +82,13 @@ export function enterFullscreen() {
 }
 
 export function exitFullscreen() {
+
+    document.body.classList.remove("fullscreen");
+    if (window.igniteView?.commandBridge?.exitFullScreen) {
+        window.igniteView.commandBridge.exitFullScreen();
+        return;
+    }
+
     if (document.exitFullscreen) {
         document.exitFullscreen();
     }

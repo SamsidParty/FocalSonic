@@ -17,7 +17,7 @@ import {
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
 import { LoopState } from "@/types/playerContext";
-import { hasPiPSupport } from "@/utils/browser";
+import { hasPiPSupport, isFullscreen } from "@/utils/browser";
 import { logger } from "@/utils/logger";
 import { ReplayGainParams } from "@/utils/replayGain";
 import { checkServerType } from "@/utils/servers";
@@ -187,7 +187,8 @@ export function Player() {
     return (
         <footer className={clsx(
             "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-bar xxs:bg-transparent",
-            isPlayerAtTop ? "top-header" : "bottom-0"
+            isPlayerAtTop ? "top-header" : "bottom-0",
+            isFullscreen() ? "player-idle-hide" : ""
         )}>
             <div className="w-full h-full grid grid-cols-player xxs:flex xxs:flex-col xxs:justify-center gap-2 px-3">
                 {/* Track Info */}

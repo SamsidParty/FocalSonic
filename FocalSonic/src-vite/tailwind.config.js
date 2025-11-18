@@ -28,6 +28,7 @@ module.exports = {
                 "shadow-header": "var(--shadow-header-height)",
                 "shadow-header-distance": "var(--shadow-header-distance)",
                 toast: "var(--toastify-toast-container-height)",
+                "vertical-shift": "var(--vertical-shift)",
             },
             colors: {
                 body: "var(--body)",

@@ -46,7 +46,7 @@ export function MiniPlayerButton() {
                     size="icon"
                     onClick={handleClick}
                     className={clsx(
-                        "relative rounded-full",
+                        "relative rounded-full hide-in-fullscreen",
                         isMiniPlayer && "text-primary hover:text-primary player-button-active",
                     )}
                     onFocus={(e) => e.preventDefault()}
