@@ -11,11 +11,9 @@ export function AppWindowProvider({ children }: { children: React.ReactNode }) {
             appWindow: null,
             isWindowMaximized: false,
             isFullscreen: false,
-            isSidebarOpen: false,
             minimizeWindow: async () => {},
             maximizeWindow: async () => {},
             toggleFullscreen: async () => {},
-            toggleSidebar: async () => {},
             enterFullscreenWindow: async () => {},
             exitFullscreenWindow: async () => {},
             closeWindow: async () => {},
@@ -26,7 +24,7 @@ export function AppWindowProvider({ children }: { children: React.ReactNode }) {
         <AppWindowContext.Provider value={{ context, setContext }}>
             {children}
         </AppWindowContext.Provider>
-    )
+    );
 
 }
 
@@ -34,11 +32,9 @@ interface AppWindowType {
     appWindow: Window | null
     isWindowMaximized: boolean
     isFullscreen: boolean
-    isSidebarOpen: boolean
     minimizeWindow: () => Promise<void>
     maximizeWindow: () => Promise<void>
     toggleFullscreen: () => Promise<void>
-    toggleSidebar: () => Promise<void>
     enterFullscreenWindow: () => Promise<void>
     exitFullscreenWindow: () => Promise<void>
     closeWindow: () => Promise<void>
@@ -50,14 +46,12 @@ export function useAppWindow(): AppWindowType {
         appWindow,
         isFullscreen,
         isWindowMaximized,
-        isSidebarOpen,
     } = useContext(AppWindowContext).context;
 
     const setContext = useContext(AppWindowContext).setContext;
 
     const setIsFullscreen = (v: boolean) => setContext((prev) => ({ ...prev, isFullscreen: v }));
     const setIsWindowMaximized = (v: boolean) => setContext((prev) => ({ ...prev, isWindowMaximized: v }));
-    const setIsSidebarOpen = (v: boolean) => setContext((prev) => ({ ...prev, isSidebarOpen: v }));
     const setAppWindow = (v: Window | null) => setContext((prev) => ({ ...prev, appWindow: v }));
 
     useEffect(() => {
@@ -130,19 +124,6 @@ export function useAppWindow(): AppWindowType {
         }
     };
 
-    const toggleSidebar = async () => {
-        setIsSidebarOpen(!isSidebarOpen);
-
-        let hasFinishedAnimation = false;
-        const sidebarAnimation = () => {
-            let event = new Event("resize");
-            event["isFromSidebar"] = true; // Custom property to indicate the event is from sidebar toggle
-            window.dispatchEvent(event);
-            !hasFinishedAnimation && requestAnimationFrame(sidebarAnimation);
-        }
-        setTimeout(() => { hasFinishedAnimation = true; }, 500);
-        sidebarAnimation();
-    }
 
     const enterFullscreenWindow = async () => {
         if (appWindow) {
@@ -181,12 +162,10 @@ export function useAppWindow(): AppWindowType {
         appWindow,
         isWindowMaximized,
         isFullscreen,
-        isSidebarOpen,
         minimizeWindow,
         maximizeWindow,
         closeWindow,
         toggleFullscreen,
-        toggleSidebar,
         enterFullscreenWindow,
         exitFullscreenWindow,
     };

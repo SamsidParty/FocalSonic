@@ -1,10 +1,10 @@
+import { useAppSettings } from "@/store/app.store";
 import clsx from "clsx";
 import { t } from "i18next";
-import { memo } from "react";
+import React, { memo } from "react";
 import CommandMenu from "../components/command/command-menu";
 import { SectionTitle, SidebarPlaylists, SidebarSection } from "../components/playlist/sidebar-list";
 import { SidebarGenerator } from "../components/sidebar/sidebar-generator";
-import { useAppWindow } from "../hooks/use-app-window";
 import { libraryItems, mainMenuItems } from "./sidebar-items";
 
 
@@ -13,10 +13,10 @@ const MemoCommandMenu = memo(CommandMenu);
     
 
 export default function LargeSidebar() {
-    const { isSidebarOpen } = useAppWindow();
+    const { sidebarOpen } = useAppSettings();
     
     return (
-        <div className={clsx("min-w-sidebar max-w-sidebar overflow-clip", isSidebarOpen ? "" : "hidden")}>
+        <div className={clsx("min-w-sidebar max-w-sidebar overflow-clip", sidebarOpen ? "" : "hidden")}>
             <div className="p-4 pt-0">
                 <MemoCommandMenu />
             </div>

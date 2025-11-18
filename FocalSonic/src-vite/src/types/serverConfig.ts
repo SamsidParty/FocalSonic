@@ -41,6 +41,7 @@ export interface IAppActions {
     saveConfig: (data: IServerConfig) => Promise<boolean>
     removeConfig: () => void
     setLogoutDialogState: (value: boolean) => void
+    toggleSidebar: () => void
 }
 
 export interface IAppUpdate {
@@ -79,6 +80,8 @@ export interface IAppSettings {
     setAltLyricsMode: (value: "off" | "transliteration" | "translation") => void
     enableDiscordPresence: boolean
     setEnableDiscordPresence: (value: boolean) => void
+    sidebarOpen: boolean
+    setSidebarOpen: (value: boolean) => void
 }
 
 export interface IAppContext {

@@ -130,6 +130,12 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                             if (playerStore) {
                                 playerStore.actions.setPresenceNonce(Date.now());
                             }
+                        },
+                        sidebarOpen: true,
+                        setSidebarOpen: (value) => {
+                            set((state) => {
+                                state.settings.sidebarOpen = value;
+                            });
                         }
                     },
                     runtimeState: {
@@ -240,6 +246,21 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.podcasts.customUser = "";
                                 state.podcasts.customUrl = "";
                             });
+                        },
+                        toggleSidebar: () => {
+                            set((state) => {
+                                state.settings.sidebarOpen = !state.settings.sidebarOpen;
+                            });
+
+                            let hasFinishedAnimation = false;
+                            const sidebarAnimation = () => {
+                                const event = new Event("resize");
+                                event["isFromSidebar"] = true; // Custom property to indicate the event is from sidebar toggle
+                                window.dispatchEvent(event);
+                                !hasFinishedAnimation && requestAnimationFrame(sidebarAnimation);
+                            };
+                            setTimeout(() => { hasFinishedAnimation = true; }, 500);
+                            sidebarAnimation();
                         }
                     },
                 })),

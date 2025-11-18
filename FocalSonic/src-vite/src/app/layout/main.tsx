@@ -1,15 +1,15 @@
 import { ScrollArea } from "@/app/components/ui/scroll-area";
+import { useAppStore } from "@/store/app.store";
 import { usePlayerStyle } from "@/store/theme.store";
 import { scrollPageToTop } from "@/utils/scrollPageToTop";
 import clsx from "clsx";
 import React, { useEffect, useRef } from "react";
 import { Location, Outlet, useLocation } from "react-router-dom";
-import { useAppWindow } from "../hooks/use-app-window";
 
 
 export function MainRoutes() {
     const { pathname } = useLocation() as Location;
-    const { isSidebarOpen } = useAppWindow();
+    const { sidebarOpen } = useAppStore().settings;
     const { isPlayerAtTop } = usePlayerStyle();
     const animationRef = useRef<HTMLDivElement>(null);
 
@@ -25,7 +25,7 @@ export function MainRoutes() {
         <main className={
             clsx(
                 "flex h-full transition-[padding-left,transform] duration-500 ease-long",
-                isSidebarOpen ? "pl-sidebar" : "pl-mini-sidebar",
+                sidebarOpen ? "pl-sidebar" : "pl-mini-sidebar",
                 isPlayerAtTop ? "pt-[calc(var(--player-height)+var(--header-height))]" : "pb-player pt-header"
             )
         }
