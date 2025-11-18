@@ -32,12 +32,15 @@ export interface AppleMusicPlaylist extends AppleMusicResource {
 
 export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist): Playlist {
     if (!playlist) { return; }
+
+    const isFavoritesPlaylist = playlist.attributes?.inFavorites && !playlist.attributes.canEdit && !playlist.attributes.canDelete && !playlist.attributes.isPublic;
+
     return removeUndefined({
         isDir: true,
         id: playlist.id,
         name: playlist.attributes?.name || "Playlist",
         comment: playlist.attributes?.description?.standard || "",
-        coverArt: playlist.attributes?.artwork?.url || "",
+        coverArt: isFavoritesPlaylist ? `${window.location.origin}/favorite_playlist.png` : (playlist.attributes?.artwork?.url || ""),
         songCount: playlist.relationships?.tracks?.data.length || 0,
         duration: 0, // Duration is not provided in the Apple Music API
         public: playlist.attributes?.isChart || false,
@@ -46,6 +49,7 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
         created: new Date(playlist.attributes?.lastModifiedDate || "").toString() || new Date().toISOString(),
         entry: playlist.relationships?.tracks?.data.map((s) => convertAppleMusicSongToSubsonic(s, playlist.attributes)) || [],
         starred: playlist.attributes?.inFavorites === true ? new Date().toISOString() : undefined,
+        isFavorites: isFavoritesPlaylist,
         appleMusic: {
             data: playlist?.attributes
         }

@@ -121,7 +121,7 @@ export function getCoverArtUrl(
 ): string {
 
     // No point proxying apple music cover art URLs, let it get served through the CDN directly
-    if (id?.startsWith("https://")) {
+    if (id?.startsWith("https://") || id?.startsWith("http://")) {
         return id.replaceAll("{w}", size).replaceAll("{h}", size).replaceAll("{f}", "webp");
     }
 

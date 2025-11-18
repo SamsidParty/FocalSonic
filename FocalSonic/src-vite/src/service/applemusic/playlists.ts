@@ -9,7 +9,10 @@ import { merge } from "lodash";
 import { defaultAppleMusicQuery } from "./common";
 
 async function getAll() {
-    const response = await httpClient<AppleMusicPlaylist[]>("/applemusic/me/library/playlists", { method: "GET", });
+    const response = await httpClient<AppleMusicPlaylist[]>("/applemusic/me/library/playlists", { 
+        method: "GET",
+        query: defaultAppleMusicQuery
+    });
 
     return response?.data.map(convertAppleMusicPlaylistToSubsonic) ?? [];
 }
@@ -20,7 +23,7 @@ async function getOne(id: string, offset?: number) {
         `/applemusic/me/library/playlists/${id}`,
         {
             method: "GET",
-            query: merge({ include: "tracks" }, defaultAppleMusicQuery)
+            query: merge({ include: "tracks" }, defaultAppleMusicQuery, defaultAppleMusicQuery)
         }
     );
 
@@ -28,7 +31,7 @@ async function getOne(id: string, offset?: number) {
         // Try again but this time in the catalog not the library
         response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/catalog/{storefront}/playlists/${id}`, {
             method: "GET",
-            query: merge({ include: "tracks" }, defaultAppleMusicQuery)
+            query: merge({ include: "tracks" }, defaultAppleMusicQuery, defaultAppleMusicQuery)
         });
     }
 

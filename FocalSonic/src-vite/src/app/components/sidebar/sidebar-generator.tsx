@@ -8,8 +8,8 @@ import { useAppStore } from "@/store/app.store";
 import { Playlist } from "@/types/responses/playlist";
 import { GridViewWrapperType, resetGridClickedItem } from "@/utils/gridTools";
 import clsx from "clsx";
-import { ListMusicIcon } from "lucide-react";
-import { ElementType, Fragment, memo, useCallback } from "react";
+import { ListMusicIcon, Star } from "lucide-react";
+import React, { ElementType, Fragment, memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 
@@ -122,7 +122,12 @@ export function SidebarPlaylistGenerator({
                                     isActive(playlist.id) && "cursor-default hover:bg-accent",
                                 )}
                             >
-                                <ListMusic color="var(--primary)" className="mr-2 min-h-4 min-w-4 h-4 w-4" />
+                                {
+                                    playlist.isFavorites ? (
+                                        <Star color="var(--primary)" className="mr-2 min-h-4 min-w-4 h-4 w-4" />
+                                    ) : (<ListMusic color="var(--primary)" className="mr-2 min-h-4 min-w-4 h-4 w-4" />)
+                                }
+                                
                                 <span className="w-full truncate text-left">
                                     {playlist.name}
                                 </span>
