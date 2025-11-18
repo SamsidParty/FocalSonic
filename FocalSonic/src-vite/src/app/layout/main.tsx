@@ -30,7 +30,13 @@ export function MainRoutes() {
             )
         }
         >
-            <div className="absolute inset-0 bg-bar " />
+            <div className={
+                clsx(
+                    "absolute flex inset-0 transition-[padding-left,transform] bg-bar z-[-100] duration-500 ease-long",
+                    sidebarOpen ? "ml-sidebar" : "ml-mini-sidebar",
+                    isPlayerAtTop ? "mt-[calc(var(--player-height)+var(--header-height))]" : "mb-player mt-header"
+                )}
+            />
             <div className="relative overflow-hidden flex h-full w-full rounded-md mr-3">
                 <ScrollArea
                     id="main-scroll-area"
