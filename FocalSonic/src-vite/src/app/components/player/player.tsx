@@ -147,6 +147,7 @@ export function Player() {
     }, [getAudioRef, setProgress]);
 
     const setupInitialVolume = useCallback(() => {
+
         const audio = getAudioRef().current;
         if (!audio) return;
 

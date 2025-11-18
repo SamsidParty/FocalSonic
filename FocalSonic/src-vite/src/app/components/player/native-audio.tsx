@@ -110,7 +110,9 @@ class NativeVirtualAudioPlayer {
     set volume(value: number) {
         if (this._volume === value) return;
         this._volume = value;
+
         setTimeout(async () => {
+            clearTimeout(this.volumeTimeout);
             await this.waitForCreation();
             window.igniteView?.commandBridge.setAudioPlayerVolume(this.id!, this._volume);
         }, 0);

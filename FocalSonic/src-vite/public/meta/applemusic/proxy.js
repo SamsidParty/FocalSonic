@@ -51,6 +51,27 @@ window.isCurrentSongRadio = false;
 window.executeInjectedQueue = async () => {
     if (!window.proxyMusicInstance) { return; }
 
+    const itemsOfTypes = {};
+    for (const item of window.injectedQueue) {
+        if (!itemsOfTypes[item.type]) {
+            itemsOfTypes[item.type] = [];
+        }
+        itemsOfTypes[item.type].push(item);
+    }
+
+    const limitTypeToOneItem = (type) => {
+        // Only keep the last item of this type
+        if (itemsOfTypes[type]?.length > 1) {
+            const lastItem = itemsOfTypes[type][itemsOfTypes[type].length - 1];
+            window.injectedQueue = window.injectedQueue.filter(item => item.type !== type);
+            window.injectedQueue.push(lastItem);
+        }
+    }
+
+    limitTypeToOneItem("setVolume");
+    limitTypeToOneItem("setSpeed");
+    limitTypeToOneItem("setReverb");
+
     while (window.injectedQueue.length > 0) {
         const item = window.injectedQueue.shift();
         console.log("[FocalSonic][Apple Music Proxy] Executing item:", item);
