@@ -13,7 +13,7 @@ import { createJSONStorage, devtools, persist, subscribeWithSelector } from "zus
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
-import { useAppStore } from "./app.store";
+import { useAppSettings, useAppStore } from "./app.store";
 
 const blurSettings = {
     min: 20,
@@ -1154,32 +1154,30 @@ export const useLyricsState = () =>
         toggleLyricsAction: state.actions.toggleLyricsAction,
     }));
 
-export const useDynamicColors = () =>
-    usePlayerStore((state) => {
-        const { currentSongColor, currentSongColorIntensity, queue } =
-      state.settings.colors;
-        const { useDynamicColors, blur } = state.settings.colors.bigPlayer;
-        const {
-            setCurrentSongColor,
-            setuseDynamicColorsOnQueue,
-            setuseDynamicColorsOnBigPlayer,
-            setBigPlayerBlurValue,
-            setCurrentSongIntensity,
-        } = state.actions;
+export const useDynamicColors = () => {
+    const { lyricBackgroundIntensity, setLyricBackgroundIntensity } = useAppSettings();
+    const { currentSongColor, currentSongColorIntensity } = usePlayerStore().settings.colors;
 
-        return {
-            currentSongColor,
-            setCurrentSongColor,
-            currentSongColorIntensity,
-            setCurrentSongIntensity,
-            useDynamicColorsOnQueue: queue.useDynamicColors,
-            useDynamicColorsOnBigPlayer: useDynamicColors,
-            setuseDynamicColorsOnQueue,
-            setuseDynamicColorsOnBigPlayer,
-            bigPlayerBlur: blur,
-            setBigPlayerBlurValue,
-        };
-    });
+    const {
+        setCurrentSongColor,
+        setBigPlayerBlurValue,
+        setCurrentSongIntensity,
+    } = usePlayerStore().actions;
+
+
+    return {
+        currentSongColor,
+        setCurrentSongColor,
+        currentSongColorIntensity: lyricBackgroundIntensity,
+        setCurrentSongIntensity: setLyricBackgroundIntensity,
+        useDynamicColorsOnQueue: lyricBackgroundIntensity > 1,
+        useDynamicColorsOnBigPlayer: lyricBackgroundIntensity > 1,
+        setuseDynamicColorsOnQueue: (v) =>  setLyricBackgroundIntensity(v ? 1.01 : 0.5),
+        setuseDynamicColorsOnBigPlayer: (v) =>  setLyricBackgroundIntensity(v ? 1.01 : 0.5),
+        bigPlayerBlur: 0,
+        setBigPlayerBlurValue,
+    };
+};
 
 export const usePlayerCurrentList = () =>
     usePlayerStore((state) => state.songlist.currentList);

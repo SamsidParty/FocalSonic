@@ -82,6 +82,8 @@ export interface IAppSettings {
     setEnableDiscordPresence: (value: boolean) => void
     sidebarOpen: boolean
     setSidebarOpen: (value: boolean) => void
+    lyricBackgroundIntensity: number
+    setLyricBackgroundIntensity: (value: number) => void
 }
 
 export interface IAppContext {

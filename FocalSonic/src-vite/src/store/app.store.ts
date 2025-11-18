@@ -136,6 +136,12 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                             set((state) => {
                                 state.settings.sidebarOpen = value;
                             });
+                        },
+                        lyricBackgroundIntensity: 1.01,
+                        setLyricBackgroundIntensity: (value) => {
+                            set((state) => {
+                                state.settings.lyricBackgroundIntensity = value;
+                            });
                         }
                     },
                     runtimeState: {

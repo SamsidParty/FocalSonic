@@ -96,19 +96,14 @@ interface IBlurSettings {
 }
 
 interface IBigPlayerSettings {
-    useDynamicColors: boolean
+
     blur: IBlurSettings
 }
 
-interface IQueueSettings {
-    useDynamicColors: boolean
-}
 
 interface IColorsSettings {
     currentSongColor: string | null
-    currentSongColorIntensity: number
     bigPlayer: IBigPlayerSettings
-    queue: IQueueSettings
 }
 
 export interface IPlayerSettings {
@@ -174,8 +169,6 @@ export interface IPlayerActions {
     updateQueueChecks: () => void
     setCurrentSongColor: (value: string | null) => void
     setCurrentSongIntensity: (value: number) => void
-    setuseDynamicColorsOnQueue: (value: boolean) => void
-    setuseDynamicColorsOnBigPlayer: (value: boolean) => void
     setBigPlayerBlurValue: (value: number) => void
     setIsLoading: (value: boolean) => void
     setPresenceNonce: (value: number) => void
