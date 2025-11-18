@@ -139,7 +139,7 @@ export default function PreviewList({
                             </p>
                         </Link>
                     )}
-                    <div className="flex gap-2">
+                    <div className="flex">
                         <CarouselButton
                             direction="prev"
                             disabled={!canScrollPrev}
