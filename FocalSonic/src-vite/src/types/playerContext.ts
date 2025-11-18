@@ -168,7 +168,6 @@ export interface IPlayerActions {
     setLastPodcast: (episode: EpisodeWithPodcast, progress: number) => void
     updateQueueChecks: () => void
     setCurrentSongColor: (value: string | null) => void
-    setCurrentSongIntensity: (value: number) => void
     setBigPlayerBlurValue: (value: number) => void
     setIsLoading: (value: boolean) => void
     setPresenceNonce: (value: number) => void
