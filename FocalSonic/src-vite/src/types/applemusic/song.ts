@@ -70,6 +70,7 @@ export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: an
         suffix: "m4a",
         coverArt: song.attributes?.artwork?.url || "",
         starred: song.attributes?.inFavorites === true ? new Date().toISOString() : undefined,
+        explicitStatus: song.attributes?.contentRating || "clean",
         appleMusic: {
             data: song,
             libraryID: song.id,

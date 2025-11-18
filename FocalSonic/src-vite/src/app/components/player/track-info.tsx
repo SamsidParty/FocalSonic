@@ -1,6 +1,6 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import { AudioLines, Maximize2 } from "lucide-react";
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Fragment } from "react/jsx-runtime";
@@ -17,6 +17,7 @@ import { enterFullscreen } from "@/utils/browser";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
+import { ExplicitIcon } from "../table/song-title";
 
 export function TrackInfo({ song }: { song: ISong | undefined }) {
     const { t } = useTranslation();
@@ -116,10 +117,11 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
                 <MarqueeTitle gap="mr-2">
                     <Link to={ROUTES.ALBUM.PAGE(song.albumId)} tabIndex={-1}>
                         <span
-                            className="text-sm font-medium hover:underline cursor-pointer"
+                            className="text-sm font-medium hover:underline cursor-pointer flex gap-1 items-center"
                             data-testid="track-title"
                         >
                             {song.title}
+                            {song.explicitStatus === "explicit" && <ExplicitIcon />}
                         </span>
                     </Link>
                 </MarqueeTitle>
