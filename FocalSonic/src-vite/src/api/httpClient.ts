@@ -122,7 +122,6 @@ export function getCoverArtUrl(
 
     // No point proxying apple music cover art URLs, let it get served through the CDN directly
     if (id?.startsWith("https://")) {
-        size = "400"; // Honestly this speeds it up rather than slowing it down, since the same URL is reused that means the image is cached
         return id.replaceAll("{w}", size).replaceAll("{h}", size).replaceAll("{f}", "webp");
     }
 

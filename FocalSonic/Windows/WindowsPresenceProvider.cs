@@ -24,6 +24,8 @@ namespace FocalSonic.Windows
         private bool HasRegisteredEvents = false;
         private RandomAccessStreamReference LastAlbumArt; // Prevents refreshing album art every time which wastes resources
 
+        public override async Task Scrobble(MediaPlaybackInfo playbackInfo) { }
+
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
             var song = playbackInfo.CurrentSong;

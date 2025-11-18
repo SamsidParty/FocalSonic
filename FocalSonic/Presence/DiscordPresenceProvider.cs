@@ -89,5 +89,7 @@ namespace FocalSonic.Presence
                 }
             });
         }
+
+        public override async Task Scrobble(MediaPlaybackInfo playbackInfo) { }
     }
 }

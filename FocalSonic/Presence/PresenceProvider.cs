@@ -9,5 +9,6 @@ namespace FocalSonic.Presence
     public abstract class PresenceProvider
     {
         public abstract Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo);
+        public abstract Task Scrobble(MediaPlaybackInfo playbackInfo);
     }
 }

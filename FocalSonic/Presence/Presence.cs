@@ -21,6 +21,7 @@ namespace FocalSonic.Presence
             Instance.RegisterProvider(new WindowsPresenceProvider());
             #endif
             Instance.RegisterProvider(new DiscordPresenceProvider());
+            Instance.RegisterProvider(new AppleMusicPresenceProvider());
         }
 
         public Presence() { Instance = this; }
@@ -41,6 +42,17 @@ namespace FocalSonic.Presence
             foreach (var provider in Providers)
             {
                 provider.UpdateMediaStatus(playbackInfo);
+            }
+        }
+
+        [Command("scrobble")]
+        public static void Scrobble() => Instance.Scrobble(MediaPlaybackInfo.Instance);
+
+        public override async Task Scrobble(MediaPlaybackInfo playbackInfo)
+        {
+            foreach (var provider in Providers)
+            {
+                provider.Scrobble(playbackInfo);
             }
         }
     }
