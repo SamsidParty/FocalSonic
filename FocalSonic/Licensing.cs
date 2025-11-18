@@ -4,7 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#if WINDOWS
 using Windows.Services.Store;
+#endif
 
 namespace FocalSonic
 {
@@ -12,12 +15,16 @@ namespace FocalSonic
     {
         public static string ProductID = "9PMT4RKHPXCR"; // 9PMT4RKHPXCR
 
+        #if WINDOWS
         public static StoreContext Context;
+        #endif
+
         public static bool HasPurchasedLicense = false;
 
         [Command("licenseCheck")]
         public static async Task<int> LicenseCheck()
         {
+            #if WINDOWS
             if (HasPurchasedLicense) return -1; // Infinite remaining free trial days
 
             try
@@ -50,11 +57,15 @@ namespace FocalSonic
             // Get number of days since trial activation
             var elapsedDays = (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - trialActivationTime) / 86400;
             return (int)Math.Max(0, 7 - elapsedDays); // Return number of remaining free trial days (7-day trial)
+            #else
+            return -1;
+            #endif
         }
 
         [Command("getPremiumPrice")]
         public static async Task<string> GetPremiumPrice()
         {
+            #if WINDOWS
             try
             {
                 var addOns = await Context.GetStoreProductsAsync(new string[] { "Durable", "Consumable" }, new string[] { ProductID });
@@ -66,11 +77,16 @@ namespace FocalSonic
             catch (Exception ex) { }
 
             return "";
+            #else
+            return "Unsupported platform";
+            #endif
+
         }
 
         [Command("purchaseLicense")]
         public static async Task PurchaseLicense()
         {
+            #if WINDOWS
             try
             {
                 var results = await Context.RequestPurchaseAsync(ProductID);
@@ -81,6 +97,7 @@ namespace FocalSonic
                 }
             }
             catch (Exception ex) { }
+            #endif
         }
     }
 }
