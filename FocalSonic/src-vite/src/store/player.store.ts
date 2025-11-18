@@ -2,6 +2,7 @@ import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
 import { service } from "@/service/service";
 import { IPlayerContext, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
+import { exitFullscreen } from "@/utils/browser";
 import { areSongListsEqual } from "@/utils/compareSongLists";
 import { checkServerType } from "@/utils/servers";
 import { addNextSongList, shuffleSongList } from "@/utils/songListFunctions";
@@ -835,6 +836,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         closeDrawer: () => {
 
                             window.igniteView?.commandBridge?.exitMiniPlayer();
+                            exitFullscreen();
 
                             set((state) => {
                                 state.playerState.mainDrawerState = false;
