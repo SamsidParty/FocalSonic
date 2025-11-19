@@ -31,6 +31,10 @@
   },
   "menu": {
     "language": "Language",
+    "cast": "Chromecast",
+    "castDescription": "Select a device to cast music to",
+    "castNoDevices": "No devices available",
+    "castRefresh": "Scan again",
     "region": "Region: {{region}}",
     "server": "Server",
     "about": "About",

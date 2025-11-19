@@ -8,6 +8,7 @@ import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { isLinux, isMac, isWindows } from "@/utils/osType";
 import clsx from "clsx";
 import React from "react";
+import { Cast } from "../components/header/cast";
 import { LicenseDialog } from "../components/license";
 import { Separator } from "../components/ui/separator";
 
@@ -28,6 +29,7 @@ export function Header() {
             <HeaderSongInfo />
             <div {...igniteViewDragRegion} className="flex justify-end items-center gap-2">
                 <LicenseDialog />
+                <Cast />
                 <UserDropdown />
                 <Separator orientation="vertical" className="bg-foreground opacity-10 h-[60%]" />
                 {isWindows && <Windows />}

@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Separator } from "./ui/separator";
 
 export function LicenseDialog() {
     const { t } = useTranslation();
@@ -56,7 +55,6 @@ export function LicenseDialog() {
                         >
                             {t("license.remainingDays", { count: remainingDays })}
                         </Button>
-                        <Separator orientation="vertical" className="bg-foreground opacity-10 h-[60%]" />
                     </>
                 )
             }
