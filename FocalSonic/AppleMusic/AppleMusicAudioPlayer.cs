@@ -21,7 +21,7 @@ namespace FocalSonic.AppleMusic
         public bool IsPlaying = false;
         public string LoadStatus = "loading";
 
-        public override string ChromecastCredential => "applemusic:" + AppleMusicKeys.MediaUserToken;
+        public override string ChromecastCredential =>  AppleMusicKeys.MediaUserToken;
 
         public AppleMusicAudioPlayer(string id) : base(id) {
 

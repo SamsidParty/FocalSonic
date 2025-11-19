@@ -1,10 +1,26 @@
 /* eslint-disable no-async-promise-executor */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { MediaSourceData } from "../types/control-interface";
+import type { ControlInterfacePacket } from "../types/control-interface";
 import type PlaybackInterface from "../types/playback-interface";
 
+window.onerror = function(message, source, lineno, colno, error) {
+    // Construct the error message for the alert
+    let errorMessage = `Error: ${message}\n`;
+    errorMessage += `Source: ${source}\n`;
+    errorMessage += `Line: ${lineno}, Column: ${colno}`;
 
+    // If an Error object is available (modern browsers), you can also include its details
+    if (error && error.stack) {
+        errorMessage += `\nStack: ${error.stack}`;
+    }
+
+    // Display the alert
+    alert(errorMessage);
+
+    // Return true to prevent the default browser error handling (e.g., logging to console)
+    return true;
+};
 
 declare global {
     interface Window {
@@ -37,7 +53,7 @@ function debug() {
 }
 setInterval(debug, 500);
 
-async function authenticate(initData: MediaSourceData) {
+async function authenticate(credentials: string) {
     if (!window.musicKitInstance) {
         window.musicKitInstance = {};
         window.appleMusicReadyPromise = new Promise(async (resolve) => {
@@ -57,7 +73,7 @@ async function authenticate(initData: MediaSourceData) {
             console.log('MusicKit configured successfully:', music);
 
             // Authorize the user
-            const userToken = initData?.credentials || getUserToken();
+            const userToken = credentials || getUserToken();
             if (!userToken) throw new Error("No user token found");
             music.musicUserToken = userToken;
             
@@ -85,20 +101,36 @@ async function authenticate(initData: MediaSourceData) {
         });
     }
 
-    window.musicKitInstance.addEventListener("mediaElementCreated", window.assignAudioElement);
+
 }
 
 const appleMusicPlaybackInterface: PlaybackInterface = {
-    setSource: async (initData: MediaSourceData) => {
-        await authenticate(initData);
+    handleEvent: async (event: ControlInterfacePacket) => {
 
-        if (!initData.songId) return;
 
-        window.lastSongID = initData.songId;
+        if (event.type === "setSource") {
+            const token = event.data[1];
+            const songID = event.data[2];
 
-        await window.musicKitInstance.stop();
-        await window.musicKitInstance.playNext({ song: initData.songId }, true);
-        await window.musicKitInstance.skipToNextItem();
+            await authenticate(token);
+
+            if (!songID) return;
+
+            window.lastSongID = songID;
+
+            await window.musicKitInstance.stop();
+            await window.musicKitInstance.playNext({ song: songID }, true);
+            await window.musicKitInstance.skipToNextItem();
+        }
+        else if (event.type === "play") {
+            if (!window.musicKitInstance.isPlaying) {
+                await window.musicKitInstance.play();
+            }
+        }
+        else if (event.type === "pause") {
+            await window.musicKitInstance.pause();
+        }
+
     }
 }
 

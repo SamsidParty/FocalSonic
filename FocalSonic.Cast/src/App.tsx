@@ -6,7 +6,7 @@ import SplashScreen from './components/splashscreen';
 import appleMusicPlaybackInterface from './lib/apple-music';
 import chromecastControlInterface from './lib/chromecast';
 import type ControlInterface from './types/control-interface';
-import type { ControlInterfacePacket, MediaSourceData } from './types/control-interface';
+import type { ControlInterfacePacket } from './types/control-interface';
 import type PlaybackInterface from './types/playback-interface';
 import type { Status } from './types/status';
 
@@ -32,25 +32,22 @@ function App() {
 
     const handleEvent = async (event: ControlInterfacePacket) => {
         if (event.type === "setSource") {
-            const data = event.data as MediaSourceData;
         
             // Set the media source
             if (!playbackInterface) {
                 // Determine and assign the appropriate playback interface
-                if (data.playbackInterface === "applemusic") {
+                if (event.data[0] === "applemusic") {
                     playbackInterface = appleMusicPlaybackInterface;
                 }
             }
+        }
 
-            try {
-                await playbackInterface?.setSource(data);
-                setCurrentStatus({ statusCode: "playing", statusMessage: "" });
-            }
-            catch (err: any) {
-                console.error(err);
-                setCurrentStatus({ isError: true, statusCode: "playback-set-source-failed", statusMessage: `Playback interface initialization failed: ${err?.message}` });
-                return;
-            }
+        try {
+            await playbackInterface?.handleEvent(event);
+        }
+        catch (err: any) {
+            console.error(err);
+            setCurrentStatus({ isError: true, statusCode: "playback-error", statusMessage: `Playback interface error: ${err.toString()}` });
         }
     };
 

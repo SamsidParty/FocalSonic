@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type ControlInterface from "../types/control-interface";
-import type { ControlInterfacePacket, MediaSourceData } from "../types/control-interface";
+import type { ControlInterfacePacket } from "../types/control-interface";
 
 declare global {
     interface Window {
@@ -27,9 +27,6 @@ const chromecastControlInterface: ControlInterface = {
             const castDebugLogger = window.cast.debug.CastDebugLogger.getInstance();
             window.castDebugLogger = castDebugLogger;
 
-            window.playerManager.setMediaElement(new Promise<HTMLMediaElement>((res) => {
-                window.assignAudioElement = res;
-            }));
 
             window.castInstance.addEventListener(window.cast.framework.system.EventType.READY, () => {
                 if (!castDebugLogger.debugOverlayElement_) {
@@ -40,8 +37,8 @@ const chromecastControlInterface: ControlInterface = {
 
 
             window.castInstance.addEventListener(window.cast.framework.system.EventType.SENDER_CONNECTED, () => {
-                resolve();
                 castDebugLogger.info("Lifecycle", "Sender connected");
+                window.castInstance.sendCustomMessage(focalsonicNamespace, null, { type: "init" });
             });
 
             window.castInstance.addEventListener(window.cast.framework.system.EventType.ERROR, () => {
@@ -51,44 +48,22 @@ const chromecastControlInterface: ControlInterface = {
 
             window.playerManager.setMessageInterceptor(window.cast.framework.messages.MessageType.LOAD, loadRequestData => {
 
-                if (!loadRequestData.media.entity) {
-                    // Copy the value from contentId for legacy reasons if needed
-                    loadRequestData.media.entity = loadRequestData.media.contentId;
+                if (loadRequestData.media.contentType == "focalsonic/virtual-cast-message") {
+                    resolve();
+                    const message = JSON.parse(loadRequestData.media.contentId) as ControlInterfacePacket;
+                    eventHandler(message);
                 }
-
-                const contentType = loadRequestData.media.contentType;
-                // Split by first colon to separate playback interface and credential
-                // The credential can include colons, so only split by the first one
-                const [playbackInterface, ...credentialParts] = contentType.split(":");
-                const credentials = credentialParts.join(":") || undefined;
-
-                const packetData: MediaSourceData = {
-                    playbackInterface: playbackInterface,
-                    credentials: credentials,
-                    songId: loadRequestData.media.entity,
-                };
-
-                eventHandler({
-                    type: "setSource",
-                    data: packetData
-                });
-
-                window.playerManager.broadcastStatus(true);
 
                 return null; // Prevent default load handling
             });
 
             
-            window.playerManager.setMessageInterceptor(window.cast.framework.messages.MessageType.PAUSE, () => {
-                alert("pause");
-            });
-
-            window.playerManager.setMessageInterceptor(window.cast.framework.messages.MessageType.PLAY, () => {
-                alert("play");
-            });
+            const receiverOptions = new window.cast.framework.CastReceiverOptions();
+            receiverOptions.customNamespaces = {};
+            receiverOptions.customNamespaces[focalsonicNamespace] = window.cast.framework.system.MessageType.JSON;
 
             // Start the cast receiver
-            window.castInstance.start();
+            window.castInstance.start(receiverOptions);
         });
     }
 }
