@@ -39,7 +39,7 @@ function App() {
                 playbackInterface = appleMusicPlaybackInterface;
             }
 
-            setCurrentStatus({ statusCode: "ready", statusMessage: "Ready for playback" });
+            setCurrentStatus({ statusCode: "ready", statusMessage: "" });
         }
 
         try {
@@ -85,7 +85,7 @@ function App() {
 
     return (
         <>
-            <div className="app bg-gray-300">
+            <div className="app">
                 <SplashScreen status={currentStatus} />
             </div>
         </>

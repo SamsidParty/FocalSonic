@@ -5,7 +5,7 @@ export default function SplashScreen({ status }: { status: Status }) {
     return (
         <div className="splash-screen w-full h-full flex flex-col justify-center items-center text-white">
             <img className="w-[30vw]" alt="splash screen logo" src="./images/splash.webp"></img>
-            <p>{status.statusMessage}</p>
+            <p className="text-white">{status.statusMessage}</p>
         </div>
     );
 }
