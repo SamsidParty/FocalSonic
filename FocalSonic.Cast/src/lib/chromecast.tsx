@@ -14,7 +14,6 @@ declare global {
 const focalsonicNamespace = 'urn:x-cast:com.samsidparty.focalsonic';
 
 
-
 const chromecastControlInterface: ControlInterface = {
     initialize(eventHandler: (event: ControlInterfacePacket) => void): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -25,17 +24,17 @@ const chromecastControlInterface: ControlInterface = {
             window.playerManager = window.castInstance.getPlayerManager();
 
 
-
             window.castInstance.addEventListener(window.cast.framework.system.EventType.READY, () => {
-
+                console.log("Ready");
             });
 
 
             window.castInstance.addEventListener(window.cast.framework.system.EventType.SENDER_CONNECTED, () => {
-                window.castInstance.sendCustomMessage(focalsonicNamespace, null, { type: "init" });
+                console.log("Connected to sender")
             });
 
             window.castInstance.addEventListener(window.cast.framework.system.EventType.ERROR, () => {
+                console.log("Error occurred within cast SDK")
                 reject();
             });
 

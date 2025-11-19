@@ -123,13 +123,14 @@ namespace FocalSonic.Casting
                 Client = new Sender(service.BuildServiceProvider());
                 Client.Disconnected += (_, _) => HandleDisconnect();
                 MediaChannel = Client?.GetChannel<IMediaChannel>();
+                
 
                 await Client.ConnectAsync(chromecast.Receiver);
                 await Client.LaunchAsync(channel);
 
                 await Send(new CastMessage("setCredentials", "applemusic", AudioPlayer.AudioPlayer.Instance.ChromecastCredential));
 
-                await Task.Delay(2000);
+                //await Task.Delay(2000);
 
                 await AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("chromecast");
                 await LoadMedia(null);

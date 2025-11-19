@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/immutability */
 /* eslint-disable react-hooks/globals */
  
 import { useEffect, useState } from 'react';
@@ -5,6 +6,7 @@ import './App.css';
 import SplashScreen from './components/splashscreen';
 import appleMusicPlaybackInterface from './lib/apple-music';
 import chromecastControlInterface from './lib/chromecast';
+import debugControlInterface from './lib/debug';
 import { requestWakeLock } from './lib/wake-lock';
 import type ControlInterface from './types/control-interface';
 import type { ControlInterfacePacket } from './types/control-interface';
@@ -14,6 +16,14 @@ import type { Status } from './types/status';
 let playbackInterface: PlaybackInterface | null = null;
 let controlInterface: ControlInterface | null = null;
 
+declare global {
+    interface Window {
+        setCurrentStatus?: (status: Status) => void;
+        currentStatus?: Status;
+        initializeCalled?: boolean;
+    }
+}
+
 function App() {
 
     if (!controlInterface) {
@@ -21,14 +31,22 @@ function App() {
         if (window.location.href.includes("chromecast")) {
             controlInterface = chromecastControlInterface;
         }
+        else if (window.location.href.includes("debug")) {
+            controlInterface = debugControlInterface;
+        }
         else {
             controlInterface = {} as unknown as ControlInterface;
         }
     }
 
     const [currentStatus, _setCurrentStatus] = useState<Status>({ isLoading: true, statusCode: "default", statusMessage: "Initializing..." });
-    const setCurrentStatus = (status: Status) => _setCurrentStatus(Object.assign({}, status));
+    const setCurrentStatus = (status: Status) => {
+        if (JSON.stringify(window.currentStatus) == JSON.stringify(status)) return;
+        window.currentStatus = status;
+        _setCurrentStatus(Object.assign({}, status));
+    };
     window.setCurrentStatus = setCurrentStatus;
+    window.currentStatus = currentStatus;
 
     const handleEvent = async (event: ControlInterfacePacket) => {
 
@@ -68,18 +86,13 @@ function App() {
 
 
             try {
-                await controlInterface.initialize(handleEvent);
+                await controlInterface?.initialize(handleEvent);
             }
             catch (err: any) { 
                 console.error(err);
                 setCurrentStatus({ isError: true, statusCode: "init-failed", statusMessage: `Control interface initialization failed: ${err.toString()}` });
                 return;
             }
- 
-            setCurrentStatus({ isLoading: true, statusCode: "loading-playback", statusMessage: "Loading playback interface..." })
-
-
-            setCurrentStatus({ statusCode: "ready", statusMessage: "Ready for playback" });
         };
 
         initialize();

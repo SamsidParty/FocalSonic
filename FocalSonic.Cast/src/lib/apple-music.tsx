@@ -3,6 +3,7 @@
 
 import type { ControlInterfacePacket } from "../types/control-interface";
 import type PlaybackInterface from "../types/playback-interface";
+import type { Status } from "../types/status";
 
 window.onerror = function(message, source, lineno, colno, error) {
     // Construct the error message for the alert
@@ -48,10 +49,26 @@ function getDeveloperToken(): string {
 
 const findAudioElement = () => document.getElementById("apple-music-player") as HTMLMediaElement;
 
-function debug() {
-    
+function updateStatus() {
+    if (window.setCurrentStatus && window.musicKitInstance?.nowPlayingItem && !window.currentStatus?.isError) {
+
+        const nowPlaying = window.musicKitInstance.nowPlayingItem.attributes;
+
+        window.setCurrentStatus({
+            metadata: {
+                playbackInterface: "applemusic",
+                title: nowPlaying.name,
+                artist: nowPlaying.artistName,
+                album: nowPlaying.albumName,
+                mediaId: window.musicKitInstance.nowPlayingItem.id,
+                artworkUrl: nowPlaying.artwork?.url
+                    .replace("{w}", "500")
+                    .replace("{h}", "500"),
+            }
+        } as Status);
+    }
+    setTimeout(updateStatus, 1000);
 }
-setInterval(debug, 500);
 
 async function authenticate(credentials?: string) {
     if (!window.musicKitInstance && credentials) {
@@ -73,9 +90,8 @@ async function authenticate(credentials?: string) {
             console.log('MusicKit configured successfully');
 
             // Authorize the user
-            const userToken = credentials || getUserToken();
-            if (!userToken) throw new Error("No user token found");
-            music.musicUserToken = userToken;
+            if (!credentials) throw new Error("No user token found");
+            music.musicUserToken = credentials;
             
             await music.authorize();
             console.log('User authorized successfully!');
@@ -83,17 +99,18 @@ async function authenticate(credentials?: string) {
             window.musicKitInstance = music;
             window.appleMusicReady = true;
             resolve();
+            updateStatus();
         });
     }
-    else if (!window.musicKitInstance.setQueue || !window.appleMusicReady) {
+    else if (!window.musicKitInstance?.setQueue || !window.appleMusicReady) {
         await window.appleMusicReadyPromise;
     }
 
     // If window.musicKitInstance.setQueue is still not available, wait until it is
-    if (!window.musicKitInstance.setQueue) {
+    if (!window.musicKitInstance?.setQueue) {
         await new Promise<void>((resolve) => {
             const checkInterval = setInterval(() => {
-                if (window.musicKitInstance.setQueue) {
+                if (window.musicKitInstance?.setQueue) {
                     clearInterval(checkInterval);
                     resolve();
                 }
@@ -111,7 +128,7 @@ const appleMusicPlaybackInterface: PlaybackInterface = {
         // Auth
         if (event.type === "setCredentials") { 
             const token = event.data[1];
-            await authenticate(token);
+            await authenticate(token || getUserToken());
         }
         else {
             await authenticate();
