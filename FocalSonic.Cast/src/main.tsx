@@ -5,7 +5,7 @@ import "./index.css";
 import './lib/screenlog';
 
 
-window.screenLog.init();
+//window.screenLog.init();
 console.log("FocalSonic cast receiver starting...");
 
 createRoot(document.getElementById('root')!).render(

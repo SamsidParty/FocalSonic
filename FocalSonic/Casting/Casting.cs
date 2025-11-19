@@ -48,6 +48,7 @@ namespace FocalSonic.Casting
 
         public static void HandleDisconnect()
         {
+            try { MediaChannel?.StopAsync(); } catch { }
             try { Client?.Disconnect(); } catch { }
             AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("local");
             LastSongID = "";
@@ -65,7 +66,7 @@ namespace FocalSonic.Casting
             {
                 await MediaChannel.LoadAsync(message.ToVirtualLoadMessage());
             }
-            catch { HandleDisconnect(); }
+            catch { }
         }
 
         [Command("getCastDevices")]
