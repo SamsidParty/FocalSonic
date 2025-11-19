@@ -1,4 +1,4 @@
-import { Info, Keyboard, LogOut, User } from "lucide-react";
+import { ChevronDown, Info, Keyboard, LogOut, SettingsIcon } from "lucide-react";
 import React, { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
@@ -27,9 +27,15 @@ export function UserDropdown() {
     const { t } = useTranslation();
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const [aboutOpen, setAboutOpen] = useState(false);
+    const { settingsDialogState, setSettingsDialogState } = useAppRuntimeState();
 
     useHotkeys("shift+ctrl+q", () => setLogoutDialogState(true));
     useHotkeys("mod+/", () => setShortcutsOpen((prev) => !prev));
+
+
+    useHotkeys("mod+comma", () => {
+        setSettingsDialogState(!settingsDialogState);
+    });
 
     const alignPosition = isMac ? "end" : "center";
 
@@ -42,9 +48,9 @@ export function UserDropdown() {
 
             <DropdownMenu>
                 <DropdownMenuTrigger className="user-dropdown-trigger">
-                    <Avatar className="w-8 h-8 rounded-md cursor-pointer">
+                    <Avatar className="w-8 h-8 mx-1 rounded-md cursor-pointer">
                         <AvatarFallback className="text-sm bg-transparent hover:bg-accent rounded-md">
-                            <User className="w-4 h-4" />
+                            <ChevronDown className="w-4 h-4" />
                         </AvatarFallback>
                     </Avatar>
                 </DropdownMenuTrigger>
@@ -64,6 +70,10 @@ export function UserDropdown() {
                         <DropdownMenuShortcut>
                             {stringifyShortcut(shortcutDialogKeys)}
                         </DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSettingsDialogState(true)}>
+                        <SettingsIcon className="mr-2 h-4 w-4" />
+                        <span>{t("settings.label")}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setAboutOpen(true)}>
                         <Info className="mr-2 h-4 w-4" />

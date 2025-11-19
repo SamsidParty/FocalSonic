@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Separator } from "./ui/separator";
 
 export function LicenseDialog() {
     const { t } = useTranslation();
@@ -46,14 +47,17 @@ export function LicenseDialog() {
         <>
             {
                 remainingDays >= 0 && (
-                    <Button 
-                        data-webview-ignore={""}
-                        onClick={() => setIsDialogOpen(true)}
-                        variant={remainingDays == 0 ? "destructive" : "secondary"}
-                        className="rounded-full h-8 w-fit"
-                    >
-                        {t("license.remainingDays", { count: remainingDays })}
-                    </Button>
+                    <>
+                        <Button 
+                            data-webview-ignore={""}
+                            onClick={() => setIsDialogOpen(true)}
+                            variant={remainingDays == 0 ? "destructive" : "secondary"}
+                            className="rounded-full h-8 w-fit"
+                        >
+                            {t("license.remainingDays", { count: remainingDays })}
+                        </Button>
+                        <Separator orientation="vertical" className="bg-foreground opacity-10 h-[60%]" />
+                    </>
                 )
             }
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} >

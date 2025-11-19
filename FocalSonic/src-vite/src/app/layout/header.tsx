@@ -3,13 +3,13 @@ import { Windows } from "@/app/components/controls/windows";
 import { HeaderSongInfo } from "@/app/components/header-song";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
-import { SettingsButton } from "@/app/components/settings/header-button";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { isLinux, isMac, isWindows } from "@/utils/osType";
 import clsx from "clsx";
 import React from "react";
 import { LicenseDialog } from "../components/license";
+import { Separator } from "../components/ui/separator";
 
 export function Header() {
     const { isFullscreen } = useAppWindow();
@@ -28,8 +28,8 @@ export function Header() {
             <HeaderSongInfo />
             <div {...igniteViewDragRegion} className="flex justify-end items-center gap-2">
                 <LicenseDialog />
-                <SettingsButton />
                 <UserDropdown />
+                <Separator orientation="vertical" className="bg-foreground opacity-10 h-[60%]" />
                 {isWindows && <Windows />}
                 {isLinux && <Linux />}
             </div>
