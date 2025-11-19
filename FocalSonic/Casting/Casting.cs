@@ -28,6 +28,7 @@ namespace FocalSonic.Casting
         public const string Namespace = "urn:x-cast:com.samsidparty.focalsonic";
 
         static string LastSongID = "";
+        static string CurrentDeviceID = "";
         static bool IsPlaying = false;
 
         static DeviceLocator _Locator;
@@ -46,6 +47,7 @@ namespace FocalSonic.Casting
         static Sender? Client;
         static IMediaChannel? MediaChannel;
 
+        [Command("disconnectCast")]
         public static void HandleDisconnect()
         {
             try { MediaChannel?.StopAsync(); } catch { }
@@ -53,6 +55,7 @@ namespace FocalSonic.Casting
             AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("local");
             LastSongID = "";
             IsPlaying = false;
+            CurrentDeviceID = "";
             Client = null;
         }
 
@@ -100,6 +103,9 @@ namespace FocalSonic.Casting
                 AudioPlayer.AudioPlayer.Instance?.HandleTimeUpdate(IsPlaying, currentTime, -1, "chromecast");
             }
         }
+
+        [Command("getCastStatus")]
+        public static string GetCastStatus() => CurrentDeviceID;
 
         [Command("getCastDevices")]
         public static async Task<List<CastDeviceReference>> GetAvailableDevices()
@@ -152,6 +158,7 @@ namespace FocalSonic.Casting
                 var service = new ServiceCollection().AddGoogleCast();
                 service.AddTransient(typeof(IChannel), typeof(FocalSonicChannel));
 
+                CurrentDeviceID = referenceID;
                 Client = new Sender(service.BuildServiceProvider());
                 Client.Disconnected += (_, _) => HandleDisconnect();
                 MediaChannel = Client?.GetChannel<IMediaChannel>();

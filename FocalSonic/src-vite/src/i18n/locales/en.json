@@ -35,6 +35,7 @@
     "castDescription": "Select a device to cast music to",
     "castNoDevices": "No devices available",
     "castRefresh": "Scan again",
+    "castStop": "Stop casting",
     "region": "Region: {{region}}",
     "server": "Server",
     "about": "About",
