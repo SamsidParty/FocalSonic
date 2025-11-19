@@ -53,8 +53,8 @@ function debug() {
 }
 setInterval(debug, 500);
 
-async function authenticate(credentials: string) {
-    if (!window.musicKitInstance) {
+async function authenticate(credentials?: string) {
+    if (!window.musicKitInstance && credentials) {
         window.musicKitInstance = {};
         window.appleMusicReadyPromise = new Promise(async (resolve) => {
 
@@ -70,7 +70,7 @@ async function authenticate(credentials: string) {
                 });
 
             // MusicKit instance is available
-            console.log('MusicKit configured successfully:', music);
+            console.log('MusicKit configured successfully');
 
             // Authorize the user
             const userToken = credentials || getUserToken();
@@ -108,12 +108,15 @@ const appleMusicPlaybackInterface: PlaybackInterface = {
     handleEvent: async (event: ControlInterfacePacket) => {
 
 
-        if (event.type === "setSource") {
+        if (event.type === "setCredentials") { 
             const token = event.data[1];
-            const songID = event.data[2];
-
             await authenticate(token);
+        }
+        else if (event.type === "setSource") {
+            await authenticate();
 
+            const songID = event.data[0];
+            const seekTime = event.data[1];
             if (!songID) return;
 
             window.lastSongID = songID;
@@ -121,6 +124,11 @@ const appleMusicPlaybackInterface: PlaybackInterface = {
             await window.musicKitInstance.stop();
             await window.musicKitInstance.playNext({ song: songID }, true);
             await window.musicKitInstance.skipToNextItem();
+            window.musicKitInstance.repeatMode = window.MusicKit.PlayerRepeatMode.none;
+
+            if (seekTime && parseFloat(seekTime) > 0.5) {
+                await window.musicKitInstance.seekToTime(parseFloat(seekTime));
+            }
         }
         else if (event.type === "play") {
             if (!window.musicKitInstance.isPlaying) {

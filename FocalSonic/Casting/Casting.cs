@@ -9,6 +9,7 @@ using IgniteView.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using SamsidParty.Subsonic.Common;
+using SamsidParty.Subsonic.Common.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,7 @@ namespace FocalSonic.Casting
         public const string Namespace = "urn:x-cast:com.samsidparty.focalsonic";
 
         static string LastSongID = "";
+        static bool IsPlaying = false;
 
         static DeviceLocator _Locator;
         static DeviceLocator Locator
@@ -49,6 +51,7 @@ namespace FocalSonic.Casting
             try { Client?.Disconnect(); } catch { }
             AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("local");
             LastSongID = "";
+            IsPlaying = false;
             Client = null;
         }
 
@@ -58,7 +61,11 @@ namespace FocalSonic.Casting
             if (MediaChannel == null) return;
 
             // I couldn't get custom channels working so this is the workaround method
-            await MediaChannel.LoadAsync(message.ToVirtualLoadMessage());
+            try
+            {
+                await MediaChannel.LoadAsync(message.ToVirtualLoadMessage());
+            }
+            catch { HandleDisconnect(); }
         }
 
         [Command("getCastDevices")]
@@ -119,10 +126,12 @@ namespace FocalSonic.Casting
                 await Client.ConnectAsync(chromecast.Receiver);
                 await Client.LaunchAsync(channel);
 
+                await Send(new CastMessage("setCredentials", "applemusic", AudioPlayer.AudioPlayer.Instance.ChromecastCredential));
 
-                AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("chromecast");
+                await Task.Delay(2000);
 
-                await LoadMedia(null); 
+                await AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("chromecast");
+                await LoadMedia(null);
                 await AudioPlayer.AudioPlayer.Instance?.PlayAudio();
 
                 return "success";
@@ -134,9 +143,11 @@ namespace FocalSonic.Casting
 
         public static async Task LoadMedia(string? songID)
         {
+            var seekTime = 0d;
             if (string.IsNullOrEmpty(songID))
             {
                 songID = MediaPlaybackInfo.Instance?.Store?.State?.SongList?.CurrentSong?.Id;
+                seekTime = MediaPlaybackInfo.Instance.Position.TotalSeconds;
             }
 
 
@@ -144,19 +155,24 @@ namespace FocalSonic.Casting
             if (Client == null) return;
             if (songID == LastSongID) return;
             LastSongID = songID;
+            IsPlaying = true;
 
-            await Send(new CastMessage("setSource", "applemusic", AudioPlayer.AudioPlayer.Instance.ChromecastCredential, songID));
+            await Send(new CastMessage("setSource", songID, seekTime.ToString()));
         }
 
         public static async Task PauseMedia()
         {
-            if (Client == null) return;
+            if (Client == null || !IsPlaying) return;
+
+            IsPlaying = false;
             await Send(new CastMessage("pause"));
         }
 
         public static async Task PlayMedia()
         {
-            if (Client == null) return;
+            if (Client == null || IsPlaying) return;
+
+            IsPlaying = true;
             await Send(new CastMessage("play"));
         }
     }

@@ -24,25 +24,18 @@ const chromecastControlInterface: ControlInterface = {
             window.castInstance = window.cast.framework.CastReceiverContext.getInstance();
             window.playerManager = window.castInstance.getPlayerManager();
 
-            const castDebugLogger = window.cast.debug.CastDebugLogger.getInstance();
-            window.castDebugLogger = castDebugLogger;
 
 
             window.castInstance.addEventListener(window.cast.framework.system.EventType.READY, () => {
-                if (!castDebugLogger.debugOverlayElement_) {
-                    castDebugLogger.setEnabled(true);
-                }
-                castDebugLogger.info("Lifecycle", "Receiver ready");
+
             });
 
 
             window.castInstance.addEventListener(window.cast.framework.system.EventType.SENDER_CONNECTED, () => {
-                castDebugLogger.info("Lifecycle", "Sender connected");
                 window.castInstance.sendCustomMessage(focalsonicNamespace, null, { type: "init" });
             });
 
             window.castInstance.addEventListener(window.cast.framework.system.EventType.ERROR, () => {
-                castDebugLogger.error("Lifecycle", "Error occurred");
                 reject();
             });
 

@@ -28,18 +28,18 @@ function App() {
     const [currentStatus, _setCurrentStatus] = useState<Status>({ isLoading: true, statusCode: "default", statusMessage: "Initializing..." });
     const setCurrentStatus = (status: Status) => _setCurrentStatus(Object.assign({}, status));
     window.setCurrentStatus = setCurrentStatus;
-    window.debugMsg = (msg: string) => setCurrentStatus({ statusCode: "debug", statusMessage: msg });
 
     const handleEvent = async (event: ControlInterfacePacket) => {
-        if (event.type === "setSource") {
-        
-            // Set the media source
-            if (!playbackInterface) {
-                // Determine and assign the appropriate playback interface
-                if (event.data[0] === "applemusic") {
-                    playbackInterface = appleMusicPlaybackInterface;
-                }
+
+        console.log(`[${event.type}] Event received: ${JSON.stringify(event.data).length < 40 ? JSON.stringify(event.data) : "[DATA TOO LARGE TO DISPLAY]"}`);
+
+        if (event.type === "setCredentials") {
+            // Determine and assign the appropriate playback interface
+            if (event.data[0] === "applemusic") {
+                playbackInterface = appleMusicPlaybackInterface;
             }
+
+            setCurrentStatus({ statusCode: "ready", statusMessage: "Ready for playback" });
         }
 
         try {
@@ -85,7 +85,7 @@ function App() {
 
     return (
         <>
-            <div className="app">
+            <div className="app bg-gray-300">
                 <SplashScreen status={currentStatus} />
             </div>
         </>
