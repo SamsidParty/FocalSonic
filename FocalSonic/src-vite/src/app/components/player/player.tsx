@@ -23,6 +23,7 @@ import { ReplayGainParams } from "@/utils/replayGain";
 import { checkServerType } from "@/utils/servers";
 import clsx from "clsx";
 import React, { memo, useCallback, useEffect, useRef } from "react";
+import { useCastStatus } from "../header/cast";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
 import { PlayerControls } from "./controls";
@@ -73,6 +74,8 @@ export function Player() {
     const currentPlaybackRate = usePlayerStore().playerState.currentPlaybackRate;
     const { replayGainType, replayGainPreAmp, replayGainDefaultGain } =
     useReplayGainState();
+
+    const { castStatus } = useCastStatus();
 
     const song = currentList[currentSongIndex];
     const radio = radioList[currentSongIndex];
@@ -230,18 +233,21 @@ export function Player() {
                         )}
 
                         {
-                            isAppleMusic && (
+                            (isAppleMusic && !castStatus) && (
                                 <MemoPlayerSpeed
                                     audioRef={getAudioRef()}
                                     disabled={!song && !radio && !podcast}
                                 />
                             )
                         }
-
-                        <MemoPlayerVolume
-                            audioRef={getAudioRef()}
-                            disabled={!song && !radio && !podcast}
-                        />
+                        {
+                            (!castStatus) && (
+                                <MemoPlayerVolume
+                                    audioRef={getAudioRef()}
+                                    disabled={!song && !radio && !podcast}
+                                />
+                            )
+                        }
 
                         {isSong && hasPiPSupport && <MemoMiniPlayerButton />}
                     </div> 

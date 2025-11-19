@@ -21,14 +21,31 @@ interface DeviceReference {
     ReferenceID: string
 }
 
+export function useCastStatus() {
+    const [castStatus, setCastStatus] = useState<string | null>(null);
 
+    const updateCastStatus = async () => {
+        const status = await window.igniteView?.commandBridge?.getCastStatus?.();
+        setCastStatus(status || null);
+    };
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            updateCastStatus();
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+    
+    return { castStatus, setCastStatus };
+}
 
 export function Cast() {
 
     const [deviceList, setDeviceList] = useState<DeviceReference[]>([]);   
     const [isScanning, setIsScanning] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const [castStatus, setCastStatus] = useState<string | null>(null);
+    const { castStatus, setCastStatus } = useCastStatus();
 
     const { t } = useTranslation();
     const alignPosition = isMac ? "end" : "center";
@@ -40,18 +57,9 @@ export function Cast() {
         setIsScanning(false);
     };
 
-    const updateCastStatus = async () => {
-        const status = await window.igniteView?.commandBridge?.getCastStatus?.();
-        setCastStatus(status || null);
-    };
 
     useEffect(() => {
         scanForDevices();
-        const interval = setInterval(() => {
-            updateCastStatus();
-        }, 1000);
-
-        return () => clearInterval(interval);
     }, []);
 
     const scanAgain = (e) => {
