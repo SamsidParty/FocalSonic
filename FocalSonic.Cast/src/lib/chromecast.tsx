@@ -52,6 +52,7 @@ const chromecastControlInterface: ControlInterface = {
 
             
             const receiverOptions = new window.cast.framework.CastReceiverOptions();
+            receiverOptions.disableIdleTimeout = true;
             receiverOptions.customNamespaces = {};
             receiverOptions.customNamespaces[focalsonicNamespace] = window.cast.framework.system.MessageType.JSON;
 

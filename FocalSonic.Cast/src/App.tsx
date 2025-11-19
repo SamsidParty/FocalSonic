@@ -5,6 +5,7 @@ import './App.css';
 import SplashScreen from './components/splashscreen';
 import appleMusicPlaybackInterface from './lib/apple-music';
 import chromecastControlInterface from './lib/chromecast';
+import { requestWakeLock } from './lib/wake-lock';
 import type ControlInterface from './types/control-interface';
 import type { ControlInterfacePacket } from './types/control-interface';
 import type PlaybackInterface from './types/playback-interface';
@@ -40,6 +41,7 @@ function App() {
             }
 
             setCurrentStatus({ statusCode: "ready", statusMessage: "" });
+            requestWakeLock(); // Prevents sleeping during playback
         }
 
         try {

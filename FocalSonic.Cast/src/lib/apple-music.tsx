@@ -108,12 +108,17 @@ const appleMusicPlaybackInterface: PlaybackInterface = {
     handleEvent: async (event: ControlInterfacePacket) => {
 
 
+        // Auth
         if (event.type === "setCredentials") { 
             const token = event.data[1];
             await authenticate(token);
         }
-        else if (event.type === "setSource") {
+        else {
             await authenticate();
+        }
+
+
+        if (event.type === "setSource") {
 
             const songID = event.data[0];
             const seekTime = event.data[1];
@@ -138,7 +143,9 @@ const appleMusicPlaybackInterface: PlaybackInterface = {
         else if (event.type === "pause") {
             await window.musicKitInstance.pause();
         }
-
+        else if (event.type === "seek") {
+            if (window.musicKitInstance.nowPlayingItem) await window.musicKitInstance.seekToTime(parseFloat(event.data[0]));
+        }
     }
 }
 

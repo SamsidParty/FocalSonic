@@ -175,5 +175,12 @@ namespace FocalSonic.Casting
             IsPlaying = true;
             await Send(new CastMessage("play"));
         }
+
+        public static async Task SeekMedia(double seekTime)
+        {
+            if (Client == null || !IsPlaying) return;
+
+            await Send(new CastMessage("seek", seekTime.ToString()));
+        }
     }
 }
