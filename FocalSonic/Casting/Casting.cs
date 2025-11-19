@@ -69,6 +69,38 @@ namespace FocalSonic.Casting
             catch { }
         }
 
+        public static async Task HandleStatusUpdate(CastMessage incomingMessage)
+        {
+            // Schedule the next status update request
+            _ = Task.Run(async () =>
+            {
+                if (Client != null)
+                {
+                    try
+                    {
+                        await Task.Delay(700);
+                        await Send(new CastMessage("ping"));
+                    }
+                    catch { }
+                }
+            });
+
+            if (incomingMessage.Type == "ok")
+            {
+                var songID = incomingMessage.Data[0];
+                var syncTime = long.Parse(incomingMessage.Data[1]); // Unix timestamp in milliseconds of when currentTime was set
+                var currentTime = double.Parse(incomingMessage.Data[2]); // The time of the playback head
+
+                // Offset the current time based on the latency of the message
+                // Latency is calculated by taking the current time and subtracting the syncTime
+                var latency = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - syncTime) / 1000.0;
+                currentTime += latency / 2;
+
+                // Send the time update
+                AudioPlayer.AudioPlayer.Instance?.HandleTimeUpdate(IsPlaying, currentTime, -1, "chromecast");
+            }
+        }
+
         [Command("getCastDevices")]
         public static async Task<List<CastDeviceReference>> GetAvailableDevices()
         {
@@ -123,17 +155,30 @@ namespace FocalSonic.Casting
                 Client = new Sender(service.BuildServiceProvider());
                 Client.Disconnected += (_, _) => HandleDisconnect();
                 MediaChannel = Client?.GetChannel<IMediaChannel>();
-                
+                MediaChannel.StatusChanged += (_, _) =>
+                {
+                    var newStatus = MediaChannel.Status;
+
+                    if ((newStatus?.Any() ?? false) && newStatus.First().Media?.ContentType == "focalsonic/virtual-response")
+                    {
+                        var message = JsonConvert.DeserializeObject<CastMessage>(newStatus.First().Media!.ContentId);
+                        try
+                        {
+                            HandleStatusUpdate(message);
+                        }
+                        catch { }
+                    }
+                };
 
                 await Client.ConnectAsync(chromecast.Receiver);
                 await Client.LaunchAsync(channel);
 
                 await Send(new CastMessage("setCredentials", "applemusic", AudioPlayer.AudioPlayer.Instance.ChromecastCredential));
 
-                //await Task.Delay(2000);
 
                 await AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("chromecast");
                 await LoadMedia(null);
+                await AudioPlayer.AudioPlayer.Instance?.SetSpeed(1); // Prevent desync
                 await AudioPlayer.AudioPlayer.Instance?.PlayAudio();
 
                 return "success";

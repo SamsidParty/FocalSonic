@@ -61,16 +61,7 @@ namespace FocalSonic.AppleMusic
         public static void RecieveTimeUpdate(WebWindow ctx, bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration)
         {
             var owningPlayer = ActivePlayers.Where((p) =>  p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
-            if (isPlaying)
-            {
-                owningPlayer?.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "timeupdate", currentPlaybackTime);
-                owningPlayer?.AssociatedWindow?.CallFunction("handleAudioEvent_" + owningPlayer.ID, "durationupdate", currentPlaybackDuration);
-            }
-
-
-            MediaPlaybackInfo.Instance.IsPlaying = isPlaying;
-            MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(currentPlaybackDuration);
-            MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(currentPlaybackTime);
+            owningPlayer.HandleTimeUpdate(isPlaying, currentPlaybackTime, currentPlaybackDuration);
         }
 
         [Command("appleMusicRecieveLoadedEvent")]

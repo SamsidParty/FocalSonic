@@ -81,6 +81,23 @@ namespace FocalSonic.AudioPlayer
             await Presence.Presence.Instance.UpdateMediaStatus(MediaPlaybackInfo.Instance);
         }
 
+        public async Task HandleTimeUpdate(bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration, string source = "local")
+        {
+            // Only accept time updates from the current source
+            if (source != OutputDevice) return;
+
+            if (isPlaying)
+            {
+                if (currentPlaybackTime >= 0) AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", currentPlaybackTime);
+                if (currentPlaybackDuration >= 0) AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "durationupdate", currentPlaybackDuration);
+            }
+
+
+            MediaPlaybackInfo.Instance.IsPlaying = isPlaying;
+            MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(currentPlaybackDuration);
+            MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(currentPlaybackTime);
+        }
+
         public virtual async Task SetSource(string src, WebWindow ctx) 
         {
             if (ctx != null)

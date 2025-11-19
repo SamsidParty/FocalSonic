@@ -61,6 +61,8 @@ function updateStatus() {
                 artist: nowPlaying.artistName,
                 album: nowPlaying.albumName,
                 mediaId: window.musicKitInstance.nowPlayingItem.id,
+                currentTime: findAudioElement()?.currentTime || 0,
+                timeSync: Date.now(),
                 artworkUrl: nowPlaying.artwork?.url
                     .replace("{w}", "500")
                     .replace("{h}", "500"),

@@ -46,7 +46,21 @@ const chromecastControlInterface: ControlInterface = {
                     eventHandler(message);
                 }
 
-                return null; // Prevent default load handling
+                const responsePacket: ControlInterfacePacket = {
+                    type: "ok",
+                    data: [
+                        window.currentStatus?.metadata?.mediaId || "no-media",
+                        (window.currentStatus?.metadata?.timeSync || Date.now()).toString(),
+                        (window.currentStatus?.metadata?.currentTime || 0).toString()
+                    ]
+                };
+
+                return {
+                    media: {
+                        contentType: "focalsonic/virtual-response",
+                        contentId: JSON.stringify(responsePacket),
+                    }
+                }
             });
 
             

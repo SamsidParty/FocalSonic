@@ -13,4 +13,6 @@ export interface MediaMetadata {
     artist: string;
     album?: string;
     artworkUrl?: string;
+    currentTime?: number; // Seconds
+    timeSync: number; // Unix timestamp in milliseconds of when currentTime was recorded
 }
