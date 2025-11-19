@@ -33,6 +33,19 @@ const chromecastControlInterface: ControlInterface = {
                 console.log("Connected to sender")
             });
 
+            window.castInstance.addEventListener(window.cast.framework.system.EventType.SENDER_DISCONNECTED, () => {
+                console.log("Disconnected from sender")
+
+                // 1 second delay to allow for quick reconnections
+                setTimeout(() => {
+                    if (window.castInstance.getSenders().length < 1) {
+                        console.log("No senders connected, stopping receiver");
+                        window.close();
+                        window.castInstance.stop();
+                    }
+                }, 1000);
+            });
+
             window.castInstance.addEventListener(window.cast.framework.system.EventType.ERROR, () => {
                 console.log("Error occurred within cast SDK")
                 reject();

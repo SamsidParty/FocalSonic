@@ -97,7 +97,7 @@ namespace FocalSonic.Casting
                 // Offset the current time based on the latency of the message
                 // Latency is calculated by taking the current time and subtracting the syncTime
                 var latency = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - syncTime) / 1000.0;
-                currentTime += latency / 2;
+                // currentTime += latency; // For some reason adding the latency makes the desync worse 
 
                 // Send the time update
                 AudioPlayer.AudioPlayer.Instance?.HandleTimeUpdate(IsPlaying, currentTime, -1, "chromecast");
@@ -192,6 +192,7 @@ namespace FocalSonic.Casting
             }
             catch { }
 
+            HandleDisconnect();
             return "failed";
         }
 
