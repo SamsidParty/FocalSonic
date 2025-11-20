@@ -5,24 +5,6 @@ import type { ControlInterfacePacket } from "../types/control-interface";
 import type PlaybackInterface from "../types/playback-interface";
 import type { Status } from "../types/status";
 
-window.onerror = function(message, source, lineno, colno, error) {
-    // Construct the error message for the alert
-    let errorMessage = `Error: ${message}\n`;
-    errorMessage += `Source: ${source}\n`;
-    errorMessage += `Line: ${lineno}, Column: ${colno}`;
-
-    // If an Error object is available (modern browsers), you can also include its details
-    if (error && error.stack) {
-        errorMessage += `\nStack: ${error.stack}`;
-    }
-
-    // Display the alert
-    alert(errorMessage);
-
-    // Return true to prevent the default browser error handling (e.g., logging to console)
-    return true;
-};
-
 declare global {
     interface Window {
         musicKitInstance?: any;

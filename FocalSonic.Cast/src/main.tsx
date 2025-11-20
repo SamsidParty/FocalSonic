@@ -8,8 +8,14 @@ import './lib/screenlog';
 //window.screenLog.init();
 console.log("FocalSonic cast receiver starting...");
 
+let ComponentToRender = App;
+
+if (window.location.href.includes("hlstest")) {
+    ComponentToRender = (await import('./components/hls-test.tsx')).default;
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ComponentToRender />
   </StrictMode>,
 )
