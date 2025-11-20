@@ -34,8 +34,6 @@ export interface IPlayerState {
     currentPlaybackRate: number
     audioPlayerRef: HTMLAudioElement | null
     mainDrawerState: boolean
-    queueState: boolean
-    lyricsState: boolean
     hasPrev: boolean
     hasNext: boolean
 }
@@ -146,11 +144,6 @@ export interface IPlayerActions {
     setLastOnQueue: (songlist: ISong[]) => void
     removeSongFromQueue: (id: string) => void
     setMainDrawerState: (state: boolean) => void
-    setQueueState: (state: boolean) => void
-    toggleQueueAction: () => void
-    setLyricsState: (state: boolean) => void
-    toggleLyricsAction: () => void
-    toggleQueueAndLyrics: () => void
     closeDrawer: () => void
     playFirstSongInQueue: () => void
     handleSongEnded: () => void

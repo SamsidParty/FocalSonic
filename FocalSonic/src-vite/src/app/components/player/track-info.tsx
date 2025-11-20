@@ -11,7 +11,7 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
-import { useDynamicColors, useLyricsState, useMainDrawerState } from "@/store/player.store";
+import { useDynamicColors, useMainDrawerState } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
@@ -21,15 +21,14 @@ import { ExplicitIcon } from "../table/song-title";
 export function TrackInfo({ song }: { song: ISong | undefined }) {
     const { t } = useTranslation();
     const { setCurrentSongColor, currentSongColor } = useDynamicColors();
-    const { toggleLyricsAction } = useLyricsState(); 
-    const { mainDrawerState, closeDrawer } = useMainDrawerState();
+    const { mainDrawerState, setMainDrawerState } = useMainDrawerState();
 
     function getImageElement() {
         return document.getElementById("track-song-image") as HTMLImageElement;
     }
 
     function openFullscreen() {
-        toggleLyricsAction();
+        setMainDrawerState(!mainDrawerState);
     }
 
     const getImageColor = useCallback(async () => {

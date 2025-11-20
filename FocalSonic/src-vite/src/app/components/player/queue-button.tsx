@@ -1,3 +1,12 @@
+import { Button } from "@/app/components/ui/button";
+import { Popover, PopoverContent } from "@/app/components/ui/popover";
+import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
+import { cn } from "@/lib/utils";
+import {
+    useMainDrawerState,
+    usePlayerActions,
+    useQueueState,
+} from "@/store/player.store";
 import { PopoverAnchor } from "@radix-ui/react-popover";
 import clsx from "clsx";
 import {
@@ -8,15 +17,6 @@ import {
 } from "lucide-react";
 import { ComponentPropsWithoutRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/app/components/ui/button";
-import { Popover, PopoverContent } from "@/app/components/ui/popover";
-import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
-import { cn } from "@/lib/utils";
-import {
-    useMainDrawerState,
-    usePlayerActions,
-    useQueueState,
-} from "@/store/player.store";
 
 interface PlayerSongListButtonProps {
     disabled: boolean
@@ -28,7 +28,7 @@ export function PlayerQueueButton({ disabled }: PlayerSongListButtonProps) {
     const { queueState, toggleQueueAction } = useQueueState();
     const [openPopover, setOpenPopover] = useState(false);
 
-    const isActive = mainDrawerState && queueState;
+    const isActive = queueState;
 
     function handleClick() {
         toggleQueueAction();

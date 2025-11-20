@@ -554,8 +554,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.playerState.loopState = LoopState.Off;
                                 state.playerState.isShuffleActive = false;
                                 state.playerState.mainDrawerState = false;
-                                state.playerState.queueState = false;
-                                state.playerState.lyricsState = false;
                                 state.playerState.currentDuration = 0;
                                 state.settings.colors.currentSongColor = null;
                             });
@@ -788,56 +786,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.playerState.mainDrawerState = status;
                             });
                         },
-                        setQueueState: (status) => {
-                            set((state) => {
-                                state.playerState.queueState = status;
-                            });
-                        },
-                        toggleQueueAction: () => {
-                            const { mainDrawerState, lyricsState, queueState } =
-                get().playerState;
-                            const {
-                                toggleQueueAndLyrics,
-                                setQueueState,
-                                setMainDrawerState,
-                            } = get().actions;
-
-                            if (mainDrawerState && lyricsState) {
-                                toggleQueueAndLyrics();
-                            } else {
-                                setQueueState(!queueState);
-                                setMainDrawerState(!mainDrawerState);
-                            }
-                        },
-                        setLyricsState: (status) => {
-                            set((state) => {
-                                state.playerState.lyricsState = status;
-                            });
-                        },
-                        toggleLyricsAction: () => {
-                            const { mainDrawerState, lyricsState, queueState } =
-                get().playerState;
-                            const {
-                                toggleQueueAndLyrics,
-                                setLyricsState,
-                                setMainDrawerState,
-                            } = get().actions;
-
-                            if (mainDrawerState && queueState) {
-                                toggleQueueAndLyrics();
-                            } else {
-                                setLyricsState(!lyricsState);
-                                setMainDrawerState(!mainDrawerState);
-                            }
-                        },
-                        toggleQueueAndLyrics: () => {
-                            const { queueState, lyricsState } = get().playerState;
-
-                            set((state) => {
-                                state.playerState.queueState = !queueState;
-                                state.playerState.lyricsState = !lyricsState;
-                            });
-                        },
                         closeDrawer: () => {
 
                             window.igniteView?.commandBridge?.exitMiniPlayer();
@@ -845,8 +793,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
 
                             set((state) => {
                                 state.playerState.mainDrawerState = false;
-                                state.playerState.queueState = false;
-                                state.playerState.lyricsState = false;
                             });
                         },
                         playFirstSongInQueue: () => {
@@ -1120,23 +1066,28 @@ export const useMainDrawerState = () =>
     usePlayerStore((state) => ({
         mainDrawerState: state.playerState.mainDrawerState,
         setMainDrawerState: state.actions.setMainDrawerState,
-        toggleQueueAndLyrics: state.actions.toggleQueueAndLyrics,
         closeDrawer: state.actions.closeDrawer,
     }));
 
-export const useQueueState = () =>
-    usePlayerStore((state) => ({
-        queueState: state.playerState.queueState,
-        setQueueState: state.actions.setQueueState,
-        toggleQueueAction: state.actions.toggleQueueAction,
-    }));
+export const useQueueState = () => {
+    const { extraBarContent, setExtraBarContent } = useAppSettings();
 
-export const useLyricsState = () =>
-    usePlayerStore((state) => ({
-        lyricsState: state.playerState.lyricsState,
-        setLyricsState: state.actions.setLyricsState,
-        toggleLyricsAction: state.actions.toggleLyricsAction,
-    }));
+    return {
+        queueState: extraBarContent === "queue",
+        setQueueState: (state: boolean) => setExtraBarContent(state ? "queue" : "none"),
+        toggleQueueAction: () => setExtraBarContent(extraBarContent === "queue" ? "none" : "queue"),
+    };
+};
+
+export const useLyricsState = () => {
+    const { extraBarContent, setExtraBarContent } = useAppSettings();
+
+    return {
+        lyricsState: extraBarContent === "lyrics",
+        setLyricsState: (state: boolean) => setExtraBarContent(state ? "lyrics" : "none"),
+        toggleLyricsAction: () => setExtraBarContent(extraBarContent === "lyrics" ? "none" : "lyrics"),
+    };
+};
 
 export const useDynamicColors = () => {
     const { lyricBackgroundIntensity, setLyricBackgroundIntensity } = useAppSettings();

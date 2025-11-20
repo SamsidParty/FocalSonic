@@ -1,9 +1,9 @@
-import clsx from "clsx";
-import { MicVocalIcon } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { useLyricsState, useMainDrawerState } from "@/store/player.store";
+import clsx from "clsx";
+import { MicVocalIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface PlayerLyricsButtonProps {
     disabled?: boolean
@@ -14,7 +14,7 @@ export function PlayerLyricsButton({ disabled }: PlayerLyricsButtonProps) {
     const { mainDrawerState } = useMainDrawerState();
     const { lyricsState, toggleLyricsAction } = useLyricsState();
 
-    const isActive = mainDrawerState && lyricsState;
+    const isActive = lyricsState;
 
     function handleClick() {
         toggleLyricsAction();
