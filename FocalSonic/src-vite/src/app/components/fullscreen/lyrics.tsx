@@ -141,16 +141,19 @@ function SyncedLyrics(props: LyricProps) {
         return convertedLyrics || "";
     }, [altLyricsMode, convertedLyrics]);
 
-    requestAnimationFrame(() => {
-        const newTimestamp = (playerRef?.currentTime || 0) * 1000;
+    if (props.visible) {
+        requestAnimationFrame(() => {
+            const newTimestamp = (playerRef?.currentTime || 0) * 1000;
 
-        if (newTimestamp !== timestamp) {
-            setTimestamp(newTimestamp);
-        }
-        else {
-            setTimestamp(newTimestamp + 1);
-        }
-    });
+            if (newTimestamp !== timestamp) {
+                setTimestamp(newTimestamp);
+            }
+            else {
+                setTimestamp(newTimestamp + 1);
+            }
+        });
+    }
+
 
     const skipToTime = (timeMs: number) => {
         if (playerRef) {

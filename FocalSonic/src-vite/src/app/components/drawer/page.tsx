@@ -106,7 +106,7 @@ export function MainDrawerPage() {
                                 <QueueSongList />
                             </ActiveContent>
                             <ActiveContent active={lyricsState}>
-                                <LyricsTab leftAlign />
+                                <LyricsTab visible={mainDrawerState && lyricsState} leftAlign />
                             </ActiveContent>
                         </div>
                     </div>
