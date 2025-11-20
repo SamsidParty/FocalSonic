@@ -22,17 +22,17 @@
     --popover-foreground: var(--system-foreground);
     --primary: var(--system-accent);
     --primary-foreground: var(--system-accent-foreground);
-    --secondary: var(--system-background2);
+    --secondary: color-mix(in hsl, var(--system-body), var(--origin-color) 40%);
     --secondary-foreground: var(--system-foreground);
     --muted: var(--system-background2);
     --muted-foreground: color-mix(in hsl, var(--system-background), var(--system-foreground) 70%);
-    --accent: color-mix(in hsl, var(--system-background), var(--system-foreground) 10%);
+    --accent: color-mix(in hsl, var(--system-body), var(--origin-color) 30%);
     --accent-foreground: var(--system-foreground);
     --destructive: hsl(0 84.2% 60.2%);
     --destructive-foreground: hsl(210 20% 98%);
     --border: var(--system-outline);
     --input: var(--system-outline);
-    --body: color-mix(in hsl, var(--system-background2), var(--origin-color) 50%);
+    --body: color-mix(in hsl, var(--system-body), var(--origin-color) 30%);
     --bar: color-mix(in srgb, transparent, var(--origin-color) 55%);
     --ring: var(--system-accent);
   }

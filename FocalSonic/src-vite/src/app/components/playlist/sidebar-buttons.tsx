@@ -1,8 +1,8 @@
-import { PlusIcon } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { usePlaylists } from "@/store/playlists.store";
+import { PlusIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function SidebarPlaylistButtons() {
     const { setPlaylistDialogState } = usePlaylists();
@@ -13,11 +13,11 @@ export function SidebarPlaylistButtons() {
             <SimpleTooltip text={t("playlist.form.create.title")}>
                 <Button
                     size="icon"
-                    variant="default"
-                    className="w-6 h-6 p-[5px]"
+                    variant="ghost"
+                    className="w-6 h-6 p-1 opacity-70"
                     onClick={() => setPlaylistDialogState(true)}
                 >
-                    <PlusIcon strokeWidth={3} />
+                    <PlusIcon strokeWidth={2} />
                 </Button>
             </SimpleTooltip>
         </div>
