@@ -11,7 +11,6 @@ import {
     useQueueState
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
-import { isFullscreen } from "@/utils/browser";
 import "@/utils/idle"; // for idle detection
 import clsx from "clsx";
 import { ChevronDownIcon, Maximize2Icon } from "lucide-react";
@@ -50,7 +49,7 @@ export function MainDrawerPage() {
                 {FullscreenBackdrop}
                 <div
                     className={clsx(
-                        "flex flex-col w-full h-content transition-[margin]",
+                        "flex flex-col w-full h-[calc(var(--drawer-height)-var(--player-height))] transition-[margin]",
                         "transition-[background-image,background-color] ease-long duration-1000",
                         "default-gradient",
                         isPlayerAtTop ? "mt-vertical-shift" : "mb-vertical-shift"
@@ -59,8 +58,7 @@ export function MainDrawerPage() {
                     <div 
                         className={clsx(
                             "absolute text-white hide-in-fullscreen-idle transition-opacity duration-600 ease-long flex w-full h-14 min-h-14 items-center justify-end gap-2",
-                            !isMiniPlayer && "px-[6%]",
-                            (isMiniPlayer || isFullscreen()) && "px-2"
+                            "px-2"
                         )}
                         {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }
                     >
@@ -69,6 +67,7 @@ export function MainDrawerPage() {
                             variant="ghost"
                             data-webview-ignore={""}
                             className="w-10 h-10 hide-in-fullscreen rounded-full p-0 hover:bg-foreground/20"
+                            data-webview-ignore={""}
                             onClick={closeDrawer}
                         >
                             {

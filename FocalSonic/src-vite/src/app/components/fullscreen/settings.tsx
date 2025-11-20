@@ -44,14 +44,15 @@ function DynamicSettingsPopover({ children }: PopoverProps) {
         <Popover>
             <PopoverTrigger asChild>
                 <Button
+                    data-webview-ignore={""}
                     variant="ghost"
                     size="icon"
-                    className="size-10 rounded-full hover:bg-foreground/20 data-[state=open]:bg-foreground/20"
+                    className="size-10 mr-auto rounded-full hover:bg-foreground/20 data-[state=open]:bg-foreground/20"
                 >
                     <SlidersHorizontal className="size-4" strokeWidth={2.5} />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
+            <PopoverContent className="w-80 p-0" align="start">
                 <div className="flex flex-col">{children}</div>
             </PopoverContent>
         </Popover>
