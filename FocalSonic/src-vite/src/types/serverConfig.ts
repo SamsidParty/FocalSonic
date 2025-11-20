@@ -1,5 +1,7 @@
 import { SettingsOptions } from "@/app/components/settings/options";
 
+export type ExtraBarContent = "none" | "lyrics" | "queue" | "podcasts";
+
 export enum AuthType {
     PASSWORD,
     TOKEN,
@@ -82,6 +84,8 @@ export interface IAppSettings {
     setEnableDiscordPresence: (value: boolean) => void
     sidebarOpen: boolean
     setSidebarOpen: (value: boolean) => void
+    extraBarContent: ExtraBarContent
+    setExtraBarContent: (value: ExtraBarContent) => void
     lyricBackgroundIntensity: number
     setLyricBackgroundIntensity: (value: number) => void
 }

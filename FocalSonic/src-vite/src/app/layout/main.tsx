@@ -9,9 +9,10 @@ import { Location, Outlet, useLocation } from "react-router-dom";
 
 export function MainRoutes() {
     const { pathname } = useLocation() as Location;
-    const { sidebarOpen } = useAppStore().settings;
+    const { sidebarOpen, extraBarContent } = useAppStore().settings;
     const { isPlayerAtTop } = usePlayerStyle();
     const animationRef = useRef<HTMLDivElement>(null);
+
 
     useEffect(() => {
         scrollPageToTop();
@@ -24,16 +25,18 @@ export function MainRoutes() {
     return (
         <main className={
             clsx(
-                "flex h-full transition-[padding-left,transform] duration-500 ease-long",
+                "flex h-full transition-[padding-left,transform,padding-right] duration-500 ease-long",
                 sidebarOpen ? "pl-sidebar" : "pl-mini-sidebar",
+                (extraBarContent != "none") ? "pr-sidebar" : "pr-0",
                 isPlayerAtTop ? "pt-[calc(var(--player-height)+var(--header-height))]" : "pb-player pt-header"
             )
         }
         >
             <div className={
                 clsx(
-                    "absolute flex inset-0 transition-[margin-left,transform] bg-bar z-[-100] duration-500 ease-long",
+                    "absolute flex inset-0 transition-[margin-left,transform,margin-right] bg-bar z-[-100] duration-500 ease-long",
                     sidebarOpen ? "ml-sidebar" : "ml-mini-sidebar",
+                    (extraBarContent != "none") ? "mr-sidebar" : "mr-0",
                     isPlayerAtTop ? "mt-[calc(var(--player-height)+var(--header-height))]" : "mb-player mt-header"
                 )}
             />

@@ -142,7 +142,13 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                             set((state) => {
                                 state.settings.lyricBackgroundIntensity = value;
                             });
-                        }
+                        },
+                        extraBarContent: "none",
+                        setExtraBarContent: (value) => {
+                            set((state) => {
+                                state.settings.extraBarContent = value;
+                            });
+                        },
                     },
                     runtimeState: {
                         settingsDialogState: false,
