@@ -32,7 +32,7 @@ export function MainRoutes() {
         >
             <div className={
                 clsx(
-                    "absolute flex inset-0 transition-[padding-left,transform] bg-bar z-[-100] duration-500 ease-long",
+                    "absolute flex inset-0 transition-[margin-left,transform] bg-bar z-[-100] duration-500 ease-long",
                     sidebarOpen ? "ml-sidebar" : "ml-mini-sidebar",
                     isPlayerAtTop ? "mt-[calc(var(--player-height)+var(--header-height))]" : "mb-player mt-header"
                 )}
