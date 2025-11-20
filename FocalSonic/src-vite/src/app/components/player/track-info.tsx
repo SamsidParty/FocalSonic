@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
 import { useDynamicColors, useLyricsState, useMainDrawerState } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
-import { enterFullscreen, exitFullscreen } from "@/utils/browser";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
@@ -30,7 +29,6 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
     }
 
     function openFullscreen() {
-        !mainDrawerState ? enterFullscreen() : exitFullscreen();
         toggleLyricsAction();
     }
 

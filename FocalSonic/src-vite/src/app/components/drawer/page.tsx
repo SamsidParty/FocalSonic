@@ -11,7 +11,7 @@ import {
     useQueueState
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
-import { isFullscreen } from "@/utils/browser";
+import { enterFullscreen, exitFullscreen, isFullscreen } from "@/utils/browser";
 import "@/utils/idle"; // for idle detection
 import clsx from "clsx";
 import { ChevronDownIcon, Maximize2Icon } from "lucide-react";
@@ -65,6 +65,25 @@ export function MainDrawerPage() {
                         {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }
                     >
                         { !isMiniPlayer && <QueueSettings /> }
+
+                        {
+                            !isMiniPlayer && (
+                                <Button
+                                    variant="ghost"
+                                    data-webview-ignore={""}
+                                    className="w-10 h-10 rounded-full p-0 hover:bg-foreground/20"
+                                    data-webview-ignore={""}
+                                    onClick={() => { isFullscreen() ? exitFullscreen() : enterFullscreen(); }}
+                                >
+                                    {
+                                        <Maximize2Icon />
+                                    }
+                            
+                                </Button>
+                            )
+                        }
+
+
                         <Button
                             variant="ghost"
                             data-webview-ignore={""}
@@ -77,6 +96,7 @@ export function MainDrawerPage() {
                             }
                             
                         </Button>
+
                     </div>
                     <div className="flex items-center w-full h-full mt-12 mb-0">
                         <CurrentSongInfo />

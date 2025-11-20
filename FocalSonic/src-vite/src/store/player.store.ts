@@ -779,6 +779,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         setMainDrawerState: (status) => {
 
+                            if (!status) {
+                                window.igniteView?.commandBridge?.exitMiniPlayer();
+                                exitFullscreen();
+                            }
+
                             set((state) => {
                                 state.playerState.mainDrawerState = status;
                             });
