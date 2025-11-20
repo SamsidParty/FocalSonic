@@ -19,10 +19,12 @@ import { Lrc, LrcLine } from "react-lrc";
 
 interface LyricProps {
     lyrics: string,
-    leftAlign?: boolean
+    leftAlign?: boolean,
+    small?: boolean,
+    visible?: boolean
 }
 
-export function LyricsTab({ leftAlign }: { leftAlign?: boolean }) {
+export function LyricsTab(props: LyricProps) {
     const { currentSong } = usePlayerSonglist();
     const { t } = useTranslation();
 
@@ -61,20 +63,22 @@ export function LyricsTab({ leftAlign }: { leftAlign?: boolean }) {
         return <CenteredMessage>{loadingLyrics}</CenteredMessage>;
     } else if (lyrics) {
         return areLyricsSynced(lyrics) ? (
-            <SyncedLyrics leftAlign={leftAlign} lyrics={lyrics} />
+            <SyncedLyrics {...props} lyrics={lyrics} />
         ) : (
-            <UnsyncedLyrics leftAlign={leftAlign} lyrics={lyrics} />
+            <UnsyncedLyrics {...props} lyrics={lyrics} />
         );
     } else {
         return <CenteredMessage>{noLyricsFound}</CenteredMessage>;
     }
 }
 
-function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
+function SyncedLyrics(props: LyricProps) {
     const playerRef = usePlayerRef();
     const [timestamp, setTimestamp] = useState<number>(0);
     const { altLyricsMode } = useAppStore().settings;
     const { isMiniPlayer } = usePlayerStyle();
+
+    let { lyrics, leftAlign, small } = props;
 
 
     const { data: convertedLyrics, isLoading } = useQuery({
@@ -163,13 +167,13 @@ function SyncedLyrics({ lyrics, leftAlign }: LyricProps) {
                 id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
                 className={clsx("h-full overflow-y-auto z-40", !isSafari && "scroll-smooth")}
                 verticalSpace={true}
-                lineRenderer={(props) => <LrcLineRenderer {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />}
+                lineRenderer={(_props) => <LrcLineRenderer {..._props} {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />}
             />
         </div>
     );
 }
 
-function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number }) {
+function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean }) {
 
     const elrcRegex = /<(\d{2}):(\d{2})\.(\d{2})>([^<]+)/g;
     const elrcTestRegex = /^\s*(<\d{2}:\d{2}\.\d+>[^<]*)+\s*$/;
@@ -215,9 +219,11 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
                 "drop-shadow-lg z-40 text-white cursor-pointer hover:opacity-100 duration-700",
                 "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left xxs:leading-normal",
                 (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
-                !subLyric ? "my-10 !2xl:my-30 !xxs:my-5" : "my-0",
-                line?.isSubLyric && "text-xl 2xl:text-3xl xxs:text-xs opacity-100 mt-0 mb-10 !2xl:mb-30 xxs:mb-2",
-                !line?.isSubLyric && "xxs:text-[18px] 2xl:my-20 !xxs:my-0",
+                (!subLyric && !small) ? "my-10 !2xl:my-30 !xxs:my-5" : "my-0",
+                (line?.isSubLyric && !small) && "text-xl 2xl:text-3xl xxs:text-xs opacity-100 mt-0 mb-10 !2xl:mb-30 xxs:mb-2",
+                (line?.isSubLyric && small) && "!text-[12px] !mb-2 leading-normal",
+                (!line?.isSubLyric && !small) && "xxs:text-[18px] 2xl:my-20 !xxs:my-0",
+                (!line?.isSubLyric && small) && "text-[18px] !my-0 !mt-8 leading-normal",
             )}
         >
             {elrcValues.elrcPortions.map((portion, index) => (
@@ -230,7 +236,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp }: { line: LrcLin
                 </span>
             ))}
             {
-                subLyric && <LrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} />
+                subLyric && <LrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} small={small} />
             }
         </p>
     );
