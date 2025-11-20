@@ -11,6 +11,7 @@ import {
     useQueueState
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
+import { isFullscreen } from "@/utils/browser";
 import "@/utils/idle"; // for idle detection
 import clsx from "clsx";
 import { ChevronDownIcon, Maximize2Icon } from "lucide-react";
@@ -49,9 +50,10 @@ export function MainDrawerPage() {
                 {FullscreenBackdrop}
                 <div
                     className={clsx(
-                        "flex flex-col w-full h-[calc(var(--drawer-height)-var(--player-height))] transition-[margin]",
+                        "flex flex-col w-full transition-[margin]",
                         "transition-[background-image,background-color] ease-long duration-1000",
                         "default-gradient",
+                        isFullscreen() ? "h-content" : "h-[calc(var(--drawer-height)-var(--player-height))] ",
                         isPlayerAtTop ? "mt-vertical-shift" : "mb-vertical-shift"
                     )}
                 >
@@ -76,7 +78,7 @@ export function MainDrawerPage() {
                             
                         </Button>
                     </div>
-                    <div className="flex items-center w-full h-full mt-12 px-[6%] mb-0">
+                    <div className="flex items-center w-full h-full mt-12 mb-0">
                         <CurrentSongInfo />
 
                         <div className="flex self-stretch flex-1 justify-center relative">
