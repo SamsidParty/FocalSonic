@@ -1,10 +1,22 @@
+/* eslint-disable no-empty */
 import Hls from "hls.js";
 
 
 /* eslint-disable no-async-promise-executor */
 const licenseURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense";
 const widevineCertURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert";
+const webPlaybackURL = "https://play.music.apple.com/WebObjects/MZPlay.woa/wa/webPlayback";
 
+export function getAudioElement(): HTMLAudioElement {
+    let audioElement = document.getElementById('apple-music-player');
+    if (!audioElement) {
+        audioElement = document.createElement('audio');
+        audioElement.id = 'apple-music-player';
+        audioElement.className = 'focalmk-audio-element';
+        document.body.appendChild(audioElement);
+    }
+    return audioElement as HTMLAudioElement;
+}
 
 export const focalHls = new Hls({
     debug: true,
@@ -82,6 +94,45 @@ export async function getFetchHeaders() {
     }
 }
 
+export async function getWebContentSources(contentID: string) {
+    try {
+        const request = await fetch(webPlaybackURL,{
+            method: "POST",
+            headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
+            body: JSON.stringify({ salableAdamId: contentID }),
+        });
+        const response = await request.json();
+        if (response?.status === 0) {
+            return response?.songList;
+        }
+    }
+    catch { }
+
+    return null;
+}
+
+export function findBestWebContentSource(sources: any[]) {
+    if (sources != null && sources.length > 0) {
+        const song = sources[0];
+        const validAssets = song?.assets?.filter((asset: any) => asset.URL && asset.URL.includes(".m3u8") && asset.flavor.includes(":ctrp")); // ctrp = compatible with widevine
+
+        // Find the asset with the highest bitrate
+        let bestAsset = null;
+        let highestBitrate = -1;
+
+        for (const asset of validAssets) {
+            if (asset.metadata?.bitRate > highestBitrate) {
+                highestBitrate = asset.metadata?.bitRate;
+                bestAsset = asset;
+            }
+        }
+
+        return bestAsset || null;
+    }
+
+    return null;
+}
+
 export function acquireWidevineAccess() {
     return new Promise<MediaKeySystemAccess>((resolve, reject) => {
         const widevineKeySystem = 'com.widevine.alpha';
@@ -103,6 +154,11 @@ export function acquireWidevineAccess() {
 }
 
 export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, contentID: string) {
+
+    if (!audio) {
+        audio = getAudioElement();
+    }
+
     return new Promise<void>(async (resolve, reject) => {
         const widevine = await acquireWidevineAccess();
         const certificate = await acquireWidevineCert();
@@ -110,6 +166,9 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
         const mediaKeys = await widevine.createMediaKeys();
         await mediaKeys.setServerCertificate(certificate);
         const session = mediaKeys.createSession();
+
+        // Attach the keys to the audio element
+        audio.src = "";
         audio?.setMediaKeys(mediaKeys);
 
         session.addEventListener('message', async (event) => {
@@ -126,3 +185,19 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
         session.generateRequest("cenc", initData);
     });
 }
+
+export async function loadContent(contentID: string) {
+    try {
+        const sources = await getWebContentSources(contentID);
+        const bestSource = findBestWebContentSource(sources);
+        if (!bestSource) throw new Error("No valid content source found");
+        console.log("Using content source:", bestSource.flavor);
+        focalHls.loadSource(bestSource.URL);
+        licenseForWebPlayback(getAudioElement(), contentID).then(() => focalHls.attachMedia(getAudioElement()));
+    }
+    catch (err) {
+        // TODO: Handle error
+        console.error("Error loading content:", err);
+    }
+}
+window.loadContent = loadContent;

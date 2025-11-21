@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { focalHls, licenseForWebPlayback } from "../lib/focalmk";
+import { loadContent } from "../lib/focalmk";
 
 
 export default function HlsTest() {
@@ -13,8 +13,9 @@ export default function HlsTest() {
             window.doneAA = true;
 
             
-            focalHls.loadSource(videoSrc);
-            licenseForWebPlayback(audio, "1785614776").then(() => focalHls.attachMedia(audio));
+            setTimeout(async () => {
+                await loadContent("1785614776");
+            }, 0);
     }, []);
 
     return (
