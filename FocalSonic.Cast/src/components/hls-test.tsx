@@ -1,5 +1,6 @@
+import Hls from "hls.js";
 import { useEffect } from "react";
-import Hls from "../lib/hls.js";
+import { licenseForWebPlayback } from "../lib/focalmk";
 
 function applyCredentials(xhr: XMLHttpRequest) {
     xhr.withCredentials = true;
@@ -10,46 +11,23 @@ function applyCredentials(xhr: XMLHttpRequest) {
 
 export default function HlsTest() {
 
-    useEffect(() => {
-
-                
+    useEffect(() => {     
             const video = document.getElementById('audio');
-            const videoSrc = 'https://aod.itunes.apple.com/itunes-assets/HLSMusic221/v4/be/ad/34/bead3418-e788-6ff9-8eec-705a1dafc7b3/P976156933_default.m3u8';
+            const videoSrc = 'https://aod-ssl.itunes.apple.com/itunes-assets/Music221/v4/58/30/7a/58307aef-3f4c-207d-2f7c-e590b2bdb9a6/mzaf_A1679278167.rphq.aac.wa.m3u8';
+            // data:;base64,AAAAAGQXwFcAHWcYFC6aTw==
 
             if (window.doneAA) return;
             window.doneAA = true;
 
-            if (Hls.isSupported()) {
-
-
+            licenseForWebPlayback(video).then(() => {
                 const hls = new Hls({
+                    emeEnabled: false,
+                    drmSystemOptions: {},
                     debug: true,
-                    emeEnabled: true,
-                    defaultAudioCodec: 'ec-3',
-                    drmSystems: {
-                        "com.widevine.alpha": {
-                            licenseUrl: "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense",
-                            serverCertificateUrl: "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert",
-                        },
-                    },
-                    licenseXhrSetup: (xhr, url, keyContext, licenseChallenge) => {
-                        console.log("License XHR Setup", xhr, url, keyContext, licenseChallenge);
-                        applyCredentials(xhr);
-
-                        return JSON.stringify({
-                            adamId: "1679278167",
-                            "key-system": "com.widevine.alpha",
-                            "user-initiated": true,
-                            isLibrary: false,
-                            uri: "data:;base64,AAAAAGQXwFcAHWcYFC6aTw==",
-                            challenge: licenseChallenge.toBase64(),
-                        });
-                    }
                 });
-                hls.loadSource(videoSrc);
                 hls.attachMedia(video);
-            }
-
+                hls.loadSource(videoSrc);
+            });
     }, []);
 
     return (
