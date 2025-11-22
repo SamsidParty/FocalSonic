@@ -1,6 +1,7 @@
 import { getAudioElement } from "../helpers/dom";
 import { loadContent } from "../interface/low-level";
 import { QueueItem, QueueItemParam } from "./types";
+import { PlayerRepeatMode } from "./virtualmk-constants";
 
 export class MusicKitInstance {
 
@@ -13,21 +14,38 @@ export class MusicKitInstance {
     }
 
     // Playback
-    repeatMode: number = 0;
+    _repeatMode: number = 0;
+    _playbackRate: number = 1;
     isPlaying: boolean = false;
     nowPlayingItem: string | null = null;
 
+
+
     // Queue
     queue: QueueItem[] = [];
+
+    get repeatMode() {
+        return this._repeatMode;
+    }
+    set repeatMode(mode: number) {
+        this._repeatMode = mode;
+
+        if (mode === PlayerRepeatMode.one) {
+            getAudioElement().loop = true;
+        } else {
+            getAudioElement().loop = false;
+        }
+    }
 
     get currentPlaybackDuration() {
         return getAudioElement().duration || 0;
     }
     
     get playbackRate() {
-        return getAudioElement().playbackRate;
+        return this._playbackRate;
     }
     set playbackRate(rate: number) {
+        this._playbackRate = rate;
         getAudioElement().playbackRate = rate;
     }
 
@@ -50,6 +68,8 @@ export class MusicKitInstance {
             itemToPlay.hasInitialized = true;
             await loadContent(itemToPlay.song);
         }
+
+        getAudioElement().playbackRate = this._playbackRate;
         getAudioElement().play();
     }
 

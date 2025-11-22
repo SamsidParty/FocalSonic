@@ -37291,6 +37291,9 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
         }
     }
 
+    const PlayerRepeatMode = { "0": "none", "1": "one", "2": "all", "none": 0, "one": 1, "all": 2 };
+    const PlaybackStates = { "0": "none", "1": "loading", "2": "playing", "3": "paused", "4": "stopped", "5": "ended", "6": "seeking", "8": "waiting", "9": "stalled", "10": "completed", "none": 0, "loading": 1, "playing": 2, "paused": 3, "stopped": 4, "ended": 5, "seeking": 6, "waiting": 8, "stalled": 9, "completed": 10 };
+
     class MusicKitInstance {
         // Auth
         musicUserToken = "ArtrW+GDMTxB5jIO2G1yBU1NqGdY4hqxDIZdnY17Knmg6Q0q2POjahUroexArY5nWdC0vviL8cS9dntXsvoP2G+JwCSMW/tjZRwrq1iF39TSDFfBi3lcklcGm/6s+LeAIBvICW1EaffwqrPhSGpEZQqR6jX/4sEhUxFstfMQ7bxNV03I1Lue4fKtUrfDftaxa8t025i6JXx3FQuh8naAklYXfUl7FoNRWdEGbnjFFPdYdQKYrg==";
@@ -37299,18 +37302,32 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
             return this.musicUserToken !== null && this.developerToken !== null;
         }
         // Playback
-        repeatMode = 0;
+        _repeatMode = 0;
+        _playbackRate = 1;
         isPlaying = false;
         nowPlayingItem = null;
         // Queue
         queue = [];
+        get repeatMode() {
+            return this._repeatMode;
+        }
+        set repeatMode(mode) {
+            this._repeatMode = mode;
+            if (mode === PlayerRepeatMode.one) {
+                getAudioElement().loop = true;
+            }
+            else {
+                getAudioElement().loop = false;
+            }
+        }
         get currentPlaybackDuration() {
             return getAudioElement().duration || 0;
         }
         get playbackRate() {
-            return getAudioElement().playbackRate;
+            return this._playbackRate;
         }
         set playbackRate(rate) {
+            this._playbackRate = rate;
             getAudioElement().playbackRate = rate;
         }
         async play() {
@@ -37329,6 +37346,7 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
                 itemToPlay.hasInitialized = true;
                 await loadContent(itemToPlay.song);
             }
+            getAudioElement().playbackRate = this._playbackRate;
             getAudioElement().play();
         }
         stop() {
@@ -37371,9 +37389,6 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
             console.log(`[FocalMK] Event listener added for ${event}`);
         }
     }
-
-    const PlayerRepeatMode = { "0": "none", "1": "one", "2": "all", "none": 0, "one": 1, "all": 2 };
-    const PlaybackStates = { "0": "none", "1": "loading", "2": "playing", "3": "paused", "4": "stopped", "5": "ended", "6": "seeking", "8": "waiting", "9": "stalled", "10": "completed", "none": 0, "loading": 1, "playing": 2, "paused": 3, "stopped": 4, "ended": 5, "seeking": 6, "waiting": 8, "stalled": 9, "completed": 10 };
 
     class MusicKit {
         PlayerRepeatMode;

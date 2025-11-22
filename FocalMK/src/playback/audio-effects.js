@@ -12,7 +12,7 @@ const _effectInstances = new WeakMap();
  * @param {Number} wetLevel - Initial wet/dry mix (0-1)
  * @returns {AudioEffectController} - AudioEffectController instance
  */
-function getAudioEffectController(source) {
+export function getAudioEffectController(source) {
     if (_effectInstances.has(source)) {
         return _effectInstances.get(source);
     }
@@ -215,5 +215,3 @@ class AudioEffectController {
     }
 
 }
-
-export { getAudioEffectController };
