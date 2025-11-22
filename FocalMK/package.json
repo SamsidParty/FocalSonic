@@ -16,6 +16,8 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "hls.js": "^1.6.15"
   }
 }
