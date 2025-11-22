@@ -37332,6 +37332,12 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
             console.log("[FocalMK] Playback paused");
             getAudioElement().pause();
         }
+        seekToTime(time) {
+            try {
+                getAudioElement().currentTime = time;
+            }
+            catch { }
+        }
         setQueue(q) {
             console.log("[FocalMK] Queue set to:", q.song);
             this.queue = [new QueueItem(q)];

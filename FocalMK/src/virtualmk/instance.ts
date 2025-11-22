@@ -65,6 +65,13 @@ export class MusicKitInstance {
         getAudioElement().pause();
     }
 
+    seekToTime(time: number) {
+        try {
+            getAudioElement().currentTime = time;
+        }
+        catch {}
+    }
+
     setQueue(q: QueueItemParam) {
         console.log("[FocalMK] Queue set to:", q.song);
         this.queue = [new QueueItem(q)];
