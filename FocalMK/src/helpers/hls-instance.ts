@@ -15,7 +15,13 @@ export function createHlsInstance(): FocalHls {
     const instance = new Hls({
         debug: true,
         emeEnabled: false, // Custom DRM implementation, turn off the default one
-        drmSystemOptions: {}
+        drmSystemOptions: {},
+        xhrSetup(xhr, url) {
+            if (window.igniteView && url.endsWith(".mp4")) {
+                // Redirect requests through focalsonic streaming proxy
+                xhr.open("GET", window.igniteView?.resolverURL + "/streaming?" + encodeURIComponent(url), true);
+            }
+        },
     }) as FocalHls;
 
     instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {

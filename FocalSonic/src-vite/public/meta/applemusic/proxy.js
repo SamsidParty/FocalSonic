@@ -37158,7 +37158,13 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
         const instance = new Hls({
             debug: true,
             emeEnabled: false, // Custom DRM implementation, turn off the default one
-            drmSystemOptions: {}
+            drmSystemOptions: {},
+            xhrSetup(xhr, url) {
+                if (window.igniteView && url.endsWith(".mp4")) {
+                    // Redirect requests through focalsonic streaming proxy
+                    xhr.open("GET", window.igniteView?.resolverURL + "/streaming?" + encodeURIComponent(url), true);
+                }
+            },
         });
         instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
             data.levels.forEach((level, id) => {
@@ -37410,7 +37416,7 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
         // Setup virtual MusicKit
         window.virtualMusicKit = new MusicKit();
     }
-    if (window.location.href.includes("music.apple.com")) {
+    if (window.location.href.includes("music.apple.com") || window.location.href.includes("proxy.html")) {
         startAppleMusicProxy();
     }
 

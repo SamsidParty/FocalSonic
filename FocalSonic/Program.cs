@@ -4,6 +4,7 @@ using FocalSonic.AudioPlayer;
 using FocalSonic.Helpers;
 using FocalSonic.OverrideSystem;
 using FocalSonic.Presence;
+using FocalSonic.Streaming;
 using FocalSonic.Windows;
 using IgniteView.Core;
 using IgniteView.Desktop;
@@ -36,6 +37,10 @@ public class Program
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.DELETE);
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.PATCH);
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.PUT);
+
+        // Streaming proxy
+        App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
+        App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.POST);
 
         // JSON Setup
         JsonConvert.DefaultSettings = () => new JsonSerializerSettings

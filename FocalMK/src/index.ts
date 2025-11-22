@@ -14,6 +14,6 @@ if (isIgniteView() && enableVirtualMK) {
     window.virtualMusicKit = new MusicKit();
 }
 
-if (window.location.href.includes("music.apple.com")) {
+if (window.location.href.includes("music.apple.com") || window.location.href.includes("proxy.html")) {
     startAppleMusicProxy();
 }
