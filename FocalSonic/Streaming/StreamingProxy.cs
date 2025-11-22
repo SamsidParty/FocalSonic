@@ -24,6 +24,33 @@ namespace FocalSonic.Streaming
             { WatsonWebserver.Core.HttpMethod.PUT, System.Net.Http.HttpMethod.Put },
         };
 
+        public static async Task StreamingProxyAtmosV1Route(HttpContextBase ctx)
+        {
+            // CORS
+            if (!ctx.Request.HeaderExists("Origin") || ctx.Request.RetrieveHeaderValue("Origin") == "127.0.0.1" || ctx.Request.RetrieveHeaderValue("Origin") == "localhost")
+            {
+                ctx.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                ctx.Response.Headers.Add("Access-Control-Allow-Headers", "*");
+            }
+
+            var shouldForward = (ctx.Request.Method != WatsonWebserver.Core.HttpMethod.OPTIONS && ctx.Request.Method != WatsonWebserver.Core.HttpMethod.HEAD);
+
+            if (ctx.Request.Url != null && shouldForward)
+            {
+                // The uri will be in the format /streaming?http://example.com/stream
+                var url = HttpUtility.UrlDecode(ctx.Request.Query.Querystring);
+                var file = await StreamingCDM.DownloadStream(url);
+                var key = StreamingCDM.GetDecryptionKey("atmos-v1");
+                var content = await StreamingCDM.DecryptStream(file, key);
+                ctx.Response.Headers.Add("Content-Type", "audio/mp4");
+
+                await ctx.Response.Send(content);
+                return;
+            }
+
+            ctx.Response.StatusCode = 201; // No content
+        }
+
         public static async Task StreamingProxyRoute(HttpContextBase ctx)
         {
             // CORS
@@ -55,15 +82,6 @@ namespace FocalSonic.Streaming
 
                 var request = await StreamingClient.SendAsync(message);
                 var content = await request.Content.ReadAsByteArrayAsync();
-
-                var streamingType = "default";
-                if (ctx.Request.Url.ToString()!.Contains("atmos-v1")) streamingType = "atmos-v1";
-
-                if (StreamingCDM.ShouldDecryptStream(streamingType) && content.Length > 0)
-                {
-                    var key = StreamingCDM.GetDecryptionKey(streamingType);
-                    content = await StreamingCDM.DecryptStream(content, key);
-                }
 
                 ctx.Response.StatusCode = (int)request.StatusCode;
                 

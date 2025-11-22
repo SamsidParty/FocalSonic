@@ -13,7 +13,7 @@ export async function loadContent(contentID: string) {
         let sourceURL = bestSource.URL;
         
         if (isAtmosEnabled() && window.igniteView) {
-            const streamingURL = "https://aod.itunes.apple.com/itunes-assets/HLSMusic221/v4/be/ad/34/bead3418-e788-6ff9-8eec-705a1dafc7b3/P976156933_A1679278167_audio_en_gr2768_mp4a-A6_m.mp4";
+            const streamingURL = "https://aod.itunes.apple.com/itunes-assets/HLSMusic221/v4/be/ad/34/bead3418-e788-6ff9-8eec-705a1dafc7b3/P976156933_A1679278167_audio_en_gr2768_mp4a-A6.m3u8";
             console.warn("[FocalMK] Content source is dolby atmos, using native mp4decrypt");
             const fetchURL = window.igniteView?.resolverURL + "/streaming-atmos-v1?" + encodeURIComponent(streamingURL);
             return new Promise<void>(async (resolve, reject) => {
@@ -22,6 +22,7 @@ export async function loadContent(contentID: string) {
                 const objectURL = URL.createObjectURL(dataBlob);
                 const audioElement = getAudioElement();
                 audioElement.src = objectURL;
+                resolve();
             });
         }
         else if (!sourceURL.endsWith(".m3u8")) {
