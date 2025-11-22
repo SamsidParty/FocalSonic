@@ -1,5 +1,5 @@
-import Hls from "hls.js";
 import { tryAcquireLicense } from "../drm/license";
+import Hls from "../playback/hls.js";
 import { isAtmosEnabled } from "./atmos";
 import { getAudioElement } from "./dom";
 
@@ -16,12 +16,6 @@ export function createHlsInstance(): FocalHls {
         debug: true,
         emeEnabled: false, // Custom DRM implementation, turn off the default one
         drmSystemOptions: {},
-        xhrSetup(xhr, url) {
-            if (window.igniteView && url.endsWith(".mp4")) {
-                // Redirect requests through focalsonic streaming proxy
-                xhr.open("GET", window.igniteView?.resolverURL + "/streaming?" + encodeURIComponent(url), true);
-            }
-        },
     }) as FocalHls;
 
     instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {

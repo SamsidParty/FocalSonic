@@ -1,4 +1,4 @@
-import Hls from "hls.js";
+import Hls from "../playback/hls.js";
 import { FocalHls } from "./hls-instance";
 
 export interface FocalAudioElement extends HTMLAudioElement {

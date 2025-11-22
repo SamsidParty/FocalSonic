@@ -41,6 +41,11 @@ namespace FocalSonic.Streaming
                 var message = new HttpRequestMessage(MethodMapping[ctx.Request.Method], url);
                 Debug.WriteLine($"[StreamingProxy] Forwarding {ctx.Request.Method} request to {url}");
 
+                foreach (var rHeader in ctx.Request.Headers.Keys)
+                {
+                    if (rHeader.ToString()!.ToLower() == "host") continue;
+                    message.Headers.TryAddWithoutValidation(rHeader.ToString()!, ctx.Request.Headers.GetValues(rHeader.ToString())!.First());
+                }
 
                 if ((ctx.Request.Method == WatsonWebserver.Core.HttpMethod.POST) && ctx.Request.ContentLength > 0)
                 {
@@ -50,6 +55,15 @@ namespace FocalSonic.Streaming
 
                 var request = await StreamingClient.SendAsync(message);
                 var content = await request.Content.ReadAsByteArrayAsync();
+
+                var streamingType = "default";
+                if (ctx.Request.Url.ToString()!.Contains("atmos-v1")) streamingType = "atmos-v1";
+
+                if (StreamingCDM.ShouldDecryptStream(streamingType) && content.Length > 0)
+                {
+                    var key = StreamingCDM.GetDecryptionKey(streamingType);
+                    content = await StreamingCDM.DecryptStream(content, key);
+                }
 
                 ctx.Response.StatusCode = (int)request.StatusCode;
                 

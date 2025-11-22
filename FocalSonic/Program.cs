@@ -39,8 +39,9 @@ public class Program
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.PUT);
 
         // Streaming proxy
-        App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
         App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.POST);
+        App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
+        App.RegisterDynamicFileRoute("/streaming-atmos-v1", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
 
         // JSON Setup
         JsonConvert.DefaultSettings = () => new JsonSerializerSettings
