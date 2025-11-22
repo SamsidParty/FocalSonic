@@ -37098,9 +37098,13 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
         });
     }
     async function acquireWidevineCert() {
+        if (window.widevineCertCache) {
+            return window.widevineCertCache;
+        }
         const req = await fetch(widevineCertURL);
         const certBuffer = await req.arrayBuffer();
         const serverCertificate = new Uint8Array(certBuffer);
+        window.widevineCertCache = serverCertificate; // Cache cause the request takes a while
         return serverCertificate;
     }
     async function acquireWebPlaybackLicense(challenge, contentID, magicDataURI) {
