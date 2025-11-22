@@ -37204,15 +37204,14 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
 
     async function getWebContentSources(contentID) {
         try {
+            const body = (!Number.isNaN(parseInt(contentID))) ? { salableAdamId: contentID } : { universalLibraryId: contentID };
             const request = await fetch(webPlaybackURL, {
                 method: "POST",
                 headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
-                body: JSON.stringify({ salableAdamId: contentID }),
+                body: JSON.stringify(body),
             });
             const response = await request.json();
-            if (response?.status === 0) {
-                return response?.songList;
-            }
+            return response?.songList || null;
         }
         catch { }
         return null;
@@ -37220,7 +37219,7 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
     function findBestWebContentSource(sources) {
         if (sources != null && sources.length > 0) {
             const song = sources[0];
-            const validAssets = song?.assets?.filter((asset) => asset.URL && asset.URL.includes(".m3u8") && asset.flavor.includes(":ctrp")); // ctrp = compatible with widevine
+            const validAssets = song?.assets?.filter((asset) => (asset.URL && asset.URL.includes(".m3u8") && asset.flavor.includes(":ctrp")) || !asset.flavor); // ctrp = compatible with widevine
             // Find the asset with the highest bitrate
             let bestAsset = null;
             let highestBitrate = -1;
@@ -37242,6 +37241,12 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
             if (!bestSource)
                 throw new Error("[FocalMK] No valid content source found");
             let sourceURL = bestSource.URL;
+            if (!sourceURL.endsWith(".m3u8")) {
+                console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
+                getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
+                getAudioElement().src = sourceURL;
+                return;
+            }
             if (isAtmosEnabled()) ;
             console.log("[FocalMK] Using content source:", bestSource.flavor);
             await new Promise((resolve) => {

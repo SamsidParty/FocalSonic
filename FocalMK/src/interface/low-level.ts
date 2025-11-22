@@ -1,5 +1,6 @@
 import Hls from "hls.js";
 import { isAtmosEnabled } from "../helpers/atmos";
+import { getAudioElement } from "../helpers/dom";
 import { getActiveHlsInstance } from "../helpers/hls-instance";
 import { findBestWebContentSource, getWebContentSources } from "../helpers/sources";
 
@@ -11,6 +12,12 @@ export async function loadContent(contentID: string) {
 
         let sourceURL = bestSource.URL;
         
+        if (!sourceURL.endsWith(".m3u8")) {
+            console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
+            getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
+            getAudioElement().src = sourceURL;
+            return;
+        }
         if (isAtmosEnabled()) {
             sourceURL = "";
         }
