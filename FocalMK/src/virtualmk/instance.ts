@@ -1,6 +1,6 @@
 import { getAudioElement } from "../helpers/dom";
 import { loadContent } from "../interface/low-level";
-import { QueueItem } from "./types";
+import { QueueItem, QueueItemParam } from "./types";
 
 export class MusicKitInstance {
 
@@ -45,6 +45,7 @@ export class MusicKitInstance {
         this.nowPlayingItem = itemToPlay.song;
         console.log(`[FocalMK] Now playing: ${itemToPlay.song}`);
 
+        itemToPlay.setActive();
         if (!itemToPlay.hasInitialized) {
             itemToPlay.hasInitialized = true;
             await loadContent(itemToPlay.song);
@@ -64,14 +65,14 @@ export class MusicKitInstance {
         getAudioElement().pause();
     }
 
-    setQueue(q: QueueItem) {
+    setQueue(q: QueueItemParam) {
         console.log("[FocalMK] Queue set to:", q.song);
-        this.queue = [q];
+        this.queue = [new QueueItem(q)];
     }
 
-    playNext(q: QueueItem) {
+    playNext(q: QueueItemParam) {
         console.log("[FocalMK] Added to queue:", q.song);
-        this.queue.push(q);
+        this.queue.push(new QueueItem(q));
     }
 
     skipToNextItem() {

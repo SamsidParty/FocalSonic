@@ -377,21 +377,6 @@
 
     setInterval(window.executeInjectedQueue, 250);
 
-    function getAudioElement() {
-        let audioElement = document.getElementById('apple-music-player');
-        if (!audioElement) {
-            audioElement = document.createElement('audio');
-            audioElement.id = 'apple-music-player';
-            audioElement.className = 'focalmk-audio-element';
-            document.body.appendChild(audioElement);
-        }
-        return audioElement;
-    }
-
-    function isAtmosEnabled() {
-        return false;
-    }
-
     // https://caniuse.com/mdn-javascript_builtins_number_isfinite
     const isFiniteNumber = Number.isFinite || function (value) {
       return typeof value === 'number' && isFinite(value);
@@ -37016,6 +37001,22 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
     }
     Hls.defaultConfig = void 0;
 
+    function getAudioElement() {
+        let audioElement = document.getElementById('apple-music-player');
+        if (!audioElement) {
+            audioElement = document.createElement('audio');
+            audioElement.id = 'apple-music-player';
+            audioElement.className = 'focalmk-dummy-audio-element';
+            audioElement.attachedHls = new Hls();
+            document.body.appendChild(audioElement);
+        }
+        return audioElement;
+    }
+
+    function isAtmosEnabled() {
+        return false;
+    }
+
     async function getFetchHeaders() {
         return {
             "Authorization": `Bearer ` + window.virtualMusicKit?.getInstance().developerToken || "",
@@ -37055,12 +37056,12 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
     }
 
     function tryAcquireLicense() {
-        if (focalHls?.contentID && focalHls.magicDataURI && !focalHls.licenseAcquired) {
-            focalHls.licenseAcquired = true;
-            console.log("Acquiring license for content ID:", focalHls.contentID);
-            licenseForWebPlayback(getAudioElement(), focalHls.contentID).then(() => {
+        if (getActiveHlsInstance()?.contentID && getActiveHlsInstance().magicDataURI && !getActiveHlsInstance().licenseAcquired) {
+            getActiveHlsInstance().licenseAcquired = true;
+            console.log("Acquiring license for content ID:", getActiveHlsInstance().contentID);
+            licenseForWebPlayback(getAudioElement(), getActiveHlsInstance().contentID).then(() => {
                 console.log("License acquired, attaching media");
-                focalHls.attachMedia(getAudioElement());
+                getActiveHlsInstance().attachMedia(getAudioElement());
             });
         }
     }
@@ -37124,7 +37125,7 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
             audio = getAudioElement();
         }
         return new Promise(async (resolve, reject) => {
-            if (!focalHls?.magicDataURI)
+            if (!getActiveHlsInstance()?.magicDataURI)
                 reject();
             const widevine = await acquireWidevineAccess();
             const certificate = await acquireWidevineCert();
@@ -37138,62 +37139,68 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
                 console.log("License Message Event:", event);
                 if (event.messageType === 'license-request') {
                     const challengeBase64 = new Uint8Array(event.message).toBase64();
-                    const license = await acquireWebPlaybackLicense(challengeBase64, contentID, focalHls.magicDataURI);
+                    const license = await acquireWebPlaybackLicense(challengeBase64, contentID, getActiveHlsInstance().magicDataURI);
                     await session.update(new Uint8Array(license));
                     resolve();
                 }
             }, false);
-            const initData = getPssh(focalHls.magicDataURI);
+            const initData = getPssh(getActiveHlsInstance().magicDataURI);
             console.log("Generating license request with initData:", initData.toBase64());
             session.generateRequest("cenc", initData);
         });
     }
 
-    const focalHls = new Hls({
-        debug: true,
-        emeEnabled: false, // Custom DRM implementation, turn off the default one
-        drmSystemOptions: {}
-    });
-    focalHls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-        data.levels.forEach((level, id) => {
+    function createHlsInstance() {
+        const instance = new Hls({
+            debug: true,
+            emeEnabled: false, // Custom DRM implementation, turn off the default one
+            drmSystemOptions: {}
         });
-    });
-    focalHls.on(Hls.Events.MANIFEST_LOADED, (event, data) => {
-        const manifestText = data.networkDetails?.responseText || "";
-        // We need to find the magic data URI from the manifest
-        // The target line is in the format: #EXT-X-KEY:METHOD=ISO-23001-7,URI="data:;base64,AAAAAGQXwFcAHWcYFC6aTw=="
-        // The format is flexible according to HLS spec, so we use a regex to find it
-        const regex = /#EXT-X-KEY:.*URI="(data:;base64,[^"]+)"/;
-        const match = manifestText.match(regex);
-        if (match && match[1]) {
-            const magicDataURI = match[1];
-            console.log("Found magic data URI:", magicDataURI);
-            focalHls.magicDataURI = magicDataURI;
-        }
-        else {
-            // If that didn't work, that means the magic data URI is likely present in the enhancedHls format
-            // There are 2 modes, one that uses com.apple.hls.AudioSessionKeyInfo and one that uses EXT-X-SESSION-KEY
-            // Try mode 1
-            if (data?.sessionData?.["com.apple.hls.AudioSessionKeyInfo"]) {
-                const sessionKeyInfo = data.sessionData["com.apple.hls.AudioSessionKeyInfo"];
-                const sessionKeyData = JSON.parse(atob(sessionKeyInfo?.VALUE || ""));
-                Object.entries(sessionKeyData).forEach((keyInfo) => {
-                    if (keyInfo[0] != "1" && keyInfo && keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]) {
-                        //focalHls.magicDataURI = "enhanced/" + keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
-                        console.log("Found magic data URI (enhancedHls):", focalHls.magicDataURI);
-                    }
-                });
+        instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+            data.levels.forEach((level, id) => {
+            });
+        });
+        instance.on(Hls.Events.MANIFEST_LOADED, (event, data) => {
+            const manifestText = data.networkDetails?.responseText || "";
+            // We need to find the magic data URI from the manifest
+            // The target line is in the format: #EXT-X-KEY:METHOD=ISO-23001-7,URI="data:;base64,AAAAAGQXwFcAHWcYFC6aTw=="
+            // The format is flexible according to HLS spec, so we use a regex to find it
+            const regex = /#EXT-X-KEY:.*URI="(data:;base64,[^"]+)"/;
+            const match = manifestText.match(regex);
+            if (match && match[1]) {
+                const magicDataURI = match[1];
+                console.log("Found magic data URI:", magicDataURI);
+                instance.magicDataURI = magicDataURI;
             }
-            // If that still didn't work, mode 2 will be called when the level is loaded
-        }
-        tryAcquireLicense();
-    });
-    focalHls.on(Hls.Events.LEVEL_LOADED, (event, data) => {
-        data.networkDetails?.responseText || "";
-        console.log("LEVEL_LOADED event received");
-        if (!focalHls.magicDataURI && isAtmosEnabled()) ;
-        tryAcquireLicense();
-    });
+            else {
+                // If that didn't work, that means the magic data URI is likely present in the enhancedHls format
+                // There are 2 modes, one that uses com.apple.hls.AudioSessionKeyInfo and one that uses EXT-X-SESSION-KEY
+                // Try mode 1
+                if (data?.sessionData?.["com.apple.hls.AudioSessionKeyInfo"]) {
+                    const sessionKeyInfo = data.sessionData["com.apple.hls.AudioSessionKeyInfo"];
+                    const sessionKeyData = JSON.parse(atob(sessionKeyInfo?.VALUE || ""));
+                    Object.entries(sessionKeyData).forEach((keyInfo) => {
+                        if (keyInfo[0] != "1" && keyInfo && keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]) {
+                            //focalHls.magicDataURI = "enhanced/" + keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
+                            console.log("Found magic data URI (enhancedHls):", instance.magicDataURI);
+                        }
+                    });
+                }
+                // If that still didn't work, mode 2 will be called when the level is loaded
+            }
+            tryAcquireLicense();
+        });
+        instance.on(Hls.Events.LEVEL_LOADED, (event, data) => {
+            data.networkDetails?.responseText || "";
+            console.log("LEVEL_LOADED event received");
+            if (!instance.magicDataURI && isAtmosEnabled()) ;
+            tryAcquireLicense();
+        });
+        return instance;
+    }
+    function getActiveHlsInstance() {
+        return getAudioElement().attachedHls;
+    }
 
     async function getWebContentSources(contentID) {
         try {
@@ -37237,12 +37244,35 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
             let sourceURL = bestSource.URL;
             if (isAtmosEnabled()) ;
             console.log("Using content source:", bestSource.flavor);
-            focalHls.contentID = contentID;
-            focalHls.loadSource(sourceURL);
+            getActiveHlsInstance().contentID = contentID;
+            getActiveHlsInstance().loadSource(sourceURL);
         }
         catch (err) {
             // TODO: Handle error
             console.error("Error loading content:", err);
+        }
+    }
+
+    class QueueItem {
+        song;
+        hasInitialized = false;
+        hls = null;
+        audio;
+        constructor(param) {
+            this.song = param.song;
+            this.audio = document.createElement('audio');
+            this.audio.className = `focalmk-audio-${this.song}`;
+            this.audio.setAttribute('data-focalmk-id', this.song);
+            document.body.appendChild(this.audio);
+        }
+        setActive() {
+            console.log(`[FocalMK] Initializing HLS for song: ${this.song}`);
+            this.hls = createHlsInstance();
+            this.audio.attachedHls = this.hls;
+            // Find the previous audio element and remove it from being the main one
+            getAudioElement().removeAttribute("id");
+            // Set the current audio element to the main one
+            this.audio.id = "apple-music-player";
         }
     }
 
@@ -37279,6 +37309,7 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
             const itemToPlay = this.queue[0];
             this.nowPlayingItem = itemToPlay.song;
             console.log(`[FocalMK] Now playing: ${itemToPlay.song}`);
+            itemToPlay.setActive();
             if (!itemToPlay.hasInitialized) {
                 itemToPlay.hasInitialized = true;
                 await loadContent(itemToPlay.song);
@@ -37288,18 +37319,20 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
         stop() {
             this.isPlaying = false;
             console.log("[FocalMK] Playback stopped");
+            getAudioElement().src = "";
         }
         pause() {
             this.isPlaying = false;
             console.log("[FocalMK] Playback paused");
+            getAudioElement().pause();
         }
         setQueue(q) {
             console.log("[FocalMK] Queue set to:", q.song);
-            this.queue = [q];
+            this.queue = [new QueueItem(q)];
         }
         playNext(q) {
             console.log("[FocalMK] Added to queue:", q.song);
-            this.queue.push(q);
+            this.queue.push(new QueueItem(q));
         }
         skipToNextItem() {
             console.log("[FocalMK] Skipping to next item in queue");

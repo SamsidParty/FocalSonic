@@ -1,16 +1,16 @@
 import { getFetchHeaders } from "../auth/headers";
 import { licenseURL, widevineCertURL } from "../helpers/constants";
 import { getAudioElement } from "../helpers/dom";
-import { focalHls } from "../helpers/hls-instance";
+import { getActiveHlsInstance } from "../helpers/hls-instance";
 import { getPssh } from "./pssh";
 
 export function tryAcquireLicense() {
-    if (focalHls?.contentID && focalHls.magicDataURI && !focalHls.licenseAcquired) {
-        focalHls.licenseAcquired = true;
-        console.log("Acquiring license for content ID:", focalHls.contentID);
-        licenseForWebPlayback(getAudioElement(), focalHls.contentID).then(() => {
+    if (getActiveHlsInstance()?.contentID && getActiveHlsInstance().magicDataURI && !getActiveHlsInstance().licenseAcquired) {
+        getActiveHlsInstance().licenseAcquired = true;
+        console.log("Acquiring license for content ID:", getActiveHlsInstance().contentID);
+        licenseForWebPlayback(getAudioElement(), getActiveHlsInstance().contentID!).then(() => {
             console.log("License acquired, attaching media");
-            focalHls.attachMedia(getAudioElement());
+            getActiveHlsInstance().attachMedia(getAudioElement());
         });
     }
 }
@@ -83,7 +83,7 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
 
     return new Promise<void>(async (resolve, reject) => {
 
-        if (!focalHls?.magicDataURI) reject();
+        if (!getActiveHlsInstance()?.magicDataURI) reject();
 
         const widevine = await acquireWidevineAccess();
         const certificate = await acquireWidevineCert();
@@ -100,13 +100,13 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
             console.log("License Message Event:", event);
             if (event.messageType === 'license-request') {
                 const challengeBase64 = new Uint8Array(event.message).toBase64();
-                const license = await acquireWebPlaybackLicense(challengeBase64, contentID, focalHls.magicDataURI!);
+                const license = await acquireWebPlaybackLicense(challengeBase64, contentID, getActiveHlsInstance().magicDataURI!);
                 await session.update(new Uint8Array(license));
                 resolve();
             }
         }, false);
 
-        const initData = getPssh(focalHls.magicDataURI!);
+        const initData = getPssh(getActiveHlsInstance().magicDataURI!);
         console.log("Generating license request with initData:", initData.toBase64());
         session.generateRequest("cenc", initData);
     });

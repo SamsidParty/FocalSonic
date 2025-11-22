@@ -1,5 +1,5 @@
 import { isAtmosEnabled } from "../helpers/atmos";
-import { focalHls } from "../helpers/hls-instance";
+import { getActiveHlsInstance } from "../helpers/hls-instance";
 import { findBestWebContentSource, getWebContentSources } from "../helpers/sources";
 
 export async function loadContent(contentID: string) {
@@ -16,8 +16,8 @@ export async function loadContent(contentID: string) {
 
         console.log("Using content source:", bestSource.flavor);
 
-        focalHls.contentID = contentID;
-        focalHls.loadSource(sourceURL);
+        getActiveHlsInstance().contentID = contentID;
+        getActiveHlsInstance().loadSource(sourceURL);
     }
     catch (err) {
         // TODO: Handle error
