@@ -2,7 +2,7 @@ import { getAudioEffectController } from "../playback/audio-effects.js";
 
 window.isCurrentSongRadio = false;
 
-export async function getMusicKit() {
+export function getMusicKit() {
     if (window.virtualMusicKit) {
         return window.virtualMusicKit;
     }
@@ -20,10 +20,10 @@ async function onMusicKitLoad() {
 
     window.proxyMusicInstance.addEventListener("playbackStateDidChange", ({ oldState, state }) => {
         console.log(`[FocalSonic][Apple Music Proxy] Playback changed from ${oldState} to ${state}`);
-        if (state === MusicKit.PlaybackStates.ended && window.proxyMusicInstance.repeatMode !== MusicKit.PlayerRepeatMode.one) {
+        if (state === getMusicKit().PlaybackStates.ended && window.proxyMusicInstance.repeatMode !== getMusicKit().PlayerRepeatMode.one) {
             window.igniteView?.commandBridge.appleMusicRecieveEndedEvent();
         }
-        else if (state === MusicKit.PlaybackStates.playing) {
+        else if (state === getMusicKit().PlaybackStates.playing) {
             window.igniteView?.commandBridge.appleMusicRecieveLoadedEvent(window.proxyMusicInstance.currentPlaybackDuration);
         }
     });
@@ -43,7 +43,7 @@ async function onMusicKitLoad() {
 };
 
 async function checkAuthState() {
-    const music = MusicKit?.getInstance();
+    const music = getMusicKit()?.getInstance();
 
     if (music && music.isAuthorized && music.musicUserToken && music.developerToken) {
         clearInterval(window.checkAuthStateInterval);
@@ -105,7 +105,7 @@ window.executeInjectedQueue = async () => {
             !!window.proxyMusicInstance.nowPlayingItem && await window.proxyMusicInstance.seekToTime(item.time);
         }
         else if (item.type === "setLoopMode") {
-            window.proxyMusicInstance.repeatMode = item.loop ? MusicKit.PlayerRepeatMode.one : MusicKit.PlayerRepeatMode.none;
+            window.proxyMusicInstance.repeatMode = item.loop ? getMusicKit().PlayerRepeatMode.one : getMusicKit().PlayerRepeatMode.none;
         }
         else if (item.type === "setVolume") {
             findAudioElement() && getAudioEffectController(findAudioElement()).setBaseVolume(item.volume);

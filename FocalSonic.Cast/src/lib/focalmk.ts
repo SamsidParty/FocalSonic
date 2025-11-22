@@ -42,7 +42,6 @@ focalHls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
 focalHls.on(Hls.Events.MANIFEST_LOADED, (event, data) => {
     const manifestText = data.networkDetails?.responseText || "";
 
-    console.log(data)
 
 
     // We need to find the magic data URI from the manifest
@@ -114,6 +113,7 @@ function getWebPlaybackPssh() {
     return n
 }
 
+
 function getEnhancedPssh(licenseURL: string) {
     if (licenseURL.includes("base64,")) {
         const split = licenseURL.split(",");
@@ -135,7 +135,7 @@ function tryAcquireLicense() {
     if (focalHls?.contentID && focalHls.magicDataURI && !focalHls.licenseAcquired) {
         focalHls.licenseAcquired = true;
         console.log("Acquiring license for content ID:", focalHls.contentID);
-        licenseForWebPlayback(getAudioElement(), focalHls.contentID).then(() => {
+        licenseWithDefaultKey(getAudioElement(), focalHls.contentID).then(() => {
             console.log("License acquired, attaching media");
             focalHls.attachMedia(getAudioElement());
         });
@@ -229,7 +229,7 @@ export function acquireWidevineAccess() {
                     {
                         contentType: 'audio/mp4; codecs="ec-3"',
                         channels: 6,
-                        robustness: 'SW_SECURE_DECODE' 
+                        robustness: 'SW_SECURE_DECODE'
                     }
                 ],
                 videoCapabilities: [
@@ -245,6 +245,36 @@ export function acquireWidevineAccess() {
 
             // Request access to the key system
             navigator.requestMediaKeySystemAccess(widevineKeySystem, config)
+                .then(resolve)
+                .catch(reject);
+        }
+    });
+}
+
+export function acquireClearKeyAccess() {
+    return new Promise<MediaKeySystemAccess>((resolve, reject) => {
+        const clearKeySystem = 'org.w3.clearkey';
+        if (navigator.requestMediaKeySystemAccess) {
+            // Define the configuration
+            const config = [{
+                initDataTypes: ['cenc'], // Common Encryption
+                audioCapabilities: [
+                    {
+                        contentType: 'audio/mp4; codecs="mp4a.40.2"'
+                    },
+                    {
+                        contentType: 'audio/mp4; codecs="ec-3"'
+                    }
+                ],
+                videoCapabilities: [
+                    {
+                        contentType: 'video/mp4; codecs="avc1.42E01E"'
+                    }
+                ],
+            }];
+
+            // Request access to the key system
+            navigator.requestMediaKeySystemAccess(clearKeySystem, config)
                 .then(resolve)
                 .catch(reject);
         }
@@ -282,6 +312,60 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
         const initData = getPssh(focalHls?.magicDataURI);
         console.log("Generating license request with initData:", initData);
         session.generateRequest("cenc", initData);
+    });
+}
+
+function makeClearKeyLicense(): Uint8Array {
+
+    const payload = {
+        keys: [
+            {
+                kty: "oct",
+                kid: "AAAAAAAAAAAAAAAAAAAAAA", //"AAAAAAAAAABzMS9lMSAgIA",
+                k: "Mrit4XaeJrH_uJhjUnk_xg",
+            },
+        ],
+        type: "temporary"
+    };
+
+    const s = JSON.stringify(payload);
+    const array = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) {
+        array[i] = s.charCodeAt(i);
+    }
+    return array;
+
+}
+
+
+export async function licenseWithDefaultKey(audio: HTMLAudioElement | null = null, contentID: string) {
+    if (!audio) {
+        audio = getAudioElement();
+    }
+
+    return new Promise<void>(async (resolve, reject) => {
+        const clearkey = await acquireClearKeyAccess();
+
+        const mediaKeys = await clearkey.createMediaKeys();
+        const session = mediaKeys.createSession();
+
+        // Attach the keys to the audio element
+        audio.src = "";
+        audio?.setMediaKeys(mediaKeys);
+
+        session.addEventListener('message', async (event) => {
+            console.log("License Message Event:", event);
+            if (event.messageType === 'license-request') {
+                const license = makeClearKeyLicense();
+                console.log("Providing ClearKey license");
+                await session.update(new Uint8Array(license));
+                resolve();
+            }
+        }, false);
+
+
+        await session.generateRequest("cenc", Uint8Array.fromBase64("AAAANHBzc2gBAAAAEHfv7MCyTQKs4zweUuL7SwAAAAEAAAAAAAAAAHMxL2UxICAgAAAAAA=="));
+
     });
 }
 

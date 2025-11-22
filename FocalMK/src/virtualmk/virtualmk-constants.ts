@@ -1,0 +1,2 @@
+export const PlayerRepeatMode = { "0": "none", "1": "one", "2": "all", "none": 0, "one": 1, "all": 2 }
+export const PlaybackStates = { "0": "none", "1": "loading", "2": "playing", "3": "paused", "4": "stopped", "5": "ended", "6": "seeking", "8": "waiting", "9": "stalled", "10": "completed", "none": 0, "loading": 1, "playing": 2, "paused": 3, "stopped": 4, "ended": 5, "seeking": 6, "waiting": 8, "stalled": 9, "completed": 10 }
