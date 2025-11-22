@@ -1,3 +1,4 @@
+import Hls from "hls.js";
 import { isAtmosEnabled } from "../helpers/atmos";
 import { getActiveHlsInstance } from "../helpers/hls-instance";
 import { findBestWebContentSource, getWebContentSources } from "../helpers/sources";
@@ -6,7 +7,7 @@ export async function loadContent(contentID: string) {
     try {
         const sources = await getWebContentSources(contentID);
         const bestSource = findBestWebContentSource(sources);
-        if (!bestSource) throw new Error("No valid content source found");
+        if (!bestSource) throw new Error("[FocalMK] No valid content source found");
 
         let sourceURL = bestSource.URL;
         
@@ -14,10 +15,18 @@ export async function loadContent(contentID: string) {
             sourceURL = "";
         }
 
-        console.log("Using content source:", bestSource.flavor);
+        console.log("[FocalMK] Using content source:", bestSource.flavor);
 
-        getActiveHlsInstance().contentID = contentID;
-        getActiveHlsInstance().loadSource(sourceURL);
+
+        await new Promise<void>((resolve) => {
+            getActiveHlsInstance().on(Hls.Events.MEDIA_ATTACHED, () => {
+                console.log("[FocalMK] Playback ready");
+                resolve();
+            });
+
+            getActiveHlsInstance().contentID = contentID;
+            getActiveHlsInstance().loadSource(sourceURL);
+        });
     }
     catch (err) {
         // TODO: Handle error

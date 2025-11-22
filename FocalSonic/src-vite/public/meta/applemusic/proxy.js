@@ -37240,12 +37240,18 @@ Schedule: ${scheduleItems.map(seg => segmentToString(seg))} pos: ${this.timeline
             const sources = await getWebContentSources(contentID);
             const bestSource = findBestWebContentSource(sources);
             if (!bestSource)
-                throw new Error("No valid content source found");
+                throw new Error("[FocalMK] No valid content source found");
             let sourceURL = bestSource.URL;
             if (isAtmosEnabled()) ;
-            console.log("Using content source:", bestSource.flavor);
-            getActiveHlsInstance().contentID = contentID;
-            getActiveHlsInstance().loadSource(sourceURL);
+            console.log("[FocalMK] Using content source:", bestSource.flavor);
+            await new Promise((resolve) => {
+                getActiveHlsInstance().on(Hls.Events.MEDIA_ATTACHED, () => {
+                    console.log("[FocalMK] Playback ready");
+                    resolve();
+                });
+                getActiveHlsInstance().contentID = contentID;
+                getActiveHlsInstance().loadSource(sourceURL);
+            });
         }
         catch (err) {
             // TODO: Handle error
