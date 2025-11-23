@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
 import { useMainDrawerState } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
+import clsx from "clsx";
 import { Link } from "react-router-dom";
 
 export function ExplicitIcon() {
@@ -22,11 +23,11 @@ export function TableSongTitle({ song }: { song: ISong }) {
                 altText={song.title}
             />
             <div className="flex flex-col w-full justify-center truncate">
-                <span className="font-medium truncate flex gap-1 items-center">
+                <span className={clsx("font-medium truncate flex gap-1 items-center")}>
                     {song.title}
                     {song.explicitStatus === "explicit" && <ExplicitIcon />}
                 </span>
-                <div className="flex items-center truncate">
+                <div className="flex items-center truncate text-muted-foreground">
                     <TableArtists song={song} />
                 </div>
             </div>

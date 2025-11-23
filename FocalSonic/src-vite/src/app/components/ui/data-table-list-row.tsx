@@ -65,14 +65,20 @@ export function TableListRow<TData>({
     const isQueue = pageType === "queue";
 
     const filterCells = (cells: Cell<TData, unknown>[]) => {
-        return cells.filter((cell) => {
+        let newCells = cells.filter((cell) => {
             
             if (pageType === "queue-small") {
-                return cell.column.id == "title";
+                return cell.column.id == "title" || cell.column.id == "index";
             }
 
             return true;
         });
+
+        if (pageType === "queue-small") {
+            newCells = newCells.reverse();
+        }
+
+        return newCells;
     };
 
     return (

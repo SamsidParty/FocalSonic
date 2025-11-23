@@ -325,7 +325,7 @@ export function DataTableList<TData, TValue>({
     return (
         <div className="h-full">
             <div
-                className={clsx("relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent", pageType === "queue-small" && "no-scrollbar")}
+                className={clsx("relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent")}
                 data-testid="data-table"
                 role="table"
             >
