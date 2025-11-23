@@ -37,7 +37,17 @@ export class MusicKitInstance {
     isPlaying: boolean = false;
     nowPlayingItem: string | null = null;
 
+    // Events
+    eventListeners: { [key: string]: ((args: any) => void)[] } = {};
 
+    fireEvent(event: string, args: any) {
+        const listeners = this.eventListeners[event];
+        if (listeners) {
+            listeners.forEach(callback => {
+                callback(args);
+            });
+        }
+    }
 
     // Queue
     queue: QueueItem[] = [];
@@ -112,12 +122,12 @@ export class MusicKitInstance {
 
     setQueue(q: QueueItemParam) {
         console.log("[FocalMK] Queue set to:", q.song);
-        this.queue = [new QueueItem(q)];
+        this.queue = [new QueueItem(q, this)];
     }
 
     playNext(q: QueueItemParam) {
         console.log("[FocalMK] Added to queue:", q.song);
-        this.queue.push(new QueueItem(q));
+        this.queue.push(new QueueItem(q, this));
     }
 
     skipToNextItem() {
@@ -132,8 +142,8 @@ export class MusicKitInstance {
     }
 
     addEventListener(event: string, callback: (args: any) => void) {
-        // Dummy implementation
-        console.log(`[FocalMK] Event listener added for ${event}`);
+        this.eventListeners[event] = this.eventListeners[event] || [];
+        this.eventListeners[event].push(callback);
     }
 
 

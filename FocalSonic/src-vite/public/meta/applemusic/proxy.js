@@ -38356,17 +38356,25 @@
         }
     }
 
+    const PlayerRepeatMode = { "0": "none", "1": "one", "2": "all", "none": 0, "one": 1, "all": 2 };
+    const PlaybackStates = { "0": "none", "1": "loading", "2": "playing", "3": "paused", "4": "stopped", "5": "ended", "6": "seeking", "8": "waiting", "9": "stalled", "10": "completed", "none": 0, "loading": 1, "playing": 2, "paused": 3, "stopped": 4, "ended": 5, "seeking": 6, "waiting": 8, "stalled": 9, "completed": 10 };
+
     class QueueItem {
         song;
         hasInitialized = false;
         hls = null;
         audio;
-        constructor(param) {
+        parent;
+        constructor(param, parent) {
             this.song = param.song;
+            this.parent = parent;
             this.audio = document.createElement('audio');
             this.audio.className = `focalmk-audio-${this.song}`;
             this.audio.setAttribute('data-focalmk-id', this.song);
             document.body.appendChild(this.audio);
+        }
+        handleEnded() {
+            this.parent.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.playing, state: PlaybackStates.ended });
         }
         setActive() {
             console.log(`[FocalMK] Initializing HLS for song: ${this.song}`);
@@ -38376,11 +38384,15 @@
             getAudioElement().removeAttribute("id");
             // Set the current audio element to the main one
             this.audio.id = "apple-music-player";
+            this.audio.addEventListener('ended', this.handleEnded.bind(this));
+        }
+        setInactive() {
+            console.log(`[FocalMK] Deactivating song: ${this.song}`);
+            this.audio.removeEventListener('ended', this.handleEnded.bind(this));
+            this.audio.src = "";
+            this.audio.removeAttribute("id");
         }
     }
-
-    const PlayerRepeatMode = { "0": "none", "1": "one", "2": "all", "none": 0, "one": 1, "all": 2 };
-    const PlaybackStates = { "0": "none", "1": "loading", "2": "playing", "3": "paused", "4": "stopped", "5": "ended", "6": "seeking", "8": "waiting", "9": "stalled", "10": "completed", "none": 0, "loading": 1, "playing": 2, "paused": 3, "stopped": 4, "ended": 5, "seeking": 6, "waiting": 8, "stalled": 9, "completed": 10 };
 
     class MusicKitInstance {
         // Auth
@@ -38406,6 +38418,16 @@
         _playbackRate = 1;
         isPlaying = false;
         nowPlayingItem = null;
+        // Events
+        eventListeners = {};
+        fireEvent(event, args) {
+            const listeners = this.eventListeners[event];
+            if (listeners) {
+                listeners.forEach(callback => {
+                    callback(args);
+                });
+            }
+        }
         // Queue
         queue = [];
         get repeatMode() {
@@ -38467,11 +38489,11 @@
         }
         setQueue(q) {
             console.log("[FocalMK] Queue set to:", q.song);
-            this.queue = [new QueueItem(q)];
+            this.queue = [new QueueItem(q, this)];
         }
         playNext(q) {
             console.log("[FocalMK] Added to queue:", q.song);
-            this.queue.push(new QueueItem(q));
+            this.queue.push(new QueueItem(q, this));
         }
         skipToNextItem() {
             console.log("[FocalMK] Skipping to next item in queue");
@@ -38485,8 +38507,8 @@
             this.queue = [];
         }
         addEventListener(event, callback) {
-            // Dummy implementation
-            console.log(`[FocalMK] Event listener added for ${event}`);
+            this.eventListeners[event] = this.eventListeners[event] || [];
+            this.eventListeners[event].push(callback);
         }
     }
 
