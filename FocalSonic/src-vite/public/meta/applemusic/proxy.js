@@ -38247,6 +38247,13 @@
             debug: true,
             emeEnabled: false, // Custom DRM implementation, turn off the default one
             drmSystemOptions: {},
+            xhrSetup: (xhr, url) => {
+                if (window.igniteView && url.includes("gr2768") && url.includes(".mp4")) {
+                    // Forward to the proxy that will edit the key IDs before it reaches the client
+                    const newUrl = window.igniteView.resolverURL + "/streaming-atmos-v1?" + encodeURIComponent(url);
+                    xhr.open("GET", newUrl, true);
+                }
+            }
         });
         instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
             console.log("MANIFEST_PARSED event received, available levels:", data.levels);
