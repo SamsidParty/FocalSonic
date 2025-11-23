@@ -10,7 +10,7 @@ import { getAppInfo } from "@/utils/appName";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, Info } from "lucide-react";
+import { DollarSign, Info, MessagesSquareIcon } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -101,6 +101,15 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                         >
                             <DollarSign className="min-w-4"/>
                             Restore Purchase
+                        </a>
+                        <a
+                            className="w-full px-2 py-1 gap-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center cursor-pointer"
+                            onClick={() => window.open("https://discord.gg/W9wb7rpB94")}
+                            target="_blank"
+                            rel="nofollow noreferrer"
+                        >
+                            <MessagesSquareIcon className="min-w-4"/>
+                            Discord
                         </a>
                     </div>
                 </div>
