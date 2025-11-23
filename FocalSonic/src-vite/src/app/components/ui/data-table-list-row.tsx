@@ -1,9 +1,9 @@
-import { Cell, flexRender, Row } from "@tanstack/react-table";
-import clsx from "clsx";
-import { memo, MouseEvent, TouchEvent, useMemo } from "react";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
+import { Cell, flexRender, Row } from "@tanstack/react-table";
+import clsx from "clsx";
+import { memo, MouseEvent, TouchEvent, useMemo } from "react";
 
 const MemoContextMenuProvider = memo(ContextMenuProvider);
 const MemoTableCell = memo(TableCell) as typeof TableCell;
@@ -16,7 +16,7 @@ interface TableRowProps<TData> {
     handleRowTap: (e: TouchEvent<HTMLDivElement>, row: Row<TData>) => void
     getContextMenuOptions: (row: Row<TData>) => JSX.Element | undefined
     dataType?: "song" | "artist" | "playlist" | "radio"
-    pageType?: "general" | "queue"
+    pageType?: "general" | "queue" | "queue-small"
 }
 
 let isTap = false;
@@ -64,6 +64,17 @@ export function TableListRow<TData>({
 
     const isQueue = pageType === "queue";
 
+    const filterCells = (cells: Cell<TData, unknown>[]) => {
+        return cells.filter((cell) => {
+            
+            if (pageType === "queue-small") {
+                return cell.column.id == "title";
+            }
+
+            return true;
+        });
+    };
+
     return (
         <MemoContextMenuProvider options={getContextMenuOptions(row)}>
             <div
@@ -90,7 +101,7 @@ export function TableListRow<TData>({
                     top: virtualRow.start,
                 }}
             >
-                {row.getVisibleCells().map((cell) => (
+                {filterCells(row.getVisibleCells()).map((cell) => (
                     <MemoTableCell key={cell.id} cell={cell} />
                 ))}
             </div>

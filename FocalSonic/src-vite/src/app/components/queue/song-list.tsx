@@ -1,6 +1,5 @@
 import { Button } from "@/app/components/ui/button";
 import { DataTableList } from "@/app/components/ui/data-table-list";
-import { DialogTitle } from "@/app/components/ui/dialog";
 import { Separator } from "@/app/components/ui/separator";
 import { queueColumns } from "@/app/tables/queue-columns";
 import {
@@ -10,11 +9,12 @@ import {
 } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
+import clsx from "clsx";
 import { ListXIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-export function QueueSongList() {
+export function QueueSongList({ small } : { small?: boolean } ) {
     const { t } = useTranslation();
     const currentList = usePlayerCurrentList();
     const currentSongIndex = usePlayerCurrentSongIndex();
@@ -40,23 +40,38 @@ export function QueueSongList() {
     ];
 
     return (
-        <div className="flex flex-1 flex-col h-full min-w-[300px]">
-            <DialogTitle className="sr-only">{t("queue.title")}</DialogTitle>
+        <div className={clsx("flex flex-1 flex-col h-full", small ? "max-w-none" : "max-w-[50vw] mx-auto")}>
+            <h1 className="sr-only">{t("queue.title")}</h1>
             <div className="flex items-center justify-between h-8 mb-2">
                 <div className="flex gap-2 h-6 items-center text-foreground/70">
-                    <p className="text-foreground">{t("queue.title")}</p>
-                    <p>{"•"}</p>
-                    <p className="text-sm">
-                        {t("playlist.songCount", { count: trackListCount })}
-                    </p>
-                    <p>{"•"}</p>
+                    <p className="ml-1 text-foreground font-bold">{t("queue.title")}</p>
+
                     {
-                        trackListDuration && (
-                            <p className="text-sm">
-                                {t("playlist.duration", { duration: trackListDuration })}
-                            </p>
+                        small ? (
+                            <>
+                                <p>{"•"}</p>
+                                <p className="text-sm">
+                                    {trackListCount}
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <p>{"•"}</p>
+                                <p className="text-sm">
+                                    {t("playlist.songCount", { count: trackListCount })}
+                                </p>
+                                <p>{"•"}</p>
+                                {
+                                    trackListDuration && (
+                                        <p className="text-sm">
+                                            {t("playlist.duration", { duration: trackListDuration })}
+                                        </p>
+                                    )
+                                }
+                            </>
                         )
                     }
+
   
                 </div>
 
@@ -84,7 +99,7 @@ export function QueueSongList() {
                     currentSongIndex={currentSongIndex}
                     allowRowSelection={false}
                     showContextMenu={false}
-                    pageType="queue"
+                    pageType={small ? "queue-small" : "queue"}
                 />
             </div>
         </div>

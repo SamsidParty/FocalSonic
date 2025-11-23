@@ -564,7 +564,7 @@
   },
   "queue": {
     "title": "Queue",
-    "clear": "Clear queue",
+    "clear": "Clear",
     "close": "Close queue",
     "open": "Open queue"
   },

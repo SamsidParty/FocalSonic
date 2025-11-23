@@ -1,29 +1,3 @@
-import {
-    ColumnFiltersState,
-    SortingState,
-    getCoreRowModel,
-    useReactTable,
-    Row,
-    RowData,
-    getSortedRowModel,
-    SortingFn,
-    Table,
-} from "@tanstack/react-table";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import clsx from "clsx";
-import debounce from "lodash/debounce";
-import {
-    useEffect,
-    MouseEvent,
-    TouchEvent,
-    useCallback,
-    useMemo,
-    useRef,
-    useState,
-    memo,
-} from "react";
-import { isMacOs } from "react-device-detect";
-import { useHotkeys } from "react-hotkeys-hook";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { SelectedSongsMenuOptions } from "@/app/components/song/selected-options";
 import { ColumnFilter } from "@/types/columnFilter";
@@ -31,6 +5,32 @@ import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISong } from "@/types/responses/song";
 import { MouseButton } from "@/utils/browser";
 import { computeMultiSelectedRows } from "@/utils/dataTable";
+import {
+    ColumnFiltersState,
+    Row,
+    RowData,
+    SortingFn,
+    SortingState,
+    Table,
+    getCoreRowModel,
+    getSortedRowModel,
+    useReactTable,
+} from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import clsx from "clsx";
+import debounce from "lodash/debounce";
+import {
+    MouseEvent,
+    TouchEvent,
+    memo,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+import { isMacOs } from "react-device-detect";
+import { useHotkeys } from "react-hotkeys-hook";
 import { DataTableListHeader } from "./data-table-list-header";
 import { TableListRow } from "./data-table-list-row";
 import { ScrollArea, scrollAreaViewportSelector } from "./scroll-area";
@@ -59,7 +59,7 @@ interface DataTableProps<TData, TValue> {
     allowRowSelection?: boolean
     showContextMenu?: boolean
     dataType?: "song" | "artist" | "playlist" | "radio"
-    pageType?: "general" | "queue"
+    pageType?: "general" | "queue" | "queue-small"
     fetchNextPage?: () => void
     hasNextPage?: boolean
     scrollToIndex?: boolean
@@ -325,7 +325,7 @@ export function DataTableList<TData, TValue>({
     return (
         <div className="h-full">
             <div
-                className="relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent"
+                className={clsx("relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent", pageType === "queue-small" && "no-scrollbar")}
                 data-testid="data-table"
                 role="table"
             >
@@ -347,12 +347,12 @@ export function DataTableList<TData, TValue>({
                     type="always"
                     className={clsx(
                         "[&_div:last-child]:border-0 overflow-auto",
-                        showHeader ? "h-[calc(100%-41px)]" : "h-full",
+                        showHeader ? "h-[calc(100%-41px)]" : "h-full"
                     )}
                     thumbClassName={clsx(pageType === "queue" && "secondary-thumb-bar")}
                 >
                     <div
-                        className="w-full relative"
+                        className={clsx("w-full relative")}
                         style={{ height: `${virtualizer.getTotalSize()}px` }}
                     >
                         {virtualizer.getVirtualItems().length ? (

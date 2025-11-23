@@ -5,8 +5,10 @@ import { useAppSettings } from "@/store/app.store";
 import { usePlayerStyle } from "@/store/theme.store";
 import React, { memo } from "react";
 import ExtrabarLyrics from "../components/extrabar/lyrics";
+import ExtrabarQueue from "../components/extrabar/queue";
 
 const MemoExtrabarLyrics = memo(ExtrabarLyrics);
+const MemoExtrabarQueue = memo(ExtrabarQueue);
 
 export function Extrabar() {
     const { t } = useTranslation();
@@ -26,8 +28,9 @@ export function Extrabar() {
             >
                 {
                     (extraBarContent !== "none") && (
-                        <div className="bg-body rounded-md w-full h-full flex flex-col">
+                        <div className="bg-body rounded-md w-full h-full flex flex-col p-2">
                             {extraBarContent === "lyrics" && <MemoExtrabarLyrics />}
+                            {extraBarContent === "queue" && <MemoExtrabarQueue />}
                         </div>
                     )
                 }
