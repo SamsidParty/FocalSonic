@@ -10,7 +10,10 @@ using IgniteView.Core;
 using IgniteView.Desktop;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
+using WatsonWebserver.Core;
 using Windows.Services.Store;
 
 public class Program
@@ -18,18 +21,27 @@ public class Program
     public static ViteAppManager App;
     public static HttpClient Http = new HttpClient();
     public static WebWindow? MainWindow => App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault();
-
     public static WindowBounds DefaultBounds = new WindowBounds(1450, 900) { MinWidth = 0, MinHeight = 0 };
+    public static string LockFilePath => Path.Join(Path.GetDirectoryName(Path.GetTempPath()), "focalsonic.lock");
 
     [STAThread]
     static void Main(string[] args)
     {
+        if (IsAnotherProcessRunning() && File.Exists(LockFilePath))
+        {
+            var existingAppServer = File.ReadAllText(LockFilePath);
+            var showCommandURL = existingAppServer + "/dynamic/show-window";
+            (new HttpClient()).GetAsync(showCommandURL).Wait();
+            return; // Now the window will open on the main process
+        }
 
         // Needed for background playback with Apple Music
         Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--autoplay-policy=no-user-gesture-required --disable-features=HardwareMediaKeyHandling");
 
         DesktopPlatformManager.Activate();
         App = new ViteAppManager();
+
+        App.RegisterDynamicFileRoute("/show-window", async (HttpContextBase ctx) => { CreateMainWindow(); }, WatsonWebserver.Core.HttpMethod.GET);
 
         // Allows communication with the apple music API from javascript
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
@@ -96,9 +108,37 @@ public class Program
             .WithPlatformBasedAdditions()
             .Show();
 
+        WriteLockFile();
+
         Licensing.Context = StoreContext.GetDefault();
         WinRT.Interop.InitializeWithWindow.Initialize(Licensing.Context, App.MainWindow.NativeHandle);
     }
 
+    public static bool IsAnotherProcessRunning()
+    {
+        var processes = Process.GetProcessesByName("focalsonic");
+        var currentProcess = Process.GetCurrentProcess();
+        foreach (var proc in processes)
+        {
+            if (proc != null && proc.Id != currentProcess.Id && !proc.HasExited)
+            {
+                return true;
+            }
+        }
 
+        return false;
+    }
+
+    public static void WriteLockFile()
+    {
+
+        var serverURL = App?.CurrentServerManager?.LocalBaseURL;
+        if (string.IsNullOrEmpty(serverURL)) return;
+
+        try
+        {
+            File.WriteAllText(LockFilePath, serverURL);
+        }
+        catch { }
+    }
 }
