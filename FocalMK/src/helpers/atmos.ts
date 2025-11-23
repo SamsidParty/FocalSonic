@@ -1,3 +1,3 @@
 export function isAtmosEnabled() {
-    return false;
+    return true;
 }

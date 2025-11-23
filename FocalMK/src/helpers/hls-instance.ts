@@ -19,6 +19,7 @@ export function createHlsInstance(): FocalHls {
     }) as FocalHls;
 
     instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+        console.log("MANIFEST_PARSED event received, available levels:", data.levels);
         data.levels.forEach((level, id) => {
             if (isAtmosEnabled() && level?.audioCodec?.includes("ec-3")) {
                 console.log("Selecting Dolby Atmos audio level:", level);
@@ -32,6 +33,7 @@ export function createHlsInstance(): FocalHls {
     });
 
     instance.on(Hls.Events.MANIFEST_LOADED, (event, data) => {
+        console.log("MANIFEST_LOADED event received, available data:", data);
         const manifestText = data.networkDetails?.responseText || "";
 
         // We need to find the magic data URI from the manifest
@@ -70,7 +72,7 @@ export function createHlsInstance(): FocalHls {
 
         const manifestText = data.networkDetails?.responseText || "";
 
-        console.log("LEVEL_LOADED event received");
+        console.log("LEVEL_LOADED event received", data);
         if (!instance.magicDataURI && isAtmosEnabled() && data.levelInfo?.audioCodec?.includes("ec-3")) {
             console.log("Attempting to find magic data URI in LEVEL_LOADED for Atmos stream");
             // Aforementioned mode 2 for enhancedHls

@@ -1,5 +1,4 @@
 import { getFetchHeaders } from "../auth/headers";
-import { isAtmosEnabled } from "../helpers/atmos";
 import { licenseURL, widevineCertURL } from "../helpers/constants";
 import { getAudioElement } from "../helpers/dom";
 import { getActiveHlsInstance } from "../helpers/hls-instance";
@@ -92,10 +91,6 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
 
     if (!audio) {
         audio = getAudioElement();
-    }
-
-    if (isAtmosEnabled()) {
-        return Promise.resolve();
     }
 
     return new Promise<void>(async (resolve, reject) => {
