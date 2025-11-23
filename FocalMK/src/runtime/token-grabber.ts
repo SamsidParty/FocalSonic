@@ -19,9 +19,9 @@ async function checkAuthState() {
         console.log("[FocalSonic][Apple Music Auth] Found user token:", music.musicUserToken);
 
         window.foundDeveloperToken = music.developerToken;
-        window.igniteView?.commandBridge.saveAppleMusicDeveloperKey(music.developerToken);
+        await window.igniteView?.commandBridge.saveAppleMusicDeveloperKey(music.developerToken);
 
-        window.location.href = window.igniteView?.resolverURL.replace("dynamic", "/meta/applemusic/proxy.html");
+        window.location.href = window.igniteView?.resolverURL.replace("/dynamic", "/meta/applemusic/proxy.html");
     }
 }
 

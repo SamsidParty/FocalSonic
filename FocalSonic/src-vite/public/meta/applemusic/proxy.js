@@ -380,8 +380,8 @@
             console.log("[FocalSonic][Apple Music Auth] Found developer token:", music.developerToken);
             console.log("[FocalSonic][Apple Music Auth] Found user token:", music.musicUserToken);
             window.foundDeveloperToken = music.developerToken;
-            window.igniteView?.commandBridge.saveAppleMusicDeveloperKey(music.developerToken);
-            window.location.href = window.igniteView?.resolverURL.replace("dynamic", "/meta/applemusic/proxy.html");
+            await window.igniteView?.commandBridge.saveAppleMusicDeveloperKey(music.developerToken);
+            window.location.href = window.igniteView?.resolverURL.replace("/dynamic", "/meta/applemusic/proxy.html");
         }
     }
     // Finds the apple music tokens in order to play music through the proxy
