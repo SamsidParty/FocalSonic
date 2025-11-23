@@ -45,14 +45,14 @@ async function onMusicKitLoad() {
 async function checkAuthState() {
     const music = getMusicKit()?.getInstance();
 
-    if (music && music.isAuthorized && music.musicUserToken && music.developerToken) {
+    console.log("[FocalSonic][Apple Music Proxy] Checking auth:", music);
+    if (music && music.musicUserToken && music.developerToken && music.isAuthorized) {
         clearInterval(window.checkAuthStateInterval);
         window.proxyMusicInstance = music;
         console.log("[FocalSonic][Apple Music Proxy] Found developer token:", music.developerToken);
         console.log("[FocalSonic][Apple Music Proxy] Found user token:", music.musicUserToken);
 
         window.foundDeveloperToken = music.developerToken;
-        window.igniteView?.commandBridge.saveAppleMusicDeveloperKey(music.developerToken);
         setTimeout(() => onMusicKitLoad(), 0);
     }
 }

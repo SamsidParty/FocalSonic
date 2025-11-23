@@ -3,10 +3,6 @@
     factory();
 })((function () { 'use strict';
 
-    function isIgniteView() {
-        return window?.igniteView?.commandBridge !== undefined;
-    }
-
     function swing(p) {
         return 0.5 - Math.cos(p * Math.PI) / 2;
     }
@@ -234,7 +230,7 @@
     }
 
     async function startAppleMusicProxy() {
-        window.checkAuthStateInterval = setInterval(checkAuthState, 500);
+        window.checkAuthStateInterval = setInterval(checkAuthState$1, 500);
     }
 
     async function onMusicKitLoad() {
@@ -265,17 +261,17 @@
         });
 
     }
-    async function checkAuthState() {
+    async function checkAuthState$1() {
         const music = getMusicKit()?.getInstance();
 
-        if (music && music.isAuthorized && music.musicUserToken && music.developerToken) {
+        console.log("[FocalSonic][Apple Music Proxy] Checking auth:", music);
+        if (music && music.musicUserToken && music.developerToken && music.isAuthorized) {
             clearInterval(window.checkAuthStateInterval);
             window.proxyMusicInstance = music;
             console.log("[FocalSonic][Apple Music Proxy] Found developer token:", music.developerToken);
             console.log("[FocalSonic][Apple Music Proxy] Found user token:", music.musicUserToken);
 
             window.foundDeveloperToken = music.developerToken;
-            window.igniteView?.commandBridge.saveAppleMusicDeveloperKey(music.developerToken);
             setTimeout(() => onMusicKitLoad(), 0);
         }
     }
@@ -376,6 +372,22 @@
     };
 
     setInterval(window.executeInjectedQueue, 250);
+
+    async function checkAuthState() {
+        const music = window.MusicKit?.getInstance();
+        if (music && music.isAuthorized && music.musicUserToken && music.developerToken) {
+            clearInterval(window.checkAuthStateInterval);
+            console.log("[FocalSonic][Apple Music Auth] Found developer token:", music.developerToken);
+            console.log("[FocalSonic][Apple Music Auth] Found user token:", music.musicUserToken);
+            window.foundDeveloperToken = music.developerToken;
+            window.igniteView?.commandBridge.saveAppleMusicDeveloperKey(music.developerToken);
+            window.location.href = window.igniteView?.resolverURL.replace("dynamic", "/meta/applemusic/proxy.html");
+        }
+    }
+    // Finds the apple music tokens in order to play music through the proxy
+    function startTokenGrabber() {
+        window.checkAuthStateInterval = setInterval(checkAuthState, 500);
+    }
 
     function getDefaultExportFromCjs (x) {
     	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
@@ -38090,7 +38102,7 @@
     }
 
     function isAtmosEnabled() {
-        return true;
+        return false;
     }
 
     async function getFetchHeaders() {
@@ -38101,7 +38113,35 @@
         };
     }
 
+    const licenseURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense";
+    const widevineCertURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert";
     const webPlaybackURL = "https://play.music.apple.com/WebObjects/MZPlay.woa/wa/webPlayback";
+    const appleMagic1 = [0, 0, 1, 222, 112, 115, 115, 104, 0, 0, 0, 0, 154, 4, 240, 121, 152, 64, 66, 134, 171, 146, 230, 91, 224, 136, 95, 149, 0, 0, 1, 190];
+    const appleMagic2 = [0, 0, 0, 52, 112, 115, 115, 104, 0, 0, 0, 0, 237, 239, 139, 169, 121, 214, 74, 206, 163, 200, 39, 220, 213, 29, 33, 237, 0, 0, 0, 20, 8, 1, 18, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    function getWebPlaybackPssh() {
+        const e = Uint8Array.from(appleMagic1);
+        const n = new Uint8Array(appleMagic2);
+        for (let d = 0; d < e.length; d++)
+            n[n.length - 16 + d] = e[d];
+        return n;
+    }
+    function getEnhancedPssh(licenseURL) {
+        if (licenseURL.includes("base64,")) {
+            const split = licenseURL.split(",");
+            const base64Decoded = Uint8Array.fromBase64(split[1]);
+            return base64Decoded;
+        }
+        throw new Error("Invalid enhanced PSSH license URL");
+    }
+    function getPssh(licenseURL) {
+        if (!licenseURL)
+            throw new Error("No license URL provided for PSSH generation");
+        if (licenseURL.startsWith("enhanced/")) {
+            return getEnhancedPssh(licenseURL.replace("enhanced/", ""));
+        }
+        return getWebPlaybackPssh();
+    }
 
     function tryAcquireLicense() {
         if (getActiveHlsInstance()?.contentID && getActiveHlsInstance().magicDataURI && !getActiveHlsInstance().licenseAcquired) {
@@ -38113,13 +38153,93 @@
             });
         }
     }
+    function acquireWidevineAccess() {
+        return new Promise((resolve, reject) => {
+            const widevineKeySystem = 'com.widevine.alpha';
+            if (navigator.requestMediaKeySystemAccess) {
+                const config = [{
+                        initDataTypes: ['cenc'], // Common Encryption
+                        audioCapabilities: [
+                            {
+                                contentType: 'audio/mp4; codecs="mp4a.40.2"'
+                            },
+                            {
+                                contentType: 'audio/mp4; codecs="ec-3"',
+                                robustness: 'SW_SECURE_DECODE'
+                            }
+                        ],
+                        videoCapabilities: [
+                            {
+                                contentType: 'video/mp4; codecs="avc1.42E01E"',
+                                robustness: 'SW_SECURE_DECODE'
+                            }
+                        ],
+                        distinctiveIdentifier: 'optional',
+                        persistentState: 'optional',
+                        sessionTypes: ['temporary']
+                    }];
+                // Request access to the key system
+                navigator.requestMediaKeySystemAccess(widevineKeySystem, config)
+                    .then(resolve)
+                    .catch(reject);
+            }
+        });
+    }
+    async function acquireWidevineCert() {
+        if (window.widevineCertCache) {
+            return window.widevineCertCache;
+        }
+        const req = await fetch(widevineCertURL);
+        const certBuffer = await req.arrayBuffer();
+        const serverCertificate = new Uint8Array(certBuffer);
+        window.widevineCertCache = serverCertificate; // Cache cause the request takes a while
+        return serverCertificate;
+    }
+    async function acquireWebPlaybackLicense(challenge, contentID, magicDataURI) {
+        const reqBody = {
+            adamId: contentID,
+            "key-system": "com.widevine.alpha",
+            "user-initiated": true,
+            isLibrary: false,
+            uri: magicDataURI.replace("enhanced/", ""),
+            challenge: challenge,
+        };
+        const request = await fetch(licenseURL, {
+            method: "POST",
+            headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
+            body: JSON.stringify(reqBody),
+        });
+        const response = await request.json();
+        return Uint8Array.fromBase64(response.license);
+    }
     function licenseForWebPlayback(audio = null, contentID) {
         if (!audio) {
             audio = getAudioElement();
         }
-        {
-            return Promise.resolve();
-        }
+        return new Promise(async (resolve, reject) => {
+            if (!getActiveHlsInstance()?.magicDataURI)
+                reject();
+            const widevine = await acquireWidevineAccess();
+            const certificate = await acquireWidevineCert();
+            const mediaKeys = await widevine.createMediaKeys();
+            await mediaKeys.setServerCertificate(certificate);
+            const session = mediaKeys.createSession();
+            // Attach the keys to the audio element
+            audio.src = "";
+            audio?.setMediaKeys(mediaKeys);
+            session.addEventListener('message', async (event) => {
+                console.log("License Message Event:", event);
+                if (event.messageType === 'license-request') {
+                    const challengeBase64 = new Uint8Array(event.message).toBase64();
+                    const license = await acquireWebPlaybackLicense(challengeBase64, contentID, getActiveHlsInstance().magicDataURI);
+                    await session.update(new Uint8Array(license));
+                    resolve();
+                }
+            }, false);
+            const initData = getPssh(getActiveHlsInstance().magicDataURI);
+            console.log("Generating license request with initData:", initData.toBase64());
+            session.generateRequest("cenc", initData);
+        });
     }
 
     function createHlsInstance() {
@@ -38130,14 +38250,6 @@
         });
         instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
             data.levels.forEach((level, id) => {
-                if (level?.audioCodec?.includes("ec-3")) {
-                    console.log("Selecting Dolby Atmos audio level:", level);
-                    instance.startLevel = id;
-                    instance.currentLevel = id;
-                    instance.nextAutoLevel = id;
-                    instance.nextLoadLevel = id;
-                    instance.loadLevel = id;
-                }
             });
         });
         instance.on(Hls.Events.MANIFEST_LOADED, (event, data) => {
@@ -38171,24 +38283,9 @@
             tryAcquireLicense();
         });
         instance.on(Hls.Events.LEVEL_LOADED, (event, data) => {
-            const manifestText = data.networkDetails?.responseText || "";
+            data.networkDetails?.responseText || "";
             console.log("LEVEL_LOADED event received");
-            if (!instance.magicDataURI && isAtmosEnabled() && data.levelInfo?.audioCodec?.includes("ec-3")) {
-                console.log("Attempting to find magic data URI in LEVEL_LOADED for Atmos stream");
-                // Aforementioned mode 2 for enhancedHls
-                // #EXT-X-KEY:METHOD=SAMPLE-AES,URI="data:text/plain;base64,AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=",KEYFORMAT="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",KEYFORMATVERSIONS="1"
-                // There will be multiple keys, we need to match all of lines that contain a valid data: URL and do the filtering later, make sure to match the full line
-                const regex2 = /#EXT-X-KEY:METHOD=SAMPLE-AES,URI="(data:[^"]+)",KEYFORMAT="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"/g;
-                const matches = manifestText.matchAll(regex2);
-                for (const m of matches) {
-                    if (m && m[0]?.includes('"urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"') && m[1]?.startsWith("data:") && !m[1]?.includes("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")) {
-                        const magicDataURI = m[1];
-                        console.log("Found magic data URI (enhancedHls):", magicDataURI);
-                        instance.magicDataURI = "enhanced/" + magicDataURI;
-                        break;
-                    }
-                }
-            }
+            if (!instance.magicDataURI && isAtmosEnabled()) ;
             tryAcquireLicense();
         });
         return instance;
@@ -38236,19 +38333,7 @@
             if (!bestSource)
                 throw new Error("[FocalMK] No valid content source found");
             let sourceURL = bestSource.URL;
-            if (isAtmosEnabled() && window.igniteView) {
-                const streamingURL = "https://aod.itunes.apple.com/itunes-assets/HLSMusic221/v4/be/ad/34/bead3418-e788-6ff9-8eec-705a1dafc7b3/P976156933_A1679278167_audio_en_gr2768_mp4a-A6.m3u8";
-                console.warn("[FocalMK] Content source is dolby atmos, using native mp4decrypt");
-                const fetchURL = window.igniteView?.resolverURL + "/streaming-atmos-v1?" + encodeURIComponent(streamingURL);
-                return new Promise(async (resolve, reject) => {
-                    const data = await fetch(fetchURL);
-                    const dataBlob = await data.blob();
-                    const objectURL = URL.createObjectURL(dataBlob);
-                    const audioElement = getAudioElement();
-                    audioElement.src = objectURL;
-                    resolve();
-                });
-            }
+            if (isAtmosEnabled() && window.igniteView) ;
             else if (!sourceURL.endsWith(".m3u8")) {
                 console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
                 getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
@@ -38299,8 +38384,20 @@
 
     class MusicKitInstance {
         // Auth
-        musicUserToken = "ArtrW+GDMTxB5jIO2G1yBU1NqGdY4hqxDIZdnY17Knmg6Q0q2POjahUroexArY5nWdC0vviL8cS9dntXsvoP2G+JwCSMW/tjZRwrq1iF39TSDFfBi3lcklcGm/6s+LeAIBvICW1EaffwqrPhSGpEZQqR6jX/4sEhUxFstfMQ7bxNV03I1Lue4fKtUrfDftaxa8t025i6JXx3FQuh8naAklYXfUl7FoNRWdEGbnjFFPdYdQKYrg==";
-        developerToken = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IldlYlBsYXlLaWQifQ.eyJpc3MiOiJBTVBXZWJQbGF5IiwiaWF0IjoxNzYxNjE4NTU1LCJleHAiOjE3Njg4NzYxNTUsInJvb3RfaHR0cHNfb3JpZ2luIjpbImFwcGxlLmNvbSJdfQ.Rag4lLqQl7vEi8FuEM7SsCW_lRzcndEobrdaFwN45O3G4ATnLchGSH2022CY-P-AccC-qlflcCukP_133uuMYA";
+        _musicUserToken = null;
+        _developerToken = null;
+        get musicUserToken() {
+            if (!this._musicUserToken) {
+                this._musicUserToken = localStorage.getItem("applemusic_media_user_token");
+            }
+            return this._musicUserToken;
+        }
+        get developerToken() {
+            if (!this._developerToken) {
+                this._developerToken = localStorage.getItem("applemusic_developer_token");
+            }
+            return this._developerToken;
+        }
         get isAuthorized() {
             return this.musicUserToken !== null && this.developerToken !== null;
         }
@@ -38408,12 +38505,14 @@
         }
     }
 
-    const enableVirtualMK = true;
-    if (isIgniteView() && enableVirtualMK) {
-        // Setup virtual MusicKit
-        window.virtualMusicKit = new MusicKit();
+    if (window.location.href.includes("music.apple.com")) {
+        startTokenGrabber();
     }
-    if (window.location.href.includes("music.apple.com") || window.location.href.includes("proxy.html")) {
+    else if (window.location.href.includes("proxy.html")) {
+        window.virtualMusicKit = new MusicKit();
+        if (!window.injectedQueue) {
+            window.injectedQueue = [];
+        }
         startAppleMusicProxy();
     }
 

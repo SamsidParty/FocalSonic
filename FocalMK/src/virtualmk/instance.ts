@@ -6,9 +6,27 @@ import { PlayerRepeatMode } from "./virtualmk-constants";
 export class MusicKitInstance {
 
     // Auth
-    musicUserToken: string | null = "ArtrW+GDMTxB5jIO2G1yBU1NqGdY4hqxDIZdnY17Knmg6Q0q2POjahUroexArY5nWdC0vviL8cS9dntXsvoP2G+JwCSMW/tjZRwrq1iF39TSDFfBi3lcklcGm/6s+LeAIBvICW1EaffwqrPhSGpEZQqR6jX/4sEhUxFstfMQ7bxNV03I1Lue4fKtUrfDftaxa8t025i6JXx3FQuh8naAklYXfUl7FoNRWdEGbnjFFPdYdQKYrg==";
-    developerToken: string | null = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IldlYlBsYXlLaWQifQ.eyJpc3MiOiJBTVBXZWJQbGF5IiwiaWF0IjoxNzYxNjE4NTU1LCJleHAiOjE3Njg4NzYxNTUsInJvb3RfaHR0cHNfb3JpZ2luIjpbImFwcGxlLmNvbSJdfQ.Rag4lLqQl7vEi8FuEM7SsCW_lRzcndEobrdaFwN45O3G4ATnLchGSH2022CY-P-AccC-qlflcCukP_133uuMYA";
+    _musicUserToken: string | null = null;
+    _developerToken: string | null = null;
     
+    get musicUserToken() {
+
+        if (!this._musicUserToken) {
+            this._musicUserToken = localStorage.getItem("applemusic_media_user_token");
+        }
+
+        return this._musicUserToken;
+    }
+
+    get developerToken() {
+
+        if (!this._developerToken) {
+            this._developerToken = localStorage.getItem("applemusic_developer_token");
+        }
+
+        return this._developerToken;
+    }
+
     get isAuthorized() {
         return this.musicUserToken !== null && this.developerToken !== null;
     }

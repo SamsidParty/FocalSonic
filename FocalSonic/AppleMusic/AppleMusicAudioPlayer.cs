@@ -31,7 +31,7 @@ namespace FocalSonic.AppleMusic
             {
                 ProxyWindow = WebWindow.Create()
                     .WithTitle("Apple Music Runtime")
-                    .WithURL(Program.App.CurrentServerManager.LocalBaseURL + "/meta/applemusic/proxy.html")
+                    .WithURL($"https://beta.music.apple.com/{AppleMusicKeys.Region}/home")
                     .WithBounds(new LockedWindowBounds(1280, 720))
                     .WithPlatformBasedAdditions()
                     .WithSharedContext("AppleMusicWindow", "");
