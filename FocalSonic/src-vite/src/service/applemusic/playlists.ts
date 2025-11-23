@@ -14,7 +14,29 @@ async function getAll() {
         query: defaultAppleMusicQuery
     });
 
-    return response?.data.map(convertAppleMusicPlaylistToSubsonic) ?? [];
+    const listData = response?.data || [];
+
+    if (response?.next) {
+        const resolvedPlaylists = await resolvePlaylists(response.next);
+        listData.push(...resolvedPlaylists.data);
+    }
+
+    return listData.map(convertAppleMusicPlaylistToSubsonic) ?? [];
+}
+
+async function resolvePlaylists(href: string) {
+    const targetURL = href.replace("/v1/", "/applemusic/");
+
+    const response = await httpClient<any>(targetURL, {
+        method: "GET",
+        query: merge({}, defaultAppleMusicQuery)
+    });
+
+    if (response?.next) {
+        response.data.push(...(await resolveTracks(response.next)).data); // Recursively fetch next pages
+    }
+
+    return response;
 }
 
 async function getOne(id: string, offset?: number) {
