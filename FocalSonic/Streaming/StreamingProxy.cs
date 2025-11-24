@@ -57,11 +57,12 @@ namespace FocalSonic.Streaming
                 var request = await StreamingClient.SendAsync(message);
                 var content = await request.Content.ReadAsByteArrayAsync();
 
-                if (ctx.Request.Url.Full.Contains("/streaming-atmos-v1"))
+                if (ctx.Request.Url.Full.Contains("/streaming-atmos-v1") && ctx.Request.HeaderExists("x-atmos-keyid"))
                 {
+                    var keyID = ctx.Request.RetrieveHeaderValue("x-atmos-keyid");
                     var keymap = new List<string>();
                     keymap.Add("000000000000000073312f6531202020");
-                    keymap.Add("000000003a2ef9056332342020202020");
+                    keymap.Add(Convert.ToHexString(Convert.FromBase64String(keyID)));
                     content = StreamingCDM.FixAtmosKeyId(content, keymap);
                 }
 

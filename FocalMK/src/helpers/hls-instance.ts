@@ -16,11 +16,20 @@ export function createHlsInstance(): FocalHls {
         debug: true,
         emeEnabled: false, // Custom DRM implementation, turn off the default one
         drmSystemOptions: {},
-        xhrSetup: (xhr, url) => {
+        xhrSetup: (xhr: XMLHttpRequest, url: string) => {
             if (isAtmosEnabled() && window.igniteView && url.includes("gr2768") && url.includes(".mp4")) { 
+
+                // Find the atmos key ID in the magic data URI
+                const magicDataURI = getActiveHlsInstance().magicDataURI || "";
+                const base64Data = magicDataURI.split("base64,")[1] || "";
+                const binaryData = Uint8Array.fromBase64(base64Data);
+                const keyID = binaryData.slice(34, 34 + 16); // Key ID is located at byte offset 34, length 16 bytes
+                console.log("Atmos Key ID:", keyID.toBase64());
+
                 // Forward to the proxy that will edit the key IDs before it reaches the client
                 const newUrl = window.igniteView.resolverURL + "/streaming-atmos-v1?" + encodeURIComponent(url);
                 xhr.open("GET", newUrl, true);
+                xhr.setRequestHeader("x-atmos-keyid", keyID.toBase64());
             }
         }
     }) as FocalHls;

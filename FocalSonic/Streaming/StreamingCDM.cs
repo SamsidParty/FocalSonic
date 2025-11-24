@@ -12,19 +12,6 @@ namespace FocalSonic.Streaming
     public class StreamingCDM
     {
 
-
-        public static string GetDecryptionKey(string streamingMode)
-        {
-            if (string.IsNullOrEmpty(streamingMode)) return null;
-
-            if (streamingMode == "atmos-v1")
-            {
-                return "00000000000000000000000000000000:32b8ade1769e26b1ffb8986352793fc6";
-            }
-
-            return null;
-        }
-
         public static byte[] FixAtmosKeyId(byte[] inData, List<string> keyMap)
         {
             const int bufferSize = 4096;
@@ -87,7 +74,7 @@ namespace FocalSonic.Streaming
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[StreamingCDM] Error fixing Atmos KID: {ex}");
+                Debug.WriteLine($"[StreamingProxy][Dolby Atmos] Error fixing Atmos KID: {ex}");
                 return inData;
             }
             finally
