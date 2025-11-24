@@ -45,7 +45,7 @@ async function getOne(id: string, offset?: number) {
         `/applemusic/me/library/playlists/${id}`,
         {
             method: "GET",
-            query: merge({ include: "tracks" }, defaultAppleMusicQuery, defaultAppleMusicQuery)
+            query: merge({ include: "tracks" }, defaultAppleMusicQuery)
         }
     );
 
@@ -53,7 +53,7 @@ async function getOne(id: string, offset?: number) {
         // Try again but this time in the catalog not the library
         response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/catalog/{storefront}/playlists/${id}`, {
             method: "GET",
-            query: merge({ include: "tracks" }, defaultAppleMusicQuery, defaultAppleMusicQuery)
+            query: merge({ include: "tracks" }, defaultAppleMusicQuery)
         });
     }
 

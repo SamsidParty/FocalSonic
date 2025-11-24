@@ -6,7 +6,6 @@ import { ISong } from "@/types/responses/song";
 import clsx from "clsx";
 import React from "react";
 import { Link } from "react-router-dom";
-import { DolbyIcon } from "../icons/dolby";
 import { ExplicitIcon } from "../icons/explicit";
 
 
@@ -22,7 +21,6 @@ export function TableSongTitle({ song }: { song: ISong }) {
                 <span className={clsx("font-medium truncate flex gap-1 items-center")}>
                     {song.title}
                     {song.explicitStatus === "explicit" && <ExplicitIcon />}
-                    {song.appleMusic?.data?.attributes?.audioTraits?.includes("atmos") && <DolbyIcon />}
                 </span>
                 <div className="flex items-center truncate text-muted-foreground">
                     <TableArtists song={song} />

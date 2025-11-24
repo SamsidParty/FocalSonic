@@ -9,15 +9,16 @@ export interface FocalHls extends Hls {
     contentID?: string;
     magicDataURI?: string;
     licenseAcquired?: boolean;
+    dolbyAtmosAvailable?: boolean;
 }
 
 export function createHlsInstance(): FocalHls {
     const instance = new Hls({
-        debug: true,
+        debug: false,
         emeEnabled: false, // Custom DRM implementation, turn off the default one
         drmSystemOptions: {},
         xhrSetup: (xhr: XMLHttpRequest, url: string) => {
-            if (isAtmosEnabled() && window.igniteView && url.includes("gr2768") && url.includes(".mp4")) { 
+            if (isAtmosEnabled() && window.igniteView && instance.dolbyAtmosAvailable && url.includes(".mp4")) { 
 
                 // Find the atmos key ID in the magic data URI
                 const magicDataURI = getActiveHlsInstance().magicDataURI || "";
@@ -37,7 +38,7 @@ export function createHlsInstance(): FocalHls {
     instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
         console.log("MANIFEST_PARSED event received, available levels:", data.levels);
         data.levels.forEach((level, id) => {
-            if (isAtmosEnabled() && level?.audioCodec?.includes("ec-3")) {
+            if (level?.audioCodec?.includes("ec-3") && level?._audioGroups.includes("audio-atmos-2768")) {
                 console.log("Selecting Dolby Atmos audio level:", level);
                 instance.startLevel = id;
                 instance.currentLevel = id;
@@ -72,8 +73,9 @@ export function createHlsInstance(): FocalHls {
                 const sessionKeyData = JSON.parse(atob(sessionKeyInfo?.VALUE || ""));
                 Object.entries(sessionKeyData).forEach((keyInfo: any) => {
                     if (keyInfo[0] != "1" && keyInfo && keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]) {
-                        //focalHls.magicDataURI = "enhanced/" + keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
+                        focalHls.magicDataURI = "enhanced/" + keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
                         console.log("Found magic data URI (enhancedHls):", instance.magicDataURI);
+                        instance.dolbyAtmosAvailable = true;
                     }
                 });
             }
@@ -101,6 +103,7 @@ export function createHlsInstance(): FocalHls {
                     const magicDataURI = m[1];
                     console.log("Found magic data URI (enhancedHls):", magicDataURI);
                     instance.magicDataURI = "enhanced/" + magicDataURI;
+                    instance.dolbyAtmosAvailable = true;
                     break;
                 }
             }

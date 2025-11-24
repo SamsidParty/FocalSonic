@@ -38263,11 +38263,11 @@
 
     function createHlsInstance() {
         const instance = new Hls({
-            debug: true,
+            debug: false,
             emeEnabled: false, // Custom DRM implementation, turn off the default one
             drmSystemOptions: {},
             xhrSetup: (xhr, url) => {
-                if (window.igniteView && url.includes("gr2768") && url.includes(".mp4")) {
+                if (window.igniteView && instance.dolbyAtmosAvailable && url.includes(".mp4")) {
                     // Find the atmos key ID in the magic data URI
                     const magicDataURI = getActiveHlsInstance().magicDataURI || "";
                     const base64Data = magicDataURI.split("base64,")[1] || "";
@@ -38284,7 +38284,7 @@
         instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
             console.log("MANIFEST_PARSED event received, available levels:", data.levels);
             data.levels.forEach((level, id) => {
-                if (level?.audioCodec?.includes("ec-3")) {
+                if (level?.audioCodec?.includes("ec-3") && level?._audioGroups.includes("audio-atmos-2768")) {
                     console.log("Selecting Dolby Atmos audio level:", level);
                     instance.startLevel = id;
                     instance.currentLevel = id;
@@ -38316,8 +38316,9 @@
                     const sessionKeyData = JSON.parse(atob(sessionKeyInfo?.VALUE || ""));
                     Object.entries(sessionKeyData).forEach((keyInfo) => {
                         if (keyInfo[0] != "1" && keyInfo && keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]) {
-                            //focalHls.magicDataURI = "enhanced/" + keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
+                            focalHls.magicDataURI = "enhanced/" + keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
                             console.log("Found magic data URI (enhancedHls):", instance.magicDataURI);
+                            instance.dolbyAtmosAvailable = true;
                         }
                     });
                 }
@@ -38340,6 +38341,7 @@
                         const magicDataURI = m[1];
                         console.log("Found magic data URI (enhancedHls):", magicDataURI);
                         instance.magicDataURI = "enhanced/" + magicDataURI;
+                        instance.dolbyAtmosAvailable = true;
                         break;
                     }
                 }
