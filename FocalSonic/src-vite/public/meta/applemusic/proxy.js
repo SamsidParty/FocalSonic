@@ -38325,6 +38325,9 @@
         if (response?.license) {
             response.license = Uint8Array.fromBase64(response.license);
         }
+        else if (response?.customerMessage) {
+            window.igniteView?.commandBridge?.displayError?.("Something went wrong with Apple Music", response.customerMessage);
+        }
         return response;
     }
     function licenseForWebPlayback(hls, contentID) {

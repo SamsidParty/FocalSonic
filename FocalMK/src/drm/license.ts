@@ -8,6 +8,7 @@ import { getPssh } from "./pssh";
 interface LicenseResponse {
     license: string | Uint8Array;
     "renew-after": number;
+    customerMessage?: string;   
 }
 
 export function tryAcquireLicense(hls: FocalHls) {
@@ -101,6 +102,9 @@ export async function acquireWebPlaybackLicense(challenge: string, contentID: st
 
     if (response?.license) {
         response.license = Uint8Array.fromBase64(response.license);
+    }
+    else if (response?.customerMessage) {
+        window.igniteView?.commandBridge?.displayError?.("Something went wrong with Apple Music", response.customerMessage);
     }
 
     return response;
