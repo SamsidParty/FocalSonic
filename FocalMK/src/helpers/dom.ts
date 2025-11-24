@@ -7,6 +7,7 @@ export interface FocalAudioElement extends HTMLAudioElement {
 
 export function getAudioElement(): FocalAudioElement {
     let audioElement = document.getElementById('apple-music-player') as FocalAudioElement;
+
     if (!audioElement) {
         audioElement = document.createElement('audio') as FocalAudioElement;
         audioElement.id = 'apple-music-player';
@@ -14,5 +15,9 @@ export function getAudioElement(): FocalAudioElement {
         audioElement.attachedHls = new Hls() as FocalHls;
         document.body.appendChild(audioElement);
     }
+    else {
+        document.querySelectorAll('.focalmk-dummy-audio-element').forEach(elem => elem.remove());
+    }
+    
     return audioElement as FocalAudioElement;
 }

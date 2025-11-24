@@ -46,5 +46,14 @@ export class QueueItem  {
         this.audio.removeEventListener('ended', this.handleEnded.bind(this));
         this.audio.src = "";
         this.audio.removeAttribute("id");
+        setTimeout(() => this.dispose(), 5000); // Delay disposal to allow any pending operations to complete
+    }
+
+    dispose() {
+        this.audio.remove();
+        this.hls?.destroy();
+        this.hls = null;
+        this.audio = null!
+        console.log(`[FocalMK] Disposed resources for song: ${this.song}`);
     }
 }

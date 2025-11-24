@@ -14,8 +14,6 @@ export interface FocalHls extends Hls {
     useDesirableAsset?: boolean;
     playbackSource: PlaybackSource;
     mediaToAttach?: HTMLAudioElement;
-    renewalTimeout?: number;
-    renewFunction?: () => void;
 }
 
 export function createHlsInstance(audio: HTMLAudioElement): FocalHls {

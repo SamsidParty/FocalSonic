@@ -105,6 +105,7 @@ export class MusicKitInstance {
         this.isPlaying = false;
         console.log("[FocalMK] Playback stopped");
         getAudioElement().src = "";
+        this.queue[0]?.setInactive?.();
     }
 
     pause() {

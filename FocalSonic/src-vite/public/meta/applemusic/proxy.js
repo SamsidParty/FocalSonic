@@ -38098,6 +38098,9 @@
             audioElement.attachedHls = new Hls();
             document.body.appendChild(audioElement);
         }
+        else {
+            document.querySelectorAll('.focalmk-dummy-audio-element').forEach(elem => elem.remove());
+        }
         return audioElement;
     }
 
@@ -38319,11 +38322,15 @@
             body: JSON.stringify(reqBody),
         });
         const response = await request.json();
-        return Uint8Array.fromBase64(response.license);
+        if (response?.license) {
+            response.license = Uint8Array.fromBase64(response.license);
+        }
+        return response;
     }
     function licenseForWebPlayback(hls, contentID) {
         if (!hls.mediaToAttach)
             return;
+        const initData = getPssh(hls.magicDataURI);
         return new Promise(async (resolve, reject) => {
             if (!hls.magicDataURI)
                 reject();
@@ -38335,19 +38342,26 @@
             // Attach the keys to the audio element
             hls.mediaToAttach.src = "";
             hls.mediaToAttach.setMediaKeys(mediaKeys);
+            const getLicenseFromChallenge = async (challenge) => {
+                const license = await acquireWebPlaybackLicense(challenge, contentID, hls.magicDataURI);
+                console.log("License acquired for content ID:", contentID);
+                await session.update(license.license);
+            };
             session.addEventListener('message', async (event) => {
                 console.log("License Message Event:", event);
                 if (event.messageType === 'license-request') {
                     const challengeBase64 = new Uint8Array(event.message).toBase64();
-                    const license = await acquireWebPlaybackLicense(challengeBase64, contentID, hls.magicDataURI);
+                    await getLicenseFromChallenge(challengeBase64);
                     {
                         await licenseForAtmos(hls, mediaKeys, contentID);
                     }
-                    await session.update(new Uint8Array(license));
                     resolve();
                 }
+                else if (event.messageType === 'license-renewal') {
+                    const challengeBase64 = new Uint8Array(event.message).toBase64();
+                    await getLicenseFromChallenge(challengeBase64);
+                }
             }, false);
-            const initData = getPssh(hls.magicDataURI);
             console.log("Generating license request with initData:", initData.toBase64());
             session.generateRequest("cenc", initData);
         });
@@ -38359,10 +38373,10 @@
             const session = mediaKeys.createSession();
             session.addEventListener('message', async (event) => {
                 console.log("Atmos License Message Event:", event);
-                if (event.messageType === 'license-request') {
+                if (event.messageType === 'license-request' || event.messageType === 'license-renewal') {
                     const challengeBase64 = new Uint8Array(event.message).toBase64();
                     const license = await acquireWebPlaybackLicense(challengeBase64, contentID, "enhanced/data:text/plain;base64,AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=");
-                    await session.update(new Uint8Array(license));
+                    await session.update(license.license);
                     resolve();
                 }
             }, false);
@@ -38497,6 +38511,14 @@
             this.audio.removeEventListener('ended', this.handleEnded.bind(this));
             this.audio.src = "";
             this.audio.removeAttribute("id");
+            setTimeout(() => this.dispose(), 5000); // Delay disposal to allow any pending operations to complete
+        }
+        dispose() {
+            this.audio.remove();
+            this.hls?.destroy();
+            this.hls = null;
+            this.audio = null;
+            console.log(`[FocalMK] Disposed resources for song: ${this.song}`);
         }
     }
 
@@ -38581,6 +38603,7 @@
             this.isPlaying = false;
             console.log("[FocalMK] Playback stopped");
             getAudioElement().src = "";
+            this.queue[0]?.setInactive?.();
         }
         pause() {
             this.isPlaying = false;

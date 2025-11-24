@@ -5,6 +5,11 @@ import { FocalHls } from "../helpers/hls-instance";
 import { tryWrapAppleMusicURL } from "../helpers/igniteview";
 import { getPssh } from "./pssh";
 
+interface LicenseResponse {
+    license: string | Uint8Array;
+    "renew-after": number;
+}
+
 export function tryAcquireLicense(hls: FocalHls) {
     if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
         hls.licenseAcquired = true;
@@ -76,7 +81,7 @@ async function acquireWidevineCert() {
     return serverCertificate;
 }
 
-export async function acquireWebPlaybackLicense(challenge: string, contentID: string, magicDataURI: string): Promise<Uint8Array> {
+export async function acquireWebPlaybackLicense(challenge: string, contentID: string, magicDataURI: string): Promise<LicenseResponse> {
     const reqBody = {
         adamId: contentID,
         "key-system": "com.widevine.alpha",
@@ -91,13 +96,20 @@ export async function acquireWebPlaybackLicense(challenge: string, contentID: st
         headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
     });
-    const response = await request.json();
-    return Uint8Array.fromBase64(response.license);
+    
+    const response: LicenseResponse = await request.json();
+
+    if (response?.license) {
+        response.license = Uint8Array.fromBase64(response.license);
+    }
+
+    return response;
 }
 
 export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
 
     if (!hls.mediaToAttach) return;
+    const initData = getPssh(hls.magicDataURI!);
 
     return new Promise<void>(async (resolve, reject) => {
 
@@ -114,22 +126,31 @@ export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
         hls.mediaToAttach!.src = "";
         hls.mediaToAttach!.setMediaKeys(mediaKeys);
 
+        const getLicenseFromChallenge = async (challenge: string) => {
+            const license = await acquireWebPlaybackLicense(challenge, contentID, hls.magicDataURI!);
+
+            console.log("License acquired for content ID:", contentID);
+            await session.update(license.license);
+        }
+
         session.addEventListener('message', async (event) => {
             console.log("License Message Event:", event);
             if (event.messageType === 'license-request') {
                 const challengeBase64 = new Uint8Array(event.message).toBase64();
-                const license = await acquireWebPlaybackLicense(challengeBase64, contentID, hls.magicDataURI!);
+                await getLicenseFromChallenge(challengeBase64);
+
                 if (isAtmosEnabled()) {
                     await licenseForAtmos(hls, mediaKeys, contentID);
                 }
-                await session.update(new Uint8Array(license));
-                
-
+            
                 resolve();
+            }
+            else if (event.messageType === 'license-renewal') {
+                const challengeBase64 = new Uint8Array(event.message).toBase64();
+                await getLicenseFromChallenge(challengeBase64);
             }
         }, false);
 
-        const initData = getPssh(hls.magicDataURI!);
         console.log("Generating license request with initData:", initData.toBase64());
         session.generateRequest("cenc", initData);
 
@@ -145,10 +166,10 @@ export function licenseForAtmos(hls: FocalHls, mediaKeys: MediaKeys, contentID: 
         
         session.addEventListener('message', async (event) => {
             console.log("Atmos License Message Event:", event);
-            if (event.messageType === 'license-request') {
+            if (event.messageType === 'license-request' || event.messageType === 'license-renewal') {
                 const challengeBase64 = new Uint8Array(event.message).toBase64();
                 const license = await acquireWebPlaybackLicense(challengeBase64, contentID, "enhanced/data:text/plain;base64,AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=");
-                await session.update(new Uint8Array(license));
+                await session.update(license.license);
 
                 resolve();
             }
