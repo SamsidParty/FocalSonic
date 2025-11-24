@@ -540,6 +540,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         clearPlayerState: () => {
                             set((state) => {
+                                state.playerState?.audioPlayerRef && (state.playerState.audioPlayerRef.src = "");
+                                state.playerState?.audioPlayerRef?.pause();
                                 state.songlist.originalList = [];
                                 state.songlist.shuffledList = [];
                                 state.songlist.currentList = [];
