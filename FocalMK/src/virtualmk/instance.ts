@@ -92,9 +92,9 @@ export class MusicKitInstance {
         console.log(`[FocalMK] Now playing: ${itemToPlay.song}`);
 
         itemToPlay.setActive();
-        if (!itemToPlay.hasInitialized) {
+        if (!itemToPlay.hasInitialized && itemToPlay.hls) {
             itemToPlay.hasInitialized = true;
-            await loadContent(itemToPlay.song);
+            await loadContent(itemToPlay.hls, itemToPlay.song);
         }
 
         getAudioElement().playbackRate = this._playbackRate;

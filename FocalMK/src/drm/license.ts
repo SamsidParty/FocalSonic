@@ -1,19 +1,17 @@
 import { getFetchHeaders } from "../auth/headers";
 import { isAtmosEnabled } from "../helpers/atmos";
 import { licenseURL, widevineCertURL } from "../helpers/constants";
-import { getAudioElement } from "../helpers/dom";
-import { getActiveHlsInstance } from "../helpers/hls-instance";
+import { FocalHls } from "../helpers/hls-instance";
 import { tryWrapAppleMusicURL } from "../helpers/igniteview";
 import { getPssh } from "./pssh";
 
-export function tryAcquireLicense() {
-    const hls = getActiveHlsInstance();
+export function tryAcquireLicense(hls: FocalHls) {
     if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
         hls.licenseAcquired = true;
         console.log("Acquiring license for content ID:", hls.contentID);
-        licenseForWebPlayback(getAudioElement(), hls.contentID!).then(() => {
+        licenseForWebPlayback(hls, hls.contentID!).then(() => {
             console.log("License acquired, attaching media");
-            hls.attachMedia(getAudioElement());
+            hls.attachMedia(hls.mediaToAttach);
         });
     }
     else if (isAtmosEnabled() && !hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
@@ -97,15 +95,13 @@ export async function acquireWebPlaybackLicense(challenge: string, contentID: st
     return Uint8Array.fromBase64(response.license);
 }
 
-export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, contentID: string) {
+export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
 
-    if (!audio) {
-        audio = getAudioElement();
-    }
+    if (!hls.mediaToAttach) return;
 
     return new Promise<void>(async (resolve, reject) => {
 
-        if (!getActiveHlsInstance()?.magicDataURI) reject();
+        if (!hls.magicDataURI) reject();
 
         const widevine = await acquireWidevineAccess();
         const certificate = await acquireWidevineCert();
@@ -115,16 +111,16 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
         const session = mediaKeys.createSession();
 
         // Attach the keys to the audio element
-        audio.src = "";
-        audio?.setMediaKeys(mediaKeys);
+        hls.mediaToAttach!.src = "";
+        hls.mediaToAttach!.setMediaKeys(mediaKeys);
 
         session.addEventListener('message', async (event) => {
             console.log("License Message Event:", event);
             if (event.messageType === 'license-request') {
                 const challengeBase64 = new Uint8Array(event.message).toBase64();
-                const license = await acquireWebPlaybackLicense(challengeBase64, contentID, getActiveHlsInstance().magicDataURI!);
+                const license = await acquireWebPlaybackLicense(challengeBase64, contentID, hls.magicDataURI!);
                 if (isAtmosEnabled()) {
-                    await licenseForAtmos(mediaKeys, contentID);
+                    await licenseForAtmos(hls, mediaKeys, contentID);
                 }
                 await session.update(new Uint8Array(license));
                 
@@ -133,17 +129,16 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
             }
         }, false);
 
-        
-        const initData = getPssh(getActiveHlsInstance().magicDataURI!);
+        const initData = getPssh(hls.magicDataURI!);
         console.log("Generating license request with initData:", initData.toBase64());
         session.generateRequest("cenc", initData);
 
     });
 }
 
-export function licenseForAtmos(mediaKeys: MediaKeys, contentID: string) {
+export function licenseForAtmos(hls: FocalHls, mediaKeys: MediaKeys, contentID: string) {
 
-    if (!getActiveHlsInstance()?.dolbyAtmosAvailable) return;
+    if (!hls.dolbyAtmosAvailable) return;
 
     return new Promise<void>((resolve, reject) => {
         const session = mediaKeys.createSession();

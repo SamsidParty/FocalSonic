@@ -1,9 +1,9 @@
 import { getAudioElement } from "../helpers/dom";
-import { getActiveHlsInstance } from "../helpers/hls-instance";
+import { FocalHls } from "../helpers/hls-instance";
 import { findBestContentSource, getContentSources } from "../helpers/sources";
 import Hls from "../playback/hls.js";
 
-export async function loadContent(contentID: string) {
+export async function loadContent(hls: FocalHls, contentID: string) {
     try {
         const sources = await getContentSources(contentID);
         const mainSource = findBestContentSource(sources);
@@ -22,15 +22,15 @@ export async function loadContent(contentID: string) {
 
 
         await new Promise<void>((resolve) => {
-            getActiveHlsInstance().on(Hls.Events.MEDIA_ATTACHED, () => {
+            hls.on(Hls.Events.MEDIA_ATTACHED, () => {
                 console.log("[FocalMK] Playback ready");
                 resolve();
             });
 
-            getActiveHlsInstance().playbackSource = mainSource;
-            getActiveHlsInstance().useDesirableAsset = mainSource.bestAsset?.desirable || false;
-            getActiveHlsInstance().contentID = contentID;
-            getActiveHlsInstance().loadSource(sourceURL);
+            hls.playbackSource = mainSource;
+            hls.useDesirableAsset = mainSource.bestAsset?.desirable || false;
+            hls.contentID = contentID;
+            hls.loadSource(sourceURL);
         });
     }
     catch (err) {

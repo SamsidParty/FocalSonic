@@ -38129,6 +38129,98 @@
         return url;
     }
 
+    async function getContentSources(contentID) {
+        try {
+            const enhancedHls = await tryGetEnhancedHLS(contentID);
+            const body = (!Number.isNaN(parseInt(contentID))) ? { salableAdamId: contentID } : { universalLibraryId: contentID };
+            const request = await fetch(webPlaybackURL, {
+                method: "POST",
+                headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+            const response = await request.json();
+            enhancedHls?.forEach((asset) => response?.songList[0]?.assets?.push(asset));
+            return response?.songList || null;
+        }
+        catch { }
+        return null;
+    }
+    async function tryGetEnhancedHLS(contentID) {
+        try {
+            if (!isAtmosEnabled())
+                ;
+            const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}?extend=extendedAssetUrls`);
+            const request = await fetch(catalogURL);
+            const response = await request.json();
+            const assets = response?.data?.[0]?.attributes?.extendedAssetUrls;
+            return Object.entries(assets).map((asset) => {
+                return { URL: asset[1], flavor: asset[0], desirable: response?.data?.[0]?.attributes?.audioTraits?.includes("atmos") && isAtmosEnabled() };
+            });
+        }
+        catch { }
+        return [{ URL: null, flavor: null }];
+    }
+    function findBestContentSource(sources) {
+        if (sources != null && sources.length > 0) {
+            const song = sources[0];
+            const validAssets = song?.assets?.filter((asset) => {
+                const hasURL = asset.URL && asset.URL.includes(".m3u8");
+                const hasFlavor = asset.flavor;
+                const isCtrp = asset.flavor?.toLowerCase().includes("ctrp"); // ctrp = compatible with widevine
+                const isEnhancedHls = asset.flavor?.toLowerCase().includes("enhancedhls");
+                return hasURL && hasFlavor && (isCtrp || isEnhancedHls || !hasFlavor);
+            });
+            // Find the asset with the highest bitrate
+            let bestAsset = null;
+            let backupAsset = null;
+            let highestBitrate = -1;
+            for (const asset of validAssets) {
+                if (asset.metadata?.bitRate > highestBitrate) {
+                    highestBitrate = asset.metadata?.bitRate;
+                    bestAsset = asset;
+                    backupAsset = asset;
+                }
+                if (asset.desirable) {
+                    bestAsset = asset;
+                    break;
+                }
+            }
+            return { bestAsset, backupAsset };
+        }
+        return { bestAsset: null, backupAsset: null };
+    }
+
+    async function loadContent(hls, contentID) {
+        try {
+            const sources = await getContentSources(contentID);
+            const mainSource = findBestContentSource(sources);
+            if (!mainSource)
+                throw new Error("[FocalMK] No valid content source found");
+            let sourceURL = mainSource.bestAsset?.URL;
+            if (!sourceURL?.endsWith(".m3u8")) {
+                console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
+                getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
+                getAudioElement().src = sourceURL;
+                return;
+            }
+            console.log("[FocalMK] Using content source:", mainSource.bestAsset?.flavor);
+            await new Promise((resolve) => {
+                hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                    console.log("[FocalMK] Playback ready");
+                    resolve();
+                });
+                hls.playbackSource = mainSource;
+                hls.useDesirableAsset = mainSource.bestAsset?.desirable || false;
+                hls.contentID = contentID;
+                hls.loadSource(sourceURL);
+            });
+        }
+        catch (err) {
+            // TODO: Handle error
+            console.error("Error loading content:", err);
+        }
+    }
+
     function getWebPlaybackPssh() {
         const e = Uint8Array.from(appleMagic1);
         const n = new Uint8Array(appleMagic2);
@@ -38153,14 +38245,13 @@
         return getWebPlaybackPssh();
     }
 
-    function tryAcquireLicense() {
-        const hls = getActiveHlsInstance();
+    function tryAcquireLicense(hls) {
         if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
             hls.licenseAcquired = true;
             console.log("Acquiring license for content ID:", hls.contentID);
-            licenseForWebPlayback(getAudioElement(), hls.contentID).then(() => {
+            licenseForWebPlayback(hls, hls.contentID).then(() => {
                 console.log("License acquired, attaching media");
-                hls.attachMedia(getAudioElement());
+                hls.attachMedia(hls.mediaToAttach);
             });
         }
         else if (!hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
@@ -38230,12 +38321,11 @@
         const response = await request.json();
         return Uint8Array.fromBase64(response.license);
     }
-    function licenseForWebPlayback(audio = null, contentID) {
-        if (!audio) {
-            audio = getAudioElement();
-        }
+    function licenseForWebPlayback(hls, contentID) {
+        if (!hls.mediaToAttach)
+            return;
         return new Promise(async (resolve, reject) => {
-            if (!getActiveHlsInstance()?.magicDataURI)
+            if (!hls.magicDataURI)
                 reject();
             const widevine = await acquireWidevineAccess();
             const certificate = await acquireWidevineCert();
@@ -38243,27 +38333,27 @@
             await mediaKeys.setServerCertificate(certificate);
             const session = mediaKeys.createSession();
             // Attach the keys to the audio element
-            audio.src = "";
-            audio?.setMediaKeys(mediaKeys);
+            hls.mediaToAttach.src = "";
+            hls.mediaToAttach.setMediaKeys(mediaKeys);
             session.addEventListener('message', async (event) => {
                 console.log("License Message Event:", event);
                 if (event.messageType === 'license-request') {
                     const challengeBase64 = new Uint8Array(event.message).toBase64();
-                    const license = await acquireWebPlaybackLicense(challengeBase64, contentID, getActiveHlsInstance().magicDataURI);
+                    const license = await acquireWebPlaybackLicense(challengeBase64, contentID, hls.magicDataURI);
                     {
-                        await licenseForAtmos(mediaKeys, contentID);
+                        await licenseForAtmos(hls, mediaKeys, contentID);
                     }
                     await session.update(new Uint8Array(license));
                     resolve();
                 }
             }, false);
-            const initData = getPssh(getActiveHlsInstance().magicDataURI);
+            const initData = getPssh(hls.magicDataURI);
             console.log("Generating license request with initData:", initData.toBase64());
             session.generateRequest("cenc", initData);
         });
     }
-    function licenseForAtmos(mediaKeys, contentID) {
-        if (!getActiveHlsInstance()?.dolbyAtmosAvailable)
+    function licenseForAtmos(hls, mediaKeys, contentID) {
+        if (!hls.dolbyAtmosAvailable)
             return;
         return new Promise((resolve, reject) => {
             const session = mediaKeys.createSession();
@@ -38281,7 +38371,7 @@
         });
     }
 
-    function createHlsInstance() {
+    function createHlsInstance(audio) {
         const instance = new Hls({
             debug: false,
             emeEnabled: false, // Custom DRM implementation, turn off the default one
@@ -38289,7 +38379,7 @@
             xhrSetup: (xhr, url) => {
                 if (window.igniteView && instance.dolbyAtmosAvailable && url.includes(".mp4")) {
                     // Find the atmos key ID in the magic data URI
-                    const magicDataURI = getActiveHlsInstance().magicDataURI || "";
+                    const magicDataURI = instance.magicDataURI || "";
                     const base64Data = magicDataURI.split("base64,")[1] || "";
                     const binaryData = Uint8Array.fromBase64(base64Data);
                     const keyID = binaryData.slice(34, 34 + 16); // Key ID is located at byte offset 34, length 16 bytes
@@ -38301,6 +38391,7 @@
                 }
             }
         });
+        instance.mediaToAttach = audio;
         instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
             console.log("MANIFEST_PARSED event received, available levels:", data.levels);
             data.levels.forEach((level, id) => {
@@ -38344,7 +38435,7 @@
                 }
                 // If that still didn't work, mode 2 will be called when the level is loaded
             }
-            tryAcquireLicense();
+            tryAcquireLicense(instance);
         });
         instance.on(Hls.Events.LEVEL_LOADED, (event, data) => {
             const manifestText = data.networkDetails?.responseText || "";
@@ -38366,104 +38457,9 @@
                     }
                 }
             }
-            tryAcquireLicense();
+            tryAcquireLicense(instance);
         });
         return instance;
-    }
-    function getActiveHlsInstance() {
-        return getAudioElement().attachedHls;
-    }
-
-    async function getContentSources(contentID) {
-        try {
-            const enhancedHls = await tryGetEnhancedHLS(contentID);
-            const body = (!Number.isNaN(parseInt(contentID))) ? { salableAdamId: contentID } : { universalLibraryId: contentID };
-            const request = await fetch(webPlaybackURL, {
-                method: "POST",
-                headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-            const response = await request.json();
-            enhancedHls?.forEach((asset) => response?.songList[0]?.assets?.push(asset));
-            return response?.songList || null;
-        }
-        catch { }
-        return null;
-    }
-    async function tryGetEnhancedHLS(contentID) {
-        try {
-            if (!isAtmosEnabled())
-                ;
-            const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}?extend=extendedAssetUrls`);
-            const request = await fetch(catalogURL);
-            const response = await request.json();
-            const assets = response?.data?.[0]?.attributes?.extendedAssetUrls;
-            return Object.entries(assets).map((asset) => {
-                return { URL: asset[1], flavor: asset[0], desirable: response?.data?.[0]?.attributes?.audioTraits?.includes("atmos") && isAtmosEnabled() };
-            });
-        }
-        catch { }
-        return [{ URL: null, flavor: null }];
-    }
-    function findBestContentSource(sources) {
-        if (sources != null && sources.length > 0) {
-            const song = sources[0];
-            const validAssets = song?.assets?.filter((asset) => {
-                const hasURL = asset.URL && asset.URL.includes(".m3u8");
-                const hasFlavor = asset.flavor;
-                const isCtrp = asset.flavor?.toLowerCase().includes("ctrp"); // ctrp = compatible with widevine
-                const isEnhancedHls = asset.flavor?.toLowerCase().includes("enhancedhls");
-                return hasURL && hasFlavor && (isCtrp || isEnhancedHls || !hasFlavor);
-            });
-            // Find the asset with the highest bitrate
-            let bestAsset = null;
-            let backupAsset = null;
-            let highestBitrate = -1;
-            for (const asset of validAssets) {
-                if (asset.metadata?.bitRate > highestBitrate) {
-                    highestBitrate = asset.metadata?.bitRate;
-                    bestAsset = asset;
-                    backupAsset = asset;
-                }
-                if (asset.desirable) {
-                    bestAsset = asset;
-                    break;
-                }
-            }
-            return { bestAsset, backupAsset };
-        }
-        return { bestAsset: null, backupAsset: null };
-    }
-
-    async function loadContent(contentID) {
-        try {
-            const sources = await getContentSources(contentID);
-            const mainSource = findBestContentSource(sources);
-            if (!mainSource)
-                throw new Error("[FocalMK] No valid content source found");
-            let sourceURL = mainSource.bestAsset?.URL;
-            if (!sourceURL?.endsWith(".m3u8")) {
-                console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
-                getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
-                getAudioElement().src = sourceURL;
-                return;
-            }
-            console.log("[FocalMK] Using content source:", mainSource.bestAsset?.flavor);
-            await new Promise((resolve) => {
-                getActiveHlsInstance().on(Hls.Events.MEDIA_ATTACHED, () => {
-                    console.log("[FocalMK] Playback ready");
-                    resolve();
-                });
-                getActiveHlsInstance().playbackSource = mainSource;
-                getActiveHlsInstance().useDesirableAsset = mainSource.bestAsset?.desirable || false;
-                getActiveHlsInstance().contentID = contentID;
-                getActiveHlsInstance().loadSource(sourceURL);
-            });
-        }
-        catch (err) {
-            // TODO: Handle error
-            console.error("Error loading content:", err);
-        }
     }
 
     const PlayerRepeatMode = { "0": "none", "1": "one", "2": "all", "none": 0, "one": 1, "all": 2 };
@@ -38488,7 +38484,7 @@
         }
         setActive() {
             console.log(`[FocalMK] Initializing HLS for song: ${this.song}`);
-            this.hls = createHlsInstance();
+            this.hls = createHlsInstance(this.audio);
             this.audio.attachedHls = this.hls;
             // Find the previous audio element and remove it from being the main one
             getAudioElement().removeAttribute("id");
@@ -38574,9 +38570,9 @@
             this.nowPlayingItem = itemToPlay.song;
             console.log(`[FocalMK] Now playing: ${itemToPlay.song}`);
             itemToPlay.setActive();
-            if (!itemToPlay.hasInitialized) {
+            if (!itemToPlay.hasInitialized && itemToPlay.hls) {
                 itemToPlay.hasInitialized = true;
-                await loadContent(itemToPlay.song);
+                await loadContent(itemToPlay.hls, itemToPlay.song);
             }
             getAudioElement().playbackRate = this._playbackRate;
             getAudioElement().play();

@@ -13,9 +13,12 @@ export interface FocalHls extends Hls {
     dolbyAtmosAvailable?: boolean;
     useDesirableAsset?: boolean;
     playbackSource: PlaybackSource;
+    mediaToAttach?: HTMLAudioElement;
+    renewalTimeout?: number;
+    renewFunction?: () => void;
 }
 
-export function createHlsInstance(): FocalHls {
+export function createHlsInstance(audio: HTMLAudioElement): FocalHls {
     const instance = new Hls({
         debug: false,
         emeEnabled: false, // Custom DRM implementation, turn off the default one
@@ -24,7 +27,7 @@ export function createHlsInstance(): FocalHls {
             if (isAtmosEnabled() && window.igniteView && instance.dolbyAtmosAvailable && url.includes(".mp4")) { 
 
                 // Find the atmos key ID in the magic data URI
-                const magicDataURI = getActiveHlsInstance().magicDataURI || "";
+                const magicDataURI = instance.magicDataURI || "";
                 const base64Data = magicDataURI.split("base64,")[1] || "";
                 const binaryData = Uint8Array.fromBase64(base64Data);
                 const keyID = binaryData.slice(34, 34 + 16); // Key ID is located at byte offset 34, length 16 bytes
@@ -37,6 +40,8 @@ export function createHlsInstance(): FocalHls {
             }
         }
     }) as FocalHls;
+
+    instance.mediaToAttach = audio;
 
     instance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
         console.log("MANIFEST_PARSED event received, available levels:", data.levels);
@@ -86,7 +91,7 @@ export function createHlsInstance(): FocalHls {
             // If that still didn't work, mode 2 will be called when the level is loaded
         }
 
-        tryAcquireLicense();
+        tryAcquireLicense(instance);
     });
 
     instance.on(Hls.Events.LEVEL_LOADED, (event, data) => {
@@ -112,7 +117,7 @@ export function createHlsInstance(): FocalHls {
             }
         }
 
-        tryAcquireLicense();
+        tryAcquireLicense(instance);
     });
 
     return instance;

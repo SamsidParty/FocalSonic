@@ -30,7 +30,7 @@ export class QueueItem  {
 
     setActive() {
         console.log(`[FocalMK] Initializing HLS for song: ${this.song}`);
-        this.hls = createHlsInstance();
+        this.hls = createHlsInstance(this.audio);
         this.audio.attachedHls = this.hls;
 
         // Find the previous audio element and remove it from being the main one
