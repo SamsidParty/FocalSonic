@@ -57,7 +57,7 @@ export default function PreviewList({
             setPlayAppleMusicRadio(entry);
             return;
         }
-        else if (entry.type.includes("playlist") && entry.id) {
+        else if (entry.type?.includes("playlist") && entry.id) {
             const response = await service.playlists.getOne(entry.id);
 
             if (response) {

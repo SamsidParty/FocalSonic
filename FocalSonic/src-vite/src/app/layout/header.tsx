@@ -6,6 +6,7 @@ import { UserDropdown } from "@/app/components/header/user-dropdown";
 import { useAppWindow } from "@/app/hooks/use-app-window";
 import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { isLinux, isMac, isWindows } from "@/utils/osType";
+import { checkServerType } from "@/utils/servers";
 import clsx from "clsx";
 import React from "react";
 import { Cast } from "../components/header/cast";
@@ -14,6 +15,7 @@ import { Separator } from "../components/ui/separator";
 
 export function Header() {
     const { isFullscreen } = useAppWindow();
+    const { isAppleMusic } = checkServerType();
 
     return (
         <header
@@ -29,7 +31,11 @@ export function Header() {
             <HeaderSongInfo />
             <div {...igniteViewDragRegion} className="flex justify-end items-center gap-2">
                 <LicenseDialog />
-                <Cast />
+                {
+                    isAppleMusic && (
+                        <Cast />
+                    )
+                }
                 <UserDropdown />
                 <Separator orientation="vertical" className="bg-foreground opacity-10 h-[60%]" />
                 {isWindows && <Windows />}

@@ -2,7 +2,7 @@ import { MiniSidebarItem } from "@/app/components/sidebar/mini-item";
 import { useAppPages, useAppPodcasts, useAppStore } from "@/store/app.store";
 import { clsx } from "clsx";
 import React from "react";
-import { libraryItems, mainMenuItems } from "./sidebar-items";
+import { mainMenuItems, useLibraryItems } from "./sidebar-items";
 
 export function MiniSidebar() {
     const { showRadiosSection } = useAppPages();
@@ -11,7 +11,7 @@ export function MiniSidebar() {
 
     return (
         <div className={clsx(!sidebarOpen ? "" : "hidden")}>
-            {menuItems.map((item) => {
+            {([...menuItems, ...(useLibraryItems())]).map((item) => {
                 // Setting to show/hide Radios section
                 if (!showRadiosSection && item.id === "radios") return null;
                 if (!isPodcastEnabled && item.id === "podcasts") return null;
@@ -22,4 +22,4 @@ export function MiniSidebar() {
     );
 }
 
-const menuItems = [...mainMenuItems, ...libraryItems];
+const menuItems = [...mainMenuItems];

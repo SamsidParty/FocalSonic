@@ -5,7 +5,7 @@ import React, { memo } from "react";
 import CommandMenu from "../components/command/command-menu";
 import { SectionTitle, SidebarPlaylists, SidebarSection } from "../components/playlist/sidebar-list";
 import { SidebarGenerator } from "../components/sidebar/sidebar-generator";
-import { libraryItems, mainMenuItems } from "./sidebar-items";
+import { mainMenuItems, useLibraryItems } from "./sidebar-items";
 
 
 const MemoSidebarGenerator = memo(SidebarGenerator);
@@ -29,7 +29,7 @@ export default function LargeSidebar() {
                 <SidebarSection>
                     <SectionTitle>{t("sidebar.library")}</SectionTitle>
                     <div>
-                        <MemoSidebarGenerator list={libraryItems} />
+                        <MemoSidebarGenerator list={useLibraryItems()} />
                     </div>
                 </SidebarSection>
             </div>

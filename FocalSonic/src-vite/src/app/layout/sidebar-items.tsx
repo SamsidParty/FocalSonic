@@ -1,4 +1,5 @@
 import { ROUTES } from "@/routes/routesList";
+import { checkServerType } from "@/utils/servers";
 import { HomeIcon, LibraryIcon, ListMusicIcon, Mic2Icon, Music2Icon, Pin, PodcastIcon, RadioIcon, Search } from "lucide-react";
 import { memo } from "react";
 
@@ -39,12 +40,6 @@ export const mainMenuItems = [
 
 export const libraryItems = [
     {
-        id: SidebarItems.Pins,
-        title: "sidebar.pins",
-        route: ROUTES.LIBRARY.PINS,
-        icon: Pin,
-    },
-    {
         id: SidebarItems.Songs,
         title: "sidebar.songs",
         route: ROUTES.LIBRARY.SONGS,
@@ -81,3 +76,19 @@ export const libraryItems = [
         icon: Radio,
     },
 ];
+
+export function useLibraryItems() {
+    const items = [...libraryItems];
+    const { isAppleMusic } = checkServerType();
+
+    if (isAppleMusic) {
+        items.unshift(    {
+            id: SidebarItems.Pins,
+            title: "sidebar.pins",
+            route: ROUTES.LIBRARY.PINS,
+            icon: Pin
+        });
+    }
+
+    return items;
+}
