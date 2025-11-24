@@ -63,20 +63,18 @@ namespace FocalSonic.Streaming
                         // Convert to lowercase hex for dictionary lookup
                         string oldKidHex = Convert.ToHexString(kidBytes).ToLowerInvariant();
 
-                        // Perform replacement if it exists in the map
-                        if (keyMap.Count > keyIndex)
-                        {
-                            keyIndex++;
-                            byte[] newKidBytes = Convert.FromHexString(keyMap[keyIndex]);
+                        byte[] newKidBytes = (keyMap.Count > keyIndex) ? Convert.FromHexString(keyMap[keyIndex]) : Convert.FromHexString("000000000000000073312f6531202020");  // Default key for Atmos streams
+                        keyIndex++;
 
-                            if (newKidBytes.Length != 16)
-                                throw new InvalidOperationException(
-                                    $"Mapped KID '{keyMap[keyIndex]}' is not 16 bytes!");
+                        Debug.WriteLine($"[StreamingProxy][Dolby Atmos] Replacing key id {oldKidHex} -> {Convert.ToHexString(newKidBytes)}");
 
-                            // Write new KID
-                            ms.Seek(kidPos, SeekOrigin.Begin);
-                            ms.Write(newKidBytes);
-                        }
+                        if (newKidBytes.Length != 16)
+                            throw new InvalidOperationException(
+                                $"Mapped KID '{keyMap[keyIndex]}' is not 16 bytes!");
+
+                        // Write new KID
+                        ms.Seek(kidPos, SeekOrigin.Begin);
+                        ms.Write(newKidBytes);
 
                         searchIndex = kidOffset + 1;
                     }

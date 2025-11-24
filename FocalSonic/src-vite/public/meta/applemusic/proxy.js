@@ -38232,10 +38232,10 @@
                 if (event.messageType === 'license-request') {
                     const challengeBase64 = new Uint8Array(event.message).toBase64();
                     const license = await acquireWebPlaybackLicense(challengeBase64, contentID, getActiveHlsInstance().magicDataURI);
-                    await session.update(new Uint8Array(license));
                     {
                         await licenseForAtmos(mediaKeys, contentID);
                     }
+                    await session.update(new Uint8Array(license));
                     resolve();
                 }
             }, false);
