@@ -25,17 +25,18 @@ namespace FocalSonic.Streaming
             return null;
         }
 
-        public static byte[] FixAtmosKeyId(byte[] inData)
+        public static byte[] FixAtmosKeyId(byte[] inData, List<string> keyMap)
         {
             const int bufferSize = 4096;
             byte[] buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
 
+            int keyIndex = 0;
+
             try
             {
                 using var ms = new MemoryStream(inData);
-                int count = 0;
-
                 int bytesRead;
+
                 while ((bytesRead = ms.Read(buffer, 0, bufferSize)) > 0)
                 {
                     long blockStart = ms.Position - bytesRead;
@@ -43,21 +44,39 @@ namespace FocalSonic.Streaming
 
                     while (true)
                     {
-                        // Inline span-based search for "tenc"
+                        // Find "tenc"
                         int found = buffer.AsSpan(0, bytesRead)[searchIndex..].IndexOf("tenc"u8);
                         if (found < 0)
                             break;
 
                         int tencIndex = searchIndex + found;
+
+                        // KID is always at tenc + 12
                         int kidOffset = tencIndex + 12;
+                        long kidPos = blockStart + kidOffset;
 
-                        ms.Seek(blockStart + kidOffset, SeekOrigin.Begin);
+                        // Read the 16-byte KID
+                        ms.Seek(kidPos, SeekOrigin.Begin);
+                        Span<byte> kidBytes = stackalloc byte[16];
+                        ms.Read(kidBytes);
 
-                        string hex = count.ToString("D32");
-                        byte[] hexBytes = Convert.FromHexString(hex);
-                        ms.Write(hexBytes);
+                        // Convert to lowercase hex for dictionary lookup
+                        string oldKidHex = Convert.ToHexString(kidBytes).ToLowerInvariant();
 
-                        count++;
+                        // Perform replacement if it exists in the map
+                        if (keyMap.Count > keyIndex)
+                        {
+                            byte[] newKidBytes = Convert.FromHexString(keyMap[keyIndex]);
+
+                            if (newKidBytes.Length != 16)
+                                throw new InvalidOperationException(
+                                    $"Mapped KID '{keyMap[keyIndex]}' is not 16 bytes!");
+
+                            // Write new KID
+                            ms.Seek(kidPos, SeekOrigin.Begin);
+                            ms.Write(newKidBytes);
+                        }
+
                         searchIndex = kidOffset + 1;
                     }
 
@@ -67,10 +86,16 @@ namespace FocalSonic.Streaming
                 ms.Seek(0, SeekOrigin.Begin);
                 return ms.ToArray();
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[StreamingCDM] Error fixing Atmos KID: {ex}");
+                return inData;
+            }
             finally
             {
                 ArrayPool<byte>.Shared.Return(buffer);
             }
         }
+
     }
 }
