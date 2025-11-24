@@ -389,6 +389,211 @@
         window.checkAuthStateInterval = setInterval(checkAuthState, 500);
     }
 
+    async function getFetchHeaders() {
+        return {
+            "Authorization": `Bearer ` + window.virtualMusicKit?.getInstance().developerToken || "",
+            "X-Apple-Music-User-Token": window.virtualMusicKit?.getInstance().musicUserToken || "",
+            "X-Apple-Renewal": "1",
+        };
+    }
+
+    function isAtmosEnabled() {
+        return true;
+    }
+
+    const licenseURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense";
+    const widevineCertURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert";
+    const webPlaybackURL = "https://play.music.apple.com/WebObjects/MZPlay.woa/wa/webPlayback";
+    const appleMagic1 = [0, 0, 1, 222, 112, 115, 115, 104, 0, 0, 0, 0, 154, 4, 240, 121, 152, 64, 66, 134, 171, 146, 230, 91, 224, 136, 95, 149, 0, 0, 1, 190];
+    const appleMagic2 = [0, 0, 0, 52, 112, 115, 115, 104, 0, 0, 0, 0, 237, 239, 139, 169, 121, 214, 74, 206, 163, 200, 39, 220, 213, 29, 33, 237, 0, 0, 0, 20, 8, 1, 18, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    function isIgniteView() {
+        return window?.igniteView?.commandBridge !== undefined;
+    }
+    function tryWrapAppleMusicURL(url) {
+        if (isIgniteView() && window.igniteView.resolverURL) {
+            return window.igniteView.resolverURL + "/applemusic?" + encodeURIComponent(url);
+        }
+        return url;
+    }
+
+    function getWebPlaybackPssh() {
+        const e = Uint8Array.from(appleMagic1);
+        const n = new Uint8Array(appleMagic2);
+        for (let d = 0; d < e.length; d++)
+            n[n.length - 16 + d] = e[d];
+        return n;
+    }
+    function getEnhancedPssh(licenseURL) {
+        if (licenseURL.includes("base64,")) {
+            const split = licenseURL.split(",");
+            const base64Decoded = Uint8Array.fromBase64(split[1]);
+            return base64Decoded;
+        }
+        throw new Error("Invalid enhanced PSSH license URL");
+    }
+    function getPssh(licenseURL) {
+        if (!licenseURL)
+            throw new Error("No license URL provided for PSSH generation");
+        if (licenseURL.startsWith("enhanced/")) {
+            return getEnhancedPssh(licenseURL.replace("enhanced/", ""));
+        }
+        return getWebPlaybackPssh();
+    }
+
+    function tryAcquireLicense(hls) {
+        if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
+            hls.licenseExpired = false;
+            hls.licenseAcquired = true;
+            console.log("Acquiring license for content ID:", hls.contentID);
+            licenseForWebPlayback(hls, hls.contentID).then(() => {
+                console.log("License acquired, attaching media");
+                if (!hls.media) {
+                    hls.attachMedia(hls.mediaToAttach);
+                }
+            });
+        }
+        else if (!hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
+            console.warn("Dolby Atmos not available for this content, switching to backup asset");
+            if (window.igniteView) {
+                window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${hls.contentID}`, "failed");
+            }
+            hls.useDesirableAsset = false;
+            setTimeout(() => {
+                hls.loadSource(hls.playbackSource.backupAsset?.URL || "");
+            }, 0);
+        }
+    }
+    function acquireWidevineAccess() {
+        return new Promise((resolve, reject) => {
+            const widevineKeySystem = 'com.widevine.alpha';
+            if (navigator.requestMediaKeySystemAccess) {
+                const config = [{
+                        initDataTypes: ['cenc'], // Common Encryption
+                        audioCapabilities: [
+                            {
+                                contentType: 'audio/mp4; codecs="mp4a.40.2"'
+                            },
+                            {
+                                contentType: 'audio/mp4; codecs="ec-3"',
+                                robustness: 'SW_SECURE_DECODE'
+                            }
+                        ],
+                        videoCapabilities: [
+                            {
+                                contentType: 'video/mp4; codecs="avc1.42E01E"',
+                                robustness: 'SW_SECURE_DECODE'
+                            }
+                        ],
+                        distinctiveIdentifier: 'optional',
+                        persistentState: 'optional',
+                        sessionTypes: ['temporary']
+                    }];
+                // Request access to the key system
+                navigator.requestMediaKeySystemAccess(widevineKeySystem, config)
+                    .then(resolve)
+                    .catch(reject);
+            }
+        });
+    }
+    async function acquireWidevineCert() {
+        if (window.widevineCertCache) {
+            return window.widevineCertCache;
+        }
+        const req = await fetch(widevineCertURL);
+        const certBuffer = await req.arrayBuffer();
+        const serverCertificate = new Uint8Array(certBuffer);
+        window.widevineCertCache = serverCertificate; // Cache cause the request takes a while
+        return serverCertificate;
+    }
+    async function acquireWebPlaybackLicense(challenge, contentID, magicDataURI) {
+        const reqBody = {
+            adamId: contentID,
+            "key-system": "com.widevine.alpha",
+            "user-initiated": true,
+            isLibrary: false,
+            uri: magicDataURI.replace("enhanced/", ""),
+            challenge: challenge,
+        };
+        const request = await fetch(tryWrapAppleMusicURL(licenseURL), {
+            method: "POST",
+            headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
+            body: JSON.stringify(reqBody),
+        });
+        const response = await request.json();
+        if (response?.license) {
+            response.license = Uint8Array.fromBase64(response.license);
+        }
+        else if (response?.customerMessage) {
+            window.igniteView?.commandBridge?.displayError?.("Something went wrong with Apple Music", response.customerMessage);
+        }
+        return response;
+    }
+    function licenseForWebPlayback(hls, contentID) {
+        if (!hls.mediaToAttach)
+            return;
+        const initData = getPssh(hls.magicDataURI);
+        return new Promise(async (resolve, reject) => {
+            if (!hls.magicDataURI)
+                reject();
+            const widevine = await acquireWidevineAccess();
+            const certificate = await acquireWidevineCert();
+            const mediaKeys = await widevine.createMediaKeys();
+            await mediaKeys.setServerCertificate(certificate);
+            const session = mediaKeys.createSession();
+            // Attach the keys to the audio element
+            hls.mediaToAttach.src = "";
+            hls.mediaToAttach.setMediaKeys(mediaKeys);
+            const getLicenseFromChallenge = async (challenge) => {
+                const license = await acquireWebPlaybackLicense(challenge, contentID, hls.magicDataURI);
+                console.log("License acquired for content ID:", contentID);
+                await session.update(license.license);
+            };
+            session.addEventListener('message', async (event) => {
+                console.log("License Message Event:", event);
+                if (event.messageType === 'license-request') {
+                    const challengeBase64 = new Uint8Array(event.message).toBase64();
+                    await getLicenseFromChallenge(challengeBase64);
+                    {
+                        await licenseForAtmos(hls, mediaKeys, contentID);
+                    }
+                    resolve();
+                }
+            }, false);
+            session.addEventListener('keystatuseschange', (event) => {
+                if (session.expiration && Date.now() >= session.expiration) {
+                    // Tells the HLS instance to renew the license after unpausing
+                    console.warn("License expired for content ID:", contentID);
+                    hls.licenseAcquired = false;
+                    hls.licenseExpired = true;
+                }
+            }, false);
+            console.log("Generating license request with initData:", initData.toBase64());
+            session.generateRequest("cenc", initData);
+        });
+    }
+    function licenseForAtmos(hls, mediaKeys, contentID) {
+        if (!hls.dolbyAtmosAvailable)
+            return;
+        return new Promise((resolve, reject) => {
+            const session = mediaKeys.createSession();
+            session.addEventListener('message', async (event) => {
+                console.log("Atmos License Message Event:", event);
+                if (event.messageType === 'license-request' || event.messageType === 'license-renewal') {
+                    const challengeBase64 = new Uint8Array(event.message).toBase64();
+                    const license = await acquireWebPlaybackLicense(challengeBase64, contentID, "enhanced/data:text/plain;base64,AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=");
+                    await session.update(license.license);
+                    if (window.igniteView) {
+                        window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${hls.contentID}`, "active");
+                    }
+                    resolve();
+                }
+            }, false);
+            console.log("Generating additional atmos license request");
+            session.generateRequest("cenc", Uint8Array.fromBase64("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
+        });
+    }
+
     function getDefaultExportFromCjs (x) {
     	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
     }
@@ -38104,34 +38309,6 @@
         return audioElement;
     }
 
-    async function getFetchHeaders() {
-        return {
-            "Authorization": `Bearer ` + window.virtualMusicKit?.getInstance().developerToken || "",
-            "X-Apple-Music-User-Token": window.virtualMusicKit?.getInstance().musicUserToken || "",
-            "X-Apple-Renewal": "1",
-        };
-    }
-
-    function isAtmosEnabled() {
-        return true;
-    }
-
-    const licenseURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense";
-    const widevineCertURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert";
-    const webPlaybackURL = "https://play.music.apple.com/WebObjects/MZPlay.woa/wa/webPlayback";
-    const appleMagic1 = [0, 0, 1, 222, 112, 115, 115, 104, 0, 0, 0, 0, 154, 4, 240, 121, 152, 64, 66, 134, 171, 146, 230, 91, 224, 136, 95, 149, 0, 0, 1, 190];
-    const appleMagic2 = [0, 0, 0, 52, 112, 115, 115, 104, 0, 0, 0, 0, 237, 239, 139, 169, 121, 214, 74, 206, 163, 200, 39, 220, 213, 29, 33, 237, 0, 0, 0, 20, 8, 1, 18, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-    function isIgniteView() {
-        return window?.igniteView?.commandBridge !== undefined;
-    }
-    function tryWrapAppleMusicURL(url) {
-        if (isIgniteView() && window.igniteView.resolverURL) {
-            return window.igniteView.resolverURL + "/applemusic?" + encodeURIComponent(url);
-        }
-        return url;
-    }
-
     async function getContentSources(contentID) {
         try {
             const enhancedHls = await tryGetEnhancedHLS(contentID);
@@ -38222,172 +38399,6 @@
             // TODO: Handle error
             console.error("Error loading content:", err);
         }
-    }
-
-    function getWebPlaybackPssh() {
-        const e = Uint8Array.from(appleMagic1);
-        const n = new Uint8Array(appleMagic2);
-        for (let d = 0; d < e.length; d++)
-            n[n.length - 16 + d] = e[d];
-        return n;
-    }
-    function getEnhancedPssh(licenseURL) {
-        if (licenseURL.includes("base64,")) {
-            const split = licenseURL.split(",");
-            const base64Decoded = Uint8Array.fromBase64(split[1]);
-            return base64Decoded;
-        }
-        throw new Error("Invalid enhanced PSSH license URL");
-    }
-    function getPssh(licenseURL) {
-        if (!licenseURL)
-            throw new Error("No license URL provided for PSSH generation");
-        if (licenseURL.startsWith("enhanced/")) {
-            return getEnhancedPssh(licenseURL.replace("enhanced/", ""));
-        }
-        return getWebPlaybackPssh();
-    }
-
-    function tryAcquireLicense(hls) {
-        if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
-            hls.licenseAcquired = true;
-            console.log("Acquiring license for content ID:", hls.contentID);
-            licenseForWebPlayback(hls, hls.contentID).then(() => {
-                console.log("License acquired, attaching media");
-                hls.attachMedia(hls.mediaToAttach);
-            });
-        }
-        else if (!hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
-            console.warn("Dolby Atmos not available for this content, switching to backup asset");
-            if (window.igniteView) {
-                window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${hls.contentID}`, "failed");
-            }
-            hls.useDesirableAsset = false;
-            setTimeout(() => {
-                hls.loadSource(hls.playbackSource.backupAsset?.URL || "");
-            }, 0);
-        }
-    }
-    function acquireWidevineAccess() {
-        return new Promise((resolve, reject) => {
-            const widevineKeySystem = 'com.widevine.alpha';
-            if (navigator.requestMediaKeySystemAccess) {
-                const config = [{
-                        initDataTypes: ['cenc'], // Common Encryption
-                        audioCapabilities: [
-                            {
-                                contentType: 'audio/mp4; codecs="mp4a.40.2"'
-                            },
-                            {
-                                contentType: 'audio/mp4; codecs="ec-3"',
-                                robustness: 'SW_SECURE_DECODE'
-                            }
-                        ],
-                        videoCapabilities: [
-                            {
-                                contentType: 'video/mp4; codecs="avc1.42E01E"',
-                                robustness: 'SW_SECURE_DECODE'
-                            }
-                        ],
-                        distinctiveIdentifier: 'optional',
-                        persistentState: 'optional',
-                        sessionTypes: ['temporary']
-                    }];
-                // Request access to the key system
-                navigator.requestMediaKeySystemAccess(widevineKeySystem, config)
-                    .then(resolve)
-                    .catch(reject);
-            }
-        });
-    }
-    async function acquireWidevineCert() {
-        if (window.widevineCertCache) {
-            return window.widevineCertCache;
-        }
-        const req = await fetch(widevineCertURL);
-        const certBuffer = await req.arrayBuffer();
-        const serverCertificate = new Uint8Array(certBuffer);
-        window.widevineCertCache = serverCertificate; // Cache cause the request takes a while
-        return serverCertificate;
-    }
-    async function acquireWebPlaybackLicense(challenge, contentID, magicDataURI) {
-        const reqBody = {
-            adamId: contentID,
-            "key-system": "com.widevine.alpha",
-            "user-initiated": true,
-            isLibrary: false,
-            uri: magicDataURI.replace("enhanced/", ""),
-            challenge: challenge,
-        };
-        const request = await fetch(tryWrapAppleMusicURL(licenseURL), {
-            method: "POST",
-            headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
-            body: JSON.stringify(reqBody),
-        });
-        const response = await request.json();
-        if (response?.license) {
-            response.license = Uint8Array.fromBase64(response.license);
-        }
-        else if (response?.customerMessage) {
-            window.igniteView?.commandBridge?.displayError?.("Something went wrong with Apple Music", response.customerMessage);
-        }
-        return response;
-    }
-    function licenseForWebPlayback(hls, contentID) {
-        if (!hls.mediaToAttach)
-            return;
-        const initData = getPssh(hls.magicDataURI);
-        return new Promise(async (resolve, reject) => {
-            if (!hls.magicDataURI)
-                reject();
-            const widevine = await acquireWidevineAccess();
-            const certificate = await acquireWidevineCert();
-            const mediaKeys = await widevine.createMediaKeys();
-            await mediaKeys.setServerCertificate(certificate);
-            const session = mediaKeys.createSession();
-            // Attach the keys to the audio element
-            hls.mediaToAttach.src = "";
-            hls.mediaToAttach.setMediaKeys(mediaKeys);
-            const getLicenseFromChallenge = async (challenge) => {
-                const license = await acquireWebPlaybackLicense(challenge, contentID, hls.magicDataURI);
-                console.log("License acquired for content ID:", contentID);
-                await session.update(license.license);
-            };
-            session.addEventListener('message', async (event) => {
-                console.log("License Message Event:", event);
-                if (event.messageType === 'license-request') {
-                    const challengeBase64 = new Uint8Array(event.message).toBase64();
-                    await getLicenseFromChallenge(challengeBase64);
-                    {
-                        await licenseForAtmos(hls, mediaKeys, contentID);
-                    }
-                    resolve();
-                }
-            }, false);
-            console.log("Generating license request with initData:", initData.toBase64());
-            session.generateRequest("cenc", initData);
-        });
-    }
-    function licenseForAtmos(hls, mediaKeys, contentID) {
-        if (!hls.dolbyAtmosAvailable)
-            return;
-        return new Promise((resolve, reject) => {
-            const session = mediaKeys.createSession();
-            session.addEventListener('message', async (event) => {
-                console.log("Atmos License Message Event:", event);
-                if (event.messageType === 'license-request' || event.messageType === 'license-renewal') {
-                    const challengeBase64 = new Uint8Array(event.message).toBase64();
-                    const license = await acquireWebPlaybackLicense(challengeBase64, contentID, "enhanced/data:text/plain;base64,AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=");
-                    await session.update(license.license);
-                    if (window.igniteView) {
-                        window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${hls.contentID}`, "active");
-                    }
-                    resolve();
-                }
-            }, false);
-            console.log("Generating additional atmos license request");
-            session.generateRequest("cenc", Uint8Array.fromBase64("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
-        });
     }
 
     function createHlsInstance(audio) {
@@ -38609,6 +38620,9 @@
             if (!itemToPlay.hasInitialized && itemToPlay.hls) {
                 itemToPlay.hasInitialized = true;
                 await loadContent(itemToPlay.hls, itemToPlay.song);
+            }
+            else if (itemToPlay.hls?.licenseExpired) {
+                await tryAcquireLicense(itemToPlay.hls);
             }
             getAudioElement().playbackRate = this._playbackRate;
             getAudioElement().play();

@@ -1,3 +1,4 @@
+import { tryAcquireLicense } from "../drm/license";
 import { getAudioElement } from "../helpers/dom";
 import { loadContent } from "../interface/low-level";
 import { QueueItem, QueueItemParam } from "./types";
@@ -102,6 +103,9 @@ export class MusicKitInstance {
         if (!itemToPlay.hasInitialized && itemToPlay.hls) {
             itemToPlay.hasInitialized = true;
             await loadContent(itemToPlay.hls, itemToPlay.song);
+        }
+        else if (itemToPlay.hls?.licenseExpired) {
+            await tryAcquireLicense(itemToPlay.hls);
         }
 
         getAudioElement().playbackRate = this._playbackRate;

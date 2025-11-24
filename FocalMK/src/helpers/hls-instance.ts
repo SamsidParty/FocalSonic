@@ -10,6 +10,7 @@ export interface FocalHls extends Hls {
     contentID?: string;
     magicDataURI?: string;
     licenseAcquired?: boolean;
+    licenseExpired?: boolean;  
     dolbyAtmosAvailable?: boolean;
     useDesirableAsset?: boolean;
     playbackSource: PlaybackSource;

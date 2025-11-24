@@ -13,11 +13,14 @@ interface LicenseResponse {
 
 export function tryAcquireLicense(hls: FocalHls) {
     if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
+        hls.licenseExpired = false;
         hls.licenseAcquired = true;
         console.log("Acquiring license for content ID:", hls.contentID);
         licenseForWebPlayback(hls, hls.contentID!).then(() => {
             console.log("License acquired, attaching media");
-            hls.attachMedia(hls.mediaToAttach);
+            if (!hls.media) {
+                hls.attachMedia(hls.mediaToAttach);
+            }
         });
     }
     else if (isAtmosEnabled() && !hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
@@ -158,6 +161,15 @@ export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
                 }
             
                 resolve();
+            }
+        }, false);
+
+        session.addEventListener('keystatuseschange', (event) => {
+            if (session.expiration && Date.now() >= session.expiration) {
+                // Tells the HLS instance to renew the license after unpausing
+                console.warn("License expired for content ID:", contentID);
+                hls.licenseAcquired = false;
+                hls.licenseExpired = true;
             }
         }, false);
 
