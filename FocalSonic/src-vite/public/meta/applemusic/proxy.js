@@ -38119,6 +38119,16 @@
     const appleMagic1 = [0, 0, 1, 222, 112, 115, 115, 104, 0, 0, 0, 0, 154, 4, 240, 121, 152, 64, 66, 134, 171, 146, 230, 91, 224, 136, 95, 149, 0, 0, 1, 190];
     const appleMagic2 = [0, 0, 0, 52, 112, 115, 115, 104, 0, 0, 0, 0, 237, 239, 139, 169, 121, 214, 74, 206, 163, 200, 39, 220, 213, 29, 33, 237, 0, 0, 0, 20, 8, 1, 18, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
+    function isIgniteView() {
+        return window?.igniteView?.commandBridge !== undefined;
+    }
+    function tryWrapAppleMusicURL(url) {
+        if (isIgniteView() && window.igniteView.resolverURL) {
+            return window.igniteView.resolverURL + "/applemusic?" + encodeURIComponent(url);
+        }
+        return url;
+    }
+
     function getWebPlaybackPssh() {
         const e = Uint8Array.from(appleMagic1);
         const n = new Uint8Array(appleMagic2);
@@ -38212,7 +38222,7 @@
             uri: magicDataURI.replace("enhanced/", ""),
             challenge: challenge,
         };
-        const request = await fetch(licenseURL, {
+        const request = await fetch(tryWrapAppleMusicURL(licenseURL), {
             method: "POST",
             headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
             body: JSON.stringify(reqBody),
@@ -38362,16 +38372,6 @@
     }
     function getActiveHlsInstance() {
         return getAudioElement().attachedHls;
-    }
-
-    function isIgniteView() {
-        return window?.igniteView?.commandBridge !== undefined;
-    }
-    function tryWrapAppleMusicURL(url) {
-        if (isIgniteView() && window.igniteView.resolverURL) {
-            return window.igniteView.resolverURL + "/applemusic?" + encodeURIComponent(url);
-        }
-        return url;
     }
 
     async function getContentSources(contentID) {

@@ -3,6 +3,7 @@ import { isAtmosEnabled } from "../helpers/atmos";
 import { licenseURL, widevineCertURL } from "../helpers/constants";
 import { getAudioElement } from "../helpers/dom";
 import { getActiveHlsInstance } from "../helpers/hls-instance";
+import { tryWrapAppleMusicURL } from "../helpers/igniteview";
 import { getPssh } from "./pssh";
 
 export function tryAcquireLicense() {
@@ -87,7 +88,7 @@ export async function acquireWebPlaybackLicense(challenge: string, contentID: st
         challenge: challenge,
     };
 
-    const request = await fetch(licenseURL, {
+    const request = await fetch(tryWrapAppleMusicURL(licenseURL), {
         method: "POST",
         headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
