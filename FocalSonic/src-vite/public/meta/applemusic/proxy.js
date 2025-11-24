@@ -38101,16 +38101,16 @@
         return audioElement;
     }
 
-    function isAtmosEnabled() {
-        return true;
-    }
-
     async function getFetchHeaders() {
         return {
             "Authorization": `Bearer ` + window.virtualMusicKit?.getInstance().developerToken || "",
             "X-Apple-Music-User-Token": window.virtualMusicKit?.getInstance().musicUserToken || "",
             "X-Apple-Renewal": "1",
         };
+    }
+
+    function isAtmosEnabled() {
+        return true;
     }
 
     const licenseURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense";
@@ -38257,7 +38257,7 @@
                 }
             }, false);
             console.log("Generating additional atmos license request");
-            session.generateRequest("cenc", Uint8Array.fromBase64("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY="));
+            session.generateRequest("cenc", Uint8Array.fromBase64("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
         });
     }
 
@@ -38352,8 +38352,19 @@
         return getAudioElement().attachedHls;
     }
 
-    async function getWebContentSources(contentID) {
+    function isIgniteView() {
+        return window?.igniteView?.commandBridge !== undefined;
+    }
+    function tryWrapAppleMusicURL(url) {
+        if (isIgniteView() && window.igniteView.resolverURL) {
+            return window.igniteView.resolverURL + "/applemusic?" + encodeURIComponent(url);
+        }
+        return url;
+    }
+
+    async function getContentSources(contentID) {
         try {
+            const enhancedHls = await tryGetEnhancedHLS(contentID);
             const body = (!Number.isNaN(parseInt(contentID))) ? { salableAdamId: contentID } : { universalLibraryId: contentID };
             const request = await fetch(webPlaybackURL, {
                 method: "POST",
@@ -38361,15 +38372,37 @@
                 body: JSON.stringify(body),
             });
             const response = await request.json();
+            enhancedHls?.forEach((asset) => response?.songList[0]?.assets?.push(asset));
             return response?.songList || null;
         }
         catch { }
         return null;
     }
-    function findBestWebContentSource(sources) {
+    async function tryGetEnhancedHLS(contentID) {
+        try {
+            if (!isAtmosEnabled())
+                ;
+            const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}?extend=extendedAssetUrls`);
+            const request = await fetch(catalogURL);
+            const response = await request.json();
+            const assets = response?.data?.[0]?.attributes?.extendedAssetUrls;
+            return Object.entries(assets).map((asset) => {
+                return { URL: asset[1], flavor: asset[0], desirable: response?.data?.[0]?.attributes?.audioTraits?.includes("atmos") && isAtmosEnabled() };
+            });
+        }
+        catch { }
+        return [{ URL: null, flavor: null }];
+    }
+    function findBestContentSource(sources) {
         if (sources != null && sources.length > 0) {
             const song = sources[0];
-            const validAssets = song?.assets?.filter((asset) => (asset.URL && asset.URL.includes(".m3u8") && asset.flavor.includes(":ctrp")) || !asset.flavor); // ctrp = compatible with widevine
+            const validAssets = song?.assets?.filter((asset) => {
+                const hasURL = asset.URL && asset.URL.includes(".m3u8");
+                const hasFlavor = asset.flavor;
+                const isCtrp = asset.flavor?.toLowerCase().includes("ctrp"); // ctrp = compatible with widevine
+                const isEnhancedHls = asset.flavor?.toLowerCase().includes("enhancedhls");
+                return hasURL && hasFlavor && (isCtrp || isEnhancedHls || !hasFlavor);
+            });
             // Find the asset with the highest bitrate
             let bestAsset = null;
             let highestBitrate = -1;
@@ -38377,6 +38410,10 @@
                 if (asset.metadata?.bitRate > highestBitrate) {
                     highestBitrate = asset.metadata?.bitRate;
                     bestAsset = asset;
+                }
+                if (asset.desirable) {
+                    bestAsset = asset;
+                    break;
                 }
             }
             return bestAsset || null;
@@ -38386,15 +38423,12 @@
 
     async function loadContent(contentID) {
         try {
-            const sources = await getWebContentSources(contentID);
-            const bestSource = findBestWebContentSource(sources);
+            const sources = await getContentSources(contentID);
+            const bestSource = findBestContentSource(sources);
             if (!bestSource)
                 throw new Error("[FocalMK] No valid content source found");
             let sourceURL = bestSource.URL;
-            if (isAtmosEnabled() && window.igniteView) {
-                sourceURL = "https://aod.itunes.apple.com/itunes-assets/HLSMusic221/v4/be/ad/34/bead3418-e788-6ff9-8eec-705a1dafc7b3/P976156933_default.m3u8";
-            }
-            else if (!sourceURL.endsWith(".m3u8")) {
+            if (!sourceURL.endsWith(".m3u8")) {
                 console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
                 getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
                 getAudioElement().src = sourceURL;
