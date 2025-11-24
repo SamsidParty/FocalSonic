@@ -38153,9 +38153,9 @@
                 hls.attachMedia(getAudioElement());
             });
         }
-        else if (!hls.dolbyAtmosAvailable && !hls.useBackupAsset) {
+        else if (!hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
             console.warn("Dolby Atmos not available for this content, switching to backup asset");
-            hls.useBackupAsset = true;
+            hls.useDesirableAsset = false;
             setTimeout(() => {
                 hls.loadSource(hls.playbackSource.backupAsset?.URL || "");
             }, 0);
@@ -38253,6 +38253,8 @@
         });
     }
     function licenseForAtmos(mediaKeys, contentID) {
+        if (!getActiveHlsInstance()?.dolbyAtmosAvailable)
+            return;
         return new Promise((resolve, reject) => {
             const session = mediaKeys.createSession();
             session.addEventListener('message', async (event) => {
@@ -38453,6 +38455,7 @@
                     resolve();
                 });
                 getActiveHlsInstance().playbackSource = mainSource;
+                getActiveHlsInstance().useDesirableAsset = mainSource.bestAsset?.desirable || false;
                 getActiveHlsInstance().contentID = contentID;
                 getActiveHlsInstance().loadSource(sourceURL);
             });

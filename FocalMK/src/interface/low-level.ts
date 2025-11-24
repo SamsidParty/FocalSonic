@@ -28,6 +28,7 @@ export async function loadContent(contentID: string) {
             });
 
             getActiveHlsInstance().playbackSource = mainSource;
+            getActiveHlsInstance().useDesirableAsset = mainSource.bestAsset?.desirable || false;
             getActiveHlsInstance().contentID = contentID;
             getActiveHlsInstance().loadSource(sourceURL);
         });

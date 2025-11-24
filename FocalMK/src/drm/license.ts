@@ -15,9 +15,9 @@ export function tryAcquireLicense() {
             hls.attachMedia(getAudioElement());
         });
     }
-    else if (isAtmosEnabled() && !hls.dolbyAtmosAvailable && !hls.useBackupAsset) {
+    else if (isAtmosEnabled() && !hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
         console.warn("Dolby Atmos not available for this content, switching to backup asset");
-        hls.useBackupAsset = true;
+        hls.useDesirableAsset = false;
         setTimeout(() => {
             hls.loadSource(hls.playbackSource.backupAsset?.URL || "");
         }, 0);
@@ -141,6 +141,8 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
 }
 
 export function licenseForAtmos(mediaKeys: MediaKeys, contentID: string) {
+
+    if (!getActiveHlsInstance()?.dolbyAtmosAvailable) return;
 
     return new Promise<void>((resolve, reject) => {
         const session = mediaKeys.createSession();
