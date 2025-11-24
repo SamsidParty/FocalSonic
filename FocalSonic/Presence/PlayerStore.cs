@@ -70,6 +70,34 @@ namespace FocalSonic.Presence
             }
         }
 
+        [Command("setPlayerCallbackData")]
+        public static async Task SetPlayerCallbackData(string key, string value)
+        {
+            try
+            {
+                lock (MediaPlaybackInfo.Instance)
+                {
+                    if (MediaPlaybackInfo.Instance?.Store?.State?.PlayerCallbackData != null)
+                    {
+                        if (string.IsNullOrEmpty(value))
+                        {
+                            MediaPlaybackInfo.Instance.Store.State.PlayerCallbackData.Remove(key);
+                        }
+                        else
+                        {
+                            MediaPlaybackInfo.Instance.Store.State.PlayerCallbackData[key] = value;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Failed to update music playback info: " + ex.Message);
+            }
+
+            Program.MainWindow?.CallFunction("window.rehydratePlayerStore", JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.Store));
+        }
+
         [Command("getPlayerStore")]
         public static string GetPlayerStore()
         {

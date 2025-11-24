@@ -11,11 +11,12 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
-import { useDynamicColors, useMainDrawerState } from "@/store/player.store";
+import { useDynamicColors, useMainDrawerState, usePlayerCallbackData } from "@/store/player.store";
 import { ISong } from "@/types/responses/song";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
+import { DolbyIcon, DolbyIconFailed } from "../icons/dolby";
 import { ExplicitIcon } from "../icons/explicit";
 
 
@@ -23,6 +24,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
     const { t } = useTranslation();
     const { setCurrentSongColor, currentSongColor } = useDynamicColors();
     const { mainDrawerState, setMainDrawerState } = useMainDrawerState();
+    const atmosState = usePlayerCallbackData("atmos-state-" + (song?.id || ""));
 
     function getImageElement() {
         return document.getElementById("track-song-image") as HTMLImageElement;
@@ -121,6 +123,8 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
                         >
                             {song.title}
                             {song.explicitStatus === "explicit" && <ExplicitIcon />}
+                            {atmosState === "active" && <DolbyIcon />}
+                            {atmosState === "failed" && <DolbyIconFailed />}
                         </span>
                     </Link>
                 </MarqueeTitle>

@@ -54,6 +54,11 @@ export class QueueItem  {
         this.hls = null;
         this.audio = null!
         this.hasInitialized = false;
+
+        if (window.igniteView) {
+            window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${this.song}`, "");
+        }
+
         console.log(`[FocalMK] Disposed resources for song: ${this.song}`);
     }
 }

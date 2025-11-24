@@ -22,6 +22,11 @@ export function tryAcquireLicense(hls: FocalHls) {
     }
     else if (isAtmosEnabled() && !hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
         console.warn("Dolby Atmos not available for this content, switching to backup asset");
+
+        if (window.igniteView) {
+            window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${hls.contentID}`, "failed");
+        }
+
         hls.useDesirableAsset = false;
         setTimeout(() => {
             hls.loadSource(hls.playbackSource.backupAsset?.URL || "");
@@ -146,6 +151,11 @@ export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
                 if (isAtmosEnabled()) {
                     await licenseForAtmos(hls, mediaKeys, contentID);
                 }
+                else {
+                    if (window.igniteView) {
+                        window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${hls.contentID}`, "inactive");
+                    }
+                }
             
                 resolve();
             }
@@ -170,6 +180,10 @@ export function licenseForAtmos(hls: FocalHls, mediaKeys: MediaKeys, contentID: 
                 const challengeBase64 = new Uint8Array(event.message).toBase64();
                 const license = await acquireWebPlaybackLicense(challengeBase64, contentID, "enhanced/data:text/plain;base64,AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=");
                 await session.update(license.license);
+
+                if (window.igniteView) {
+                    window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${hls.contentID}`, "active");
+                }
 
                 resolve();
             }

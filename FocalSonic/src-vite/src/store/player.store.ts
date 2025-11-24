@@ -867,6 +867,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             }); 
                         }
                     },
+                    playerCallbackData: {},
                 })),
                 { name: "player_store" },
             ),
@@ -954,6 +955,7 @@ usePlayerStore.subscribe(
 );
 
 export const usePlayerActions = () => usePlayerStore((state) => state.actions);
+export const usePlayerCallbackData = (key: string) => usePlayerStore((state) => state.playerCallbackData[key] || undefined);
 
 export const usePlayerSonglist = () =>
     usePlayerStore((state) => {

@@ -173,5 +173,6 @@ export interface IPlayerContext {
     playerProgress: IPlayerProgress
     settings: IPlayerSettings
     actions: IPlayerActions
+    playerCallbackData: Record<string, string>
     presenceNonce: number
 }

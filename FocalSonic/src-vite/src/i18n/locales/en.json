@@ -665,6 +665,10 @@
       }
     },
     "audio": {
+      "atmos": {
+        "active": "Dolby Atmos is Active",
+        "failed": "Atmos DRM doesn't work on this track"
+      },
       "replayGain": {
         "group": "ReplayGain",
         "description": "Automatically normalize audio playback levels for a consistent listening experience.",
