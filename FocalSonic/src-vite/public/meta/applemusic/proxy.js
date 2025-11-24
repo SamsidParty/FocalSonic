@@ -38357,10 +38357,6 @@
                     }
                     resolve();
                 }
-                else if (event.messageType === 'license-renewal') {
-                    const challengeBase64 = new Uint8Array(event.message).toBase64();
-                    await getLicenseFromChallenge(challengeBase64);
-                }
             }, false);
             console.log("Generating license request with initData:", initData.toBase64());
             session.generateRequest("cenc", initData);
@@ -38476,9 +38472,6 @@
         return instance;
     }
 
-    const PlayerRepeatMode = { "0": "none", "1": "one", "2": "all", "none": 0, "one": 1, "all": 2 };
-    const PlaybackStates = { "0": "none", "1": "loading", "2": "playing", "3": "paused", "4": "stopped", "5": "ended", "6": "seeking", "8": "waiting", "9": "stalled", "10": "completed", "none": 0, "loading": 1, "playing": 2, "paused": 3, "stopped": 4, "ended": 5, "seeking": 6, "waiting": 8, "stalled": 9, "completed": 10 };
-
     class QueueItem {
         song;
         hasInitialized = false;
@@ -38494,7 +38487,7 @@
             document.body.appendChild(this.audio);
         }
         handleEnded() {
-            this.parent.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.playing, state: PlaybackStates.ended });
+            this.parent.handleSongEnded();
         }
         setActive() {
             console.log(`[FocalMK] Initializing HLS for song: ${this.song}`);
@@ -38518,9 +38511,13 @@
             this.hls?.destroy();
             this.hls = null;
             this.audio = null;
+            this.hasInitialized = false;
             console.log(`[FocalMK] Disposed resources for song: ${this.song}`);
         }
     }
+
+    const PlayerRepeatMode = { "0": "none", "1": "one", "2": "all", "none": 0, "one": 1, "all": 2 };
+    const PlaybackStates = { "0": "none", "1": "loading", "2": "playing", "3": "paused", "4": "stopped", "5": "ended", "6": "seeking", "8": "waiting", "9": "stalled", "10": "completed", "none": 0, "loading": 1, "playing": 2, "paused": 3, "stopped": 4, "ended": 5, "seeking": 6, "waiting": 8, "stalled": 9, "completed": 10 };
 
     class MusicKitInstance {
         // Auth
@@ -38556,6 +38553,17 @@
                 });
             }
         }
+        handleSongEnded() {
+            if (this.repeatMode === PlayerRepeatMode.one && this.queue[0]) {
+                // Redo of playback
+                // Insert a new queue item just after the current one
+                const newItem = new QueueItem({ song: this.queue[0].song }, this);
+                this.queue.splice(1, 0, newItem);
+                this.skipToNextItem();
+                return;
+            }
+            this.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.playing, state: PlaybackStates.ended });
+        }
         // Queue
         queue = [];
         get repeatMode() {
@@ -38563,12 +38571,6 @@
         }
         set repeatMode(mode) {
             this._repeatMode = mode;
-            if (mode === PlayerRepeatMode.one) {
-                getAudioElement().loop = true;
-            }
-            else {
-                getAudioElement().loop = false;
-            }
         }
         get currentPlaybackDuration() {
             return getAudioElement().duration || 0;
@@ -38582,7 +38584,7 @@
         }
         async play() {
             this.isPlaying = true;
-            console.log("[FocalMK] Playback started");
+            console.log("[FocalMK] Playback request started");
             if (this.queue.length < 1) {
                 console.warn("[FocalMK] No items in queue to play");
                 return;
@@ -38626,6 +38628,9 @@
         }
         skipToNextItem() {
             console.log("[FocalMK] Skipping to next item in queue");
+            if (this.queue[0]?.hasInitialized) {
+                this.queue[0]?.setInactive();
+            }
             if (this.queue.length > 1) {
                 this.queue.shift();
             }
@@ -38633,6 +38638,9 @@
         }
         clearQueue() {
             console.log("[FocalMK] Clearing queue");
+            this.queue.forEach(item => {
+                item?.hasInitialized && item.setInactive();
+            });
             this.queue = [];
         }
         addEventListener(event, callback) {

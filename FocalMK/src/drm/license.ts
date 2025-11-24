@@ -145,10 +145,6 @@ export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
             
                 resolve();
             }
-            else if (event.messageType === 'license-renewal') {
-                const challengeBase64 = new Uint8Array(event.message).toBase64();
-                await getLicenseFromChallenge(challengeBase64);
-            }
         }, false);
 
         console.log("Generating license request with initData:", initData.toBase64());

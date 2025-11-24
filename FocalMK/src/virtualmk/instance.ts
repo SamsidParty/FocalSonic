@@ -1,7 +1,7 @@
 import { getAudioElement } from "../helpers/dom";
 import { loadContent } from "../interface/low-level";
 import { QueueItem, QueueItemParam } from "./types";
-import { PlayerRepeatMode } from "./virtualmk-constants";
+import { PlaybackStates, PlayerRepeatMode } from "./virtualmk-constants";
 
 export class MusicKitInstance {
 
@@ -49,6 +49,19 @@ export class MusicKitInstance {
         }
     }
 
+    handleSongEnded() {
+        if (this.repeatMode === PlayerRepeatMode.one && this.queue[0]) {
+            // Redo of playback
+            // Insert a new queue item just after the current one
+            const newItem = new QueueItem({ song: this.queue[0]!.song }, this);
+            this.queue.splice(1, 0, newItem);
+            this.skipToNextItem();
+            return;
+        }
+
+        this.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.playing, state: PlaybackStates.ended });
+    }
+
     // Queue
     queue: QueueItem[] = [];
 
@@ -57,12 +70,6 @@ export class MusicKitInstance {
     }
     set repeatMode(mode: number) {
         this._repeatMode = mode;
-
-        if (mode === PlayerRepeatMode.one) {
-            getAudioElement().loop = true;
-        } else {
-            getAudioElement().loop = false;
-        }
     }
 
     get currentPlaybackDuration() {
@@ -79,7 +86,7 @@ export class MusicKitInstance {
 
     async play() {
         this.isPlaying = true;
-        console.log("[FocalMK] Playback started");
+        console.log("[FocalMK] Playback request started");
 
         if (this.queue.length < 1) {
             console.warn("[FocalMK] No items in queue to play");
@@ -133,12 +140,22 @@ export class MusicKitInstance {
 
     skipToNextItem() {
         console.log("[FocalMK] Skipping to next item in queue");
+
+        if (this.queue[0]?.hasInitialized) {
+            this.queue[0]?.setInactive();
+        }
+
         if (this.queue.length > 1) { this.queue.shift(); }
         this.play();
     }
 
     clearQueue() {
         console.log("[FocalMK] Clearing queue");
+
+        this.queue.forEach(item => {
+            item?.hasInitialized && item.setInactive();
+        });
+
         this.queue = [];
     }
 

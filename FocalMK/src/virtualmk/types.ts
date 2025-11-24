@@ -1,7 +1,6 @@
 import { FocalAudioElement, getAudioElement } from "../helpers/dom";
 import { createHlsInstance, FocalHls } from "../helpers/hls-instance";
 import { MusicKitInstance } from "./instance";
-import { PlaybackStates } from "./virtualmk-constants";
 
 export interface QueueItemParam {
     song: string;
@@ -25,7 +24,7 @@ export class QueueItem  {
     }
 
     handleEnded() {
-        this.parent.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.playing, state: PlaybackStates.ended });
+        this.parent.handleSongEnded();
     }
 
     setActive() {
@@ -54,6 +53,7 @@ export class QueueItem  {
         this.hls?.destroy();
         this.hls = null;
         this.audio = null!
+        this.hasInitialized = false;
         console.log(`[FocalMK] Disposed resources for song: ${this.song}`);
     }
 }
