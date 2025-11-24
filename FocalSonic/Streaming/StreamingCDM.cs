@@ -66,6 +66,7 @@ namespace FocalSonic.Streaming
                         // Perform replacement if it exists in the map
                         if (keyMap.Count > keyIndex)
                         {
+                            keyIndex++;
                             byte[] newKidBytes = Convert.FromHexString(keyMap[keyIndex]);
 
                             if (newKidBytes.Length != 16)

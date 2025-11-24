@@ -1,4 +1,5 @@
 import { getFetchHeaders } from "../auth/headers";
+import { isAtmosEnabled } from "../helpers/atmos";
 import { licenseURL, widevineCertURL } from "../helpers/constants";
 import { getAudioElement } from "../helpers/dom";
 import { getActiveHlsInstance } from "../helpers/hls-instance";
@@ -113,13 +114,41 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
             if (event.messageType === 'license-request') {
                 const challengeBase64 = new Uint8Array(event.message).toBase64();
                 const license = await acquireWebPlaybackLicense(challengeBase64, contentID, getActiveHlsInstance().magicDataURI!);
+                if (isAtmosEnabled()) {
+                    await licenseForAtmos(mediaKeys, contentID);
+                }
                 await session.update(new Uint8Array(license));
+                
+
                 resolve();
             }
         }, false);
 
+        
         const initData = getPssh(getActiveHlsInstance().magicDataURI!);
         console.log("Generating license request with initData:", initData.toBase64());
         session.generateRequest("cenc", initData);
+
+    });
+}
+
+export function licenseForAtmos(mediaKeys: MediaKeys, contentID: string) {
+
+    return new Promise<void>((resolve, reject) => {
+        const session = mediaKeys.createSession();
+        
+        session.addEventListener('message', async (event) => {
+            console.log("Atmos License Message Event:", event);
+            if (event.messageType === 'license-request') {
+                const challengeBase64 = new Uint8Array(event.message).toBase64();
+                const license = await acquireWebPlaybackLicense(challengeBase64, contentID, "enhanced/data:text/plain;base64,AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=");
+                await session.update(new Uint8Array(license));
+
+                resolve();
+            }
+        }, false);
+
+        console.log("Generating additional atmos license request");
+        session.generateRequest("cenc", Uint8Array.fromBase64("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY="));
     });
 }
