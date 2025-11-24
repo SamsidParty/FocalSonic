@@ -6,6 +6,7 @@ import { AlbumFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
 import PreviewList from "@/app/components/home/preview-list";
+import { DolbyIconLarge } from "@/app/components/icons/dolby";
 import ListWrapper from "@/app/components/list-wrapper";
 import { DataTable } from "@/app/components/ui/data-table";
 import {
@@ -86,6 +87,14 @@ export default function Album() {
         badges.unshift({
             content: album.year.toString(),
             type: "text",
+        });
+    }
+
+    // Dolby atmos
+    if (album.appleMusic?.data.attributes?.audioTraits?.includes("atmos")) {
+        badges.push({
+            content: <DolbyIconLarge />,
+            type: "component",
         });
     }
 

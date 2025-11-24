@@ -19,7 +19,13 @@ type ChipBadge = {
     link: string
 }
 
-export type BadgesData = Array<TextBadge | LinkBadge | ChipBadge>
+type ComponentBadge = {
+    content: React.ReactNode
+    type: "component"
+}
+
+
+export type BadgesData = Array<TextBadge | LinkBadge | ChipBadge | ComponentBadge>
 
 interface HeaderInfoProps {
     showFirstDot?: boolean
@@ -29,7 +35,8 @@ interface HeaderInfoProps {
 const renderBadge = {
     text: (props) => <p className="opacity-80 drop-shadow">{props.item.content}</p>,
     chip: (props) => <p className="opacity-80 drop-shadow rounded-sm px-1 bg-primary text-primary-foreground">{props.item.content}</p>,
-    link: (props) => <Link to={props.item.link} className="flex opacity-80 drop-shadow hover:opacity-100 hover:underline"> {props.item.content}</Link>
+    link: (props) => <Link to={props.item.link} className="flex opacity-80 drop-shadow hover:opacity-100 hover:underline"> {props.item.content}</Link>,
+    component: (props) => <>{props.item.content}</>,
 };
 
 export function HeaderInfoGenerator({

@@ -16,7 +16,8 @@ import { ISong } from "@/types/responses/song";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { logger } from "@/utils/logger";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
-import { ExplicitIcon } from "../table/song-title";
+import { ExplicitIcon } from "../icons/explicit";
+
 
 export function TrackInfo({ song }: { song: ISong | undefined }) {
     const { t } = useTranslation();
