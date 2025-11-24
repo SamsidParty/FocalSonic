@@ -6,19 +6,19 @@ import Hls from "../playback/hls.js";
 export async function loadContent(contentID: string) {
     try {
         const sources = await getContentSources(contentID);
-        const bestSource = findBestContentSource(sources);
-        if (!bestSource) throw new Error("[FocalMK] No valid content source found");
+        const mainSource = findBestContentSource(sources);
+        if (!mainSource) throw new Error("[FocalMK] No valid content source found");
 
-        let sourceURL = bestSource.URL;
+        let sourceURL = mainSource.bestAsset?.URL;
         
-        if (!sourceURL.endsWith(".m3u8")) {
+        if (!sourceURL?.endsWith(".m3u8")) {
             console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
             getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
-            getAudioElement().src = sourceURL;
+            getAudioElement().src = sourceURL!;
             return;
         }
 
-        console.log("[FocalMK] Using content source:", bestSource.flavor);
+        console.log("[FocalMK] Using content source:", mainSource.bestAsset?.flavor);
 
 
         await new Promise<void>((resolve) => {
@@ -27,6 +27,7 @@ export async function loadContent(contentID: string) {
                 resolve();
             });
 
+            getActiveHlsInstance().playbackSource = mainSource;
             getActiveHlsInstance().contentID = contentID;
             getActiveHlsInstance().loadSource(sourceURL);
         });

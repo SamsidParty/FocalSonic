@@ -3,6 +3,20 @@ import { isAtmosEnabled } from "./atmos";
 import { webPlaybackURL } from "./constants";
 import { tryWrapAppleMusicURL } from "./igniteview";
 
+export interface PlaybackAsset {
+    URL: string | null;
+    flavor: string | null;
+    desirable?: boolean;
+    metadata?: {
+        bitRate: number;
+    };
+}
+
+export interface PlaybackSource {
+    bestAsset: PlaybackAsset | null;
+    backupAsset: PlaybackAsset | null;
+}
+
 export async function getContentSources(contentID: string) {
     try {
         const enhancedHls = await tryGetEnhancedHLS(contentID);
@@ -23,7 +37,7 @@ export async function getContentSources(contentID: string) {
     return null;
 }
 
-export async function tryGetEnhancedHLS(contentID: string) {
+export async function tryGetEnhancedHLS(contentID: string): Promise<PlaybackAsset[]> {
     try {
         if (!isAtmosEnabled()) return [{ URL: null, flavor: null }];
         const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}?extend=extendedAssetUrls`);
@@ -32,14 +46,14 @@ export async function tryGetEnhancedHLS(contentID: string) {
         const assets = response?.data?.[0]?.attributes?.extendedAssetUrls;
         return Object.entries(assets).map((asset) => {
             return { URL: asset[1], flavor: asset[0], desirable: response?.data?.[0]?.attributes?.audioTraits?.includes("atmos") && isAtmosEnabled() };
-        })
+        }) as PlaybackAsset[];
     }
     catch {}
 
     return [{ URL: null, flavor: null }];
 }
 
-export function findBestContentSource(sources: any[]) {
+export function findBestContentSource(sources: any[]): PlaybackSource {
     if (sources != null && sources.length > 0) {
         const song = sources[0];
         const validAssets = song?.assets?.filter((asset: any) => {
@@ -52,12 +66,14 @@ export function findBestContentSource(sources: any[]) {
 
         // Find the asset with the highest bitrate
         let bestAsset = null;
+        let backupAsset = null;
         let highestBitrate = -1;
 
         for (const asset of validAssets) {
             if (asset.metadata?.bitRate > highestBitrate) {
                 highestBitrate = asset.metadata?.bitRate;
                 bestAsset = asset;
+                backupAsset = asset;
             }
 
             if (asset.desirable) {
@@ -66,8 +82,8 @@ export function findBestContentSource(sources: any[]) {
             }
         }
 
-        return bestAsset || null;
+        return { bestAsset, backupAsset };
     }
 
-    return null;
+    return { bestAsset: null, backupAsset: null };
 }

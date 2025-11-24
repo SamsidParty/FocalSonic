@@ -38144,13 +38144,21 @@
     }
 
     function tryAcquireLicense() {
-        if (getActiveHlsInstance()?.contentID && getActiveHlsInstance().magicDataURI && !getActiveHlsInstance().licenseAcquired) {
-            getActiveHlsInstance().licenseAcquired = true;
-            console.log("Acquiring license for content ID:", getActiveHlsInstance().contentID);
-            licenseForWebPlayback(getAudioElement(), getActiveHlsInstance().contentID).then(() => {
+        const hls = getActiveHlsInstance();
+        if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
+            hls.licenseAcquired = true;
+            console.log("Acquiring license for content ID:", hls.contentID);
+            licenseForWebPlayback(getAudioElement(), hls.contentID).then(() => {
                 console.log("License acquired, attaching media");
-                getActiveHlsInstance().attachMedia(getAudioElement());
+                hls.attachMedia(getAudioElement());
             });
+        }
+        else if (!hls.dolbyAtmosAvailable && !hls.useBackupAsset) {
+            console.warn("Dolby Atmos not available for this content, switching to backup asset");
+            hls.useBackupAsset = true;
+            setTimeout(() => {
+                hls.loadSource(hls.playbackSource.backupAsset?.URL || "");
+            }, 0);
         }
     }
     function acquireWidevineAccess() {
@@ -38407,41 +38415,44 @@
             });
             // Find the asset with the highest bitrate
             let bestAsset = null;
+            let backupAsset = null;
             let highestBitrate = -1;
             for (const asset of validAssets) {
                 if (asset.metadata?.bitRate > highestBitrate) {
                     highestBitrate = asset.metadata?.bitRate;
                     bestAsset = asset;
+                    backupAsset = asset;
                 }
                 if (asset.desirable) {
                     bestAsset = asset;
                     break;
                 }
             }
-            return bestAsset || null;
+            return { bestAsset, backupAsset };
         }
-        return null;
+        return { bestAsset: null, backupAsset: null };
     }
 
     async function loadContent(contentID) {
         try {
             const sources = await getContentSources(contentID);
-            const bestSource = findBestContentSource(sources);
-            if (!bestSource)
+            const mainSource = findBestContentSource(sources);
+            if (!mainSource)
                 throw new Error("[FocalMK] No valid content source found");
-            let sourceURL = bestSource.URL;
-            if (!sourceURL.endsWith(".m3u8")) {
+            let sourceURL = mainSource.bestAsset?.URL;
+            if (!sourceURL?.endsWith(".m3u8")) {
                 console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
                 getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
                 getAudioElement().src = sourceURL;
                 return;
             }
-            console.log("[FocalMK] Using content source:", bestSource.flavor);
+            console.log("[FocalMK] Using content source:", mainSource.bestAsset?.flavor);
             await new Promise((resolve) => {
                 getActiveHlsInstance().on(Hls.Events.MEDIA_ATTACHED, () => {
                     console.log("[FocalMK] Playback ready");
                     resolve();
                 });
+                getActiveHlsInstance().playbackSource = mainSource;
                 getActiveHlsInstance().contentID = contentID;
                 getActiveHlsInstance().loadSource(sourceURL);
             });

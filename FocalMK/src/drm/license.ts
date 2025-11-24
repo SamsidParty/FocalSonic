@@ -6,13 +6,21 @@ import { getActiveHlsInstance } from "../helpers/hls-instance";
 import { getPssh } from "./pssh";
 
 export function tryAcquireLicense() {
-    if (getActiveHlsInstance()?.contentID && getActiveHlsInstance().magicDataURI && !getActiveHlsInstance().licenseAcquired) {
-        getActiveHlsInstance().licenseAcquired = true;
-        console.log("Acquiring license for content ID:", getActiveHlsInstance().contentID);
-        licenseForWebPlayback(getAudioElement(), getActiveHlsInstance().contentID!).then(() => {
+    const hls = getActiveHlsInstance();
+    if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
+        hls.licenseAcquired = true;
+        console.log("Acquiring license for content ID:", hls.contentID);
+        licenseForWebPlayback(getAudioElement(), hls.contentID!).then(() => {
             console.log("License acquired, attaching media");
-            getActiveHlsInstance().attachMedia(getAudioElement());
+            hls.attachMedia(getAudioElement());
         });
+    }
+    else if (isAtmosEnabled() && !hls.dolbyAtmosAvailable && !hls.useBackupAsset) {
+        console.warn("Dolby Atmos not available for this content, switching to backup asset");
+        hls.useBackupAsset = true;
+        setTimeout(() => {
+            hls.loadSource(hls.playbackSource.backupAsset?.URL || "");
+        }, 0);
     }
 }
 

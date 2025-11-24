@@ -2,6 +2,7 @@ import { tryAcquireLicense } from "../drm/license";
 import Hls from "../playback/hls.js";
 import { isAtmosEnabled } from "./atmos";
 import { getAudioElement } from "./dom";
+import { PlaybackSource } from "./sources";
 
 
 
@@ -10,6 +11,8 @@ export interface FocalHls extends Hls {
     magicDataURI?: string;
     licenseAcquired?: boolean;
     dolbyAtmosAvailable?: boolean;
+    useBackupAsset?: boolean;
+    playbackSource: PlaybackSource;
 }
 
 export function createHlsInstance(): FocalHls {
