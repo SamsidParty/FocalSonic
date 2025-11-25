@@ -671,7 +671,7 @@
         "toggle": "Enable Dolby Atmos",
         "changes": "Changes will take effect when you play a new track.",
         "unsupported": "Dolby Atmos is not supported with your current configuration, toggling this option will have no effect.",
-        "description": "Enables spatial audio playback for supported tracks on Atmos-enabled devices. Some Atmos tracks are exclusive to Apple's DRM and will not work with FocalSonic."
+        "description": "(EXPERIMENTAL) Enables spatial audio playback for supported tracks on Atmos-enabled devices. Some Atmos tracks are exclusive to Apple's DRM and will not work with FocalSonic."
       },
       "replayGain": {
         "group": "ReplayGain",
