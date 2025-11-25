@@ -113,9 +113,9 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             wheelStep: 5,
                         },
                         speed: {
-                            min: 0.1,
+                            min: 0.5,
                             max: 2,
-                            step: 0.05,
+                            step: 0.01,
                             wheelStep: 0.1,
                         },
                         fullscreen: {
