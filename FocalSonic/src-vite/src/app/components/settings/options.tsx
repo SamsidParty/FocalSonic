@@ -7,9 +7,9 @@ import {
 } from "@/app/components/ui/sidebar";
 import { useAppRuntimeState } from "@/store/app.store";
 import {
-    Globe,
     LinkIcon,
-    Paintbrush
+    Paintbrush,
+    Volume2
 } from "lucide-react";
 import { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,7 +28,7 @@ interface OptionsData {
 
 const options: OptionsData[] = [
     { id: "appearance", icon: Paintbrush },
-    { id: "language", icon: Globe },
+    { id: "audio", icon: Volume2 },
     { id: "integrations", icon: LinkIcon },
 ];
 

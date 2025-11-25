@@ -629,7 +629,7 @@
     "options": {
       "appearance": "Appearance",
       "language": "Language & Region",
-      "audio": "Player & Audio",
+      "audio": "Audio",
       "content": "Content",
       "integrations": "Integrations"
     },
