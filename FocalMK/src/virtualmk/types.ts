@@ -49,7 +49,7 @@ export class QueueItem  {
     }
 
     dispose() {
-        this.audio.remove();
+        this.audio?.remove();
         this.hls?.destroy();
         this.hls = null;
         this.audio = null!

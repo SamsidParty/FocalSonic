@@ -100,6 +100,9 @@ namespace FocalSonic.AudioPlayer
 
         public virtual async Task SetSource(string src, WebWindow ctx) 
         {
+            if (Source == src) { return; } // Already set
+            await UpdatePrePlaybackParameters();
+
             if (ctx != null)
             {
                 AssociatedWindowID = ctx.ID;
@@ -126,6 +129,7 @@ namespace FocalSonic.AudioPlayer
         public virtual async Task SetOutputDevice(string outputDevice) { OutputDevice = outputDevice; }
         public virtual async Task SetVolume(double volume) { Volume = (float)volume; }
         public virtual async Task SetSpeed(double speed) { Speed = (float)speed; }
+        public virtual async Task SetEnableAtmos(bool enabled) { }
 
         public async Task CallEndEvent()
         {
@@ -140,6 +144,11 @@ namespace FocalSonic.AudioPlayer
             {
                 AssociatedWindow?.CallFunction("handleAudioEvent_" + this.ID, "loaded", duration);
             }
+        }
+
+        public async Task UpdatePrePlaybackParameters()
+        {
+            await SetEnableAtmos(MediaPlaybackInfo.Instance?.Store?.ExtraProperties?.EnableAtmos ?? false);
         }
 
         public async Task UpdatePlaybackParameters()

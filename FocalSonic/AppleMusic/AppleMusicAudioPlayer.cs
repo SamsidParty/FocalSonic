@@ -157,6 +157,16 @@ namespace FocalSonic.AppleMusic
             );
         }
 
+        public override async Task SetEnableAtmos(bool atmos)
+        {
+            await base.SetEnableAtmos(atmos);
+            ProxyWindow?.ExecuteJavaScript(
+                InjectionPrefix +
+                $"window.injectedQueue.push({{ type: 'setEnableAtmos', enabled: {atmos.ToString().ToLower()} }});" +
+                InjectionSuffix
+            );
+        }
+
         public override async Task SetVolume(double volume)
         {
             await base.SetVolume(volume);

@@ -107,6 +107,9 @@ window.executeInjectedQueue = async () => {
         else if (item.type === "setLoopMode") {
             window.proxyMusicInstance.repeatMode = item.loop ? getMusicKit().PlayerRepeatMode.one : getMusicKit().PlayerRepeatMode.none;
         }
+        else if (item.type === "setEnableAtmos") {
+            window.enableAtmos = item.enabled;
+        }
         else if (item.type === "setVolume") {
             findAudioElement() && getAudioEffectController(findAudioElement()).setBaseVolume(item.volume);
         }

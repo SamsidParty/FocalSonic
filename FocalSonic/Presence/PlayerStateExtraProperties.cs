@@ -19,6 +19,9 @@ namespace FocalSonic.Presence
         [JsonProperty("enableDiscordPresence")]
         public bool EnableDiscordPresence;
 
+        [JsonProperty("enableAtmos")]
+        public bool EnableAtmos;
+
         public string GetCoverArtForSong(string coverArtID)
         {
             if (string.IsNullOrEmpty(CoverArtBaseURL)) return string.Empty;

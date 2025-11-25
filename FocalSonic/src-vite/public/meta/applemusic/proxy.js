@@ -326,6 +326,9 @@
             else if (item.type === "setLoopMode") {
                 window.proxyMusicInstance.repeatMode = item.loop ? getMusicKit().PlayerRepeatMode.one : getMusicKit().PlayerRepeatMode.none;
             }
+            else if (item.type === "setEnableAtmos") {
+                window.enableAtmos = item.enabled;
+            }
             else if (item.type === "setVolume") {
                 findAudioElement() && getAudioEffectController(findAudioElement()).setBaseVolume(item.volume);
             }
@@ -397,8 +400,14 @@
         };
     }
 
+    function isAtmosSupported() {
+        // Check for ec-3 codec support
+        const audio = document.createElement("audio");
+        const isEc3Supported = audio.canPlayType('audio/mp4; codecs="ec-3"') !== "";
+        return isEc3Supported;
+    }
     function isAtmosEnabled() {
-        return true;
+        return window.enableAtmos === true && isAtmosSupported();
     }
 
     const licenseURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense";
@@ -453,7 +462,7 @@
                 }
             });
         }
-        else if (!hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
+        else if (isAtmosEnabled() && !hls.dolbyAtmosAvailable && hls.useDesirableAsset) {
             console.warn("Dolby Atmos not available for this content, switching to backup asset");
             if (window.igniteView) {
                 window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${hls.contentID}`, "failed");
@@ -554,8 +563,13 @@
                 if (event.messageType === 'license-request') {
                     const challengeBase64 = new Uint8Array(event.message).toBase64();
                     await getLicenseFromChallenge(challengeBase64);
-                    {
+                    if (isAtmosEnabled()) {
                         await licenseForAtmos(hls, mediaKeys, contentID);
+                    }
+                    else {
+                        if (window.igniteView) {
+                            window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${hls.contentID}`, "inactive");
+                        }
                     }
                     resolve();
                 }
@@ -38328,7 +38342,7 @@
     async function tryGetEnhancedHLS(contentID) {
         try {
             if (!isAtmosEnabled())
-                ;
+                return [{ URL: null, flavor: null }];
             const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}?extend=extendedAssetUrls`);
             const request = await fetch(catalogURL);
             const response = await request.json();
@@ -38407,7 +38421,7 @@
             emeEnabled: false, // Custom DRM implementation, turn off the default one
             drmSystemOptions: {},
             xhrSetup: (xhr, url) => {
-                if (window.igniteView && instance.dolbyAtmosAvailable && url.includes(".mp4")) {
+                if (isAtmosEnabled() && window.igniteView && instance.dolbyAtmosAvailable && url.includes(".mp4")) {
                     // Find the atmos key ID in the magic data URI
                     const magicDataURI = instance.magicDataURI || "";
                     const base64Data = magicDataURI.split("base64,")[1] || "";
@@ -38527,7 +38541,7 @@
             setTimeout(() => this.dispose(), 5000); // Delay disposal to allow any pending operations to complete
         }
         dispose() {
-            this.audio.remove();
+            this.audio?.remove();
             this.hls?.destroy();
             this.hls = null;
             this.audio = null;
