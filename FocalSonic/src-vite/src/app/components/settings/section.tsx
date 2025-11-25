@@ -1,8 +1,8 @@
-import { InfoIcon } from "lucide-react";
-import { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Separator } from "@/app/components/ui/separator";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { cn } from "@/lib/utils";
+import { InfoIcon } from "lucide-react";
+import { ComponentPropsWithoutRef, ReactNode } from "react";
 
 type SectionComponent = ComponentPropsWithoutRef<"div">
 
@@ -28,8 +28,8 @@ export function HeaderTitle({ children }: { children: ReactNode }) {
     );
 }
 
-export function HeaderDescription({ children }: { children: ReactNode }) {
-    return <p className="text-xs text-muted-foreground">{children}</p>;
+export function HeaderDescription({ children, className }: { children: ReactNode, className?: string }) {
+    return <p className={cn("text-xs text-muted-foreground", className)}>{children}</p>;
 }
 
 export function Content({ children, className, ...props }: SectionComponent) {

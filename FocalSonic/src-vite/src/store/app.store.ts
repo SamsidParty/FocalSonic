@@ -113,6 +113,12 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.settings.enableLRCLib = value;
                             });
                         },
+                        enableAtmos: false,
+                        setEnableAtmos: (value) => {
+                            set((state) => {
+                                state.settings.enableAtmos = value;
+                            });
+                        },
                         enableDiscordPresence: false,
                         altLyricsMode: "off",
                         setAltLyricsMode: (value) => {

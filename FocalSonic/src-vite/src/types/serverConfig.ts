@@ -82,6 +82,8 @@ export interface IAppSettings {
     setAltLyricsMode: (value: "off" | "transliteration" | "translation") => void
     enableDiscordPresence: boolean
     setEnableDiscordPresence: (value: boolean) => void
+    enableAtmos: boolean
+    setEnableAtmos: (value: boolean) => void
     sidebarOpen: boolean
     setSidebarOpen: (value: boolean) => void
     extraBarContent: ExtraBarContent
