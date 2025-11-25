@@ -74,7 +74,7 @@ export function LoginForm() {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const queryClient = useQueryClient();
-    const enableSubsonic = true; // Future use
+    const enableSubsonic = false; // Future use
 
     const shouldHideUrlInput = urlIsValid && hideServer;
 

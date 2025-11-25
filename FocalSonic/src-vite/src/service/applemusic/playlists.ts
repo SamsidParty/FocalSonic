@@ -59,7 +59,7 @@ async function getOne(id: string, offset?: number) {
 
     const playlistData = response?.data[0];
 
-    if (playlistData.attributes.trackCount > 99) {
+    if (playlistData.attributes.trackCount > 99 || playlistData?.relationships?.tracks?.next) {
         const resolvedTracks = await resolveTracks(playlistData.relationships?.tracks?.href || "");
         playlistData.relationships!.tracks!.data = resolvedTracks.data;
     }
@@ -77,8 +77,8 @@ async function resolveTracks(href: string) {
         query: merge({}, defaultAppleMusicQuery)
     });
 
-    if (response?.next) {
-        response.data.push(...(await resolveTracks(response.next)).data); // Recursively fetch next pages
+    if (response?.next || response?.data?.[0].relationships?.tracks?.next) {
+        response.data.push(...(await resolveTracks(response.next || response?.data?.[0].relationships?.tracks?.next)).data); // Recursively fetch next pages
     }
 
     return response;
