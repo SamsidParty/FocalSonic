@@ -40,17 +40,22 @@ export function Services() {
                         />
                     </ContentItemForm>
                 </ContentItem>
-                <ContentItem>
-                    <ContentItemTitle info={t("settings.integrations.services.discord.info")}>
-                        {t("settings.integrations.services.discord.label")}
-                    </ContentItemTitle>
-                    <ContentItemForm>
-                        <Switch
-                            checked={enableDiscordPresence}
-                            onCheckedChange={setEnableDiscordPresence}
-                        />
-                    </ContentItemForm>
-                </ContentItem>
+                {
+                    window.igniteView && (
+                        <ContentItem>
+                            <ContentItemTitle info={t("settings.integrations.services.discord.info")}>
+                                {t("settings.integrations.services.discord.label")}
+                            </ContentItemTitle>
+                            <ContentItemForm>
+                                <Switch
+                                    checked={enableDiscordPresence}
+                                    onCheckedChange={setEnableDiscordPresence}
+                                />
+                            </ContentItemForm>
+                        </ContentItem>
+                    )
+                }
+
             </Content>
             <ContentSeparator />
         </Root>
