@@ -162,7 +162,14 @@ function SyncedLyrics(props: LyricProps) {
     };
 
     return (
-        <div className="w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics maskImage-big-player-lyrics">
+        <div 
+            className={
+                clsx(
+                    "w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics maskImage-big-player-lyrics",
+                    props.small ? " text-foreground" : "text-white"
+                )
+            }
+        >
             <Lrc
                 lrc={formattedLyrics!}
                 recoverAutoScrollInterval={1000}
@@ -219,7 +226,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
             key={line?.id}
             onClick={() => skipToTime(line.startMillisecond)}
             className={clsx(
-                "drop-shadow-lg z-40 text-white cursor-pointer hover:opacity-100 duration-700",
+                "drop-shadow-lg z-40cursor-pointer hover:opacity-100 duration-700",
                 "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left xxs:leading-normal",
                 (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
                 (!subLyric && !small) ? "my-10 !2xl:my-30 !xxs:my-5" : "my-0",

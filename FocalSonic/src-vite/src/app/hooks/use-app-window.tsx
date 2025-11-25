@@ -1,3 +1,4 @@
+import { isFullscreen } from "@/utils/browser";
 import { getOsType, isWindows } from "@/utils/osType";
 import { isTauri } from "@/utils/tauriTools";
 import { getCurrentWindow, Window } from "@tauri-apps/api/window";
@@ -42,9 +43,10 @@ interface AppWindowType {
 
 export function useAppWindow(): AppWindowType {
 
+    const _isFullscreen = isFullscreen();
+
     const {
         appWindow,
-        isFullscreen,
         isWindowMaximized,
     } = useContext(AppWindowContext).context;
 
@@ -161,7 +163,7 @@ export function useAppWindow(): AppWindowType {
     return {
         appWindow,
         isWindowMaximized,
-        isFullscreen,
+        isFullscreen: _isFullscreen,
         minimizeWindow,
         maximizeWindow,
         closeWindow,
