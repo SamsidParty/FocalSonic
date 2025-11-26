@@ -43,7 +43,7 @@ export function acquireWidevineAccess() {
         const widevineKeySystem = 'com.widevine.alpha';
         if (navigator.requestMediaKeySystemAccess) {
             const config: MediaKeySystemConfiguration[] = [{
-                initDataTypes: ['cenc'], // Common Encryption
+                initDataTypes: ['cenc', 'keyids'], // Common Encryption
                 audioCapabilities: [
                     {
                         contentType: 'audio/mp4; codecs="mp4a.40.2"'
@@ -60,7 +60,7 @@ export function acquireWidevineAccess() {
                     }
                 ],
                 distinctiveIdentifier: 'optional' as MediaKeysRequirement,
-                persistentState: 'optional' as MediaKeysRequirement,
+                persistentState: 'required' as MediaKeysRequirement,
                 sessionTypes: ['temporary' as MediaKeySessionType]
             }];
 
