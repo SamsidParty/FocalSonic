@@ -15,6 +15,8 @@ namespace FocalSonic.AppleMusic
         /// </summary>
         WebWindow ProxyWindow;
 
+        public static AppleMusicAudioPlayer GetOwningPlayer(WebWindow ctx) => ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value as AppleMusicAudioPlayer;
+
         const string InjectionPrefix = "if (!window.injectedQueue) { window.injectedQueue = []; }\n";
         const string InjectionSuffix = "\nif (window.executeInjectedQueue) { window.executeInjectedQueue(); }";
 
@@ -38,13 +40,18 @@ namespace FocalSonic.AppleMusic
 
                 // Since we're serving from apple.com instead of localhost, interop needs to be setup manually
                 ProxyWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
-                ProxyWindow.ExecuteJavaScript(new JSAssignment("window.injectedUserToken", AppleMusicKeys.MediaUserToken!));
-                ProxyWindow.ExecuteJavaScript(
-                    InjectionPrefix + "\n" +
-                    Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/proxy.js") + "\n" +
-                    InjectionSuffix
-                );
+                InitializeProxy(ProxyWindow);
             });
+        }
+
+        public static void InitializeProxy(WebWindow ctx)
+        {
+            ctx.ExecuteJavaScript(new JSAssignment("window.injectedUserToken", AppleMusicKeys.MediaUserToken!));
+            ctx.ExecuteJavaScript(
+                InjectionPrefix + "\n" +
+                Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/proxy.js") + "\n" +
+                InjectionSuffix
+            );
         }
 
         #region Player
@@ -59,14 +66,14 @@ namespace FocalSonic.AppleMusic
         [Command("appleMusicRecieveTimeUpdate")]
         public static void RecieveTimeUpdate(WebWindow ctx, bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration)
         {
-            var owningPlayer = ActivePlayers.Where((p) =>  p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
+            var owningPlayer = GetOwningPlayer(ctx);
             owningPlayer.HandleTimeUpdate(isPlaying, currentPlaybackTime, currentPlaybackDuration);
         }
 
         [Command("appleMusicRecieveLoadedEvent")]
         public static void RecieveLoadedEvent(WebWindow ctx, double currentPlaybackDuration)
         {
-            var owningPlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
+            var owningPlayer = GetOwningPlayer(ctx);
             if (!owningPlayer.HasLoaded)
             {
                 owningPlayer.CallLoadEvent(currentPlaybackDuration);
@@ -77,7 +84,7 @@ namespace FocalSonic.AppleMusic
         [Command("appleMusicRecieveEndedEvent")]
         public static void RecieveEndedEvent(WebWindow ctx)
         {
-            var owningPlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer && ((AppleMusicAudioPlayer)p.Value).ProxyWindow.ID == ctx.ID).FirstOrDefault().Value;
+            var owningPlayer = GetOwningPlayer(ctx);
             owningPlayer?.CallEndEvent();
         }
 
@@ -261,6 +268,18 @@ namespace FocalSonic.AppleMusic
         {
             LocalStorage.SetItem("applemusic_developer_token", developerKey, "default");
             LoadKeys();
+        }
+
+        [Command("transferAppleMusicProxyToMainWindow")]
+        public static void TransferAppleMusicProxyToMainWindow(WebWindow ctx)
+        {
+            #if LINUX
+            // For linux, background webwindows are not supported, so we need to transfer the proxy to the main window
+            var owningPlayer = GetOwningPlayer(ctx);
+            owningPlayer.ProxyWindow.Close(); // Close the old proxy window
+            owningPlayer.ProxyWindow = Program.MainWindow;
+            InitializeProxy(owningPlayer.ProxyWindow);
+            #endif
         }
 
         [Command("logOutOfAppleMusic")]

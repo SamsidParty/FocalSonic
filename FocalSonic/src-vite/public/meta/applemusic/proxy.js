@@ -384,6 +384,9 @@
             console.log("[FocalSonic][Apple Music Auth] Found user token:", music.musicUserToken);
             window.foundDeveloperToken = music.developerToken;
             await window.igniteView?.commandBridge.saveAppleMusicDeveloperKey(music.developerToken);
+            if (window.igniteView?.platformHints?.includes("linux")) {
+                await window.igniteView?.commandBridge.transferAppleMusicProxyToMainWindow();
+            }
             window.location.href = window.igniteView?.resolverURL.replace("/dynamic", "/meta/applemusic/proxy.html");
         }
     }
@@ -38731,7 +38734,7 @@
     if (window.location.href.includes("music.apple.com")) {
         startTokenGrabber();
     }
-    else if (window.location.href.includes("proxy.html")) {
+    else if (window.location.href.includes("proxy.html") || (window.igniteView?.platformHints?.includes("linux"))) {
         window.virtualMusicKit = new MusicKit();
         if (!window.injectedQueue) {
             window.injectedQueue = [];

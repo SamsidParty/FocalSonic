@@ -14,7 +14,7 @@
 
 
 	<PropertyGroup Condition="'$(IsWindows)'=='true'">
-		<DefineConstants>Windows</DefineConstants>
+		<DefineConstants>WINDOWS</DefineConstants>
 		<TargetFramework>net9.0-windows10.0.19041</TargetFramework>
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
@@ -23,10 +23,10 @@
 	</ItemGroup>
 	
 	<PropertyGroup Condition="'$(IsLinux)'=='true'">
-		<DefineConstants>Linux</DefineConstants>
+		<DefineConstants>LINUX</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(IsMac)'=='true'">
-		<DefineConstants>MacOS</DefineConstants>
+		<DefineConstants>MACOS</DefineConstants>
 	</PropertyGroup>
 	
 	<!-- IgniteView -->
