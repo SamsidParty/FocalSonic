@@ -7,23 +7,29 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   body.windows-linux {
     @apply antialiased;
   }
+
   body.mac {
     @apply subpixel-antialiased;
   }
+
   :root[player-style="default"] {
     --player-height: 96px;
     --grid-player: minmax(250px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 1fr);
   }
+
   :root[player-style="slim"] {
     --player-height: 64px;
     --grid-player: minmax(250px, 1fr) fit-content(200px) minmax(0px, 1fr) minmax(250px, 1fr);
   }
+
   :root {
     --header-height: 44px;
     --sidebar-width: 280px;
@@ -39,12 +45,14 @@
 
     --windows-red: hsl(5, 75%, 44%);
   }
+
   :root .fullscreen {
     --header-height: 0px;
     --drawer-height: 100vh;
     --content-height: 100vh;
     --vertical-shift: var(--player-height);
   }
+
   :root .fullscreen.idle {
     --vertical-shift: 0px;
   }
@@ -81,7 +89,8 @@
   }
 }
 
-body, html {
+body,
+html {
   background-color: var(--system-body);
 }
 
@@ -223,18 +232,22 @@ img {
   width: 7px;
   height: 0px;
 }
+
 ::-webkit-scrollbar-button {
   width: 7px;
   height: 0px;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 7px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
   border-radius: 7px;
 }
+
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
@@ -253,7 +266,7 @@ img {
   @apply rounded-full default-ring;
 }
 
-.user-dropdown-trigger[data-state="open"] > :first-child {
+.user-dropdown-trigger[data-state="open"]> :first-child {
   @apply bg-accent;
 }
 
@@ -294,30 +307,68 @@ svg#bars .eq-bar--4 {
 }
 
 @keyframes eq-1 {
-  0%, 100% { transform: scaleY(0.4); }
-  50% { transform: scaleY(0.8); }
+
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+
+  50% {
+    transform: scaleY(0.8);
+  }
 }
 
 @keyframes eq-2 {
-  0%, 100% { transform: scaleY(0.9); }
-  50% { transform: scaleY(0.4); }
+
+  0%,
+  100% {
+    transform: scaleY(0.9);
+  }
+
+  50% {
+    transform: scaleY(0.4);
+  }
 }
 
 @keyframes eq-3 {
-  0%, 100% { transform: scaleY(0.7); }
-  50% { transform: scaleY(1); }
+
+  0%,
+  100% {
+    transform: scaleY(0.7);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
 }
 
 @keyframes eq-4 {
-  0%, 100% { transform: scaleY(0.6); }
-  50% { transform: scaleY(1); }
+
+  0%,
+  100% {
+    transform: scaleY(0.6);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
 }
 
+@keyframes lyric-wipe {
+  0% {
+    background-position: 50% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
 
 #sync-lyrics-box-left,
 #sync-lyrics-box-center,
 .lrc-box,
 .no-scrollbar {
+
   /* webkit */
   &::-webkit-scrollbar {
     width: 0;
@@ -328,7 +379,8 @@ svg#bars .eq-bar--4 {
   scrollbar-width: none;
 }
 
-.font-lyrics, .font-lyrics * {
+.font-lyrics,
+.font-lyrics * {
   font-family: var(--theme-lyrics-font);
 }
 
@@ -340,6 +392,25 @@ svg#bars .eq-bar--4 {
   @apply w-fit m-auto max-w-[80%] text-balance;
 }
 
+.lyric-wipe {
+  background: linear-gradient(to right,
+    rgba(255, 255, 255, 1) 20%,
+    rgba(255, 255, 255, 0.4) 30%,
+    rgba(255, 255, 255, 0.4) 70%,
+    rgba(255, 255, 255, 1) 80%);
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background-size: 500% auto;
+  background-position: 50% 50%;
+}
+
+.lyric-wipe-active {
+  animation: lyric-wipe;
+  animation-fill-mode: forwards;
+}
+
+
 .default-gradient {
   background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.212) 100%);
 }
@@ -349,7 +420,9 @@ svg#bars .eq-bar--4 {
 }
 
 @media all and (display-mode: picture-in-picture) {
-  body, html {
+
+  body,
+  html {
     @apply w-full h-full overflow-hidden p-0 m-0;
   }
 }
@@ -357,6 +430,7 @@ svg#bars .eq-bar--4 {
 div[data-test-id="table-row"][data-state="selected"],
 div[data-test-id="table-row"].row-active,
 div[data-test-id="table-row"]:hover {
+
   & a,
   & span {
     @apply text-foreground;
@@ -368,6 +442,7 @@ div[data-test-id="table-row"]:hover {
     transform: scale(1.1);
     filter: brightness(1.1) blur(4px);
   }
+
   100% {
     transform: scale(1);
     filter: brightness(1) blur(0px);
@@ -379,12 +454,13 @@ div[data-test-id="table-row"]:hover {
     transform: scale(1.02);
     opacity: 0;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
   }
 }
 
-.album-art-animation  {
+.album-art-animation {
   animation: albumArtAnimation 0.6s forwards;
 }

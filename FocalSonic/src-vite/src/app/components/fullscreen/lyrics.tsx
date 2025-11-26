@@ -211,10 +211,27 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
             const fractionOfSeconds = parseInt(match[3], 10);
             const totalSeconds = minutes * 60 + seconds + fractionOfSeconds / 100;
 
-            values.elrcPortions.push({
-                Time: totalSeconds,
-                Text: match[4],
-            });
+            if (totalSeconds > 0.05) {
+                values.elrcPortions.push({
+                    time: Math.max(totalSeconds, 0),
+                    text: match[4],
+                });
+            }
+            else {
+                const lastElement = values.elrcPortions[values.elrcPortions.length - 1];
+                lastElement && (lastElement.text += match[4]);
+            }
+
+        }
+
+        // Calculate the duration for each portion
+        for (let i = 0; i < values.elrcPortions.length; i++) {
+            if (i < values.elrcPortions.length - 1) {
+                values.elrcPortions[i].duration = (values.elrcPortions[i + 1].time - values.elrcPortions[i].time);
+                console.log(values.elrcPortions[i].time);
+            } else {
+                values.elrcPortions[i].duration = 0.3; // Default duration for the last portion
+            }
         }
         
         return values;
@@ -240,9 +257,10 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
                 <span
                     data-time={portion.Time}
                     key={index}
-                    className={(timestamp >= portion.Time - 0.2) ? "opacity-100 transition-opacity duration-200" : "opacity-40"}
+                    className={(timestamp >= portion.time - 0.2) ? "lyric-wipe lyric-wipe-active" : "lyric-wipe"}
+                    style={{ animationDuration: `${portion.duration}s` }}
                 >
-                    {portion.Text}
+                    {portion.text}
                 </span>
             ))}
             {
