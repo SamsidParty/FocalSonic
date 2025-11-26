@@ -94,7 +94,7 @@ function SyncedLyrics(props: LyricProps) {
             // When altLyricsMode is 'translation', each LRC line has two parts separated by a '\x1D' character.
             // For every line, check if it's non-latin. If it is, check if the second part is empty
             // If all non-latin lines have empty second parts, we need to translate
-            if (altLyricsMode === "translation") {
+            if (altLyricsMode === "translation" || altLyricsMode === "transliteration") {
                 const lines = lyrics!.split("\n");
                 let needsTranslation = false;
 
@@ -116,15 +116,15 @@ function SyncedLyrics(props: LyricProps) {
                     let translatedMonolith = "";
                     for (const line of lines) {
                         const strippedLine = stripLRCLine(line);
-                        translatedMonolith += strippedLine + "\n";
+                        translatedMonolith += strippedLine + "\n⁜"; // Use a rare character as line separator to survive translation
                     }
 
 
                     // Translate as one block because multiple requests can get throttled
-                    translatedMonolith = (await translateText(translatedMonolith.trim(), "en")) || "";
+                    translatedMonolith = (await translateText(translatedMonolith.trim(), altLyricsMode === "transliteration" ? "ja" : "en", altLyricsMode === "transliteration")) || "";
 
                     // Reintegrate translated lines back into LRC format
-                    const translatedLines = translatedMonolith.split("\n");
+                    const translatedLines = translatedMonolith.split("⁜");
                     const finalLyricsLines = lyrics!.split("\n").map((line, index) => {
                         const altLyric = translatedLines[index] || "";
                         return line.split("\x1D")[0] + `\x1D<00:00.00>${altLyric}<00:00.00>`; // Append dummy ELRC tag to translated part

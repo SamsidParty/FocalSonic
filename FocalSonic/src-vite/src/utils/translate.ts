@@ -1,10 +1,10 @@
-export function getTranslationURL (lang: string, text: string): string {
-    return `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${lang}&dt=t&q=${encodeURIComponent(text)}`;
+export function getTranslationURL (lang: string, text: string, romaji?: boolean): string {
+    return `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${romaji ? lang : "auto"}&tl=${lang}${romaji ? "-Latn&dt=rm" : ""}&dt=t&q=${encodeURIComponent(text)}`;
 }
 
-export async function translateText(text, targetLanguage) {
+export async function translateText(text, targetLanguage, romaji) {
     const cacheKey = `${targetLanguage}_${text}`;
-    const url = getTranslationURL(targetLanguage, text);
+    const url = getTranslationURL(targetLanguage, text, romaji);
 
 
     return fetch(url, {
@@ -15,7 +15,12 @@ export async function translateText(text, targetLanguage) {
             const originalLanguage = data[2];
             let translatedText = "";
             data[0].forEach(part => {
-                translatedText += part[0];
+                if (romaji) {
+                    translatedText += part[2] || "";
+                }
+                else {
+                    translatedText += part[0] || "";;
+                }
             });
             if (text.trim().toLowerCase() === translatedText.trim().toLowerCase() && text.trim() !== "") {
                 return null;
