@@ -75,6 +75,7 @@ export function LyricsTab(props: LyricProps) {
 function SyncedLyrics(props: LyricProps) {
     const playerRef = usePlayerRef();
     const [timestamp, setTimestamp] = useState<number>(0);
+    const [currentLineIndex, setCurrentLineIndex] = useState<number>(-1);
     const { altLyricsMode } = useAppStore().settings;
     const { isMiniPlayer } = usePlayerStyle();
 
@@ -176,14 +177,15 @@ function SyncedLyrics(props: LyricProps) {
                 currentMillisecond={timestamp}
                 id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
                 className={clsx("h-full overflow-y-auto z-40", !isSafari && "scroll-smooth")}
+                onLineUpdate={(l) => setCurrentLineIndex(l.index)}
                 verticalSpace={true}
-                lineRenderer={(_props) => <LrcLineRenderer {..._props} {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />}
+                lineRenderer={(_props) => <LrcLineRenderer {..._props} {...props} skipToTime={skipToTime} activeIndex={currentLineIndex} timestamp={timestamp / 1000} />}
             />
         </div>
     );
 }
 
-function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean }) {
+function LrcLineRenderer({ line, active, skipToTime, timestamp, small, activeIndex }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean, activeIndex?: number }) {
 
     const elrcRegex = /<(\d{2}):(\d{2})\.(\d{2})>([^<]+)/g;
     const elrcTestRegex = /^\s*(<\d{2}:\d{2}\.\d+>[^<]*)+\s*$/;
@@ -241,14 +243,20 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
         return values;
     }, [lyric]);
 
+    // Calculate the distance from the active line
+    let timeDiff = Math.abs(activeIndex - line.lineNumber);
+    if (timeDiff > 5) timeDiff = 5; // Cap the difference to avoid excessive blur recalculation
+    if (active || small) timeDiff = 0;
+
 
     return (
         <p
             key={line?.id}
             onClick={() => skipToTime(line.startMillisecond)}
             className={clsx(
-                "drop-shadow-lg z-40cursor-pointer hover:opacity-100 duration-700",
-                "transition-[opacity,transform] motion-reduce:transition-none ease-long text-left xxs:leading-normal",
+                "lyric-line drop-shadow-lg z-40 cursor-pointer hover:opacity-100 duration-700",
+                "transition-[opacity,transform,filter] motion-reduce:transition-none ease-long text-left xxs:leading-normal",
+                (active) && "lyric-line-active",
                 (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
                 (!subLyric && !small) ? "my-10 !2xl:my-30 !xxs:my-5" : "my-0",
                 (line?.isSubLyric && !small) && "text-xl 2xl:text-3xl xxs:text-xs opacity-100 mt-0 mb-10 !2xl:mb-30 xxs:mb-2",
@@ -256,6 +264,9 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
                 (!line?.isSubLyric && !small) && "xxs:text-[18px] 2xl:my-20 !xxs:my-0",
                 (!line?.isSubLyric && small) && "text-[18px] !my-0 !mt-8 leading-normal",
             )}
+            style={{
+                filter: `blur(${timeDiff*1.2}px)`
+            }}
         >
             {elrcValues.elrcPortions.map((portion, index) => (
                 <span
