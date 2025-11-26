@@ -206,22 +206,27 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
         let match;
 
         while ((match = elrcRegex.exec(displayLyric)) !== null) {
+            const lastElement = values.elrcPortions[values.elrcPortions.length - 1];
             const minutes = parseInt(match[1], 10);
             const seconds = parseInt(match[2], 10);
             const fractionOfSeconds = parseInt(match[3], 10);
             const totalSeconds = minutes * 60 + seconds + fractionOfSeconds / 100;
 
-            if (totalSeconds > 0.05) {
+            if (totalSeconds > 0.05 || !lastElement) {
                 values.elrcPortions.push({
                     time: Math.max(totalSeconds, 0),
                     text: match[4],
                 });
             }
             else {
-                const lastElement = values.elrcPortions[values.elrcPortions.length - 1];
                 lastElement && (lastElement.text += match[4]);
             }
+        }
 
+        // Handle case with unsynced lyrics
+        if (values.elrcPortions.length === 1 && values.elrcPortions[0].time === 0) {
+            values.elrcPortions[0].time = line.startMillisecond / 1000; // Set to line start time
+            values.elrcPortions[0].duration = 0.3;
         }
 
         // Calculate the duration for each portion
