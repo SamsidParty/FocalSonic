@@ -80,6 +80,12 @@ public class Program
         while (true)
         {
             App.Run();
+
+            #if !WINDOWS
+            // Only windows has background playback support for now
+            // On other platforms just exit when the main window is closed
+            break;
+            #endif
         }
     }
 
