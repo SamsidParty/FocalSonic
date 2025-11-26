@@ -16,9 +16,6 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
-using Windows.Media.Protection.PlayReady;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace FocalSonic.Casting
 {

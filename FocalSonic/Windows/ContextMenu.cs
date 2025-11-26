@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿#if WINDOWS
+
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
@@ -101,3 +103,5 @@ namespace FocalSonic.Windows
 
     }
 }
+
+#endif

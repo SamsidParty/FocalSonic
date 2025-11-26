@@ -14,7 +14,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using WatsonWebserver.Core;
+#if WINDOWS
 using Windows.Services.Store;
+#endif
 
 public class Program
 {
@@ -110,8 +112,10 @@ public class Program
 
         WriteLockFile();
 
+        #if WINDOWS
         Licensing.Context = StoreContext.GetDefault();
         WinRT.Interop.InitializeWithWindow.Initialize(Licensing.Context, App.MainWindow.NativeHandle);
+        #endif
     }
 
     public static bool IsAnotherProcessRunning()

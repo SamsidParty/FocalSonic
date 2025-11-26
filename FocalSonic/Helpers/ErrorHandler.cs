@@ -20,12 +20,10 @@ namespace FocalSonic.Helpers
         {
             Console.WriteLine($"[Error] {title}: {message}");
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Display message box
-                MessageBox(IntPtr.Zero, message, title, 0);
-
-            }
+            #if WINDOWS
+            // Display message box
+            MessageBox(IntPtr.Zero, message, title, 0);
+            #endif
             //TODO: Other platforms
         }
     }
