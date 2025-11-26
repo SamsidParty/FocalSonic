@@ -228,7 +228,6 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
         for (let i = 0; i < values.elrcPortions.length; i++) {
             if (i < values.elrcPortions.length - 1) {
                 values.elrcPortions[i].duration = (values.elrcPortions[i + 1].time - values.elrcPortions[i].time);
-                console.log(values.elrcPortions[i].time);
             } else {
                 values.elrcPortions[i].duration = 0.3; // Default duration for the last portion
             }
@@ -258,7 +257,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
                     data-time={portion.Time}
                     key={index}
                     className={(timestamp >= portion.time - 0.2) ? "lyric-wipe lyric-wipe-active" : "lyric-wipe"}
-                    style={{ animationDuration: `${portion.duration}s` }}
+                    style={{ animationDuration: `${portion.duration * 2}s` }}
                 >
                     {portion.text}
                 </span>

@@ -356,10 +356,17 @@ svg#bars .eq-bar--4 {
 
 @keyframes lyric-wipe {
   0% {
+    text-shadow: 0px 0px 10px transparent;
     background-position: 50% 50%;
   }
 
+  50% {
+    text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.774);
+    background-position: 0% 50%;
+  }
+
   100% {
+    text-shadow: 0px 0px 10px transparent;
     background-position: 0% 50%;
   }
 }
