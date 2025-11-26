@@ -1,5 +1,6 @@
 import { getFetchHeaders } from "../auth/headers";
 import { isAtmosEnabled } from "../helpers/atmos";
+import { base64ToUint8Array, uint8ArrayToBase64 } from "../helpers/base64";
 import { licenseURL, widevineCertURL } from "../helpers/constants";
 import { FocalHls } from "../helpers/hls-instance";
 import { tryWrapAppleMusicURL } from "../helpers/igniteview";
@@ -109,7 +110,7 @@ export async function acquireWebPlaybackLicense(challenge: string, contentID: st
     const response: LicenseResponse = await request.json();
 
     if (response?.license) {
-        response.license = Uint8Array.fromBase64(response.license);
+        response.license = base64ToUint8Array(response.license);
     }
     else if (response?.customerMessage) {
         window.igniteView?.commandBridge?.displayError?.("Something went wrong with Apple Music", response.customerMessage);
@@ -148,7 +149,7 @@ export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
         session.addEventListener('message', async (event) => {
             console.log("License Message Event:", event);
             if (event.messageType === 'license-request') {
-                const challengeBase64 = new Uint8Array(event.message).toBase64();
+                const challengeBase64 = uint8ArrayToBase64(new Uint8Array(event.message));
                 await getLicenseFromChallenge(challengeBase64);
 
                 if (isAtmosEnabled()) {
@@ -173,7 +174,7 @@ export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
             }
         }, false);
 
-        console.log("Generating license request with initData:", initData.toBase64());
+        console.log("Generating license request with initData:", uint8ArrayToBase64(initData));
         session.generateRequest("cenc", initData);
 
     });
@@ -189,7 +190,7 @@ export function licenseForAtmos(hls: FocalHls, mediaKeys: MediaKeys, contentID: 
         session.addEventListener('message', async (event) => {
             console.log("Atmos License Message Event:", event);
             if (event.messageType === 'license-request' || event.messageType === 'license-renewal') {
-                const challengeBase64 = new Uint8Array(event.message).toBase64();
+                const challengeBase64 = uint8ArrayToBase64(new Uint8Array(event.message));
                 const license = await acquireWebPlaybackLicense(challengeBase64, contentID, "enhanced/data:text/plain;base64,AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=");
                 await session.update(license.license);
 
@@ -202,6 +203,6 @@ export function licenseForAtmos(hls: FocalHls, mediaKeys: MediaKeys, contentID: 
         }, false);
 
         console.log("Generating additional atmos license request");
-        session.generateRequest("cenc", Uint8Array.fromBase64("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
+        session.generateRequest("cenc", base64ToUint8Array("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
     });
 }

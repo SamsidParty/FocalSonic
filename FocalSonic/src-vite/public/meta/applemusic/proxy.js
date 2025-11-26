@@ -410,6 +410,30 @@
         return window.enableAtmos === true && isAtmosSupported();
     }
 
+    function uint8ArrayToBase64(buffer) {
+        if (buffer.toBase64) {
+            return buffer.toBase64();
+        }
+        let binary = "";
+        const len = buffer.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(buffer[i]);
+        }
+        return btoa(binary);
+    }
+    function base64ToUint8Array(base64) {
+        if (Uint8Array.fromBase64) {
+            return Uint8Array.fromBase64(base64);
+        }
+        const binaryString = atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+    }
+
     const licenseURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/acquireWebPlaybackLicense";
     const widevineCertURL = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/wa/widevineCert";
     const webPlaybackURL = "https://play.music.apple.com/WebObjects/MZPlay.woa/wa/webPlayback";
@@ -436,7 +460,7 @@
     function getEnhancedPssh(licenseURL) {
         if (licenseURL.includes("base64,")) {
             const split = licenseURL.split(",");
-            const base64Decoded = Uint8Array.fromBase64(split[1]);
+            const base64Decoded = base64ToUint8Array(split[1]);
             return base64Decoded;
         }
         throw new Error("Invalid enhanced PSSH license URL");
@@ -531,7 +555,7 @@
         });
         const response = await request.json();
         if (response?.license) {
-            response.license = Uint8Array.fromBase64(response.license);
+            response.license = base64ToUint8Array(response.license);
         }
         else if (response?.customerMessage) {
             window.igniteView?.commandBridge?.displayError?.("Something went wrong with Apple Music", response.customerMessage);
@@ -561,7 +585,7 @@
             session.addEventListener('message', async (event) => {
                 console.log("License Message Event:", event);
                 if (event.messageType === 'license-request') {
-                    const challengeBase64 = new Uint8Array(event.message).toBase64();
+                    const challengeBase64 = uint8ArrayToBase64(new Uint8Array(event.message));
                     await getLicenseFromChallenge(challengeBase64);
                     if (isAtmosEnabled()) {
                         await licenseForAtmos(hls, mediaKeys, contentID);
@@ -582,7 +606,7 @@
                     hls.licenseExpired = true;
                 }
             }, false);
-            console.log("Generating license request with initData:", initData.toBase64());
+            console.log("Generating license request with initData:", uint8ArrayToBase64(initData));
             session.generateRequest("cenc", initData);
         });
     }
@@ -594,7 +618,7 @@
             session.addEventListener('message', async (event) => {
                 console.log("Atmos License Message Event:", event);
                 if (event.messageType === 'license-request' || event.messageType === 'license-renewal') {
-                    const challengeBase64 = new Uint8Array(event.message).toBase64();
+                    const challengeBase64 = uint8ArrayToBase64(new Uint8Array(event.message));
                     const license = await acquireWebPlaybackLicense(challengeBase64, contentID, "enhanced/data:text/plain;base64,AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=");
                     await session.update(license.license);
                     if (window.igniteView) {
@@ -604,7 +628,7 @@
                 }
             }, false);
             console.log("Generating additional atmos license request");
-            session.generateRequest("cenc", Uint8Array.fromBase64("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
+            session.generateRequest("cenc", base64ToUint8Array("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
         });
     }
 
@@ -38425,13 +38449,13 @@
                     // Find the atmos key ID in the magic data URI
                     const magicDataURI = instance.magicDataURI || "";
                     const base64Data = magicDataURI.split("base64,")[1] || "";
-                    const binaryData = Uint8Array.fromBase64(base64Data);
+                    const binaryData = base64ToUint8Array(base64Data);
                     const keyID = binaryData.slice(34, 34 + 16); // Key ID is located at byte offset 34, length 16 bytes
-                    console.log("Atmos Key ID:", keyID.toBase64());
+                    console.log("Atmos Key ID:", uint8ArrayToBase64(keyID));
                     // Forward to the proxy that will edit the key IDs before it reaches the client
                     const newUrl = window.igniteView.resolverURL + "/streaming-atmos-v1?" + encodeURIComponent(url);
                     xhr.open("GET", newUrl, true);
-                    xhr.setRequestHeader("x-atmos-keyid", keyID.toBase64());
+                    xhr.setRequestHeader("x-atmos-keyid", uint8ArrayToBase64(keyID));
                 }
             }
         });

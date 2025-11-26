@@ -1,6 +1,7 @@
 import { tryAcquireLicense } from "../drm/license";
 import Hls from "../playback/hls.js";
 import { isAtmosEnabled } from "./atmos";
+import { base64ToUint8Array, uint8ArrayToBase64 } from "./base64";
 import { getAudioElement } from "./dom";
 import { PlaybackSource } from "./sources";
 
@@ -28,14 +29,14 @@ export function createHlsInstance(audio: HTMLAudioElement): FocalHls {
                 // Find the atmos key ID in the magic data URI
                 const magicDataURI = instance.magicDataURI || "";
                 const base64Data = magicDataURI.split("base64,")[1] || "";
-                const binaryData = Uint8Array.fromBase64(base64Data);
+                const binaryData = base64ToUint8Array(base64Data);
                 const keyID = binaryData.slice(34, 34 + 16); // Key ID is located at byte offset 34, length 16 bytes
-                console.log("Atmos Key ID:", keyID.toBase64());
+                console.log("Atmos Key ID:", uint8ArrayToBase64(keyID));
 
                 // Forward to the proxy that will edit the key IDs before it reaches the client
                 const newUrl = window.igniteView.resolverURL + "/streaming-atmos-v1?" + encodeURIComponent(url);
                 xhr.open("GET", newUrl, true);
-                xhr.setRequestHeader("x-atmos-keyid", keyID.toBase64());
+                xhr.setRequestHeader("x-atmos-keyid", uint8ArrayToBase64(keyID));
             }
         }
     }) as FocalHls;

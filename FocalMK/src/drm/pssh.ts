@@ -1,3 +1,4 @@
+import { base64ToUint8Array } from "../helpers/base64";
 import { appleMagic1, appleMagic2 } from "../helpers/constants";
 
 
@@ -12,7 +13,7 @@ export function getWebPlaybackPssh() {
 export function getEnhancedPssh(licenseURL: string) {
     if (licenseURL.includes("base64,")) {
         const split = licenseURL.split(",");
-        const base64Decoded = Uint8Array.fromBase64(split[1]);
+        const base64Decoded = base64ToUint8Array(split[1]);
         return base64Decoded;
     }
     throw new Error("Invalid enhanced PSSH license URL");
