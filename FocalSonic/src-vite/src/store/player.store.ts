@@ -780,7 +780,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         setMainDrawerState: (status) => {
 
                             if (!status) {
-                                window.igniteView?.commandBridge?.exitMiniPlayer();
+                                window.igniteView?.commandBridge?.exitMiniPlayer?.();
                                 exitFullscreen();
                             }
 
@@ -790,7 +790,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         closeDrawer: () => {
 
-                            window.igniteView?.commandBridge?.exitMiniPlayer();
+                            window.igniteView?.commandBridge?.exitMiniPlayer?.();
                             exitFullscreen();
 
                             set((state) => {

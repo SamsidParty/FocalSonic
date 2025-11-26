@@ -22,9 +22,9 @@ export function MiniPlayerButton() {
 
     const handleClick = useCallback(async () => {
         if (isMiniPlayer) {
-            window.igniteView?.commandBridge?.exitMiniPlayer();
+            window.igniteView?.commandBridge?.exitMiniPlayer?.();
         } else {
-            window.igniteView?.commandBridge?.enterMiniPlayer();
+            window.igniteView?.commandBridge?.enterMiniPlayer?.();
             setQueueState(false);
             setLyricsState(true);
             setMainDrawerState(true);
