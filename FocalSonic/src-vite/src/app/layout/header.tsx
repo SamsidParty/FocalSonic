@@ -1,4 +1,3 @@
-import { Linux } from "@/app/components/controls/linux";
 import { Windows } from "@/app/components/controls/windows";
 import { HeaderSongInfo } from "@/app/components/header-song";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
@@ -56,7 +55,6 @@ export function Header() {
                 <UserDropdown />
                 <Separator orientation="vertical" className="bg-foreground opacity-10 h-[60%]" />
                 {isWindows && <Windows />}
-                {isLinux && <Linux />}
             </div>
         </header>
     );

@@ -90,25 +90,30 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                             target="_blank"
                             rel="nofollow noreferrer"
                         >
-                            <Info className="min-w-4"/>
+                            <Info className="min-w-4" />
                             Support
-                        </a>                        
-                        <a
-                            className="w-full px-2 py-1 gap-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center cursor-pointer"
-                            onClick={() => window.igniteView?.commandBridge?.purchaseLicense()}
-                            target="_blank"
-                            rel="nofollow noreferrer"
-                        >
-                            <DollarSign className="min-w-4"/>
-                            Restore Purchase
                         </a>
+                        {
+                            window.igniteView?.commandBridge?.purchaseLicense && (
+                                <a
+                                    className="w-full px-2 py-1 gap-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center cursor-pointer"
+                                    onClick={() => window.igniteView?.commandBridge?.purchaseLicense()}
+                                    target="_blank"
+                                    rel="nofollow noreferrer"
+                                >
+                                    <DollarSign className="min-w-4" />
+                                    Restore Purchase
+                                </a>
+                            )
+                        }
+
                         <a
                             className="w-full px-2 py-1 gap-1 rounded-md bg-primary/60 hover:bg-primary/50 border border-primary text-sm font-medium flex items-center justify-center cursor-pointer"
                             onClick={() => window.open("https://discord.gg/W9wb7rpB94")}
                             target="_blank"
                             rel="nofollow noreferrer"
                         >
-                            <MessagesSquareIcon className="min-w-4"/>
+                            <MessagesSquareIcon className="min-w-4" />
                             Discord
                         </a>
                     </div>

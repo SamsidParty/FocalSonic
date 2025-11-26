@@ -83,10 +83,10 @@ namespace FocalSonic
 
         }
 
+        #if WINDOWS
         [Command("purchaseLicense")]
         public static async Task PurchaseLicense()
         {
-            #if WINDOWS
             try
             {
                 var results = await Context.RequestPurchaseAsync(ProductID);
@@ -97,7 +97,7 @@ namespace FocalSonic
                 }
             }
             catch (Exception ex) { }
-            #endif
         }
+        #endif
     }
 }
