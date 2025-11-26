@@ -262,7 +262,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
                     data-time={portion.Time}
                     key={index}
                     className={(timestamp >= portion.time - 0.2) ? "lyric-wipe lyric-wipe-active" : "lyric-wipe"}
-                    style={{ animationDuration: `${portion.duration * 2}s` }}
+                    style={{ transitionDuration: `${portion.duration * 2}s` }}
                 >
                     {portion.text}
                 </span>

@@ -505,7 +505,7 @@
             const widevineKeySystem = 'com.widevine.alpha';
             if (navigator.requestMediaKeySystemAccess) {
                 const config = [{
-                        initDataTypes: ['cenc'], // Common Encryption
+                        initDataTypes: ['cenc', 'keyids'], // Common Encryption
                         audioCapabilities: [
                             {
                                 contentType: 'audio/mp4; codecs="mp4a.40.2"'
@@ -522,7 +522,7 @@
                             }
                         ],
                         distinctiveIdentifier: 'optional',
-                        persistentState: 'optional',
+                        persistentState: 'required',
                         sessionTypes: ['temporary']
                     }];
                 // Request access to the key system

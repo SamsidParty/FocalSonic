@@ -354,20 +354,15 @@ svg#bars .eq-bar--4 {
   }
 }
 
-@keyframes lyric-wipe {
+@keyframes lyric-glow {
   0% {
-    text-shadow: 0px 0px 10px transparent;
-    background-position: 50% 50%;
+    text-shadow: 0px 0px 10px rgba(255, 255, 255, 0);
   }
-
   50% {
-    text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.774);
-    background-position: 0% 50%;
+    text-shadow: 0px 0px 20px rgba(255, 255, 255, 1);
   }
-
   100% {
-    text-shadow: 0px 0px 10px transparent;
-    background-position: 0% 50%;
+    text-shadow: 0px 0px 10px rgba(255, 255, 255, 0);
   }
 }
 
@@ -413,8 +408,9 @@ svg#bars .eq-bar--4 {
 }
 
 .lyric-wipe-active {
-  animation: lyric-wipe;
-  animation-fill-mode: forwards;
+  transition: background-position;
+  background-position: 0% 50%;
+  animation: lyric-glow 2s forwards;
 }
 
 
