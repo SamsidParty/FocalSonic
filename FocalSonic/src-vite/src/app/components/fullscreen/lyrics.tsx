@@ -72,10 +72,11 @@ export function LyricsTab(props: LyricProps) {
     }
 }
 
+let currentLineNumber = -1;
+
 function SyncedLyrics(props: LyricProps) {
     const playerRef = usePlayerRef();
     const [timestamp, setTimestamp] = useState<number>(0);
-    const [currentLineIndex, setCurrentLineIndex] = useState<number>(-1);
     const { altLyricsMode } = useAppStore().settings;
     const { isMiniPlayer } = usePlayerStyle();
 
@@ -177,15 +178,15 @@ function SyncedLyrics(props: LyricProps) {
                 currentMillisecond={timestamp}
                 id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
                 className={clsx("h-full overflow-y-auto z-40", !isSafari && "scroll-smooth")}
-                onLineUpdate={(l) => setCurrentLineIndex(l.index)}
+                onLineUpdate={(l) => currentLineNumber = l?.index}
                 verticalSpace={true}
-                lineRenderer={(_props) => <LrcLineRenderer {..._props} {...props} skipToTime={skipToTime} activeIndex={currentLineIndex} timestamp={timestamp / 1000} />}
+                lineRenderer={(_props) => <LrcLineRenderer {..._props} {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />}
             />
         </div>
     );
 }
 
-function LrcLineRenderer({ line, active, skipToTime, timestamp, small, activeIndex }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean, activeIndex?: number }) {
+function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean }) {
 
     const { enableLyricBlur, enableLyricGlow } = useTheme();
 
@@ -246,7 +247,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small, activeInd
     }, [lyric]);
 
     // Calculate the distance from the active line
-    let timeDiff = Math.abs(activeIndex - line.lineNumber);
+    let timeDiff = Math.abs((currentLineNumber || 0) - line.lineNumber);
     if (timeDiff > 5) timeDiff = 5; // Cap the difference to avoid excessive blur recalculation
     if (active || small || !enableLyricBlur) timeDiff = 0;
 
