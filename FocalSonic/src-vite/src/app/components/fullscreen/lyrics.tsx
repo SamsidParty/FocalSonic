@@ -105,7 +105,7 @@ function SyncedLyrics(props: LyricProps) {
                     const altLyric = parts[1] || "";
 
                     // Check if mainLyric has non-latin characters
-                    if (/[^\u0000-\u007F]/.test(mainLyric)) {
+                    if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Oriya}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Thai}\p{Script=Khmer}\p{Script=Lao}\p{Script=Myanmar}\p{Script=Ethiopic}\p{Script=Georgian}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Yi}]/u.test(mainLyric)) {
                         if (altLyric.trim() === "") {
                             needsTranslation = true;
                             break;
