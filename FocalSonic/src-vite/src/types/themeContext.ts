@@ -36,4 +36,8 @@ export interface IThemeContext {
     setIsPlayerAtTop: (isAtTop: boolean) => void
     playerStyle: "default" | "slim"
     setPlayerStyle: (style: "default" | "slim") => void
+    enableLyricGlow: boolean
+    setEnableLyricGlow: (value: boolean) => void
+    enableLyricBlur: boolean
+    setEnableLyricBlur: (value: boolean) => void
 }

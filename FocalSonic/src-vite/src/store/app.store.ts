@@ -167,7 +167,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
 
                                 state.settings.extraBarContent = value;
                             });
-                        },
+                        }
                     },
                     runtimeState: {
                         settingsDialogState: false,

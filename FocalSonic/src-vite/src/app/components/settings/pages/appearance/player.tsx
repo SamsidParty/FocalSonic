@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 
 export function PlayerSettings() {
     const { t } = useTranslation();
-    const { setIsPlayerAtTop, setPlayerStyle, isPlayerAtTop, playerStyle } = useTheme();
+    const { setIsPlayerAtTop, setPlayerStyle, isPlayerAtTop, playerStyle, enableLyricGlow, setEnableLyricGlow, enableLyricBlur, setEnableLyricBlur } = useTheme();
 
     return (
         <Root>
@@ -37,6 +37,28 @@ export function PlayerSettings() {
                         <Switch
                             checked={playerStyle === "slim"}
                             onCheckedChange={(v) => setPlayerStyle(v ? "slim" : "default")}
+                        />
+                    </ContentItemForm>
+                </ContentItem>
+                <ContentItem>
+                    <ContentItemTitle>
+                        {t("settings.appearance.lyrics.lyricGlow")}
+                    </ContentItemTitle>
+                    <ContentItemForm>
+                        <Switch
+                            checked={enableLyricGlow}
+                            onCheckedChange={setEnableLyricGlow}
+                        />
+                    </ContentItemForm>
+                </ContentItem>
+                <ContentItem>
+                    <ContentItemTitle>
+                        {t("settings.appearance.lyrics.lyricBlur")}
+                    </ContentItemTitle>
+                    <ContentItemForm>
+                        <Switch
+                            checked={enableLyricBlur}
+                            onCheckedChange={setEnableLyricBlur}
                         />
                     </ContentItemForm>
                 </ContentItem>

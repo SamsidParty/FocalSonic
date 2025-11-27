@@ -40,6 +40,18 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                             state.playerStyle = style;
                         });
                     },
+                    enableLyricGlow: true,
+                    setEnableLyricGlow(value: boolean) {
+                        set((state) => {
+                            state.enableLyricGlow = value;
+                        });
+                    },
+                    enableLyricBlur: true,
+                    setEnableLyricBlur(value: boolean) {
+                        set((state) => {
+                            state.enableLyricBlur = value;
+                        });
+                    },
                 })),
                 {
                     name: "theme_store",

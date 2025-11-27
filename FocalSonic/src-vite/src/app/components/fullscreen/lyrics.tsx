@@ -6,7 +6,7 @@ import { parseTTML } from "@/lib/ttml/parser";
 import { service } from "@/service/service";
 import { useAppStore } from "@/store/app.store";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
-import { usePlayerStyle } from "@/store/theme.store";
+import { usePlayerStyle, useTheme } from "@/store/theme.store";
 import { ILyric } from "@/types/responses/song";
 import { stripLRCLine } from "@/utils/lyricUtils";
 import { isSafari } from "@/utils/osType";
@@ -187,6 +187,8 @@ function SyncedLyrics(props: LyricProps) {
 
 function LrcLineRenderer({ line, active, skipToTime, timestamp, small, activeIndex }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean, activeIndex?: number }) {
 
+    const { enableLyricBlur, enableLyricGlow } = useTheme();
+
     const elrcRegex = /<(\d{2}):(\d{2})\.(\d{2})>([^<]+)/g;
     const elrcTestRegex = /^\s*(<\d{2}:\d{2}\.\d+>[^<]*)+\s*$/;
     let subLyric: string = null;
@@ -246,7 +248,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small, activeInd
     // Calculate the distance from the active line
     let timeDiff = Math.abs(activeIndex - line.lineNumber);
     if (timeDiff > 5) timeDiff = 5; // Cap the difference to avoid excessive blur recalculation
-    if (active || small) timeDiff = 0;
+    if (active || small || !enableLyricBlur) timeDiff = 0;
 
 
     return (
@@ -272,7 +274,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small, activeInd
                 <span
                     data-time={portion.Time}
                     key={index}
-                    className={(timestamp >= portion.time - 0.2) ? "lyric-wipe lyric-wipe-active" : "lyric-wipe"}
+                    className={clsx((timestamp >= portion.time - 0.2) ? "lyric-wipe lyric-wipe-active" : "lyric-wipe", !enableLyricGlow && "lyric-glow-disabled")}
                     style={{ transitionDuration: `${portion.duration * 2}s` }}
                 >
                     {portion.text}

@@ -631,7 +631,8 @@
       "language": "Language & Region",
       "audio": "Audio",
       "content": "Content",
-      "integrations": "Integrations"
+      "integrations": "Integrations",
+      "lyrics": "Lyrics"
     },
     "appearance": {
       "font": {
@@ -662,6 +663,10 @@
         "showAtTop": "Integrate player in titlebar",
         "slimPlayer": "Slim player",
         "alternateLyric": "Alternate Lyrics"
+      },
+      "lyrics": {
+        "lyricGlow": "Lyric Glow Effects",
+        "lyricBlur": "Lyric Blur Effects"
       }
     },
     "audio": {

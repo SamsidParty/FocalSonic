@@ -11,7 +11,7 @@ import {
     Paintbrush,
     Volume2
 } from "lucide-react";
-import { ComponentType } from "react";
+import React, { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 
 export type SettingsOptions =
