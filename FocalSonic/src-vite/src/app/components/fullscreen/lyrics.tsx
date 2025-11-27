@@ -11,6 +11,7 @@ import { ILyric } from "@/types/responses/song";
 import { stripLRCLine } from "@/utils/lyricUtils";
 import { isSafari } from "@/utils/osType";
 import { translateText } from "@/utils/translate";
+import useDebouncedWindowSize from "@/utils/useDebouncedWindowSize";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import React, { ComponentPropsWithoutRef, useEffect, useMemo, useRef, useState } from "react";
@@ -79,6 +80,7 @@ function SyncedLyrics(props: LyricProps) {
     const [timestamp, setTimestamp] = useState<number>(0);
     const { altLyricsMode } = useAppStore().settings;
     const { isMiniPlayer } = usePlayerStyle();
+    const { width, height, isResizing } = useDebouncedWindowSize(100);
 
     let { lyrics, leftAlign, small } = props;
 
@@ -163,6 +165,8 @@ function SyncedLyrics(props: LyricProps) {
         }
     };
 
+    if (isResizing) return;
+
     return (
         <div 
             className={
@@ -173,11 +177,12 @@ function SyncedLyrics(props: LyricProps) {
             }
         >
             <Lrc
+                key={`debouncedlyrics_${width}x${height}`}
                 lrc={formattedLyrics!}
                 recoverAutoScrollInterval={1000}
                 currentMillisecond={timestamp}
                 id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
-                className={clsx("h-full overflow-y-auto z-40", !isSafari && "scroll-smooth")}
+                className={clsx("h-full z-40", !isSafari && "scroll-smooth")}
                 onLineUpdate={(l) => currentLineNumber = l?.index}
                 verticalSpace={true}
                 lineRenderer={(_props) => <LrcLineRenderer {..._props} {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />}
