@@ -67,11 +67,9 @@ export default function Equalizer() {
     };
 
     useEffect(() => {
-        if (!playerRef?.current) return;
-        playerRef.current.filterData = filterData;
+        if (!playerRef) return;
+        playerRef.filterData = filterData;
     }, [playerRef, filterData]);
-
-    console.log("Filters:", filterData);
 
     return (
         <div>
