@@ -51,6 +51,7 @@
     "cmdk": "^1.1.1",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
+    "dsssp": "^0.6.4",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "gsap": "^3.13.0",
