@@ -48,6 +48,10 @@ class AudioEffectController {
 
         this.fadeGain = 1.0;
 
+        // Equalizer nodes (dynamic)
+        this.eqNodes = [];
+        // Default transition time (seconds) when changing filter parameters
+        this.eqTransition = 0.05;
         // Reverb nodes
         this.convolver = this.audioCtx.createConvolver();
         this.wetGain = this.audioCtx.createGain();
@@ -56,19 +60,6 @@ class AudioEffectController {
         this.dryGain.gain.value = 1 - wetLevel;
         this.reverbEnabled = false;
 
-        // EQ nodes
-        this.filters = {
-            low: this.audioCtx.createBiquadFilter(),
-            mid: this.audioCtx.createBiquadFilter(),
-            high: this.audioCtx.createBiquadFilter()
-        };
-        this.filters.low.type = 'lowshelf';
-        this.filters.mid.type = 'peaking';
-        this.filters.high.type = 'highshelf';
-        this.filters.low.frequency.value = 200;
-        this.filters.mid.frequency.value = 1000;
-        this.filters.high.frequency.value = 5000;
-        this.filters.mid.Q.value = 1; // quality factor for mid band
 
         // Load impulse response
         this._loadImpulseResponse(impulseUrl);
@@ -106,20 +97,51 @@ class AudioEffectController {
     }
 
     _buildAudioGraph() {
-        // Source → EQ → Dry & Wet
-        let eqChain = this.sourceNode;
-        for (const band of ['low', 'mid', 'high']) {
-            eqChain.connect(this.filters[band]);
-            eqChain = this.filters[band];
+        // Connect the source through the EQ chain (if any) to Dry and Wet paths.
+        // This will create the routing but actual EQ nodes are managed by setFilters().
+        this._rebuildConnections();
+    }
+
+    _disconnectNodeOutputs(node) {
+        try {
+            node.disconnect();
+        } catch (e) {
+            // ignore if node was not connected
+        }
+    }
+
+    _rebuildConnections() {
+        // Disconnect source outputs first to avoid duplicate connections
+        this._disconnectNodeOutputs(this.sourceNode);
+
+        if (this.eqNodes && this.eqNodes.length) {
+            // Connect source -> first EQ
+            this.sourceNode.connect(this.eqNodes[0]);
+
+            // Chain EQ nodes
+            for (let i = 0; i < this.eqNodes.length - 1; i++) {
+                this._disconnectNodeOutputs(this.eqNodes[i]);
+                this.eqNodes[i].connect(this.eqNodes[i + 1]);
+            }
+
+            // Connect last EQ to dry and wet paths
+            const last = this.eqNodes[this.eqNodes.length - 1];
+            this._disconnectNodeOutputs(last);
+            last.connect(this.dryGain);
+            last.connect(this.convolver);
+        } else {
+            // No EQ nodes: connect source directly to dry and wet
+            this.sourceNode.connect(this.dryGain);
+            this.sourceNode.connect(this.convolver);
         }
 
-        // Dry path
-        eqChain.connect(this.dryGain);
+        // Ensure dry/wet go to destination
+        this._disconnectNodeOutputs(this.dryGain);
         this.dryGain.connect(this.audioCtx.destination);
 
-        // Wet path
-        eqChain.connect(this.convolver);
+        this._disconnectNodeOutputs(this.convolver);
         this.convolver.connect(this.wetGain);
+        this._disconnectNodeOutputs(this.wetGain);
         this.wetGain.connect(this.audioCtx.destination);
     }
 
@@ -134,16 +156,107 @@ class AudioEffectController {
         this.dryGain.gain.value = 1 - this.wetGain.gain.value;
     }
 
-    // EQ methods
-    setLowGain(db) { this.filters.low.gain.value = db; }
-    setMidGain(db) { this.filters.mid.gain.value = db; }
-    setHighGain(db) { this.filters.high.gain.value = db; }
+    setFilters(filterData) {
+        // Accepts an array of filter objects and updates the EQ chain.
+        // Reuses existing nodes where possible and smoothly ramps params.
+        if (!Array.isArray(filterData) || !this.audioCtx) return;
 
-    // Optional: set all EQ at once
-    setEQ(lowDb, midDb, highDb) {
-        this.setLowGain(lowDb);
-        this.setMidGain(midDb);
-        this.setHighGain(highDb);
+        const mapType = (t) => {
+            if (!t) return 'peaking';
+            const up = String(t).toUpperCase();
+            switch (up) {
+                case 'PEAK':
+                case 'PEAKING':
+                    return 'peaking';
+                case 'LOWPASS':
+                case 'LPF':
+                    return 'lowpass';
+                case 'HIGHPASS':
+                case 'HPF':
+                    return 'highpass';
+                case 'LOWSHELF':
+                case 'LSHELF':
+                    return 'lowshelf';
+                case 'HIGHSHELF':
+                case 'HSHELF':
+                    return 'highshelf';
+                case 'BANDPASS':
+                    return 'bandpass';
+                case 'NOTCH':
+                case 'BANDSTOP':
+                    return 'notch';
+                case 'ALLPASS':
+                    return 'allpass';
+                default:
+                    return 'peaking';
+            }
+        };
+
+        // Normalize input (filter objects with freq defined)
+        const filters = filterData.filter(f => f && typeof f.freq !== 'undefined');
+        const nyquist = this.audioCtx.sampleRate / 2;
+        const now = this.audioCtx.currentTime;
+        const transition = (typeof this.eqTransition === 'number') ? Math.max(0, this.eqTransition) : 0.05;
+
+        // Ensure eqNodes array exists
+        if (!this.eqNodes) this.eqNodes = [];
+
+        // Reuse or create nodes up to filters.length
+        for (let i = 0; i < filters.length; i++) {
+            const f = filters[i];
+
+            let node = this.eqNodes[i];
+            let created = false;
+            if (!node) {
+                node = this.audioCtx.createBiquadFilter();
+                this.eqNodes[i] = node;
+                created = true;
+            }
+
+            const targetType = mapType(f.type);
+            if (node.type !== targetType) node.type = targetType;
+
+            // Frequency
+            const freqTarget = Math.max(10, Math.min(Number(f.freq) || 1000, nyquist));
+            try { node.frequency.cancelScheduledValues(now); } catch (e) {}
+            if (created) {
+                node.frequency.setValueAtTime(freqTarget, now);
+            } else {
+                node.frequency.setValueAtTime(node.frequency.value, now);
+                node.frequency.linearRampToValueAtTime(freqTarget, now + transition);
+            }
+
+            // Gain (dB)
+            const gainTarget = (typeof f.gain === 'number') ? f.gain : 0;
+            try { node.gain.cancelScheduledValues(now); } catch (e) {}
+            if (created) {
+                node.gain.setValueAtTime(gainTarget, now);
+            } else {
+                node.gain.setValueAtTime(node.gain.value, now);
+                node.gain.linearRampToValueAtTime(gainTarget, now + transition);
+            }
+
+            // Q
+            const qTarget = (typeof f.q === 'number') ? Math.max(0.0001, f.q) : 1;
+            try { node.Q.cancelScheduledValues(now); } catch (e) {}
+            if (created) {
+                node.Q.setValueAtTime(qTarget, now);
+            } else {
+                node.Q.setValueAtTime(node.Q.value, now);
+                node.Q.linearRampToValueAtTime(qTarget, now + transition);
+            }
+        }
+
+        // If there are more existing nodes than desired, disconnect and remove extras
+        if (this.eqNodes.length > filters.length) {
+            for (let i = filters.length; i < this.eqNodes.length; i++) {
+                try { this.eqNodes[i].disconnect(); } catch (e) {}
+            }
+            this.eqNodes.length = filters.length;
+        }
+
+        // Reconnect the audio graph (this will handle chaining)
+        this._rebuildConnections();
     }
 
     setBaseVolume(level) {

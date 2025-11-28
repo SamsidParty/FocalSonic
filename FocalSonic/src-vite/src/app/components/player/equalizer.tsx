@@ -2,6 +2,7 @@ import { usePlayerFilterData, usePlayerRef } from "@/store/player.store";
 import {
     CompositeCurve,
     FilterChangeEvent,
+    FilterCurve,
     FilterGradient,
     FilterPoint,
     FrequencyResponseGraph,
@@ -13,20 +14,33 @@ import React, { useEffect, useState } from "react";
 const theme: GraphThemeOverride = {
     background: {
         grid: {
-            dotted: true,
-            lineColor: "#47464b",
-            lineWidth: { border: 0 }
+            lineColor: "#ffffff00"
         },
         gradient: {
-            start: "#080c10",
-            stop: "#233546",
+            start: "#ffffff00",
+            stop: "#ffffff00",
             direction: "DIAGONAL_BL_TR"
         },
         label: {
-            color: "#959da9",
-            fontSize: 10,
-            fontFamily: "Poppins,sans-serif"
+            color: "#ffffff00",
+            fontSize: 0,
         }
+    },
+    filters: {
+        gradientOpacity: 0.05,
+        point: {
+            backgroundOpacity: {
+                active: 1,
+                drag: 1
+            }
+        },
+        curve: {
+            opacity: {
+                active: 0.1,
+                normal: 0.1
+            }
+        },
+        defaultColor: "white"
     }
 };
 
@@ -75,7 +89,7 @@ export default function Equalizer() {
         <div>
             <FrequencyResponseGraph
                 width={260}
-                height={220}
+                height={350}
                 scale={scale}
                 theme={theme}
             >
@@ -111,6 +125,27 @@ export default function Equalizer() {
                         activeBackgroundOpacity={1}
                         onChange={handleFilterChange}
                     />
+                ))}
+
+                {filters.map((filter, index) => (
+                    <>
+                        <FilterGradient
+                            fill
+                            key={index}
+                            index={index}
+                            filter={filter}
+                            id={`filter-${index}`}
+                        />
+
+                        <FilterCurve
+                            showPin
+                            key={index}
+                            index={index}
+                            filter={filter}
+                            active={false}
+                            gradientId={`filter-${index}`}
+                        />
+                    </>
                 ))}
             </FrequencyResponseGraph>
         </div>

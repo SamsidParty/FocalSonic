@@ -120,6 +120,9 @@ window.executeInjectedQueue = async () => {
         else if (item.type === "setReverb") {
             findAudioElement() && getAudioEffectController(findAudioElement()).setWetLevel(item.reverb);
         }
+        else if (item.type === "setFilterData") {
+            findAudioElement() && getAudioEffectController(findAudioElement()).setFilters(item.filterData);
+        }
         else if (item.type === "setOutputDevice") {
             window.outputDevice = item.outputDevice;
             findAudioElement() && getAudioEffectController(findAudioElement()).updateVolume();
