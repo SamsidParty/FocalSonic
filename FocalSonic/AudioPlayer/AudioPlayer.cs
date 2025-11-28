@@ -24,6 +24,7 @@ namespace FocalSonic.AudioPlayer
         public bool Looping;
         public float Volume = 1.0f;
         public float Speed = 1.0f;
+        public string FilterData = "";
         internal int AssociatedWindowID;
         internal WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
 
@@ -129,6 +130,7 @@ namespace FocalSonic.AudioPlayer
         public virtual async Task SetOutputDevice(string outputDevice) { OutputDevice = outputDevice; }
         public virtual async Task SetVolume(double volume) { Volume = (float)volume; }
         public virtual async Task SetSpeed(double speed) { Speed = (float)speed; }
+        public virtual async Task SetFilterData(string filterData) { FilterData = filterData; }
         public virtual async Task SetEnableAtmos(bool enabled) { }
 
         public async Task CallEndEvent()
@@ -166,6 +168,7 @@ namespace FocalSonic.AudioPlayer
         [Command("setAudioPlayerVolume")] public static async Task SetVolumeOnPlayer(string id, double volume) => RunOnPlayer(id, (p) => p.SetVolume(volume));
         [Command("setAudioPlayerSpeed")] public static async Task SetSpeedOnPlayer(string id, double speed) => RunOnPlayer(id, (p) => p.SetSpeed(speed));
         [Command("setAudioPlayerOutputDevice")] public static async Task SetOutputDeviceOnPlayer(string id, string outputDevice) => RunOnPlayer(id, (p) => p.SetOutputDevice(outputDevice));
+        [Command("setAudioPlayerFilterData")] public static async Task SetFilterDataOnPlayer(string id, string filterData) => RunOnPlayer(id, (p) => p.SetFilterData(filterData));
 
         [Command("disposeAudioPlayer")] 
         public static async Task DisposeAudioPlayer(string id)

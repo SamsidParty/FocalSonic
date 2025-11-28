@@ -8,6 +8,7 @@ class NativeVirtualAudioPlayer {
     duration = NaN;
     _volume = 1;
     _playbackRate = 1;
+    _filterData = "";
     _currentTime = 0;
     _currentTimeOffset = Date.now();
     _loop: boolean = false;
@@ -100,6 +101,19 @@ class NativeVirtualAudioPlayer {
         setTimeout(async () => {
             await this.waitForCreation();
             window.igniteView?.commandBridge.setAudioPlayerLoopMode(this.id!, this._loop);
+        }, 0);
+    }
+
+    get filterData() {
+        return this._filterData;
+    }
+
+    set filterData(value: string) {
+        if (this._filterData === value) return;
+        this._filterData = value;
+        setTimeout(async () => {
+            await this.waitForCreation();
+            window.igniteView?.commandBridge.setAudioPlayerFilterData(this.id!, this._filterData);
         }, 0);
     }
 

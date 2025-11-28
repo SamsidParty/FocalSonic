@@ -1,3 +1,4 @@
+import { usePlayerFilterData, usePlayerRef } from "@/store/player.store";
 import {
     CompositeCurve,
     FilterChangeEvent,
@@ -7,7 +8,7 @@ import {
     GraphFilter,
     GraphThemeOverride
 } from "dsssp";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const theme: GraphThemeOverride = {
     background: {
@@ -50,7 +51,9 @@ const defaultPreset: GraphFilter[] = [
 
 export default function Equalizer() {
 
-    const [filters, setFilters] = useState(defaultPreset);
+    const { filterData, setFilterData } = usePlayerFilterData();
+    const [filters, setFilters] = useState(filterData ? JSON.parse(filterData) : defaultPreset);
+    const playerRef = usePlayerRef();
 
     const handleFilterChange = (filterEvent: FilterChangeEvent) => {
         const { index, ...filter } = filterEvent;
@@ -58,11 +61,17 @@ export default function Equalizer() {
         setFilters((prevFilters) => {
             const newFilters = [...prevFilters];
             newFilters[index] = { ...newFilters[index], ...filter };
+            setFilterData(JSON.stringify(newFilters));
             return newFilters;
         });
     };
 
-    console.log("Filters:", filters);
+    useEffect(() => {
+        if (!playerRef?.current) return;
+        playerRef.current.filterData = filterData;
+    }, [playerRef, filterData]);
+
+    console.log("Filters:", filterData);
 
     return (
         <div>

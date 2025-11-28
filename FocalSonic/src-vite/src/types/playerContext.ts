@@ -29,6 +29,7 @@ export interface IPlayerState {
     isSongStarred: boolean
     volume: number
     speed: number
+    filterData: string
     currentDuration: number
     mediaType: "song" | "radio" | "podcast"
     currentPlaybackRate: number
@@ -135,6 +136,7 @@ export interface IPlayerActions {
     setProgress: (progress: number) => void
     setVolume: (volume: number) => void
     setSpeed: (speed: number) => void
+    setFilterData: (data: string) => void
     handleVolumeWheel: (isScrollingDown: boolean) => void
     setCurrentDuration: (duration: number) => void
     setPlayRadio: (list: Radio[], index: number) => void

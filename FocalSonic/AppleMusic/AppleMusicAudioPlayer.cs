@@ -194,6 +194,17 @@ namespace FocalSonic.AppleMusic
             );
         }
 
+        public override async Task SetFilterData(string filterData)
+        {
+            filterData = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(filterData)); // Sanitize and validate
+            await base.SetFilterData(filterData);
+            ProxyWindow?.ExecuteJavaScript(
+                InjectionPrefix +
+                $"window.injectedQueue.push({{ type: 'setFilterData', filterData: {filterData} }});" +
+                InjectionSuffix
+            );
+        }
+
         #endregion
 
         #region Sign In

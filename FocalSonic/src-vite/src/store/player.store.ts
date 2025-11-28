@@ -92,6 +92,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         isSongStarred: false,
                         volume: 100,
                         speed: 1,
+                        filterData: "",
                         currentDuration: 0,
                         mediaType: "song",
                         audioPlayerRef: null,
@@ -586,6 +587,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.playerState.speed = speed;
                             });
                         },
+                        setFilterData: (data) => {
+                            set((state) => {
+                                state.playerState.filterData = data;
+                            });
+                        },
                         handleVolumeWheel: (isScrollingDown) => {
                             const { min, max, wheelStep } = get().settings.volume;
                             const { volume } = get().playerState;
@@ -996,6 +1002,11 @@ export const usePlayerVolume = () => ({
 export const usePlayerSpeed = () => ({
     speed: usePlayerStore((state) => state.playerState.speed),
     setSpeed: usePlayerStore((state) => state.actions.setSpeed)
+});
+
+export const usePlayerFilterData = () => ({
+    filterData: usePlayerStore((state) => state.playerState.filterData),
+    setFilterData: usePlayerStore((state) => state.actions.setFilterData)
 });
 
 export const useVolumeSettings = () =>
