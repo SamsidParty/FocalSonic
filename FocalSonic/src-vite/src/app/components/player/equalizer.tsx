@@ -11,6 +11,9 @@ import {
 } from "dsssp";
 import React, { useEffect, useState } from "react";
 
+const getCSSColor = (col: string) => window.getComputedStyle(document.documentElement).getPropertyValue(col);
+
+
 const theme: GraphThemeOverride = {
     background: {
         grid: {
@@ -54,14 +57,21 @@ const scale = {
 };
 
 const defaultPreset: GraphFilter[] = [
-    { freq: 100, gain: +4.0, q: 0.7, type: "PEAK" },
-    { freq: 200, gain: -6.0, q: 0.7, type: "PEAK" },
-    { freq: 400, gain: +7.0, q: 0.7, type: "PEAK" },
-    { freq: 800, gain: -8.0, q: 0.7, type: "PEAK" },
-    { freq: 1600, gain: +7.0, q: 0.7, type: "PEAK" },
-    { freq: 3200, gain: -6.0, q: 0.7, type: "PEAK" },
-    { freq: 6400, gain: +4.0, q: 0.7, type: "PEAK" }
+    { freq: 100, gain: 0, q: 0.7, type: "PEAK" },
+    { freq: 200, gain: 0, q: 0.7, type: "PEAK" },
+    { freq: 400, gain: 0, q: 0.7, type: "PEAK" },
+    { freq: 800, gain: 0, q: 0.7, type: "PEAK" },
+    { freq: 1600, gain: 0, q: 0.7, type: "PEAK" },
+    { freq: 3200, gain: 0, q: 0.7, type: "PEAK" },
+    { freq: 6400, gain: 0, q: 0.7, type: "PEAK" }
 ];
+
+const glowFilter = () => ({
+    filter: `
+      drop-shadow(0 0 1px ${getCSSColor("--primary")})
+      drop-shadow(0 0 3px ${getCSSColor("--primary")})
+    `
+});
 
 export default function Equalizer() {
 
@@ -88,38 +98,41 @@ export default function Equalizer() {
     return (
         <div>
             <FrequencyResponseGraph
-                width={260}
+                width={268}
                 height={350}
                 scale={scale}
                 theme={theme}
+                style={{ overflow: "visible" }}
             >
                 <FilterGradient
                     fill
                     opacity={0.2}
-                    color="#71abe0"
+                    color={getCSSColor("--primary")}
                     id="composite-curve"
                 />
                 <CompositeCurve
-                    color="#71abe0"
+                    color={getCSSColor("--primary")}
                     filters={filters}
                     gradientId="composite-curve"
                 />
                 <CompositeCurve
-                    color="#ffffff"
+                    color={getCSSColor("--primary")}
                     filters={filters}
+                    style={glowFilter()}
                 />
+
                 {filters.map((filter, index) => (
                     <FilterPoint
                         key={index}
                         index={index}
                         filter={filter}
                         radius={4}
-                        color="#b3ddf3"
+                        color={getCSSColor("--primary")}
                         dragColor="#ffffff"
                         activeColor="#ffffff"
-                        background="#b3ddf3"
-                        dragBackground="#ffffff"
-                        activeBackground="#ffffff"
+                        background="transparent"
+                        dragBackground="transparent"
+                        activeBackground="transparent"
                         backgroundOpacity={1}
                         dragBackgroundOpacity={1}
                         activeBackgroundOpacity={1}

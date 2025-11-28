@@ -30,7 +30,7 @@ export function Extrabar() {
             >
                 {
                     (extraBarContent !== "none") && (
-                        <div className="bg-body rounded-md w-full h-full flex flex-col p-2">
+                        <div className="bg-body rounded-md w-full h-full flex flex-col">
                             {extraBarContent === "lyrics" && <MemoExtrabarLyrics />}
                             {extraBarContent === "queue" && <MemoExtrabarQueue />}
                             {extraBarContent === "effects" && <MemoExtrabarEffects />}

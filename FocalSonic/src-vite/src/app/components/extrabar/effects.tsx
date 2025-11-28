@@ -4,8 +4,8 @@ import Equalizer from "../player/equalizer";
 
 export default function ExtrabarEffects() {
     return (
-        <div className="flex flex-col h-8 mb-2">
-            <p className="ml-1 text-foreground font-bold">{t("player.effects.title")}</p>
+        <div className="flex flex-col h-full mb-2 overflow-clip">
+            <p className="ml-3 mt-3 text-foreground font-bold">{t("player.effects.title")}</p>
             <Equalizer />
         </div>
     );

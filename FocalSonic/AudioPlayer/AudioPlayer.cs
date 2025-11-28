@@ -155,6 +155,7 @@ namespace FocalSonic.AudioPlayer
 
         public async Task UpdatePlaybackParameters()
         {
+            await SetFilterData(FilterData);
             await SetLoopMode(Looping);
             await SetVolume(Volume);
             await SetSpeed(Speed);
