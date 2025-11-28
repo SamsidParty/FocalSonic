@@ -27,13 +27,13 @@ import { useCastStatus } from "../header/cast";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
 import { PlayerControls } from "./controls";
+import { PlayerEffects } from "./effects";
 import { PlayerLikeButton } from "./like-button";
 import { PlayerLyricsButton } from "./lyrics-button";
 import { PodcastInfo } from "./podcast-info";
 import { PodcastPlaybackRate } from "./podcast-playback-rate";
 import { PlayerProgress } from "./progress";
 import { PlayerQueueButton } from "./queue-button";
-import { PlayerSpeed } from "./speed";
 import { PlayerVolume } from "./volume";
 
 const MemoTrackInfo = memo(TrackInfo);
@@ -45,7 +45,7 @@ const MemoPlayerLikeButton = memo(PlayerLikeButton);
 const MemoPlayerQueueButton = memo(PlayerQueueButton);
 const MemoPlayerClearQueueButton = memo(PlayerClearQueueButton);
 const MemoPlayerVolume = memo(PlayerVolume);
-const MemoPlayerSpeed = memo(PlayerSpeed);
+const MemoPlayerEffects = memo(PlayerEffects);
 const MemoPodcastPlaybackRate = memo(PodcastPlaybackRate);
 const MemoLyricsButton = memo(PlayerLyricsButton);
 const MemoMiniPlayerButton = memo(MiniPlayerButton);
@@ -234,7 +234,7 @@ export function Player() {
 
                         {
                             (isAppleMusic && !castStatus) && (
-                                <MemoPlayerSpeed
+                                <MemoPlayerEffects
                                     audioRef={getAudioRef()}
                                     disabled={!song && !radio && !podcast}
                                 />

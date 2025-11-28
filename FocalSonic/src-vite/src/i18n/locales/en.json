@@ -457,6 +457,9 @@
         "mute": "Mute",
         "unmute": "Unmute"
       }
+    },
+    "effects": {
+      "title": "Audio Effects"
     }
   },
   "options": {

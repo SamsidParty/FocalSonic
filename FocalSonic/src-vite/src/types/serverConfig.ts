@@ -1,6 +1,6 @@
 import { SettingsOptions } from "@/app/components/settings/options";
 
-export type ExtraBarContent = "none" | "lyrics" | "queue" | "podcasts";
+export type ExtraBarContent = "none" | "lyrics" | "queue" | "effects";
 
 export enum AuthType {
     PASSWORD,
