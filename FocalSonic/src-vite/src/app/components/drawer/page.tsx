@@ -60,7 +60,8 @@ export function MainDrawerPage() {
                     <div 
                         className={clsx(
                             "absolute text-white hide-in-fullscreen-idle transition-opacity duration-600 ease-long flex w-full h-14 min-h-14 items-center justify-end gap-2",
-                            "px-2"
+                            "px-2",
+                            isMiniPlayer && "hide-on-idle"
                         )}
                         {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }
                     >
@@ -98,14 +99,14 @@ export function MainDrawerPage() {
                         </Button>
 
                     </div>
-                    <div className="flex items-center w-full h-full mt-12 mb-0">
+                    <div className="flex items-center w-full h-full mt-12 xxs:mt-[10vh] mb-0 xxs:mb-[10vh]">
                         <CurrentSongInfo />
 
                         <div className="flex self-stretch flex-1 justify-center relative">
                             <ActiveContent active={queueState}>
                                 <QueueSongList />
                             </ActiveContent>
-                            <ActiveContent active={lyricsState}>
+                            <ActiveContent active={lyricsState && (!isMiniPlayer || (document.documentElement.clientWidth > document.documentElement.clientHeight))}>
                                 <LyricsTab visible={mainDrawerState && lyricsState} leftAlign />
                             </ActiveContent>
                         </div>

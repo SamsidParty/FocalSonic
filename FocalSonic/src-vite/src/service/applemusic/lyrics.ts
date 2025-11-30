@@ -1,9 +1,9 @@
-import { httpClient } from "@/api/httpClient";
 import { AppleMusicLyricsResponse } from "@/types/applemusic/song";
-import { GetLyricsData, getLyricsFromLRCLib } from "../subsonic/lyrics";
+import { GetLyricsData, getLyricsFromLyricOtter } from "../subsonic/lyrics";
 
 async function getLyrics(getLyricsData: GetLyricsData) {
-
+    
+    /*
     if (window?.igniteView?.commandBridge?.getCustomOverride) {
         const cachedLyrics = await window.igniteView.commandBridge.getCustomOverride("AppleLyrics", getLyricsData.id!);
         if (cachedLyrics) {
@@ -20,8 +20,9 @@ async function getLyrics(getLyricsData: GetLyricsData) {
             "l[script]": "en-Latn",
             "l[lyrics]": "en-us"
         }
-    });
+    });*/
 
+    const response = {} as unknown as AppleMusicLyricsResponse;
     let lyrics = response?.data[0]?.attributes?.ttmlLocalizations || response?.data[0]?.attributes?.ttml;
     
     // No point using unsynced lyrics from apple when we can find synced ones from other providers
@@ -29,9 +30,9 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         lyrics = null;
     }
 
-    // Fetch from LRCLib
+    // Fetch from alternative providers if no lyrics found
     if (!lyrics) {
-        lyrics = (await getLyricsFromLRCLib(getLyricsData)).value;
+        lyrics = (await getLyricsFromLyricOtter(getLyricsData)).value;
     }
 
     if (window?.igniteView?.commandBridge?.saveCustomOverride && lyrics) {

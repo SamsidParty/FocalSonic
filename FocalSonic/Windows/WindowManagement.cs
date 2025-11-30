@@ -70,12 +70,16 @@ namespace FocalSonic.Windows
             IsMiniPlayer = true;
 
             // Prevent overwriting previous bounds with the mini player bounds
-            if (ctx.Bounds.MaxWidth != 500)
+            if (ctx.Bounds.MaxWidth != 700)
             {
                 PreviousBounds = ctx.Bounds;
             }
 
-            ctx.Bounds = new LockedWindowBounds(500, 300);
+            ctx.Bounds = new WindowBounds(550, 300)
+            {
+                MaxHeight = 500,
+                MaxWidth = 700
+            };
 
             SetWindowPos(ctx.NativeHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
             int exStyle = GetWindowLong(ctx.NativeHandle, GWL_EXSTYLE);
@@ -87,11 +91,19 @@ namespace FocalSonic.Windows
         {
             if (ctx == null || !IsMiniPlayer) return;
             IsMiniPlayer = false;
-            ctx.Bounds = PreviousBounds ?? Program.DefaultBounds;
 
             SetWindowPos(ctx.NativeHandle, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
             int exStyle = GetWindowLong(ctx.NativeHandle, GWL_EXSTYLE);
             SetWindowLong(ctx.NativeHandle, GWL_EXSTYLE, exStyle & ~WS_EX_TOOLWINDOW);
+
+            ctx.Bounds = Program.DefaultBounds;
+
+            SetWindowPos(
+                ctx.NativeHandle,
+                HWND_NOTOPMOST,
+                300, 100,
+                Program.DefaultBounds.InitialWidth, Program.DefaultBounds.InitialHeight,
+                SWP_FRAMECHANGED | SWP_NOZORDER);
         }
 
         [Command("enterFullScreen")]

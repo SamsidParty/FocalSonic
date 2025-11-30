@@ -4,19 +4,27 @@ import { AspectRatio } from "@/app/components/ui/aspect-ratio";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
 import { useMainDrawerState, usePlayerSonglist } from "@/store/player.store";
+import { usePlayerStyle } from "@/store/theme.store";
 import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
+import clsx from "clsx";
+import React from "react";
 import { Link } from "react-router-dom";
 import CoverArtImage from "../cover-art";
 
 export function CurrentSongInfo() {
     const { currentSong } = usePlayerSonglist();
     const { closeDrawer } = useMainDrawerState();
+    const { isMiniPlayer } = usePlayerStyle();
 
     const imageUrl = getCoverArtUrl(currentSong.coverArt, "song", "900");
 
     return (
-        <div className="ml-[8vw] xxs:mr-2 xxs:w-[35vw] lg:block w-[28vw]">
+        <div className={
+            clsx(
+                "ml-[8vw] xxs:ml-[10vh] xxs:mr-0 xxs:w-[80vh] lg:block w-[28vw]"
+            )}
+        >
             <AspectRatio
                 ratio={1 / 1}
                 className="shadow-header-image rounded-md overflow-hidden bg-accent"
@@ -35,7 +43,7 @@ export function CurrentSongInfo() {
                 />
             </AspectRatio>
 
-            <div className="flex flex-col items-center justify-center mt-6 px-1">
+            <div className="flex flex-col items-center justify-center mt-6 xxs:hidden px-1">
                 <h4 className="scroll-m-20 text-xl xxs:hidden font-bold tracking-tight text-center text-balance text-white drop-shadow-md">
                     {currentSong.albumId ? (
                         <Link

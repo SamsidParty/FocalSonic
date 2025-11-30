@@ -53,6 +53,7 @@
     --vertical-shift: var(--player-height);
   }
 
+
   :root .fullscreen.idle {
     --vertical-shift: 0px;
   }

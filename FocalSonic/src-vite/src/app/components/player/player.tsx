@@ -81,7 +81,7 @@ export function Player() {
     const radio = radioList[currentSongIndex];
     const podcast = podcastList[currentSongIndex];
 
-    const { playerStyle, isPlayerAtTop } = usePlayerStyle();
+    const { playerStyle, isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
 
     const getAudioRef = useCallback(() => {
         if (isRadio) return radioRef;
@@ -191,7 +191,7 @@ export function Player() {
         <footer className={clsx(
             "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-bar xxs:bg-transparent",
             isPlayerAtTop ? "top-header" : "bottom-0",
-            isFullscreen() ? "player-idle-hide" : ""
+            isFullscreen() || isMiniPlayer ? "player-idle-hide" : "",
         )}>
             <div className="w-full h-full grid grid-cols-player xxs:flex xxs:flex-col xxs:justify-center gap-2 px-3">
                 {/* Track Info */}

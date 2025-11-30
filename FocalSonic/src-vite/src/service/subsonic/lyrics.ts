@@ -127,6 +127,30 @@ export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
     };
 }
 
+export async function getLyricsFromLyricOtter(getLyricsData: GetLyricsData) {
+
+    // Debug URL
+
+    const url = "https://127.0.0.1:7283/api/focal/lyric/isrc/JPU902202007?format=elrc-lite";
+    try {
+        const request = await fetch(url);
+        const response = await request.text();
+
+        return {
+            artist: getLyricsData.artist,
+            album: getLyricsData.album || "",
+            value: response,
+        };
+    }
+    catch {}
+
+    return {
+        artist: "",
+        album: "",
+        value: "",
+    };
+}
+
 function formatLyrics(lyrics: string) {
     return lyrics.trim().replaceAll("\r\n", "\n");
 }
