@@ -199,7 +199,7 @@ export function Player() {
 
     return (
         <footer className={clsx(
-            "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-bar xxs:bg-transparent",
+            "h-[--player-height] w-full flex items-center fixed left-0 right-0 z-40 bg-bar",
             isPlayerAtTop ? "top-header" : "bottom-0",
             isFullscreen() || isMiniPlayer ? "player-idle-hide" : "",
         )}>
