@@ -19,7 +19,11 @@ export interface PlaybackSource {
 
 export async function getContentSources(contentID: string) {
     try {
-        const enhancedHls = await tryGetEnhancedHLS(contentID);
+        let enhancedHls: PlaybackAsset[] | undefined;
+
+        if (isAtmosEnabled() && !Number.isNaN(parseInt(contentID))) {
+            enhancedHls = await tryGetEnhancedHLS(contentID);
+        }
 
         const body = (!Number.isNaN(parseInt(contentID))) ? { salableAdamId: contentID } : { universalLibraryId: contentID };
         const request = await fetch(webPlaybackURL, {

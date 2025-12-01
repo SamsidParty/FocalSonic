@@ -10,6 +10,7 @@ import {
     GraphThemeOverride
 } from "dsssp";
 import React, { useEffect, useState } from "react";
+import EffectSliders from "./effect-sliders";
 
 const getCSSColor = (col: string) => window.getComputedStyle(document.documentElement).getPropertyValue(col);
 
@@ -78,6 +79,13 @@ export default function Equalizer() {
     const { filterData, setFilterData } = usePlayerFilterData();
     const [filters, setFilters] = useState(filterData ? JSON.parse(filterData) : defaultPreset);
     const playerRef = usePlayerRef();
+
+    const reverb = filters[0]?.reverb || 0;
+    const setReverb = (value: number) => {
+        filters[0].reverb = value;
+        setFilterData(JSON.stringify(filters));
+        setFilters([...filters]);
+    };
 
     const handleFilterChange = (filterEvent: FilterChangeEvent) => {
         const { index, ...filter } = filterEvent;
@@ -161,6 +169,8 @@ export default function Equalizer() {
                     </>
                 ))}
             </FrequencyResponseGraph>
+
+            <EffectSliders reverb={reverb} setReverb={setReverb} />
         </div>
     );
 }

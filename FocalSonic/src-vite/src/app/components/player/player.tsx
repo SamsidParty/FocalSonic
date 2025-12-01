@@ -12,6 +12,7 @@ import {
     usePlayerMediaType,
     usePlayerRef,
     usePlayerSonglist,
+    usePlayerSpeed,
     usePlayerStore,
     useReplayGainState,
 } from "@/store/player.store";
@@ -75,6 +76,8 @@ export function Player() {
     const { replayGainType, replayGainPreAmp, replayGainDefaultGain } =
     useReplayGainState();
 
+    const { speed } = usePlayerSpeed();
+
     const { castStatus } = useCastStatus();
 
     const song = currentList[currentSongIndex];
@@ -103,6 +106,13 @@ export function Player() {
 
         audio.playbackRate = currentPlaybackRate;
     }, [currentPlaybackRate, isPodcast]);
+
+
+    useEffect(() => {
+        if (!audioRef.current) return;
+        audioRef.current.playbackRate = speed;
+        audioRef.current.preservesPitch = false;
+    }, [audioRef, speed]);
 
     const setupDuration = useCallback(() => {
         const audio = getAudioRef().current;

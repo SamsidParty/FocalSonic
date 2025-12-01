@@ -196,10 +196,9 @@ namespace FocalSonic.AppleMusic
 
         public override async Task SetFilterData(string filterData)
         {
-            if (string.IsNullOrEmpty(filterData)) return;
-            if (filterData == FilterData) return;
-            filterData = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(filterData)); // Sanitize and validate
             await base.SetFilterData(filterData);
+            if (string.IsNullOrEmpty(filterData)) return;
+            filterData = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(filterData)); // Sanitize and validate
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
                 $"window.injectedQueue.push({{ type: 'setFilterData', filterData: {filterData} }});" +

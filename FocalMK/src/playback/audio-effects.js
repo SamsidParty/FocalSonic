@@ -17,7 +17,7 @@ export function getAudioEffectController(source) {
         return _effectInstances.get(source);
     }
 
-    const reverb = new AudioEffectController(source);
+    const reverb = new AudioEffectController(source, window.igniteView?.resolverURL.replace("/dynamic", "/meta/impulse/spatial0.wav"));
     _effectInstances.set(source, reverb);
     return reverb;
 }
@@ -69,11 +69,7 @@ class AudioEffectController {
 
         // Resume context on user gesture
         if (this.isAudioElement) {
-            const resumeContext = () => {
-                this.audioCtx.resume();
-                document.removeEventListener('click', resumeContext);
-            };
-            document.addEventListener('click', resumeContext);
+            this.audioCtx.resume();
         }
     }
 
@@ -204,6 +200,10 @@ class AudioEffectController {
         // Reuse or create nodes up to filters.length
         for (let i = 0; i < filters.length; i++) {
             const f = filters[i];
+
+            if (i == 0 && f.reverb) {
+                this.setWetLevel(Math.min(Math.max(f.reverb, 0), 1));
+            }
 
             let node = this.eqNodes[i];
             let created = false;

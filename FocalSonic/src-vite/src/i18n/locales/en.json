@@ -459,7 +459,9 @@
       }
     },
     "effects": {
-      "title": "Audio Effects"
+      "title": "Audio Effects",
+      "speed": "Speed",
+      "reverb": "Reverb"
     }
   },
   "options": {
