@@ -152,7 +152,7 @@ export default function Equalizer() {
                     <>
                         <FilterGradient
                             fill
-                            key={index}
+                            key={index + "_gradient"}
                             index={index}
                             filter={filter}
                             id={`filter-${index}`}
@@ -160,7 +160,7 @@ export default function Equalizer() {
 
                         <FilterCurve
                             showPin
-                            key={index}
+                            key={index + "_curve"}
                             index={index}
                             filter={filter}
                             active={false}
