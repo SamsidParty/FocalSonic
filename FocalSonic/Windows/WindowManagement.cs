@@ -79,8 +79,8 @@ namespace FocalSonic.Windows
             {
                 MaxHeight = 400,
                 MaxWidth = 700,
-                MinHeight = 200,
-                MinWidth = 200
+                MinHeight = 300,
+                MinWidth = 300
             };
 
             SetWindowPos(ctx.NativeHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);

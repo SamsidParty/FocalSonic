@@ -87,6 +87,13 @@ export default function Equalizer() {
         setFilters([...filters]);
     };
 
+    const impulse = filters[0]?.impulse || "";
+    const setImpulse = (value: string) => {
+        filters[0].impulse = value;
+        setFilterData(JSON.stringify(filters));
+        setFilters([...filters]);
+    };
+
     const handleFilterChange = (filterEvent: FilterChangeEvent) => {
         const { index, ...filter } = filterEvent;
 
@@ -170,7 +177,7 @@ export default function Equalizer() {
                 ))}
             </FrequencyResponseGraph>
 
-            <EffectSliders reverb={reverb} setReverb={setReverb} />
+            <EffectSliders reverb={reverb} setReverb={setReverb} impulse={impulse} setImpulse={setImpulse} />
         </div>
     );
 }

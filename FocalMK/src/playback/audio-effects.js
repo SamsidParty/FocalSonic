@@ -17,7 +17,7 @@ export function getAudioEffectController(source) {
         return _effectInstances.get(source);
     }
 
-    const reverb = new AudioEffectController(source, window.igniteView?.resolverURL.replace("/dynamic", "/meta/impulse/spatial0.wav"));
+    const reverb = new AudioEffectController(source, "spatial0");
     _effectInstances.set(source, reverb);
     return reverb;
 }
@@ -74,8 +74,13 @@ class AudioEffectController {
     }
 
     async _loadImpulseResponse(impulseUrl) {
+
+        if (this._lastImpulseUrl == impulseUrl) return;
+        this._lastImpulseUrl = impulseUrl;
+
         if (impulseUrl) {
-            const response = await fetch(impulseUrl);
+            const realURL = window.igniteView?.resolverURL.replace("/dynamic", `/meta/impulse/${impulseUrl}.wav`);
+            const response = await fetch(realURL);
             const arrayBuffer = await response.arrayBuffer();
             this.convolver.buffer = await this.audioCtx.decodeAudioData(arrayBuffer);
         } else {
@@ -203,6 +208,9 @@ class AudioEffectController {
 
             if (i == 0 && f.reverb) {
                 this.setWetLevel(Math.min(Math.max(f.reverb, 0), 1));
+            }
+            if (i == 0 && f.impulse) {
+                this._loadImpulseResponse(f.impulse);
             }
 
             let node = this.eqNodes[i];
