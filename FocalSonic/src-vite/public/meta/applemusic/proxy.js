@@ -449,9 +449,6 @@
                 window.proxyMusicInstance.playbackRate = item.speed;
                 findAudioElement() && (findAudioElement().preservesPitch = false);
             }
-            else if (item.type === "setReverb") {
-                findAudioElement() && getAudioEffectController(findAudioElement()).setWetLevel(item.reverb);
-            }
             else if (item.type === "setFilterData") {
                 findAudioElement() && getAudioEffectController(findAudioElement()).setFilters(item.filterData);
             }
@@ -38504,11 +38501,11 @@
         if (sources != null && sources.length > 0) {
             const song = sources[0];
             const validAssets = song?.assets?.filter((asset) => {
-                const hasURL = asset.URL && asset.URL.includes(".m3u8");
+                const hasURL = asset.URL;
                 const hasFlavor = asset.flavor;
                 const isCtrp = asset.flavor?.toLowerCase().includes("ctrp"); // ctrp = compatible with widevine
                 const isEnhancedHls = asset.flavor?.toLowerCase().includes("enhancedhls");
-                return hasURL && hasFlavor && (isCtrp || isEnhancedHls || !hasFlavor);
+                return hasURL && (isCtrp || isEnhancedHls || !hasFlavor);
             });
             // Find the asset with the highest bitrate
             let bestAsset = null;
