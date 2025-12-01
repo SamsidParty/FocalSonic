@@ -3,7 +3,7 @@ const defaultAppleMusicQuery = {
     "extend[songs]": "trackCount,tags",
     "extend[library-playlists]": "inFavorites",
     "art[url]": "f",
-    "extend": "extendedAssetUrls",
+    "extend": "extendedAssetUrls"
 };
 
 

@@ -11,6 +11,7 @@ export interface GetLyricsData {
     album?: string
     duration?: number
     id?: string
+    isrc?: string
 }
 
 interface LRCLibResponse {
@@ -129,20 +130,28 @@ export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
 
 export async function getLyricsFromLyricOtter(getLyricsData: GetLyricsData) {
 
-    // Debug URL
+    const { isAppleMusic } = checkServerType();
 
-    const url = "https://127.0.0.1:7283/api/focal/lyric/isrc/JPU902202007?format=elrc-lite";
-    try {
-        const request = await fetch(url);
-        const response = await request.text();
+    if (isAppleMusic) {
+        // Debug URL
+        const url = `http://127.0.0.1:5155/api/focal/lyric/apple-music/${getLyricsData.id}?format=elrc-lite`;
+        console.log("Fetching lyrics from Lyric Otter:", url);
 
-        return {
-            artist: getLyricsData.artist,
-            album: getLyricsData.album || "",
-            value: response,
-        };
+        try {
+            const request = await fetch(url);
+            const response = await request.text();
+
+            return {
+                artist: getLyricsData.artist,
+                album: getLyricsData.album || "",
+                value: formatLyrics(response),
+            };
+        }
+        catch {}
     }
-    catch {}
+
+
+
 
     return {
         artist: "",

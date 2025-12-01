@@ -77,8 +77,10 @@ namespace FocalSonic.Windows
 
             ctx.Bounds = new WindowBounds(550, 300)
             {
-                MaxHeight = 500,
-                MaxWidth = 700
+                MaxHeight = 400,
+                MaxWidth = 700,
+                MinHeight = 200,
+                MinWidth = 200
             };
 
             SetWindowPos(ctx.NativeHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
