@@ -53,7 +53,7 @@ export function MainDrawerPage() {
                         "flex flex-col w-full transition-[margin]",
                         "transition-[background-image,background-color] ease-long duration-1000",
                         "default-gradient",
-                        isFullscreen() ? "h-content" : "h-[calc(var(--drawer-height)-var(--player-height))] ",
+                        (isFullscreen() || isMiniPlayer) ? "h-content" : "h-[calc(var(--drawer-height)-var(--player-height))] ",
                         isPlayerAtTop ? "mt-vertical-shift" : "mb-vertical-shift"
                     )}
                 >
@@ -73,7 +73,6 @@ export function MainDrawerPage() {
                                     variant="ghost"
                                     data-webview-ignore={""}
                                     className="w-10 h-10 rounded-full p-0 hover:bg-foreground/20"
-                                    data-webview-ignore={""}
                                     onClick={() => { isFullscreen() ? exitFullscreen() : enterFullscreen(); }}
                                 >
                                     {
@@ -88,8 +87,7 @@ export function MainDrawerPage() {
                         <Button
                             variant="ghost"
                             data-webview-ignore={""}
-                            className="w-10 h-10 hide-in-fullscreen rounded-full p-0 hover:bg-foreground/20"
-                            data-webview-ignore={""}
+                            className="w-10 h-10 z-10 hide-in-fullscreen rounded-full p-0 hover:bg-foreground/20"
                             onClick={closeDrawer}
                         >
                             {
@@ -99,7 +97,7 @@ export function MainDrawerPage() {
                         </Button>
 
                     </div>
-                    <div className="flex items-center w-full h-full mt-12 xxs:mt-[10vh] mb-0 xxs:mb-[10vh]">
+                    <div className="flex items-center w-full h-full mt-12 xxs:mt-0 mb-0">
                         <CurrentSongInfo />
 
                         <div className="flex self-stretch flex-1 justify-center relative">

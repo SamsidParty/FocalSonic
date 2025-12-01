@@ -22,7 +22,7 @@ export function CurrentSongInfo() {
     return (
         <div className={
             clsx(
-                "ml-[8vw] xxs:ml-[10vh] xxs:mr-0 xxs:w-[80vh] lg:block w-[28vw]"
+                "ml-[8vw] xxs:ml-0 xxs:mr-0 xxs:w-[100vh] lg:block w-[28vw]"
             )}
         >
             <AspectRatio

@@ -98,6 +98,16 @@ export function exitFullscreen() {
     }
 }
 
+export function enterMiniPlayer() {
+    document.body.classList.add("miniplayer");
+    window.igniteView?.commandBridge?.enterMiniPlayer?.();
+}
+
+export function exitMiniPlayer() {
+    document.body.classList.remove("miniplayer");
+    window.igniteView?.commandBridge?.exitMiniPlayer?.();
+}
+
 function setFontSmoothing() {
     if (isMacOs) {
         document.body.classList.add("mac");

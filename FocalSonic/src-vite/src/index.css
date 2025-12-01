@@ -53,9 +53,14 @@
     --vertical-shift: var(--player-height);
   }
 
-
   :root .fullscreen.idle {
     --vertical-shift: 0px;
+  }
+
+  :root .miniplayer {
+    --header-height: 0px;
+    --drawer-height: 100vh;
+    --content-height: 100vh;
   }
 }
 

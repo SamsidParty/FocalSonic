@@ -2,6 +2,7 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { useLyricsState, useMainDrawerState, usePlayerCurrentList, useQueueState } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
+import { enterMiniPlayer, exitMiniPlayer } from "@/utils/browser";
 import clsx from "clsx";
 import { PictureInPicture2Icon } from "lucide-react";
 import React, { memo, useCallback } from "react";
@@ -22,9 +23,9 @@ export function MiniPlayerButton() {
 
     const handleClick = useCallback(async () => {
         if (isMiniPlayer) {
-            window.igniteView?.commandBridge?.exitMiniPlayer?.();
+            exitMiniPlayer();
         } else {
-            window.igniteView?.commandBridge?.enterMiniPlayer?.();
+            enterMiniPlayer();
             setQueueState(false);
             setLyricsState(true);
             setMainDrawerState(true);
