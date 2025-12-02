@@ -52,6 +52,16 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                             state.enableLyricBlur = value;
                         });
                     },
+                    vibrancyMode: "acrylic",
+                    setVibrancyMode(mode) {
+                        set((state) => {
+                            state.vibrancyMode = mode;
+                        });
+
+                        if (window.igniteView?.commandBridge?.setWindowVibrancy) {
+                            window.igniteView.commandBridge.setWindowVibrancy(mode);
+                        }
+                    },
                 })),
                 {
                     name: "theme_store",

@@ -23,7 +23,7 @@ public class Program
     public static ViteAppManager App;
     public static HttpClient Http = new HttpClient();
     public static WebWindow? MainWindow => App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("MainWindow")).FirstOrDefault();
-    public static WindowBounds DefaultBounds = new WindowBounds(1450, 900) { MinWidth = 0, MinHeight = 0 };
+    public static WindowBounds DefaultBounds = new WindowBounds(1450, 900) { MinWidth = 1150, MinHeight = 750 };
     public static string LockFilePath => Path.Join(Path.GetDirectoryName(Path.GetTempPath()), "focalsonic.lock");
 
     [STAThread]

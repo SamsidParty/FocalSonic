@@ -653,6 +653,14 @@
           "info": "If enabled, when accessing the big player, the app will automatically enter fullscreen mode."
         }
       },
+      "vibrancy": {
+        "title": "Window Background",
+        "mica": "Mica",
+        "mica-alt": "Mica Alt",
+        "acrylic": "Acrylic",
+        "blurbehind": "Blurbehind",
+        "disabled": "Disabled"
+      },
       "colors": {
         "group": "Dynamic Colors",
         "description": "Select whether the app should use the dominant color from the currently playing album art as the background.",

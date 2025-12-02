@@ -40,4 +40,6 @@ export interface IThemeContext {
     setEnableLyricGlow: (value: boolean) => void
     enableLyricBlur: boolean
     setEnableLyricBlur: (value: boolean) => void
+    vibrancyMode: "mica" | "mica-alt" | "acrylic" | "blurbehind"
+    setVibrancyMode: (mode: "mica" | "mica-alt" | "acrylic" | "blurbehind") => void
 }
