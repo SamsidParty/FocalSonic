@@ -134,7 +134,12 @@ class NativeVirtualAudioPlayer {
 
     set playbackRate(value: number) {
         if (this._playbackRate === value) return;
+        
+        if (value <= 0) {
+            value = 1;
+        }
         this._playbackRate = value;
+
         setTimeout(async () => {
             await this.waitForCreation();
             window.igniteView?.commandBridge.setAudioPlayerSpeed(this.id!, this._playbackRate);

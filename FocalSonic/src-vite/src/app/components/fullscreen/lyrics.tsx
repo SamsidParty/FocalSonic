@@ -95,7 +95,7 @@ function SyncedLyrics(props: LyricProps) {
             }
 
             // Determine if auto translation is needed
-            // When altLyricsMode is 'translation', each LRC line has two parts separated by a '\x1D' character.
+            // When altLyricsMode is 'translation', each LRC line has two parts separated by a '⏩' character.
             // For every line, check if it's non-latin. If it is, check if the second part is empty
             // If all non-latin lines have empty second parts, we need to translate
             if (altLyricsMode === "translation" || altLyricsMode === "transliteration") {
@@ -103,7 +103,7 @@ function SyncedLyrics(props: LyricProps) {
                 let needsTranslation = false;
 
                 for (const line of lines) {
-                    const parts = line.split("\x1D");
+                    const parts = line.split("⏩");
                     const mainLyric = parts[0] || "";
                     const altLyric = parts[1] || "";
 
@@ -131,7 +131,7 @@ function SyncedLyrics(props: LyricProps) {
                     const translatedLines = translatedMonolith.split("⁜");
                     const finalLyricsLines = lyrics!.split("\n").map((line, index) => {
                         const altLyric = translatedLines[index] || "";
-                        return line.split("\x1D")[0] + `\x1D<00:00.00>${altLyric}<00:00.00>`; // Append dummy ELRC tag to translated part
+                        return line.split("⏩")[0] + `⏩<00:00.00>${altLyric}<00:00.00>`; // Append dummy ELRC tag to translated part
                     });
 
                     lyrics = finalLyricsLines.join("\n");
@@ -201,9 +201,9 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
     let subLyric: string = null;
     let lyric = line?.content;
 
-    if (line?.content.split("\x1D").length > 1) {
-        subLyric = line.content.split("\x1D")[1];
-        lyric = line.content.split("\x1D")[0];
+    if (line?.content.split("⏩").length > 1) {
+        subLyric = line.content.split("⏩")[1];
+        lyric = line.content.split("⏩")[0];
     }
 
     const elrcValues = useMemo(() => {
@@ -212,7 +212,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
             elrcPortions: [] as any[]
         };
 
-        const displayLyric = values.isElrc ? lyric : `\x1D<00:00.00>${lyric}<00:00.00>`;
+        const displayLyric = values.isElrc ? lyric : `⏩<00:00.00>${lyric}<00:00.00>`;
 
         let match;
 
@@ -398,7 +398,7 @@ function convertTTMLToLRC(ttml: string, altMode: "off" | "transliteration" | "tr
                 if (enableAltLyrics && line.words.filter((f) => f.word && f["altWord_" + altMode]).length > 0) {
                     output +=
                         (line.words.map((word) => word.word?.replaceAll(" ", "").trim()).join("") !== line.words.map((word) => word["altWord_" + altMode]?.replaceAll(" ", "").trim()).join("")) // Skip if word and alternate word are same
-                            ? `\x1D${line.words.map((word) => convertMS(word.startTime, true) + (word["altWord_" + altMode])).join(" ")}`
+                            ? `⏩${line.words.map((word) => convertMS(word.startTime, true) + (word["altWord_" + altMode])).join(" ")}`
                             : "";
                 }
             }
