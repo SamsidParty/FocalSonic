@@ -17,12 +17,12 @@ export function CurrentSongInfo() {
     const { closeDrawer } = useMainDrawerState();
     const { isMiniPlayer } = usePlayerStyle();
 
-    const imageUrl = getCoverArtUrl(currentSong.coverArt, "song", "900");
+    const imageUrl = getCoverArtUrl(currentSong.coverArt, "song", "1200");
 
     return (
         <div className={
             clsx(
-                "ml-[8vw] xxs:ml-0 xxs:mr-0 xxs:w-[100vh] lg:block w-[28vw]"
+                "ml-[8vw] xxs:ml-0 xxs:mr-0 xxs:w-[100vh] lg:block w-[35vw]"
             )}
         >
             <AspectRatio

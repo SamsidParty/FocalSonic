@@ -120,10 +120,13 @@ export function getCoverArtUrl(
     size = "300"
 ): string {
 
+    const { isAppleMusic } = checkServerType();
+
     // No point proxying apple music cover art URLs, let it get served through the CDN directly
     if (id?.startsWith("https://") || id?.startsWith("http://")) {
-        return id.replaceAll("{w}", size).replaceAll("{h}", size).replaceAll("{f}", "webp");
+        return id.replaceAll("{w}", size).replaceAll("{h}", size).replaceAll("{f}", "jpeg");
     }
+
 
     if (!id) {
         // everything except artists uses the same default cover art
