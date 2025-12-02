@@ -13,6 +13,7 @@ export interface EffectSliderControls {
     setReverb: (value: number) => void,
     impulse: string,
     setImpulse: (value: string) => void,
+    orientation?: "horizontal" | "vertical"
 }
 
 const impulsePresets = new Array(36).fill(null).map((_, i) => `spatial${i}`);
@@ -41,8 +42,8 @@ export default function EffectSliders(props: EffectSliderControls) {
     };
 
     return (
-        <div className="flex flex-col gap-2">
-            <div className="flex flex-row gap-2 mx-4">
+        <div className={clsx("flex px-4 gap-2", props.orientation == "horizontal" ? "flex-row justify-center" : "flex-col")}>
+            <div className={clsx("flex flex-row gap-2")}>
                 <EffectControlContainerVertical isActive={speed > 0} onToggle={() => setSpeed(-speed)}>
                     <Label>{t("player.effects.speed")}</Label>
                     <Slider
@@ -107,7 +108,7 @@ export default function EffectSliders(props: EffectSliderControls) {
 
 function EffectControlContainer({ children, label }: { children: React.ReactNode, label?: string }) {
     return (
-        <div className="flex flex-col mx-4 px-2 py-2 gap-1 bg-background rounded-md">
+        <div className="flex flex-col px-2 py-2 gap-1 max-w-80 bg-background w-full rounded-md">
             <Label>{label}</Label>
             {children}
         </div>

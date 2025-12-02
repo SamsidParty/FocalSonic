@@ -7,6 +7,7 @@ import { podcasts } from "@/service/subsonic/podcasts";
 import {
     getVolume,
     usePlayerActions,
+    usePlayerFilterData,
     usePlayerIsPlaying,
     usePlayerLoop,
     usePlayerMediaType,
@@ -77,6 +78,7 @@ export function Player() {
     useReplayGainState();
 
     const { speed } = usePlayerSpeed();
+    const { filterData, setFilterData } = usePlayerFilterData();
 
     const { castStatus } = useCastStatus();
 
@@ -113,6 +115,12 @@ export function Player() {
         audioRef.current.playbackRate = speed;
         audioRef.current.preservesPitch = false;
     }, [audioRef, speed]);
+
+    
+    useEffect(() => {
+        if (!audioRef.current) return;
+        audioRef.current.filterData != undefined && (audioRef.current.filterData = filterData);
+    }, [audioRef, filterData]);   
 
     const setupDuration = useCallback(() => {
         const audio = getAudioRef().current;

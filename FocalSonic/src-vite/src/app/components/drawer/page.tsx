@@ -5,6 +5,7 @@ import { QueueSongList } from "@/app/components/queue/song-list";
 import { Button } from "@/app/components/ui/button";
 import { Drawer, DrawerContent } from "@/app/components/ui/drawer";
 import { cn } from "@/lib/utils";
+import { useAppSettings } from "@/store/app.store";
 import {
     useLyricsState,
     useMainDrawerState,
@@ -17,15 +18,17 @@ import clsx from "clsx";
 import { ChevronDownIcon, Maximize2Icon } from "lucide-react";
 import React, { ComponentPropsWithoutRef } from "react";
 import { useFullscreenBackdrop } from "../fullscreen/backdrop";
+import Equalizer from "../player/equalizer";
 
 export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
     const { queueState } = useQueueState();
+    const { extraBarContent, setExtraBarContent } = useAppSettings();
     let { lyricsState } = useLyricsState();
     const { isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
 
-    if (!lyricsState && !queueState) {
+    if (!extraBarContent || extraBarContent === "none") {
         lyricsState = true;
     }
 
@@ -105,7 +108,10 @@ export function MainDrawerPage() {
                                 <QueueSongList />
                             </ActiveContent>
                             <ActiveContent active={lyricsState && (!isMiniPlayer || (document.documentElement.clientWidth > document.documentElement.clientHeight))}>
-                                <LyricsTab visible={mainDrawerState && lyricsState} leftAlign />
+                                <LyricsTab leftAlign visible={mainDrawerState && lyricsState} />
+                            </ActiveContent>
+                            <ActiveContent active={extraBarContent === "effects"}>
+                                <Equalizer orientation="horizontal" />
                             </ActiveContent>
                         </div>
                     </div>

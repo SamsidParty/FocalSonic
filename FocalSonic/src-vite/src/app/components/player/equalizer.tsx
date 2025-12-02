@@ -1,4 +1,5 @@
 import { usePlayerFilterData, usePlayerRef } from "@/store/player.store";
+import clsx from "clsx";
 import {
     CompositeCurve,
     FilterChangeEvent,
@@ -9,7 +10,7 @@ import {
     GraphFilter,
     GraphThemeOverride
 } from "dsssp";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import EffectSliders from "./effect-sliders";
 
 const getCSSColor = (col: string) => window.getComputedStyle(document.documentElement).getPropertyValue(col);
@@ -74,7 +75,7 @@ const glowFilter = () => ({
     `
 });
 
-export default function Equalizer() {
+export default function Equalizer({ orientation = "vertical" }: { orientation?: "horizontal" | "vertical" }) {
 
     const { filterData, setFilterData } = usePlayerFilterData();
     const [filters, setFilters] = useState(filterData ? JSON.parse(filterData) : defaultPreset);
@@ -105,19 +106,18 @@ export default function Equalizer() {
         });
     };
 
-    useEffect(() => {
-        if (!playerRef) return;
-        playerRef?.filterData != undefined && (playerRef.filterData = filterData);
-    }, [playerRef, filterData]);
 
     return (
-        <div>
+        <div className={clsx("flex flex-col justify-center", orientation == "horizontal" ? "h-full frequency-graph" : "")}>
             <FrequencyResponseGraph
-                width={268}
-                height={350}
+                width={orientation == "vertical" ? 268 : 600}
+                height={orientation == "vertical" ? 350 : 268}
                 scale={scale}
                 theme={theme}
-                style={{ overflow: "visible" }}
+                className={clsx(
+                    "overflow-visible",
+                    orientation == "horizontal" ? "self-center" : ""
+                )}
             >
                 <FilterGradient
                     fill
@@ -177,7 +177,7 @@ export default function Equalizer() {
                 ))}
             </FrequencyResponseGraph>
 
-            <EffectSliders reverb={reverb} setReverb={setReverb} impulse={impulse} setImpulse={setImpulse} />
+            <EffectSliders reverb={reverb} setReverb={setReverb} impulse={impulse} setImpulse={setImpulse} orientation={orientation} />
         </div>
     );
 }
