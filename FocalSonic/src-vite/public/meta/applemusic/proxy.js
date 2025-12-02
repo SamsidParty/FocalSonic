@@ -217,7 +217,7 @@
             for (let i = 0; i < filters.length; i++) {
                 const f = filters[i];
 
-                if (i == 0 && f.reverb) {
+                if (i == 0 && f.reverb != undefined) {
                     this.setWetLevel(Math.min(Math.max(f.reverb, 0), 1));
                 }
                 if (i == 0 && f.impulse) {

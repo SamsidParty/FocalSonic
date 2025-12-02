@@ -43,7 +43,7 @@ export default function EffectSliders(props: EffectSliderControls) {
     return (
         <div className="flex flex-col gap-2">
             <div className="flex flex-row gap-2 mx-4">
-                <EffectControlContainerVertical isActive={speed > 0 && speed != 1} onToggle={() => setSpeed(-speed)}>
+                <EffectControlContainerVertical isActive={speed > 0} onToggle={() => setSpeed(-speed)}>
                     <Label>{t("player.effects.speed")}</Label>
                     <Slider
                         className={cn(
@@ -77,11 +77,11 @@ export default function EffectSliders(props: EffectSliderControls) {
                 </EffectControlContainerVertical>          
             </div>
             <EffectControlContainer label={t("player.effects.impulse")}>
-                <Select value={props.impulse} onValueChange={props.setImpulse}>
+                <Select value={props.impulse || "spatial0"} onValueChange={props.setImpulse}>
                     <SelectTrigger className="h-8 mt-1 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
                         <SelectValue>
                             <span className="text-sm text-foreground">
-                                {props.impulse}
+                                {props.impulse || "spatial0"}
                             </span>
                         </SelectValue>
                     </SelectTrigger>

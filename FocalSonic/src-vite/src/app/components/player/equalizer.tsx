@@ -107,7 +107,7 @@ export default function Equalizer() {
 
     useEffect(() => {
         if (!playerRef) return;
-        playerRef.filterData = filterData;
+        playerRef?.filterData != undefined && (playerRef.filterData = filterData);
     }, [playerRef, filterData]);
 
     return (
