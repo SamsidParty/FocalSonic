@@ -77,6 +77,14 @@ namespace FocalSonic.Windows
 
             ctx.Bounds = new WindowBounds(550, 300)
             {
+                MaxHeight = 0,
+                MaxWidth = 0,
+                MinHeight = 0,
+                MinWidth = 0
+            };
+
+            ctx.Bounds = new WindowBounds(550, 300)
+            {
                 MaxHeight = 400,
                 MaxWidth = 700,
                 MinHeight = 300,
