@@ -114,6 +114,7 @@ window.executeInjectedQueue = async () => {
             findAudioElement() && getAudioEffectController(findAudioElement()).setBaseVolume(item.volume);
         }
         else if (item.type === "setSpeed") {
+            if (item.speed < 0) { item.speed = 1; }
             window.proxyMusicInstance.playbackRate = item.speed;
             findAudioElement() && (findAudioElement().preservesPitch = false);
         }

@@ -17,12 +17,13 @@ type SliderProps = React.ComponentPropsWithoutRef<
 > & {
     variant?: Variant
     tooltipValue?: string
+    handleStyle?: "default" | "large"
 }
 
 const Slider = React.forwardRef<
     React.ElementRef<typeof SliderPrimitive.Root>,
     SliderProps
->(({ className, tooltipValue, variant = "default", ...props }, ref) => {
+>(({ className, tooltipValue, variant = "default", handleStyle = "default", ...props }, ref) => {
     const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
         event.preventDefault();
     };
@@ -33,7 +34,8 @@ const Slider = React.forwardRef<
         <SliderPrimitive.Root
             ref={ref}
             className={cn(
-                "relative h-3 flex w-full touch-none select-none items-center cursor-pointer",
+                "relative flex touch-none select-none items-center cursor-pointer",
+                props.orientation === "vertical" ? "h-full w-3 flex-col" : "h-3 w-full",
                 className,
             )}
             onMouseEnter={() => setShowTooltip(true)}
@@ -42,17 +44,19 @@ const Slider = React.forwardRef<
         >
             <SliderPrimitive.Track
                 className={clsx(
-                    "relative h-1 w-full grow overflow-hidden rounded-full select-none",
+                    "relative grow overflow-hidden rounded-full select-none",
                     variant === "default" && "bg-secondary",
                     variant === "secondary" && "bg-muted-foreground/70",
+                    props.orientation === "vertical" ? "h-full w-1" : "w-full h-1",
                 )}
                 onContextMenu={handleContextMenu}
             >
                 <SliderPrimitive.Range
                     className={clsx(
-                        "absolute h-full select-none rounded",
+                        "absolute select-none rounded",
                         variant === "default" && "bg-primary",
                         variant === "secondary" && "bg-secondary-foreground",
+                        props.orientation === "vertical" ? "w-full" : "h-full",
                     )}
                     onContextMenu={handleContextMenu}
                 />
@@ -66,14 +70,14 @@ const Slider = React.forwardRef<
             >
                 <SliderPrimitive.Thumb
                     className={clsx(
-                        "block opacity-0 h-3 w-3 cursor-pointer select-none rounded-full",
+                        "block opacity-0 cursor-pointer select-none rounded-full",
                         "border-2 ring-offset-background transition-[background-color,opacity]",
                         "focus-visible:outline-none focus-visible:ring-transparent",
                         "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-                        showTooltip && "opacity-100",
+                        (showTooltip || handleStyle === "large") && "opacity-100",
                         variant === "default" && "bg-foreground border-foreground",
-                        variant === "secondary" &&
-              "bg-secondary-foreground border-secondary-foreground",
+                        variant === "secondary" && "bg-secondary-foreground border-secondary-foreground",
+                        handleStyle === "large" ? "h-5 w-10 shadow-lg" : "h-3 w-3",
                     )}
                     onKeyDown={(e) => e.preventDefault()}
                 />

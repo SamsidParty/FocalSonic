@@ -461,7 +461,8 @@
     "effects": {
       "title": "Audio Effects",
       "speed": "Speed",
-      "reverb": "Reverb"
+      "reverb": "Reverb",
+      "impulse": "Impulse Response"
     }
   },
   "options": {

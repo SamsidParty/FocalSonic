@@ -156,9 +156,16 @@
         toggleReverb() { this.reverbEnabled ? this.disableReverb() : this.enableReverb(); }
         setWetLevel(value) {
             if (value > 0) { this.enableReverb(); }
-            else { this.disableReverb(); return; }
-            this.wetGain.gain.value = Math.min(Math.max(value, 0), 1);
-            this.dryGain.gain.value = 1 - this.wetGain.gain.value;
+            else { this.disableReverb(); }
+
+            if (this.reverbEnabled) {
+                this.wetGain.gain.value = Math.min(Math.max(value, 0), 1);
+                this.dryGain.gain.value = 1 - this.wetGain.gain.value;
+            }
+            else {
+                this.wetGain.gain.value = 0;
+                this.dryGain.gain.value = 1;
+            }
         }
 
         setFilters(filterData) {
@@ -454,6 +461,7 @@
                 findAudioElement() && getAudioEffectController(findAudioElement()).setBaseVolume(item.volume);
             }
             else if (item.type === "setSpeed") {
+                if (item.speed < 0) { item.speed = 1; }
                 window.proxyMusicInstance.playbackRate = item.speed;
                 findAudioElement() && (findAudioElement().preservesPitch = false);
             }

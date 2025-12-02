@@ -1,7 +1,9 @@
 import { cn } from "@/lib/utils";
 import { usePlayerSpeed } from "@/store/player.store";
+import clsx from "clsx";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Slider } from "../ui/slider";
@@ -20,60 +22,113 @@ export default function EffectSliders(props: EffectSliderControls) {
     const { speed, setSpeed } = usePlayerSpeed();
     const { t } = useTranslation();
 
+    // Preserve the sign of speed when setting
+    const setSpeedWrapper = (value: number) => {
+        if (speed < 0) {
+            setSpeed(-value);
+        } else {
+            setSpeed(value);
+        }
+    };
+
+    // Same for reverb
+    const setReverbWrapper = (value: number) => {
+        if (props.reverb < 0) {
+            props.setReverb(-value);
+        } else {
+            props.setReverb(value);
+        }
+    };
 
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex flex-col px-4 gap-1">
-                <Label>{t("player.effects.speed")}</Label>
-                <Slider
-                    className={cn(
-                        "cursor-pointer w-full"
-                    )}
-                    tooltipValue={speed.toString()}
-                    value={[speed]}
-                    min={0.6}
-                    max={2}
-                    step={0.01}
-                    onValueChange={([value]) => setSpeed(value)}
-                />
+            <div className="flex flex-row gap-2 mx-4">
+                <EffectControlContainerVertical isActive={speed > 0 && speed != 1} onToggle={() => setSpeed(-speed)}>
+                    <Label>{t("player.effects.speed")}</Label>
+                    <Slider
+                        className={cn(
+                            "cursor-pointer h-full"
+                        )}
+                        tooltipValue={speed.toString()}
+                        value={[Math.abs(speed)]}
+                        min={0.6}
+                        max={2}
+                        step={0.01}
+                        orientation="vertical"  
+                        handleStyle="large"  
+                        onValueChange={([value]) => setSpeedWrapper(value)}
+                    />
+                </EffectControlContainerVertical>
+                <EffectControlContainerVertical onToggle={() => props.setReverb(-props.reverb)} isActive={props.reverb > 0}>
+                    <Label>{t("player.effects.reverb")}</Label>
+                    <Slider
+                        className={cn(
+                            "cursor-pointer h-full"
+                        )}
+                        tooltipValue={props.reverb.toString()}
+                        value={[Math.abs(props.reverb)]}
+                        min={0}
+                        max={1}
+                        orientation="vertical"
+                        step={0.01}
+                        handleStyle="large"
+                        onValueChange={([value]) => setReverbWrapper(value)}
+                    />
+                </EffectControlContainerVertical>          
             </div>
-            <div className="flex flex-col px-4 gap-1">
-                <Label>{t("player.effects.reverb")}</Label>
-                <Slider
-                    className={cn(
-                        "cursor-pointer w-full"
-                    )}
-                    tooltipValue={props.reverb.toString()}
-                    value={[props.reverb]}
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    onValueChange={([value]) => props.setReverb(value)}
-                />
-            </div>
-            <Select value={props.impulse} onValueChange={props.setImpulse}>
-                <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
-                    <SelectValue>
-                        <span className="text-sm text-foreground">
-                            {props.impulse}
-                        </span>
-                    </SelectValue>
-                </SelectTrigger>
-                <SelectContent align="end">
-                    <SelectGroup>
-                        {impulsePresets.map((preset) => (
-                            <SelectItem
-                                key={preset}
-                                value={preset}
-                            >
-                                <span className="text-sm text-foreground">
-                                    {preset}
-                                </span>
-                            </SelectItem>
-                        ))}
-                    </SelectGroup>
-                </SelectContent>
-            </Select>
+            <EffectControlContainer label={t("player.effects.impulse")}>
+                <Select value={props.impulse} onValueChange={props.setImpulse}>
+                    <SelectTrigger className="h-8 mt-1 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
+                        <SelectValue>
+                            <span className="text-sm text-foreground">
+                                {props.impulse}
+                            </span>
+                        </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                        <SelectGroup>
+                            {impulsePresets.map((preset) => (
+                                <SelectItem
+                                    key={preset}
+                                    value={preset}
+                                >
+                                    <span className="text-sm text-foreground">
+                                        {preset}
+                                    </span>
+                                </SelectItem>
+                            ))}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </EffectControlContainer>
+        </div>
+    );
+}
+
+function EffectControlContainer({ children, label }: { children: React.ReactNode, label?: string }) {
+    return (
+        <div className="flex flex-col mx-4 px-2 py-2 gap-1 bg-background rounded-md">
+            <Label>{label}</Label>
+            {children}
+        </div>
+    );
+}
+
+function EffectControlContainerVertical({ children, onToggle, isActive }: { children: React.ReactNode, onToggle?: () => void, isActive?: boolean }) {
+    return (
+        <div className={clsx("flex flex-col relative px-2 py-4 gap-4 bg-background items-center rounded-md w-full h-40", !isActive && "opacity-50")}>
+            {children}
+            <Button 
+                className={
+                    clsx(
+                        "absolute bottom-2 right-2 w-4 h-4",
+                        isActive ? "opacity-100 shadow-primary-glow" : "opacity-50"
+                    )
+                }
+                    
+                size="icon"
+                onClick={onToggle}
+            />
         </div>
     );
 }
