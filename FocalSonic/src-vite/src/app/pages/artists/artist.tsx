@@ -1,4 +1,5 @@
 import ImageHeader from "@/app/components/album/image-header";
+import AppleArtistEnhancedHeader from "@/app/components/artist/apple-artist-enhanced-header";
 import ArtistTopSongs from "@/app/components/artist/artist-top-songs";
 import { ArtistInfo } from "@/app/components/artist/info";
 import RelatedArtistsList from "@/app/components/artist/related-artists";
@@ -17,6 +18,7 @@ import ErrorPage from "@/app/pages/error-page";
 import { ROUTES } from "@/routes/routesList";
 import { sortRecentAlbums } from "@/utils/album";
 import { checkServerType } from "@/utils/servers";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
@@ -33,7 +35,7 @@ export default function Artist() {
     const { data: artistInfo, isLoading: artistInfoIsLoading } =
     useGetArtistInfo(artistId);
     const { data: topSongs, isLoading: topSongsIsLoading } = useGetTopSongs(
-        isAppleMusic ? artistId : artist?.name,
+        isAppleMusic ? artist?.id : artist?.name,
     );
 
     if (artistIsLoading) return <AlbumFallback />;
@@ -82,15 +84,19 @@ export default function Artist() {
 
     const recentAlbums = artist.album ? sortRecentAlbums(artist.album) : [];
 
+    console.log(artist?.appleMusic?.data);
+    const HeaderType = artist?.appleMusic?.data.attributes?.editorialArtwork?.subscriptionHero ? AppleArtistEnhancedHeader : ImageHeader;
+
     return (
         <div className="w-full">
-            <ImageHeader
+            <HeaderType
                 type={t("artist.headline")}
                 title={artist.name}
                 coverArtId={artist.coverArt}
                 coverArtType="artist"
                 coverArtSize="700"
                 coverArtAlt={artist.name}
+                artists={[artist]}
                 badges={badges}
             />
 

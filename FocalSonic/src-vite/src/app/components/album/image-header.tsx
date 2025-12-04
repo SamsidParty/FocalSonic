@@ -17,7 +17,7 @@ import { AlbumArtistInfo } from "./artists";
 
 const DarkVeilMemo = memo(DarkVeil, (o, n) => o.style?.opacity === n.style?.opacity);
 
-interface ImageHeaderProps {
+export interface ImageHeaderProps {
     type: string
     title: string
     subtitle?: string

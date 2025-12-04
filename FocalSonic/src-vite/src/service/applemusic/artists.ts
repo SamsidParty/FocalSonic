@@ -24,11 +24,24 @@ async function getAll() {
 }
 
 async function getOne(id: string) {
+
+    let url = `/applemusic/me/library/artists/${id}`;
+
+    if (id.startsWith("authorof:")) {
+        url = `/applemusic/catalog/{storefront}/songs/${id.replace("authorof:", "")}/artists`;
+    }
+
+    const query = { 
+        "extend": "centeredFullscreenBackground,artistBio,bornOrFormed,editorialArtwork,editorialVideo,isGroup,origin,hero,inFavorites",
+        "views": "featured-release,full-albums,appears-on-albums,featured-albums,featured-on-albums,singles,compilation-albums,live-albums,latest-release,top-music-videos,similar-artists,top-songs,playlists,more-to-see",
+        "platform": "web"
+    };
+
     let response = await httpClient<AppleMusicArtist[]>(
-        `/applemusic/me/library/artists/${id}`,
+        url,
         {
             method: "GET",
-            query: merge({}, defaultAppleMusicQuery)
+            query: merge(query, defaultAppleMusicQuery)
         }
     );
 
@@ -36,7 +49,7 @@ async function getOne(id: string) {
         // Try again but this time in the catalog not the library
         response = await httpClient<AppleMusicArtist[]>(`/applemusic/catalog/{storefront}/artists/${id}`, {
             method: "GET",
-            query: merge({}, defaultAppleMusicQuery)
+            query: merge(query, defaultAppleMusicQuery)
         });
     }
 
