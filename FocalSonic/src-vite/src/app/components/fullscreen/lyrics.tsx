@@ -12,10 +12,15 @@ import { translateText } from "@/utils/translate";
 import useDebouncedWindowSize from "@/utils/useDebouncedWindowSize";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import React, { ComponentPropsWithoutRef, useEffect, useMemo, useRef, useState } from "react";
+import React, { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Lrc, LrcLine } from "react-lrc";
 import { areLyricsSynced, areLyricsTTML, convertTTMLToLRC } from "../lyrics/lyric-helpers";
+
+// Move regex patterns outside component to avoid recreation
+const ELRC_REGEX = /<(\d{2}):(\d{2})\.(\d{2})>([^<]+)/g;
+const ELRC_TEST_REGEX = /^\s*(<\d{2}:\d{2}\.\d+>[^<]*)+\s*$/;
+const NON_LATIN_REGEX = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Oriya}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Thai}\p{Script=Khmer}\p{Script=Lao}\p{Script=Myanmar}\p{Script=Ethiopic}\p{Script=Georgian}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Yi}]/u;
 
 interface LyricProps {
     lyrics: string,
@@ -81,9 +86,9 @@ function SyncedLyrics(props: LyricProps) {
     const { altLyricsMode } = useAppStore().settings;
     const { isMiniPlayer } = usePlayerStyle();
     const { width, height, isResizing } = useDebouncedWindowSize(100);
+    const rafRef = useRef<number | null>(null);
 
     let { lyrics, leftAlign, small } = props;
-
 
     const { data: convertedLyrics, isLoading } = useQuery({
         queryKey: ["convert-and-translate-lyrics", lyrics, altLyricsMode],
@@ -93,10 +98,6 @@ function SyncedLyrics(props: LyricProps) {
                 lyrics = convertTTMLToLRC(lyrics!, altLyricsMode);
             }
 
-            // Determine if auto translation is needed
-            // When altLyricsMode is 'translation', each LRC line has two parts separated by a '⏩' character.
-            // For every line, check if it's non-latin. If it is, check if the second part is empty
-            // If all non-latin lines have empty second parts, we need to translate
             if (altLyricsMode === "translation" || altLyricsMode === "transliteration") {
                 const lines = lyrics!.split("\n");
                 let needsTranslation = false;
@@ -106,8 +107,7 @@ function SyncedLyrics(props: LyricProps) {
                     const mainLyric = parts[0] || "";
                     const altLyric = parts[1] || "";
 
-                    // Check if mainLyric has non-latin characters
-                    if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Oriya}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Thai}\p{Script=Khmer}\p{Script=Lao}\p{Script=Myanmar}\p{Script=Ethiopic}\p{Script=Georgian}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Yi}]/u.test(mainLyric)) {
+                    if (NON_LATIN_REGEX.test(mainLyric)) {
                         if (altLyric.trim() === "") {
                             needsTranslation = true;
                             break;
@@ -119,7 +119,7 @@ function SyncedLyrics(props: LyricProps) {
                     let translatedMonolith = "";
                     for (const line of lines) {
                         const strippedLine = stripLRCLine(line);
-                        translatedMonolith += strippedLine + "\n⁜"; // Use a rare character as line separator to survive translation
+                        translatedMonolith += strippedLine + "\n⁜";
                     }
 
 
@@ -143,29 +143,52 @@ function SyncedLyrics(props: LyricProps) {
 
     const formattedLyrics = useMemo(() => {
         return convertedLyrics || "";
-    }, [altLyricsMode, convertedLyrics]);
+    }, [convertedLyrics]);
 
-    if (props.visible) {
-        requestAnimationFrame(() => {
-            const newTimestamp = (playerRef?.currentTime || 0) * 1000;
-
-            if (newTimestamp !== timestamp) {
-                setTimestamp(newTimestamp);
+    // Optimized timestamp update using useEffect instead of inline RAF
+    useEffect(() => {
+        if (!props.visible) {
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+                rafRef.current = null;
             }
-            else {
-                setTimestamp(newTimestamp + 1);
-            }
-        });
-    }
-
-
-    const skipToTime = (timeMs: number) => {
-        if (playerRef) {
-            playerRef!.currentTime = timeMs / 1000;
+            return;
         }
-    };
 
-    if (isResizing) return;
+        const updateTimestamp = () => {
+            const newTimestamp = (playerRef?.currentTime || 0) * 1000;
+            setTimestamp(prev => prev !== newTimestamp ? newTimestamp : newTimestamp + 0.001);
+            rafRef.current = requestAnimationFrame(updateTimestamp);
+        };
+
+        rafRef.current = requestAnimationFrame(updateTimestamp);
+
+        return () => {
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+            }
+        };
+    }, [props.visible, playerRef]);
+
+    // Memoize skipToTime callback
+    const skipToTime = useCallback((timeMs: number) => {
+        if (playerRef) {
+            playerRef.currentTime = timeMs / 1000;
+        }
+    }, [playerRef]);
+
+    // Memoize the line renderer to prevent recreation
+    const lineRenderer = useCallback(
+        (_props: any) => <MemoizedLrcLineRenderer {..._props} {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />,
+        [props.leftAlign, props.small, skipToTime, timestamp]
+    );
+
+    // Memoize onLineUpdate callback
+    const onLineUpdate = useCallback((l: any) => {
+        currentLineNumber = l?.index;
+    }, []);
+
+    if (isResizing) return null;
 
     return (
         <div 
@@ -183,21 +206,29 @@ function SyncedLyrics(props: LyricProps) {
                 currentMillisecond={timestamp}
                 id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
                 className={clsx("h-full z-40", !isSafari && "scroll-smooth")}
-                onLineUpdate={(l) => currentLineNumber = l?.index}
+                onLineUpdate={onLineUpdate}
                 verticalSpace={true}
-                lineRenderer={(_props) => <LrcLineRenderer {..._props} {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />}
+                lineRenderer={lineRenderer}
             />
         </div>
     );
 }
 
+// Memoized LrcLineRenderer component
+const MemoizedLrcLineRenderer = React.memo(LrcLineRenderer, (prevProps, nextProps) => {
+    return (
+        prevProps.active === nextProps.active &&
+        prevProps.line.id === nextProps.line.id &&
+        prevProps.timestamp === nextProps.timestamp &&
+        prevProps.small === nextProps.small
+    );
+});
+
 function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean }) {
 
     const { enableLyricBlur, enableLyricGlow } = useTheme();
 
-    const elrcRegex = /<(\d{2}):(\d{2})\.(\d{2})>([^<]+)/g;
-    const elrcTestRegex = /^\s*(<\d{2}:\d{2}\.\d+>[^<]*)+\s*$/;
-    let subLyric: string = null;
+    let subLyric: string | null = null;
     let lyric = line?.content;
 
     if (line?.content.split("⏩").length > 1) {
@@ -206,24 +237,24 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
     }
 
     const elrcValues = useMemo(() => {
-        const values = {
-            isElrc: elrcTestRegex.exec(lyric),
-            elrcPortions: [] as any[]
-        };
+        const isElrc = ELRC_TEST_REGEX.test(lyric);
+        const elrcPortions: any[] = [];
 
-        const displayLyric = values.isElrc ? lyric : `⏩<00:00.00>${lyric}<00:00.00>`;
+        const displayLyric = isElrc ? lyric : `⏩<00:00.00>${lyric}<00:00.00>`;
 
+        // Create new regex instance for exec to avoid stateful issues
+        const regex = new RegExp(ELRC_REGEX.source, ELRC_REGEX.flags);
         let match;
 
-        while ((match = elrcRegex.exec(displayLyric)) !== null) {
-            const lastElement = values.elrcPortions[values.elrcPortions.length - 1];
+        while ((match = regex.exec(displayLyric)) !== null) {
+            const lastElement = elrcPortions[elrcPortions.length - 1];
             const minutes = parseInt(match[1], 10);
             const seconds = parseInt(match[2], 10);
             const fractionOfSeconds = parseInt(match[3], 10);
             const totalSeconds = minutes * 60 + seconds + fractionOfSeconds / 100;
 
             if (totalSeconds > 0.05 || !lastElement) {
-                values.elrcPortions.push({
+                elrcPortions.push({
                     time: Math.max(totalSeconds, 0),
                     text: match[4],
                 });
@@ -233,34 +264,37 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
             }
         }
 
-        // Handle case with unsynced lyrics
-        if (values.elrcPortions.length === 1 && values.elrcPortions[0].time === 0) {
-            values.elrcPortions[0].time = line.startMillisecond / 1000; // Set to line start time
-            values.elrcPortions[0].duration = 0.3;
+        if (elrcPortions.length === 1 && elrcPortions[0].time === 0) {
+            elrcPortions[0].time = line.startMillisecond / 1000;
+            elrcPortions[0].duration = 0.3;
         }
 
-        // Calculate the duration for each portion
-        for (let i = 0; i < values.elrcPortions.length; i++) {
-            if (i < values.elrcPortions.length - 1) {
-                values.elrcPortions[i].duration = (values.elrcPortions[i + 1].time - values.elrcPortions[i].time);
+        for (let i = 0; i < elrcPortions.length; i++) {
+            if (i < elrcPortions.length - 1) {
+                elrcPortions[i].duration = (elrcPortions[i + 1].time - elrcPortions[i].time);
             } else {
-                values.elrcPortions[i].duration = 0.3; // Default duration for the last portion
+                elrcPortions[i].duration = 0.3;
             }
         }
         
-        return values;
-    }, [lyric]);
+        return { isElrc, elrcPortions };
+    }, [lyric, line.startMillisecond]);
 
-    // Calculate the distance from the active line
+    // Remove memoization - currentLineNumber is external and changes frequently
     let timeDiff = Math.abs((currentLineNumber || 0) - line.lineNumber);
-    if (timeDiff > 5) timeDiff = 5; // Cap the difference to avoid excessive blur recalculation
+    if (timeDiff > 5) timeDiff = 5;
     if (active || small || !enableLyricBlur) timeDiff = 0;
+    const blurStyle = { filter: `blur(${timeDiff * 1.2}px)` };
 
+    // Memoize click handler
+    const handleClick = useCallback(() => {
+        skipToTime(line.startMillisecond);
+    }, [skipToTime, line.startMillisecond]);
 
     return (
         <p
             key={line?.id}
-            onClick={() => skipToTime(line.startMillisecond)}
+            onClick={handleClick}
             className={clsx(
                 "lyric-line drop-shadow-lg z-40 cursor-pointer hover:opacity-100 duration-700",
                 "transition-[opacity,transform,filter] motion-reduce:transition-none ease-long text-left xxs:leading-normal",
@@ -272,13 +306,11 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
                 (!line?.isSubLyric && !small) && "xxs:text-[18px] 2xl:my-20 !xxs:my-0",
                 (!line?.isSubLyric && small) && "text-[18px] !my-0 !mt-8 leading-normal",
             )}
-            style={{
-                filter: `blur(${timeDiff*1.2}px)`
-            }}
+            style={blurStyle}
         >
             {elrcValues.elrcPortions.map((portion, index) => (
                 <span
-                    data-time={portion.Time}
+                    data-time={portion.time}
                     key={index}
                     className={clsx((timestamp >= portion.time - 0.2) ? "lyric-wipe lyric-wipe-active" : "lyric-wipe", !enableLyricGlow && "lyric-glow-disabled")}
                     style={{ transitionDuration: `${portion.duration * 2}s` }}
@@ -287,19 +319,20 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
                 </span>
             ))}
             {
-                subLyric && <LrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} small={small} />
+                subLyric && <MemoizedLrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} small={small} />
             }
         </p>
     );
-
 }
 
 function UnsyncedLyrics({ lyrics }: LyricProps) {
     const { currentSong } = usePlayerSonglist();
     const lyricsBoxRef = useRef<HTMLDivElement>(null);
 
-    const lines = lyrics!.split("\n");
+    // Memoize lines array
+    const lines = useMemo(() => lyrics!.split("\n"), [lyrics]);
 
+    // ...existing useEffect...
     useEffect(() => {
         if (lyricsBoxRef.current) {
             const scrollArea = lyricsBoxRef.current.querySelector(
