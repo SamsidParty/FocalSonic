@@ -129,7 +129,7 @@ function SyncedLyrics(props: LyricProps) {
                     // Reintegrate translated lines back into LRC format
                     const translatedLines = translatedMonolith.split("⁜");
                     const finalLyricsLines = lyrics!.split("\n").map((line, index) => {
-                        const altLyric = translatedLines[index] || "";
+                        const altLyric = translatedLines[index].trim() || "";
                         return line.split("⏩")[0] + `⏩<00:00.00>${altLyric}<00:00.00>`; // Append dummy ELRC tag to translated part
                     });
 

@@ -132,7 +132,7 @@ export async function getLyricsFromLyricOtter(getLyricsData: GetLyricsData) {
 
     const { isAppleMusic } = checkServerType();
 
-    if (isAppleMusic) {
+    if (isAppleMusic && false) {
         const url = `https://rikka-prod.samsidparty.com/api/otter-focal/lyric/apple-music/${getLyricsData.id}?format=elrc-focalsonic`;
         //const url = `http://127.0.0.1:5271/api/otter-focal/lyric/apple-music/${getLyricsData.id}?format=elrc-focalsonic`;
         console.log("Fetching lyrics from Lyric Otter:", url);
