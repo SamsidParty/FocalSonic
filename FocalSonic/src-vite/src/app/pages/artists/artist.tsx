@@ -9,6 +9,7 @@ import { TopSongsTableFallback } from "@/app/components/fallbacks/table-fallback
 import { BadgesData } from "@/app/components/header-info";
 import PreviewList from "@/app/components/home/preview-list";
 import ListWrapper from "@/app/components/list-wrapper";
+import { WidePreview } from "@/app/components/preview-card/wide-preview";
 import {
     useGetArtist,
     useGetArtistInfo,
@@ -32,8 +33,7 @@ export default function Artist() {
         isLoading: artistIsLoading,
         isFetched,
     } = useGetArtist(artistId);
-    const { data: artistInfo, isLoading: artistInfoIsLoading } =
-    useGetArtistInfo(artistId);
+    const { data: artistInfo, isLoading: artistInfoIsLoading } = useGetArtistInfo(artist?.id);
     const { data: topSongs, isLoading: topSongsIsLoading } = useGetTopSongs(
         isAppleMusic ? artist?.id : artist?.name,
     );
@@ -86,6 +86,7 @@ export default function Artist() {
 
     const HeaderType = isAppleMusic ? AppleArtistEnhancedHeader : ImageHeader;
 
+
     return (
         <div className="w-full">
             <HeaderType
@@ -95,15 +96,26 @@ export default function Artist() {
                 coverArtType="artist"
                 coverArtSize="700"
                 coverArtAlt={artist.name}
-                artists={[artist]}
+                artists={[artistInfo || artist]}
                 badges={badges}
             >
                 <ArtistInfo artist={artist} />
+                
+                {
+                    (artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0] && topSongs?.length > 1) && (
+                        <div className="flex flex-row mb-2 mt-4 gap-4">
+                            <WidePreview entry={artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0]}></WidePreview>
+                            <WidePreview entry={topSongs[0]}></WidePreview>
+                        </div>
+                    )
+                }
             </HeaderType>
 
             <ListWrapper>
 
                 {topSongsIsLoading && <TopSongsTableFallback />}
+
+
                 {topSongs && !topSongsIsLoading && (
                     <ArtistTopSongs topSongs={topSongs} artist={artist} />
                 )}

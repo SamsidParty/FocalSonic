@@ -8,7 +8,6 @@ import {
 } from "@/app/components/ui/carousel";
 import { CarouselButton } from "@/app/components/ui/carousel-button";
 import { ROUTES } from "@/routes/routesList";
-import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
@@ -16,6 +15,7 @@ import { checkServerType } from "@/utils/servers";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
+import usePreviewCard from "../preview-card/use-preview-card";
 
 interface PreviewListProps {
     list: Albums[] | AppleMusicRecommendationContent[]
@@ -42,6 +42,7 @@ export default function PreviewList({
     const { isAppleMusic } = checkServerType();
     const navigate = useNavigate();
     const { setPlayRadio } = usePlayerActions();
+    const { handlePlay, navigateToResource } = usePreviewCard();
 
     moreTitle = moreTitle || t("generic.seeMore");
 
@@ -49,35 +50,6 @@ export default function PreviewList({
         list = list.slice(0, 16);
     }
 
-    async function handlePlay(entry: AppleMusicRecommendationContent | Albums) {
-
-
-        if (entry.type === "stations") {
-            // Apple music radio
-            setPlayAppleMusicRadio(entry);
-            return;
-        }
-        else if (entry.type?.includes("playlist") && entry.id) {
-            const response = await service.playlists.getOne(entry.id);
-
-            if (response) {
-                setSongList(response.entry, 0);
-                return;
-            }
-        }
-        else {
-            const response = await service.albums.getOne(entry.id);
-
-            if (response) {
-                setSongList(response.song, 0);
-                return;
-            }
-        }
-
-
-
-        navigateToResource(entry);
-    }
 
     useEffect(() => {
         if (!api) {
@@ -92,33 +64,6 @@ export default function PreviewList({
             setCanScrollNext(api.canScrollNext());
         });
     }, [api]);
-
-    const getResourceType = (entry: AppleMusicRecommendationContent | Albums) => {
-        const type = (entry as AppleMusicRecommendationContent).type;
-        return type?.slice(0, -1).toUpperCase().replace("LIBRARY-", "") || "ALBUM";
-    };
-
-    const navigateToResource = (entry: AppleMusicRecommendationContent | Albums) => {
-
-        if (entry.attributes?.link?.target == "external" && entry.attributes?.link?.url) {
-            window.open(entry.attributes.link.url);
-            return;
-        }
-
-        if (entry.type === "stations") {
-            handlePlay(entry); 
-            return;
-        }
-
-        let resourceType = getResourceType(entry);
-        resourceType == "SONG" && (resourceType = "ALBUM");
-
-        const route = ROUTES[resourceType]?.PAGE(entry.id);
-
-        if (route) {
-            setTimeout(() => navigate(route), 0);
-        }
-    };
 
  
 
@@ -195,9 +140,7 @@ export default function PreviewList({
                                         } : {}}
                                     >
                                         <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl backdrop-brightness-[80%] px-4 grow text-center flex flex-col rounded-b-sm overflow-hidden justify-center align-center"}>
-                                            <PreviewCard.Title onClick={() => navigateToResource(entry)}>
-                                                {entry.name || entry.attributes?.name || entry?.attributes?.editorialNotes?.name}
-                                            </PreviewCard.Title>
+                                            <PreviewCard.Title entry={entry} onClick={() => navigateToResource(entry)}/>
                                             <PreviewCard.Subtitle
                                                 enableLink={(entry.relationships?.artists?.data[0]?.id || entry.artistId) !== undefined}
                                                 link={ROUTES.ARTIST.PAGE(entry.relationships?.artists?.data[0]?.id || entry.artistId)}

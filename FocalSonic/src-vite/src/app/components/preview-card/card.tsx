@@ -1,9 +1,12 @@
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
+import { Albums } from "@/types/responses/album";
 import { Play } from "lucide-react";
 import React, { ComponentPropsWithoutRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CoverArtImage from "../cover-art";
+import { ExplicitIcon } from "../icons/explicit";
 
 interface Children {
     children: React.ReactNode
@@ -101,18 +104,21 @@ function InfoWrapper({ children, className, style }: InfoWrapperProps) {
 interface TitleProps {
     link: string
     children: string,
-    onClick: () => void
+    onClick: () => void,
+    entry: Albums | AppleMusicRecommendationContent
 }
 
-function Title({ link, children, onClick }: TitleProps) {
+function Title({ link, children, onClick, entry }: TitleProps) {
     return (
         <div className="w-full truncate" data-testid="card-title">
             <Link
                 to={link}
-                className="max-w-full truncate hover:underline leading-7 text-sm font-semibold"
+                className="max-w-full truncate hover:underline leading-7 text-sm font-semibold flex flex-row items-center gap-1"
                 onClick={onClick}
                 data-testid="card-title-link"
             >
+                {entry?.name || entry?.attributes?.name || entry?.attributes?.editorialNotes?.name}
+                {entry?.explicitStatus === "explicit" && <ExplicitIcon />}
                 {children}
             </Link>
         </div>

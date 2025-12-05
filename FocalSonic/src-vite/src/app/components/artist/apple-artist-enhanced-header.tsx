@@ -2,6 +2,7 @@ import React, { memo } from "react";
 
 import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import clsx from "clsx";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 import { AlbumArtistInfo } from "../album/artists";
 import { ImageHeaderProps } from "../album/image-header";
 import { HeaderInfoGenerator } from "../header-info";
@@ -26,19 +27,27 @@ export default function AppleArtistEnhancedHeader({
     isPlaylist = false,
 }: ImageHeaderProps) {
     
-    const enhancedCover = artists[0]?.appleMusic?.data.attributes?.editorialArtwork?.subscriptionHero?.url;
-    const headerImage = enhancedCover || artists[0]?.appleMusic?.data.attributes?.artwork?.url;
+
+    const enhancedCover = artists[0]?.appleMusic?.data?.[0]?.attributes?.editorialArtwork?.subscriptionHero?.url;
+    const headerImage = enhancedCover || artists[0]?.appleMusic?.data?.[0]?.attributes?.artwork?.url || artists[0].coverArt;
 
     return (
         <div
-            className="flex relative w-full h-[calc(3rem+300px)] 2xl:h-[calc(3rem+400px)] px-4 mb-4"
+            className="flex relative w-full h-[calc(3rem+500px)] 2xl:h-[calc(3rem+600px)] px-4 mb-4"
             key={`header-${coverArtId}`}
         >
-            <img src={headerImage?.replace("{w}", "2160").replace("{h}", "1080").replace("{f}", "jpg")} alt={coverArtAlt} className={clsx("object-cover w-full h-full absolute inset-0")} />
+            <LazyLoadImage 
+                src={headerImage?.replace("{w}", "2160").replace("{h}", "1080").replace("{f}", "jpg")} 
+                alt={coverArtAlt} 
+                className={clsx("object-cover w-full h-full absolute inset-0")}
+                effect="opacity"
+                style={{
+                    maskImage: "linear-gradient(to top, transparent 0%, black 70%, black 100%)"
+                }}
+            />
             
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/30 to-transparent z-[5]"></div>
 
-            <div className="flex w-full max-w-[calc(100%-216px)] 2xl:max-w-[calc(100%-266px)] flex-col justify-end z-10">
+            <div className="flex w-full flex-col justify-end z-10">
                 <h1
                     className={clsx(
                         "max-w-full scroll-m-20 font-bold tracking-tight antialiased drop-shadow-md break-words line-clamp-2",

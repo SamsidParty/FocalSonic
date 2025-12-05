@@ -19,15 +19,13 @@ export interface AppleMusicArtistRelationships {
     genres?: AppleMusicRelationship<AppleMusicGenre> | undefined;
 }
 
-export function convertAppleMusicArtistToSubsonic(artist: AppleMusicArtist): ISimilarArtist {
+export function convertAppleMusicArtistToSubsonic(artist: AppleMusicArtist, appleMusicData: any): ISimilarArtist {
     if (!artist) { return; }
     return {
         id: artist.id,
         name: artist.attributes?.name,
         coverArt: artist.attributes?.artwork?.url || "",
         artistImageUrl: artist.attributes?.artwork?.url || "",
-        appleMusic: {
-            data: artist
-        }
+        appleMusic: appleMusicData || { data: [artist] }
     };
 }

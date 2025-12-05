@@ -53,7 +53,7 @@ async function getOne(id: string) {
         });
     }
 
-    return convertAppleMusicArtistToSubsonic(response?.data[0]) || null;
+    return convertAppleMusicArtistToSubsonic(response?.data[0], response) || null;
 }
 
 async function getInfo(id: string) {
