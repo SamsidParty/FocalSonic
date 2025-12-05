@@ -2,7 +2,7 @@ import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { useLyricsState, useMainDrawerState } from "@/store/player.store";
 import clsx from "clsx";
-import { MicVocalIcon } from "lucide-react";
+import { QuoteIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface PlayerLyricsButtonProps {
@@ -32,7 +32,7 @@ export function PlayerLyricsButton({ disabled }: PlayerLyricsButtonProps) {
                 onClick={handleClick}
                 disabled={disabled}
             >
-                <MicVocalIcon className={clsx("w-4 h-4", isActive && "text-primary")} />
+                <QuoteIcon className={clsx("w-4 h-4", isActive && "text-primary")} />
             </Button>
         </SimpleTooltip>
     );

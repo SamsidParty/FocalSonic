@@ -194,10 +194,12 @@ function SyncedLyrics(props: LyricProps) {
         <div 
             className={
                 clsx(
-                    "w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics maskImage-big-player-lyrics",
-                    props.small ? " text-foreground" : "text-white"
+                    "w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics maskImage-big-player-lyrics text-[var(--lyric-color)]",
                 )
             }
+            style={{
+                "--lyric-color": small ? "var(--foreground)" : "white"
+            }}
         >
             <Lrc
                 key={`debouncedlyrics_${width}x${height}`}

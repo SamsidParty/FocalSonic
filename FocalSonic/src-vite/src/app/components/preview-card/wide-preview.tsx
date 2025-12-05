@@ -17,7 +17,7 @@ export function WidePreview({ entry, className }: WidePreviewProps) {
     const { handlePlay, navigateToResource } = usePreviewCard();
 
     return (
-        <PreviewCard.Root className={cn("h-32 w-full p-2 gap-2 flex items-center bg-secondary box-content rounded-lg", className)}>
+        <PreviewCard.Root className={cn("h-32 w-full p-2 gap-2 flex items-center bg-card box-content rounded-lg shadow-sm", className)}>
 
             <div className="w-32 h-auto flex-shrink-0">
                 <PreviewCard.ImageWrapper 
