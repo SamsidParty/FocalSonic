@@ -2,12 +2,10 @@ import {
     ScrollArea,
     scrollAreaViewportSelector,
 } from "@/app/components/ui/scroll-area";
-import { parseTTML } from "@/lib/ttml/parser";
 import { service } from "@/service/service";
 import { useAppStore } from "@/store/app.store";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
 import { usePlayerStyle, useTheme } from "@/store/theme.store";
-import { ILyric } from "@/types/responses/song";
 import { stripLRCLine } from "@/utils/lyricUtils";
 import { isSafari } from "@/utils/osType";
 import { translateText } from "@/utils/translate";
@@ -17,6 +15,7 @@ import clsx from "clsx";
 import React, { ComponentPropsWithoutRef, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Lrc, LrcLine } from "react-lrc";
+import { areLyricsSynced, areLyricsTTML, convertTTMLToLRC } from "../lyrics/lyric-helpers";
 
 interface LyricProps {
     lyrics: string,
@@ -349,72 +348,3 @@ function CenteredMessage({ children }: CenteredMessageProps) {
     );
 }
 
-function areLyricsSynced(lyrics: ILyric) {
-    // Most LRC files start with the string "[00:" or "[01:" indicating synced lyrics
-    const lyric = lyrics?.trim() ?? "";
-    return (
-        lyric.startsWith("[00:") ||
-        lyric.startsWith("[01:") ||
-        lyric.startsWith("[02:") ||
-        areLyricsTTML(lyrics)
-    );
-}
-
-function areLyricsTTML(lyrics: ILyric) {
-    const lyric = lyrics?.trim() ?? "";
-    return lyric.startsWith("<tt");
-}
-
-function convertTTMLToLRC(ttml: string, altMode: "off" | "transliteration" | "translation"): string {
-    try {
-        const parsedTTML = parseTTML(ttml);
-
-        const enableELRC = true;
-        const enableAltLyrics = altMode != "off";
-
-        const convertedELRC = parsedTTML.lyricLines.map((line) => {
-
-            let output = "";
-
-            const convertMS = (ms, wrap?: boolean) => {
-                const minutes = Math.floor(ms / 60000);
-                const remainingMsAfterMinutes = ms % 60000;
-                const seconds = Math.floor(remainingMsAfterMinutes / 1000);
-                const milliseconds = remainingMsAfterMinutes % 1000;
-                const formattedMinutes = String(minutes).padStart(2, "0");
-                const formattedSeconds = String(seconds).padStart(2, "0");
-                const formattedMilliseconds = String(milliseconds).padStart(3, "0");
-
-                if (wrap) {
-                    return `<${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds.substring(0, 2)}>`;
-                }
-
-                return `${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds}`;
-            };
-
-            if (enableELRC) {
-                output += `[${convertMS(line.startTime)}] ${line.words.map((word) => convertMS(word.startTime, true) + (word.word)).join("")}`;
-
-                if (enableAltLyrics && line.words.filter((f) => f.word && f["altWord_" + altMode]).length > 0) {
-                    output +=
-                        (line.words.map((word) => word.word?.replaceAll(" ", "").trim()).join("") !== line.words.map((word) => word["altWord_" + altMode]?.replaceAll(" ", "").trim()).join("")) // Skip if word and alternate word are same
-                            ? `⏩${line.words.map((word) => convertMS(word.startTime, true) + (word["altWord_" + altMode])).join(" ")}`
-                            : "";
-                }
-            }
-            else {
-                output += `[${convertMS(line.startTime)}]${line.words.map((word) => word.word).join("")}`;
-            }
-
-            return output;
-
-        }).join("\n");
-
-        return convertedELRC;
-    }
-    catch (error) {
-        console.error("Error parsing TTML:", error);
-    }
-
-    return ttml;
-}
