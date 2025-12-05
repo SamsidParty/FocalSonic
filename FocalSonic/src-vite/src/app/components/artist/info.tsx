@@ -1,7 +1,9 @@
-import { Fragment } from "react/jsx-runtime";
 import { CollapsibleInfo } from "@/app/components/info/collapsible-info";
 import { useGetArtistInfo } from "@/app/hooks/use-artist";
 import { IArtist } from "@/types/responses/artist";
+import { checkServerType } from "@/utils/servers";
+import React from "react";
+import { Fragment } from "react/jsx-runtime";
 import { ArtistButtons } from "./buttons";
 
 interface ArtistInfoProps {
@@ -10,12 +12,12 @@ interface ArtistInfoProps {
 
 export function ArtistInfo({ artist }: ArtistInfoProps) {
     const { data: artistInfo } = useGetArtistInfo(artist.id);
+    const { isAppleMusic } = checkServerType();
 
     const hasInfoToShow =
     artistInfo !== undefined && artistInfo.biography !== undefined;
 
-    const isArtistEmpty =
-    artist.albumCount === undefined || artist.albumCount === 0;
+    const isArtistEmpty = (artist.albumCount === undefined || artist.albumCount === 0) && !isAppleMusic;
 
     return (
         <Fragment>

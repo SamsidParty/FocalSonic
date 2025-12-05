@@ -29,7 +29,8 @@ export interface ImageHeaderProps {
     coverArtAlt: string
     badges: BadgesData
     isPlaylist?: boolean
-    albumId?: string
+    albumId?: string,
+    children?: React.ReactNode
 }
 
 export default function ImageHeader({
@@ -44,6 +45,7 @@ export default function ImageHeader({
     coverArtSize,
     coverArtAlt,
     badges,
+    children,
     isPlaylist = false,
 }: ImageHeaderProps) {
     const [open, setOpen] = useState(false);
@@ -140,10 +142,11 @@ export default function ImageHeader({
                         )
                     }
 
+                    {children}
+                    
                     <div className="flex items-center mt-2">
                         <HeaderInfoGenerator badges={badges} showFirstDot={false} />
                     </div>
-
                 </div>
             </div>
 

@@ -84,8 +84,7 @@ export default function Artist() {
 
     const recentAlbums = artist.album ? sortRecentAlbums(artist.album) : [];
 
-    console.log(artist?.appleMusic?.data);
-    const HeaderType = artist?.appleMusic?.data.attributes?.editorialArtwork?.subscriptionHero ? AppleArtistEnhancedHeader : ImageHeader;
+    const HeaderType = isAppleMusic ? AppleArtistEnhancedHeader : ImageHeader;
 
     return (
         <div className="w-full">
@@ -98,10 +97,11 @@ export default function Artist() {
                 coverArtAlt={artist.name}
                 artists={[artist]}
                 badges={badges}
-            />
+            >
+                <ArtistInfo artist={artist} />
+            </HeaderType>
 
             <ListWrapper>
-                <ArtistInfo artist={artist} />
 
                 {topSongsIsLoading && <TopSongsTableFallback />}
                 {topSongs && !topSongsIsLoading && (

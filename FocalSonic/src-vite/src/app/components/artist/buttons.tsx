@@ -5,11 +5,10 @@ import { useAppPages } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
 import { IArtist } from "@/types/responses/artist";
 import { queryKeys } from "@/utils/queryKeys";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { ArtistOptions } from "./options";
 import { checkServerType } from "@/utils/servers";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface ArtistButtonsProps {
     artist: IArtist
@@ -26,6 +25,7 @@ export function ArtistButtons({
     const { setSongList } = usePlayerActions();
     const { showInfoPanel, toggleShowInfoPanel } = useAppPages();
     const { getArtistAllSongs } = useSongList();
+    const { setPlayAppleMusicRadio } = usePlayerActions();
     const { isAppleMusic } = checkServerType();
 
     const isArtistStarred = artist.starred !== undefined;
@@ -50,6 +50,13 @@ export function ArtistButtons({
     }
 
     async function handlePlayArtistRadio(shuffle = false) {
+
+        if (isAppleMusic) {
+            const station = "ra.a-" + artist.id;
+            setPlayAppleMusicRadio({ id: station });
+            return;
+        }
+
         const songList = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
 
         if (songList) {
@@ -86,13 +93,6 @@ export function ArtistButtons({
             </Actions.Button>
 
             <Actions.Button
-                tooltip={buttonsTooltips.shuffle}
-                onClick={() => handlePlayArtistRadio(true)}
-            >
-                <Actions.ShuffleIcon />
-            </Actions.Button>
-
-            <Actions.Button
                 tooltip={buttonsTooltips.like()}
                 onClick={handleLikeButton}
             >
@@ -107,11 +107,6 @@ export function ArtistButtons({
                     <Actions.InfoIcon />
                 </Actions.Button>
             )}
-
-            <Actions.Dropdown
-                tooltip={buttonsTooltips.options}
-                options={<ArtistOptions artist={artist} />}
-            />
         </Actions.Container>
     );
 }

@@ -15,7 +15,6 @@ type AlbumArtistProps = {
 export function AlbumArtistInfo({ id, name }: AlbumArtistProps) {
     return (
         <div className="flex items-center gap-2">
-            
             <ArtistLink id={id} name={name} />
         </div>
     );

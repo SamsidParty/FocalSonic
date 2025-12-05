@@ -57,7 +57,7 @@ async function getOne(id: string) {
 }
 
 async function getInfo(id: string) {
-    return {};
+    return await getOne(id);
 }
 
 export const artists = {
