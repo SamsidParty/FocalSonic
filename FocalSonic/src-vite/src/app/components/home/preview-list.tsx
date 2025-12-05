@@ -140,7 +140,7 @@ export default function PreviewList({
                                         } : {}}
                                     >
                                         <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl backdrop-brightness-[80%] px-4 grow text-center flex flex-col rounded-b-sm overflow-hidden justify-center align-center"}>
-                                            <PreviewCard.Title entry={entry} onClick={() => navigateToResource(entry)}/>
+                                            <PreviewCard.Title className={isLarge ? "justify-center" : ""} entry={entry} onClick={() => navigateToResource(entry)}/>
                                             <PreviewCard.Subtitle
                                                 enableLink={(entry.relationships?.artists?.data[0]?.id || entry.artistId) !== undefined}
                                                 link={ROUTES.ARTIST.PAGE(entry.relationships?.artists?.data[0]?.id || entry.artistId)}

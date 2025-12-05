@@ -105,20 +105,21 @@ interface TitleProps {
     link: string
     children: string,
     onClick: () => void,
-    entry: Albums | AppleMusicRecommendationContent
+    entry: Albums | AppleMusicRecommendationContent,
+    className?: string
 }
 
-function Title({ link, children, onClick, entry }: TitleProps) {
+function Title({ link, children, onClick, entry, className }: TitleProps) {
     return (
         <div className="w-full truncate" data-testid="card-title">
             <Link
                 to={link}
-                className="max-w-full truncate hover:underline leading-7 text-sm font-semibold flex flex-row items-center gap-1"
+                className={cn("max-w-full truncate hover:underline leading-7 text-sm font-semibold items-center gap-1", className)}
                 onClick={onClick}
                 data-testid="card-title-link"
             >
                 {entry?.name || entry?.attributes?.name || entry?.attributes?.editorialNotes?.name}
-                {entry?.explicitStatus === "explicit" && <ExplicitIcon />}
+                {entry?.explicitStatus === "explicit" && <ExplicitIcon inline />}
                 {children}
             </Link>
         </div>
