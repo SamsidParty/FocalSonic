@@ -95,6 +95,8 @@ namespace FocalSonic.Windows
                 };
             }
 
+            // Window title
+            if (Program.MainWindow != null && !string.IsNullOrEmpty(song?.Title)) Program.MainWindow.Title = song?.Title + " | FocalSonic"; 
 
             smtc.DisplayUpdater.Update();
             LastSongID = song?.Id ?? null;
