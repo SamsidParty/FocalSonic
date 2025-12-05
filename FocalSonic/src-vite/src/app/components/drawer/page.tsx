@@ -24,13 +24,10 @@ export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
     const { queueState } = useQueueState();
     const { extraBarContent, setExtraBarContent } = useAppSettings();
-    let { lyricsState } = useLyricsState();
+    const { lyricsState } = useLyricsState();
     const { isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
+    const hasExtraContent = extraBarContent != "none";
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
-
-    if (!extraBarContent || extraBarContent === "none") {
-        lyricsState = true;
-    }
 
     return (
         <Drawer
@@ -101,9 +98,9 @@ export function MainDrawerPage() {
 
                     </div>
                     <div className="flex items-center w-full h-full mt-12 xxs:mt-0 mb-0">
-                        <CurrentSongInfo />
+                        <CurrentSongInfo fillWidth={!hasExtraContent} />
 
-                        <div className="flex self-stretch flex-1 justify-center relative">
+                        <div className={clsx("flex self-stretch flex-1 justify-center relative", !hasExtraContent && "hidden")}>
                             <ActiveContent active={queueState}>
                                 <QueueSongList />
                             </ActiveContent>

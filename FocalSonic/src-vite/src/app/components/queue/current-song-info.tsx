@@ -12,7 +12,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import CoverArtImage from "../cover-art";
 
-export function CurrentSongInfo() {
+export function CurrentSongInfo({ fillWidth }: { fillWidth?: boolean }) {
     const { currentSong } = usePlayerSonglist();
     const { closeDrawer } = useMainDrawerState();
     const { isMiniPlayer } = usePlayerStyle();
@@ -22,7 +22,8 @@ export function CurrentSongInfo() {
     return (
         <div className={
             clsx(
-                "ml-[8vw] xxs:ml-0 xxs:mr-0 xxs:w-[100vh] lg:block w-[35vw]"
+                " lg:block xxs:w-[100vh] w-[35vw] transition-all duration-300 flex-shrink-0",
+                fillWidth ? "ml-auto mr-auto" : "ml-[8vw] xxs:ml-0 xxs:mr-0",
             )}
         >
             <AspectRatio
