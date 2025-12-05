@@ -22,8 +22,8 @@ export function CurrentSongInfo({ fillWidth }: { fillWidth?: boolean }) {
     return (
         <div className={
             clsx(
-                " lg:block xxs:w-[100vh] w-[35vw] transition-all duration-300 flex-shrink-0",
-                fillWidth ? "ml-auto mr-auto" : "ml-[8vw] xxs:ml-0 xxs:mr-0",
+                " lg:block xxs:w-[100vh] w-[35vw] transition-all duration-1000 ease-long flex-shrink-0",
+                fillWidth ? "ml-[32.5%] " : "ml-[8vw] xxs:ml-0 xxs:mr-0",
             )}
         >
             <AspectRatio
