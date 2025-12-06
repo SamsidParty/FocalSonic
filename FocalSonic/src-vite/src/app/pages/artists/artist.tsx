@@ -7,9 +7,8 @@ import { AlbumFallback } from "@/app/components/fallbacks/album-fallbacks";
 import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { TopSongsTableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
-import PreviewList from "@/app/components/home/preview-list";
+import PreviewList, { RegularPreviewCard } from "@/app/components/home/preview-list";
 import ListWrapper from "@/app/components/list-wrapper";
-import { WidePreview } from "@/app/components/preview-card/wide-preview";
 import {
     useGetArtist,
     useGetArtistInfo,
@@ -104,8 +103,12 @@ export default function Artist() {
                 {
                     (artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0] && topSongs?.length > 1) && (
                         <div className="flex flex-row mb-2 mt-4 gap-4">
-                            <WidePreview entry={artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0]}></WidePreview>
-                            <WidePreview entry={topSongs[0]}></WidePreview>
+                            <div className="min-w-0 shrink-0 grow-0 basis-1/6">
+                                <RegularPreviewCard isLarge title={t("artist.latest")} entry={artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0]} />
+                            </div>
+                            <div className="min-w-0 shrink-0 grow-0 basis-1/6">
+                                <RegularPreviewCard isLarge title={t("artist.topSong")} entry={topSongs[0]} />
+                            </div>
                         </div>
                     )
                 }

@@ -2,24 +2,25 @@ import { getCoverArtUrl } from "@/api/httpClient";
 import { cn } from "@/lib/utils";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
-import { title } from "process";
 import React from "react";
+import { ChipBadge } from "../ui/badge";
 import { PreviewCard } from "./card";
 import usePreviewCard from "./use-preview-card";
 
 interface WidePreviewProps {
     entry: Albums | AppleMusicRecommendationContent,
     className?: string,
+    title?: string,
 }
 
-export function WidePreview({ entry, className }: WidePreviewProps) {
+export function WidePreview({ entry, className, title }: WidePreviewProps) {
 
     const { handlePlay, navigateToResource } = usePreviewCard();
 
     return (
-        <PreviewCard.Root className={cn("h-32 w-full p-2 gap-2 flex items-center bg-card box-content rounded-lg shadow-sm", className)}>
+        <PreviewCard.Root className={cn("h-40 w-96 p-2 gap-2 flex items-center bg-card box-content rounded-lg shadow-sm", className)}>
 
-            <div className="w-32 h-auto flex-shrink-0">
+            <div className="w-40 h-auto flex-shrink-0">
                 <PreviewCard.ImageWrapper 
                     onClick={() => navigateToResource(entry)}
                     className={"rounded"}
@@ -34,7 +35,10 @@ export function WidePreview({ entry, className }: WidePreviewProps) {
                 </PreviewCard.ImageWrapper>
                 
             </div>
-            <div className="w-full h-full flex flex-row">
+            <div className="w-full h-full flex flex-col">
+                <div className="flex">
+                    <ChipBadge text={title || ""} />
+                </div>
                 <PreviewCard.Title entry={entry} onClick={() => navigateToResource(entry)}/>
             </div>
 

@@ -403,8 +403,8 @@ svg#bars .eq-bar--4 {
 .lyric-wipe {
   background: linear-gradient(to right,
     var(--lyric-color) 20%,
-    color-mix(in srgb, var(--lyric-color) 30%, rgba(255, 255, 255, 0.4) 70%) 30%,
-    color-mix(in srgb, var(--lyric-color) 30%, rgba(255, 255, 255, 0.4) 70%) 70%,
+    color-mix(in hsl, var(--lyric-color) 20%, rgba(255, 255, 255, 0.4) 80%) 30%,
+    color-mix(in hsl, var(--lyric-color) 20%, rgba(255, 255, 255, 0.4) 80%) 70%,
     var(--lyric-color) 80%);
   background-clip: text;
   color: transparent;

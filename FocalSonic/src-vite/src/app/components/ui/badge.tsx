@@ -36,4 +36,8 @@ function Badge({ className, variant, ...props }: BadgeProps) {
     );
 }
 
-export { Badge, badgeVariants };
+function ChipBadge({ text }: { text: string }) {
+    return (<p className="text-sm opacity-80 drop-shadow rounded-sm px-1 bg-primary text-primary-foreground">{text}</p>);
+}
+
+export { Badge, badgeVariants, ChipBadge };

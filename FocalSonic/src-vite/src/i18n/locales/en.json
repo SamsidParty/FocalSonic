@@ -221,6 +221,8 @@
       "albumsCount_other": "{{count}} albums"
     },
     "topSongs": "Popular",
+    "topSong": "Most Popular",
+    "latest": "Latest Release",
     "recentAlbums": "Recent albums",
     "relatedArtists": "Related artists"
   },

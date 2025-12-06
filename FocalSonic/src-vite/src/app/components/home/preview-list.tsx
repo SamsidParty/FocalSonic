@@ -8,14 +8,14 @@ import {
 } from "@/app/components/ui/carousel";
 import { CarouselButton } from "@/app/components/ui/carousel-button";
 import { ROUTES } from "@/routes/routesList";
-import { usePlayerActions } from "@/store/player.store";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
 import { checkServerType } from "@/utils/servers";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import usePreviewCard from "../preview-card/use-preview-card";
+import { ChipBadge } from "../ui/badge";
 
 interface PreviewListProps {
     list: Albums[] | AppleMusicRecommendationContent[]
@@ -37,12 +37,8 @@ export default function PreviewList({
     const [api, setApi] = useState<CarouselApi>();
     const [canScrollPrev, setCanScrollPrev] = useState<boolean>();
     const [canScrollNext, setCanScrollNext] = useState<boolean>();
-    const { setSongList, setPlayAppleMusicRadio } = usePlayerActions();
     const { t } = useTranslation();
-    const { isAppleMusic } = checkServerType();
-    const navigate = useNavigate();
-    const { setPlayRadio } = usePlayerActions();
-    const { handlePlay, navigateToResource } = usePreviewCard();
+
 
     moreTitle = moreTitle || t("generic.seeMore");
 
@@ -118,38 +114,7 @@ export default function PreviewList({
                                 className={isLarge ? "basis-1/4 2xl:basis-1/6 " : "basis-1/6 2xl:basis-1/8"}
                                 data-testid={`preview-list-carousel-item-${index}`}
                             >
-                                <PreviewCard.Root>
-                                    <PreviewCard.ImageWrapper 
-                                        onClick={() => navigateToResource(entry)}
-                                        className={isLarge && "rounded-b-none rounded-t"}
-                                    >
-                                        <PreviewCard.Image
-                                            src={getCoverArtUrl(entry.coverArt || entry.attributes?.artwork?.url || entry.attributes?.editorialArtwork?.brandLogo?.url, "album")}
-                                            alt={title}
-                                        />
-                                        <PreviewCard.PlayButton
-                                            onClick={() => handlePlay(entry)}
-                                        />
-                                    </PreviewCard.ImageWrapper>
-                                    <PreviewCard.InfoWrapper
-                                        className={(isLarge && isAppleMusic) && "min-h-16 max-h-16 flex-col rounded-b overflow-hidden"}
-                                        style={(isLarge && isAppleMusic) ? {
-                                            backgroundImage: "url('" + getCoverArtUrl(entry.coverArt || entry.attributes?.artwork?.url || entry.attributes?.editorialArtwork?.brandLogo?.url) + "')",
-                                            backgroundPosition: "bottom",
-                                            color: "#" + (entry as AppleMusicRecommendationContent).attributes?.artwork?.textColor1
-                                        } : {}}
-                                    >
-                                        <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl backdrop-brightness-[80%] px-4 grow text-center flex flex-col rounded-b-sm overflow-hidden justify-center align-center"}>
-                                            <PreviewCard.Title className={isLarge ? "justify-center" : ""} entry={entry} onClick={() => navigateToResource(entry)}/>
-                                            <PreviewCard.Subtitle
-                                                enableLink={(entry.relationships?.artists?.data[0]?.id || entry.artistId) !== undefined}
-                                                link={ROUTES.ARTIST.PAGE(entry.relationships?.artists?.data[0]?.id || entry.artistId)}
-                                            >
-                                                {entry.artist || entry?.attributes?.artistName || entry?.attributes?.curatorName || entry?.attributes?.editorialNotes?.tagline}
-                                            </PreviewCard.Subtitle>
-                                        </div>
-                                    </PreviewCard.InfoWrapper>
-                                </PreviewCard.Root>
+                                <RegularPreviewCard entry={entry} isLarge={isLarge} />
                             </CarouselItem>
                         ))}
                     </CarouselContent>
@@ -157,4 +122,54 @@ export default function PreviewList({
             </div>
         </div>
     );
+}
+
+
+export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | AppleMusicRecommendationContent, isLarge: boolean, title?: string }) {
+
+    const { handlePlay, navigateToResource } = usePreviewCard();
+    const { isAppleMusic } = checkServerType();
+
+    return (
+        <PreviewCard.Root>
+            <PreviewCard.ImageWrapper 
+                onClick={() => navigateToResource(entry)}
+                className={isLarge && "rounded-b-none rounded-t"}
+            >
+                <PreviewCard.Image
+                    src={getCoverArtUrl(entry.coverArt || entry.attributes?.artwork?.url || entry.attributes?.editorialArtwork?.brandLogo?.url, "album")}
+                    alt={title}
+                />
+                <PreviewCard.PlayButton
+                    onClick={() => handlePlay(entry)}
+                />
+                {
+                    title && (
+                        <div className="flex absolute top-2 left-2">
+                            <ChipBadge text={title || ""} />
+                        </div>
+                    )
+                }
+            </PreviewCard.ImageWrapper>
+            <PreviewCard.InfoWrapper
+                className={(isLarge && isAppleMusic) && "min-h-16 max-h-16 flex-col rounded-b overflow-hidden"}
+                style={(isLarge && isAppleMusic) ? {
+                    backgroundImage: "url('" + getCoverArtUrl(entry.coverArt || entry.attributes?.artwork?.url || entry.attributes?.editorialArtwork?.brandLogo?.url) + "')",
+                    backgroundPosition: "bottom",
+                    color: "#" + (entry as AppleMusicRecommendationContent).attributes?.artwork?.textColor1
+                } : {}}
+            >
+                <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl backdrop-brightness-[80%] px-4 grow text-center flex flex-col rounded-b-sm overflow-hidden justify-center align-center"}>
+                    <PreviewCard.Title className={isLarge ? "justify-center" : ""} entry={entry} onClick={() => navigateToResource(entry)}/>
+                    <PreviewCard.Subtitle
+                        enableLink={(entry.relationships?.artists?.data[0]?.id || entry.artistId) !== undefined}
+                        link={ROUTES.ARTIST.PAGE(entry.relationships?.artists?.data[0]?.id || entry.artistId)}
+                    >
+                        {entry.artist || entry?.attributes?.artistName || entry?.attributes?.curatorName || entry?.attributes?.editorialNotes?.tagline}
+                    </PreviewCard.Subtitle>
+                </div>
+            </PreviewCard.InfoWrapper>
+        </PreviewCard.Root>
+    );
+
 }

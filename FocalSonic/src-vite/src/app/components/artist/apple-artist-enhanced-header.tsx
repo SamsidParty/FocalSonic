@@ -33,13 +33,14 @@ export default function AppleArtistEnhancedHeader({
 
     return (
         <div
-            className="flex relative w-full h-[calc(3rem+500px)] 2xl:h-[calc(3rem+600px)] px-4 mb-4"
+            className="flex relative w-full h-[calc(3rem+700px)] 2xl:h-[calc(3rem+700px)] px-4 mb-4"
             key={`header-${coverArtId}`}
         >
             <LazyLoadImage 
                 src={headerImage?.replace("{w}", "2160").replace("{h}", "1080").replace("{f}", "jpg")} 
                 alt={coverArtAlt} 
-                className={clsx("object-cover w-full h-full absolute inset-0")}
+                className={clsx("object-cover w-full h-full")}
+                wrapperClassName="absolute top-0 left-0 right-0 bottom-[100px]"
                 effect="opacity"
                 style={{
                     maskImage: "linear-gradient(to top, transparent 0%, black 70%, black 100%)"

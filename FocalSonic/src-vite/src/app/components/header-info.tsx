@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Fragment } from "react/jsx-runtime";
 import { Dot } from "./dot";
+import { ChipBadge } from "./ui/badge";
 
 type TextBadge = {
     content: string | null
@@ -34,7 +35,7 @@ interface HeaderInfoProps {
 
 const renderBadge = {
     text: (props) => <p className="opacity-80 drop-shadow">{props.item.content}</p>,
-    chip: (props) => <p className="opacity-80 drop-shadow rounded-sm px-1 bg-primary text-primary-foreground">{props.item.content}</p>,
+    chip: (props) => <ChipBadge text={props.item.content || ""} />,
     link: (props) => <Link to={props.item.link} className="flex opacity-80 drop-shadow hover:opacity-100 hover:underline"> {props.item.content}</Link>,
     component: (props) => <>{props.item.content}</>,
 };
