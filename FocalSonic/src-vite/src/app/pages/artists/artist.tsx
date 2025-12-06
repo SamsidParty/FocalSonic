@@ -82,8 +82,8 @@ export default function Artist() {
     ];
 
     const recentAlbums = artist.album ? sortRecentAlbums(artist.album) : [];
-
     const HeaderType = isAppleMusic ? AppleArtistEnhancedHeader : ImageHeader;
+    const showNewStyle = artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0] && topSongs?.length > 1;
 
 
     return (
@@ -101,13 +101,16 @@ export default function Artist() {
                 <ArtistInfo artist={artist} />
                 
                 {
-                    (artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0] && topSongs?.length > 1) && (
-                        <div className="flex flex-row mb-2 mt-4 gap-4">
-                            <div className="min-w-0 shrink-0 grow-0 basis-1/6">
+                    (showNewStyle && !topSongsIsLoading) && (
+                        <div className="flex flex-row mb-2 mt-4 gap-4 overflow-hidden">
+                            <div className="min-w-0 shrink-0 grow-0 basis-1/5">
                                 <RegularPreviewCard isLarge title={t("artist.latest")} entry={artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0]} />
                             </div>
-                            <div className="min-w-0 shrink-0 grow-0 basis-1/6">
+                            <div className="min-w-0 shrink-0 grow-0 basis-1/5">
                                 <RegularPreviewCard isLarge title={t("artist.topSong")} entry={topSongs[0]} />
+                            </div>
+                            <div className="w-full h-full bg-card rounded backdrop-blur-lg basis-3/5">
+                                <ArtistTopSongs embedded topSongs={topSongs} artist={artist} />
                             </div>
                         </div>
                     )
@@ -119,7 +122,7 @@ export default function Artist() {
                 {topSongsIsLoading && <TopSongsTableFallback />}
 
 
-                {topSongs && !topSongsIsLoading && (
+                {topSongs && !topSongsIsLoading && !showNewStyle && (
                     <ArtistTopSongs topSongs={topSongs} artist={artist} />
                 )}
 

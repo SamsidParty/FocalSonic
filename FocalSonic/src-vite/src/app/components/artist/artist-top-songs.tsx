@@ -11,10 +11,11 @@ import { Link } from "react-router-dom";
 
 interface TopSongsProps {
     topSongs: ISong[]
-    artist: IArtist
+    artist: IArtist,
+    embedded?: boolean,
 }
 
-export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
+export default function ArtistTopSongs({ topSongs, artist, embedded = false }: TopSongsProps) {
     const { t } = useTranslation();
     const { setSongList } = usePlayerActions();
     const { isAppleMusic } = checkServerType();
@@ -22,7 +23,7 @@ export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
     const topTenSongs = topSongs.length > 10 ? topSongs.slice(0, 10) : topSongs;
     const { id, name } = artist;
 
-    const columnsToShow: ColumnFilter[] = [
+    let columnsToShow: ColumnFilter[] = [
         "index",
         "title",
         "album",
@@ -34,23 +35,36 @@ export default function ArtistTopSongs({ topSongs, artist }: TopSongsProps) {
         "select",
     ];
 
+    if (embedded) {
+        columnsToShow = [
+            "index",
+            "title",
+            "duration",
+        ];
+    }
+
     return (
         <div className="w-full mb-4">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-                    {t("artist.topSongs")}
-                </h3>
+            {
+                !embedded && (
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+                            {t("artist.topSongs")}
+                        </h3>
 
-                <Link
-                    to={ROUTES.SONGS.ARTIST_TRACKS(id, name)}
-                    className="h-full"
-                    data-testid="view-all-tracks-link"
-                >
-                    <p className="leading-7 text-sm truncate hover:underline text-muted-foreground hover:text-primary">
-                        {t("generic.viewAll")}
-                    </p>
-                </Link>
-            </div>
+                        <Link
+                            to={ROUTES.SONGS.ARTIST_TRACKS(id, name)}
+                            className="h-full"
+                            data-testid="view-all-tracks-link"
+                        >
+                            <p className="leading-7 text-sm truncate hover:underline text-muted-foreground hover:text-primary">
+                                {t("generic.viewAll")}
+                            </p>
+                        </Link>
+                    </div>
+                )
+            }
+
 
             <DataTable
                 columns={columns}
