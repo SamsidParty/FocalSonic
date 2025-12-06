@@ -103,13 +103,13 @@ export default function Artist() {
                 {
                     (showNewStyle && !topSongsIsLoading) && (
                         <div className="flex flex-row mb-2 mt-4 gap-4 overflow-hidden">
-                            <div className="min-w-0 shrink-0 grow-0 basis-1/5">
+                            <div className="min-w-0 shrink-0 grow-0 basis-1/6">
                                 <RegularPreviewCard isLarge title={t("artist.latest")} entry={artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0]} />
                             </div>
-                            <div className="min-w-0 shrink-0 grow-0 basis-1/5">
+                            <div className="min-w-0 shrink-0 grow-0 basis-1/6">
                                 <RegularPreviewCard isLarge title={t("artist.topSong")} entry={topSongs[0]} />
                             </div>
-                            <div className="w-full h-full bg-card rounded backdrop-blur-lg basis-3/5">
+                            <div className="w-full h-full rounded basis-4/6 py-4">
                                 <ArtistTopSongs embedded topSongs={topSongs} artist={artist} />
                             </div>
                         </div>

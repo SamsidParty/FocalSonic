@@ -40,10 +40,10 @@ export default function AppleArtistEnhancedHeader({
                 src={headerImage?.replace("{w}", "2160").replace("{h}", "1440").replace("{f}", "jpg")} 
                 alt={coverArtAlt} 
                 className={clsx("object-cover w-full h-full")}
-                wrapperClassName="absolute inset-0"
+                wrapperClassName="absolute top-0 left-0 right-0 h-[450px]"
                 effect="opacity"
                 style={{
-                    maskImage: "linear-gradient(to top, transparent 0%, black 80%, black 100%)"
+                    maskImage: "linear-gradient(to top, transparent 0%, black 50%, black 100%)"
                 }}
             />
             

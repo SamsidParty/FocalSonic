@@ -39,6 +39,7 @@ export default function ArtistTopSongs({ topSongs, artist, embedded = false }: T
         columnsToShow = [
             "index",
             "title",
+            "album",
             "duration",
         ];
     }
@@ -71,6 +72,7 @@ export default function ArtistTopSongs({ topSongs, artist, embedded = false }: T
                 data={topTenSongs}
                 handlePlaySong={(row) => setSongList(topTenSongs, row.index)}
                 columnFilter={columnsToShow}
+                showHeader={!embedded}
                 variant="modern"
             />
         </div>
