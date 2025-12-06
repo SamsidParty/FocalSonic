@@ -109,9 +109,14 @@ namespace FocalSonic.AudioPlayer
                 AssociatedWindowID = ctx.ID;
             }
 
-            if (Source == src) { return; } // Already set
 
             await Casting.Casting.LoadMedia(src);
+        }
+
+        public virtual async Task ResetSource()
+        {
+            Source = null;
+            HasLoaded = false;
         }
 
         public virtual async Task PlayAudio() {
@@ -135,7 +140,7 @@ namespace FocalSonic.AudioPlayer
 
         public async Task CallEndEvent()
         {
-            MediaPlaybackInfo.Instance?.NextSong();
+            MediaPlaybackInfo.Instance?.NextSong(false);
         }
         
         public async Task CallLoadEvent(double duration)

@@ -2,7 +2,7 @@ import { tryAcquireLicense } from "../drm/license";
 import { getAudioElement } from "../helpers/dom";
 import { loadContent } from "../interface/low-level";
 import { QueueItem, QueueItemParam } from "./types";
-import { PlaybackStates, PlayerRepeatMode } from "./virtualmk-constants";
+import { PlaybackStates } from "./virtualmk-constants";
 
 export class MusicKitInstance {
 
@@ -51,15 +51,6 @@ export class MusicKitInstance {
     }
 
     handleSongEnded() {
-        if (this.repeatMode === PlayerRepeatMode.one && this.queue[0]) {
-            // Redo of playback
-            // Insert a new queue item just after the current one
-            const newItem = new QueueItem({ song: this.queue[0]!.song }, this);
-            this.queue.splice(1, 0, newItem);
-            this.skipToNextItem();
-            return;
-        }
-
         this.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.playing, state: PlaybackStates.ended });
     }
 

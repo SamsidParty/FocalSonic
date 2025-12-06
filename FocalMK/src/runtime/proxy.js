@@ -20,7 +20,7 @@ async function onMusicKitLoad() {
 
     window.proxyMusicInstance.addEventListener("playbackStateDidChange", ({ oldState, state }) => {
         console.log(`[FocalSonic][Apple Music Proxy] Playback changed from ${oldState} to ${state}`);
-        if (state === getMusicKit().PlaybackStates.ended && window.proxyMusicInstance.repeatMode !== getMusicKit().PlayerRepeatMode.one) {
+        if (state === getMusicKit().PlaybackStates.ended) {
             window.igniteView?.commandBridge.appleMusicRecieveEndedEvent();
         }
         else if (state === getMusicKit().PlaybackStates.playing) {

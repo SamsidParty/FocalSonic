@@ -94,8 +94,19 @@ namespace FocalSonic.Presence
         public Song? NextQueueItem => Queue?[NextSongIndex ?? -1];
         public Song? PreviousQueueItem => Queue?[PreviousSongIndex ?? -1];
 
-        public async Task NextSong() => await PlaySong(NextQueueItem, NextSongIndex);
-        public async Task PreviousSong() => await PlaySong(PreviousQueueItem, PreviousSongIndex);
+        public async Task NextSong(bool fromUserAction = true)
+        {
+            if (!fromUserAction && LoopState == PlayerLoopState.One)
+            {
+                // Loop
+                await PlaySong(CurrentSong, CurrentSongIndex);
+                return;
+            }
+
+            await PlaySong(NextQueueItem, NextSongIndex);
+        }
+
+        public async Task PreviousSong(bool fromUserAction = true) => await PlaySong(PreviousQueueItem, PreviousSongIndex);
 
         public async Task PlaySong(Song? song, int? index)
         {
@@ -129,6 +140,8 @@ namespace FocalSonic.Presence
 
             var playbackURL = Store.ExtraProperties.GetStreamURLForSong(song.Id);
 
+
+            await AssociatedPlayer.ResetSource();
             await AssociatedPlayer.SetSource(playbackURL, null);
             await AssociatedPlayer.UpdatePlaybackParameters();
             await Play();

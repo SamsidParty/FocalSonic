@@ -368,7 +368,7 @@
 
         window.proxyMusicInstance.addEventListener("playbackStateDidChange", ({ oldState, state }) => {
             console.log(`[FocalSonic][Apple Music Proxy] Playback changed from ${oldState} to ${state}`);
-            if (state === getMusicKit().PlaybackStates.ended && window.proxyMusicInstance.repeatMode !== getMusicKit().PlayerRepeatMode.one) {
+            if (state === getMusicKit().PlaybackStates.ended) {
                 window.igniteView?.commandBridge.appleMusicRecieveEndedEvent();
             }
             else if (state === getMusicKit().PlaybackStates.playing) {
@@ -38750,14 +38750,6 @@
             }
         }
         handleSongEnded() {
-            if (this.repeatMode === PlayerRepeatMode.one && this.queue[0]) {
-                // Redo of playback
-                // Insert a new queue item just after the current one
-                const newItem = new QueueItem({ song: this.queue[0].song }, this);
-                this.queue.splice(1, 0, newItem);
-                this.skipToNextItem();
-                return;
-            }
             this.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.playing, state: PlaybackStates.ended });
         }
         // Queue
