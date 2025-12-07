@@ -48,10 +48,11 @@ interface ImageProps {
     alt: string
     animationCatalogID?: string
     animationCatalogType?: "songs" | "albums"
-    animated?: boolean
+    animated?: boolean,
+    className?: string
 }
 
-function Image({ src, alt, animationCatalogID, animationCatalogType, animated }: ImageProps) {
+function Image({ src, alt, animationCatalogID, animationCatalogType, animated, className }: ImageProps) {
     return (
         <CoverArtImage
             src={src}
@@ -62,7 +63,7 @@ function Image({ src, alt, animationCatalogID, animationCatalogType, animated }:
             effect="opacity"
             width="100%"
             height="100%"
-            className="aspect-square object-cover w-full h-full absolute inset-0 z-0"
+            className={cn("aspect-square object-cover w-full h-full absolute inset-0 z-0", className)}  
             data-testid="card-image"
         />
     );
@@ -118,7 +119,7 @@ function Title({ link, children, onClick, entry, className }: TitleProps) {
                 onClick={onClick}
                 data-testid="card-title-link"
             >
-                {entry?.name || entry?.attributes?.name || entry?.attributes?.editorialNotes?.name}
+                {entry?.name || entry?.attributes?.name || entry?.attributes?.editorialNotes?.name || entry?.attributes?.plainEditorialNotes?.name}
                 {entry?.explicitStatus === "explicit" && <ExplicitIcon inline />}
                 {children}
             </Link>

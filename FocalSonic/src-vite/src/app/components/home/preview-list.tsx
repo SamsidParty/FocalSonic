@@ -16,12 +16,14 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import usePreviewCard from "../preview-card/use-preview-card";
 import { ChipBadge } from "../ui/badge";
+import AppleMusicHeroCard from "./apple-music-hero-card";
 
 interface PreviewListProps {
     list: Albums[] | AppleMusicRecommendationContent[]
     title: string
     showMore?: boolean
     isLarge: boolean
+    appleMusic?: any,
     moreTitle?: string
     moreRoute?: string
 }
@@ -31,6 +33,7 @@ export default function PreviewList({
     title,
     showMore = true,
     moreTitle,
+    appleMusic,
     isLarge,
     moreRoute,
 }: PreviewListProps) {
@@ -108,15 +111,26 @@ export default function PreviewList({
                     data-testid="preview-list-carousel"
                 >
                     <CarouselContent>
-                        {list.map((entry, index) => (
-                            <CarouselItem
-                                key={entry.id}
-                                className={isLarge ? "basis-1/4 2xl:basis-1/6 " : "basis-1/6 2xl:basis-1/8"}
-                                data-testid={`preview-list-carousel-item-${index}`}
-                            >
-                                <RegularPreviewCard entry={entry} isLarge={isLarge} />
-                            </CarouselItem>
-                        ))}
+                        {list.map((entry, index) => {
+
+                            let CardType = RegularPreviewCard;
+                            let className = isLarge ? "basis-1/4 2xl:basis-1/6 " : "basis-1/6 2xl:basis-1/8";
+
+                            if (appleMusic?.attributes?.display?.kind == "MusicSuperHeroShelf" && Object.values(entry?.attributes?.plainEditorialCard || {})?.[0]?.editorialArtwork?.superHeroWide?.url) {
+                                CardType = AppleMusicHeroCard;
+                                className = "basis-full";
+                            }
+
+                            return (
+                                <CarouselItem
+                                    key={entry.id}
+                                    className={className}
+                                    data-testid={`preview-list-carousel-item-${index}`}
+                                >
+                                    <CardType entry={entry} isLarge={isLarge} />
+                                </CarouselItem>
+                            );
+                        })}
                     </CarouselContent>
                 </Carousel>
             </div>
@@ -137,7 +151,7 @@ export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | 
                 className={isLarge && "rounded-b-none rounded-t"}
             >
                 <PreviewCard.Image
-                    src={getCoverArtUrl(entry.coverArt || entry.attributes?.artwork?.url || entry.attributes?.editorialArtwork?.brandLogo?.url, "album")}
+                    src={getCoverArtUrl(entry.coverArt || entry?.attributes?.artwork?.url || entry?.attributes?.editorialArtwork?.brandLogo?.url, "album")}
                     alt={title}
                 />
                 <PreviewCard.PlayButton
@@ -154,7 +168,7 @@ export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | 
             <PreviewCard.InfoWrapper
                 className={(isLarge && isAppleMusic) && "min-h-16 max-h-16 flex-col rounded-b overflow-hidden"}
                 style={(isLarge && isAppleMusic) ? {
-                    backgroundImage: "url('" + getCoverArtUrl(entry.coverArt || entry.attributes?.artwork?.url || entry.attributes?.editorialArtwork?.brandLogo?.url) + "')",
+                    backgroundImage: "url('" + getCoverArtUrl(entry.coverArt || entry?.attributes?.artwork?.url || entry?.attributes?.editorialArtwork?.brandLogo?.url) + "')",
                     backgroundPosition: "bottom",
                     color: "#" + (entry as AppleMusicRecommendationContent).attributes?.artwork?.textColor1
                 } : {}}
@@ -165,7 +179,7 @@ export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | 
                         enableLink={(entry.relationships?.artists?.data[0]?.id || entry.artistId) !== undefined}
                         link={ROUTES.ARTIST.PAGE(entry.relationships?.artists?.data[0]?.id || entry.artistId)}
                     >
-                        {entry.artist || entry?.attributes?.artistName || entry?.attributes?.curatorName || entry?.attributes?.editorialNotes?.tagline}
+                        {entry.artist || entry?.attributes?.artistName || entry?.attributes?.curatorName || entry?.attributes?.editorialNotes?.tagline || entry?.attributes?.plainEditorialNotes?.tagline}
                     </PreviewCard.Subtitle>
                 </div>
             </PreviewCard.InfoWrapper>

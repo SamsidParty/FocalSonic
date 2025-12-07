@@ -19,6 +19,7 @@ async function getHome() {
             "displayFilter[kind]": "MusicCircleCoverShelf,MusicCoverGrid,MusicCoverShelf,MusicNotesHeroShelf,MusicSocialCardShelf,MusicSuperHeroShelf",
             "extend[playlists]": "artistNames",
             "extend[stations]": "airTime,supportsAirTimeUpdates",
+            "extend": "editorialVideo,plainEditorialCard,plainEditorialNotes",
             "fields[artists]": "name,artwork,url",
             "include[albums]": "artists",
             "include[personal-recommendation]": "primary-content",

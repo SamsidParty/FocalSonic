@@ -28,6 +28,7 @@ export default function AppleMusicHome() {
                         title={section.attributes.title?.stringForDisplay}
                         showMore={false}
                         isLarge={i === 0}
+                        appleMusic={section}
                         list={section.relationships.contents.data}
                     />
                 );

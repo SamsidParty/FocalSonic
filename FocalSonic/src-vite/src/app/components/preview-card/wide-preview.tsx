@@ -26,7 +26,7 @@ export function WidePreview({ entry, className, title }: WidePreviewProps) {
                     className={"rounded"}
                 >
                     <PreviewCard.Image
-                        src={getCoverArtUrl(entry.coverArt || entry.attributes?.artwork?.url || entry.attributes?.editorialArtwork?.brandLogo?.url, "album")}
+                        src={getCoverArtUrl(entry.coverArt || entry?.attributes?.artwork?.url || entry?.attributes?.editorialArtwork?.brandLogo?.url, "album")}
                         alt={title}
                     />
                     <PreviewCard.PlayButton

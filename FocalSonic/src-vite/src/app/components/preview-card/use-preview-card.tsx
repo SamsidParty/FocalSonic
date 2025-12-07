@@ -52,8 +52,8 @@ export default function usePreviewCard() {
 
     const navigateToResource = (entry: AppleMusicRecommendationContent | Albums) => {
 
-        if (entry.attributes?.link?.target == "external" && entry.attributes?.link?.url) {
-            window.open(entry.attributes.link.url);
+        if (entry?.attributes?.link?.target == "external" && entry?.attributes?.link?.url) {
+            window.open(entry?.attributes.link.url);
             return;
         }
 
