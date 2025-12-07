@@ -70,10 +70,11 @@ function Image({ src, alt, animationCatalogID, animationCatalogType, animated, c
 }
 
 interface PlayButtonProps {
-    onClick: () => void
+    onClick: () => void,
+    children?: React.ReactNode
 }
 
-function PlayButton({ onClick }: PlayButtonProps) {
+function PlayButton({ onClick, children }: PlayButtonProps) {
     return (
         <div className="w-full h-full p-2 flex justify-start items-end transition-all duration-300 absolute inset-0 z-10">
             <div className="absolute inset-0 bg-gradient-to-t from-[#00000090] to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"/>
@@ -89,6 +90,7 @@ function PlayButton({ onClick }: PlayButtonProps) {
             >
                 <Play className="fill-foreground hover:scale-125 transition-transform duration-300" />
             </Button>
+            {children}
         </div>
     );
 }

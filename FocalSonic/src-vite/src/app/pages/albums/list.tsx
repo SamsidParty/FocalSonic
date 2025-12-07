@@ -15,7 +15,7 @@ export default function AlbumsList() {
         <div className="w-full h-full">
             <AlbumsHeader albumCount={albumsCount} />
 
-            <ListWrapper className="pt-[--shadow-header-distance] px-0">
+            <ListWrapper className="pt-[calc(var(--shadow-header-distance)-0.5rem)] px-0">
                 <div className="grid grid-cols-6 2xl:grid-cols-8 gap-4 px-4" data-testid="albums-grid" type="albums">
                     {
                         albums && albums.map((album) => <AlbumGridCard key={album.id} album={album} />)

@@ -8,8 +8,8 @@ import { SongListFallback } from "@/app/components/fallbacks/song-fallbacks";
 import { HeaderTitle } from "@/app/components/header-title";
 import ListWrapper from "@/app/components/list-wrapper";
 import { EmptyPlaylistsPage } from "@/app/components/playlist/empty-page";
+import { PlaylistGridCard } from "@/app/components/playlist/playlist-grid-card";
 import { Button } from "@/app/components/ui/button";
-import { DataTable } from "@/app/components/ui/data-table";
 import { playlistsColumns } from "@/app/tables/playlists-columns";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
@@ -17,6 +17,7 @@ import { usePlaylists } from "@/store/playlists.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
+import React from "react";
 
 export default function PlaylistsPage() {
     const { setPlaylistDialogState } = usePlaylists();
@@ -77,19 +78,12 @@ export default function PlaylistsPage() {
             {!showTable && <EmptyPlaylistsPage />}
 
             {showTable && (
-                <ListWrapper className="pt-[--shadow-header-distance]">
-                    <DataTable
-                        columns={columns}
-                        data={playlists}
-                        showPagination={true}
-                        showSearch={true}
-                        searchColumn="name"
-                        handlePlaySong={(row) => handlePlayPlaylist(row.original.id)}
-                        allowRowSelection={false}
-                        dataType="playlist"
-                        columnFilter={columnsToShow}
-                        noRowsMessage={t("options.playlist.notFound")}
-                    />
+                <ListWrapper className="pt-[calc(var(--shadow-header-distance)-0.5rem)] px-0">
+                    <div className="grid grid-cols-5 2xl:grid-cols-6 gap-4 px-4" data-testid="playlists-grid">
+                        {
+                            playlists && playlists.map((playlist) => <PlaylistGridCard key={playlist.id} playlist={playlist} />)
+                        }
+                    </div>
                 </ListWrapper>
             )}
         </div>
