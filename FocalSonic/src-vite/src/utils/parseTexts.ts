@@ -63,12 +63,20 @@ export function sanitizeLinks(text: string) {
     const doc = parser.parseFromString(text, "text/html");
 
     const tagWhiteList = ["a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "br", "span", "div"];
+    const attributeWhiteList = ["href", "class", "style", "rel", "target"];
 
     // Remove all tags not in the whitelist
     doc.body.querySelectorAll("*").forEach((node) => {
         if (!tagWhiteList.includes(node.tagName.toLowerCase())) {
             node.remove();
         }
+
+        // Strip attributes not in the whitelist
+        Array.from(node.attributes).forEach((attr) => {
+            if (!attributeWhiteList.includes(attr.name)) {
+                node.removeAttribute(attr.name);
+            }
+        });
     });
 
     doc.querySelectorAll("a").forEach((link) => {
@@ -76,8 +84,9 @@ export function sanitizeLinks(text: string) {
         const href = link.getAttribute("href") ?? "";
 
         if (href.includes("javascript")) {
-            const textNode = document.createTextNode(link.textContent || "");
-            link.replaceWith(textNode);
+            // There is no legitimate reason to have javascript: links
+            // Delete the link entirely
+            link.replaceWith(document.createTextNode(""));
         } else {
             link.setAttribute("target", "_blank");
             link.setAttribute("rel", "noreferrer nofollow");
