@@ -152,19 +152,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                         extraBarContent: "none",
                         setExtraBarContent: (value) => {
                             set((state) => {
-
-                                if ((state.settings.extraBarContent === "none" && value !== "none") || (value === "none" && state.settings.extraBarContent !== "none")) {
-                                    let hasFinishedAnimation = false;
-                                    const sidebarAnimation = () => {
-                                        const event = new Event("resize");
-                                        event["isFromSidebar"] = true; // Custom property to indicate the event is from sidebar toggle
-                                        window.dispatchEvent(event);
-                                        !hasFinishedAnimation && requestAnimationFrame(sidebarAnimation);
-                                    };
-                                    setTimeout(() => { hasFinishedAnimation = true; }, 500);
-                                    sidebarAnimation();
-                                }
-
                                 state.settings.extraBarContent = value;
                             });
                         }
@@ -283,15 +270,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.settings.sidebarOpen = !state.settings.sidebarOpen;
                             });
 
-                            let hasFinishedAnimation = false;
-                            const sidebarAnimation = () => {
-                                const event = new Event("resize");
-                                event["isFromSidebar"] = true; // Custom property to indicate the event is from sidebar toggle
-                                window.dispatchEvent(event);
-                                !hasFinishedAnimation && requestAnimationFrame(sidebarAnimation);
-                            };
-                            setTimeout(() => { hasFinishedAnimation = true; }, 500);
-                            sidebarAnimation();
                         }
                     },
                 })),

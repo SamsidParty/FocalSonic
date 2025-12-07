@@ -2,7 +2,6 @@ import { AlbumGridCard } from "@/app/components/albums/album-grid-card";
 import { EmptyAlbums } from "@/app/components/albums/empty-page";
 import { AlbumsHeader } from "@/app/components/albums/header";
 import { AlbumsFallback } from "@/app/components/fallbacks/album-fallbacks";
-import { GridViewWrapper } from "@/app/components/grid-view-wrapper";
 import ListWrapper from "@/app/components/list-wrapper";
 import { useAlbumsListModel } from "./list.model";
 
@@ -17,9 +16,11 @@ export default function AlbumsList() {
             <AlbumsHeader albumCount={albumsCount} />
 
             <ListWrapper className="pt-[--shadow-header-distance] px-0">
-                <GridViewWrapper list={albums} data-testid="albums-grid" type="albums">
-                    {(album) => <AlbumGridCard album={album} />}
-                </GridViewWrapper>
+                <div className="grid grid-cols-6 2xl:grid-cols-8 gap-4 px-4" data-testid="albums-grid" type="albums">
+                    {
+                        albums && albums.map((album) => <AlbumGridCard key={album.id} album={album} />)
+                    }
+                </div>
             </ListWrapper>
         </div>
     );

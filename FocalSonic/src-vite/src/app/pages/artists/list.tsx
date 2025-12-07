@@ -1,7 +1,6 @@
 import { ShadowHeader } from "@/app/components/album/shadow-header";
 import { ArtistGridCard } from "@/app/components/artist/artist-grid-card";
 import { ArtistsFallback } from "@/app/components/fallbacks/artists.tsx";
-import { GridViewWrapper } from "@/app/components/grid-view-wrapper";
 import { HeaderTitle } from "@/app/components/header-title";
 import ListWrapper from "@/app/components/list-wrapper";
 import { MainViewTypeSelector } from "@/app/components/main-grid";
@@ -88,13 +87,9 @@ export default function ArtistsList() {
 
             {isGridView && (
                 <MemoListWrapper className="pt-shadow-header-distance px-0">
-                    <GridViewWrapper
-                        list={artists}
-                        data-testid="artists-grid"
-                        type="artists"
-                    >
-                        {(artist) => <ArtistGridCard artist={artist} />}
-                    </GridViewWrapper>
+                    <div className="grid grid-cols-6 2xl:grid-cols-8 gap-4 px-4" data-testid="artists-grid">
+                        {artists && artists.map((artist) => <ArtistGridCard key={artist.id || artist.name} artist={artist} />)}
+                    </div>
                 </MemoListWrapper>
             )}
         </div>
