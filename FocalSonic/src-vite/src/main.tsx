@@ -1,18 +1,19 @@
-import { QueryClientProvider } from "@tanstack/react-query";
-import { StrictMode } from "react";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { persistQueryClient, PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import "react-lazy-load-image-component/src/effects/opacity.css";
-import "react-toastify/dist/ReactToastify.css";
 import "@/fonts.css";
 import "@/themes.css";
 import "@/index.css";
+import "react-lazy-load-image-component/src/effects/opacity.css";
+import "react-toastify/dist/ReactToastify.css";
 
 import "@/i18n";
 
 import App from "@/App";
 
-import { queryClient } from "@/lib/queryClient";
+import { queryCacheStorage, queryClient } from "@/lib/queryClient";
 import { blockFeatures } from "@/utils/browser";
 import { isLinux } from "@/utils/osType";
 import { AppWindowProvider } from "./app/hooks/use-app-window";
@@ -23,12 +24,18 @@ if (isLinux) {
 
 blockFeatures();
 
+const persister = createAsyncStoragePersister({
+    storage: queryCacheStorage, 
+});
+
+persistQueryClient({ queryClient, persister });
+
 createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider client={queryClient} persistOptions={{persister}}>
             <AppWindowProvider>
                 <App />
             </AppWindowProvider>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
     </StrictMode>,
 );

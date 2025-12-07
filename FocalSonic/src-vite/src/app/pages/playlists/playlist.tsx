@@ -7,6 +7,7 @@ import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-s
 import { DataTable } from "@/app/components/ui/data-table";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
+import { makeQueryPersistent } from "@/lib/queryClient";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
@@ -14,6 +15,7 @@ import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
@@ -28,10 +30,10 @@ export default function Playlist() {
         data: playlist,
         isLoading,
         isFetching,
-    } = useQuery({
+    } = useQuery(makeQueryPersistent({
         queryKey: [queryKeys.playlist.single, playlistId],
         queryFn: () => service.playlists.getOne(playlistId),
-    });
+    }));
 
     if (isFetching || isLoading) return <PlaylistFallback />;
     if (!playlist) return <ErrorPage status={404} statusText="Not Found" />;
