@@ -2,7 +2,9 @@ import LastFmIcon from "@/app/components/icons/last-fm";
 import MusicbrainzIcon from "@/app/components/icons/musicbrainz";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { Skeleton } from "@/app/components/ui/skeleton";
+import { fetchLastFmArtistInfo } from "@/utils/lastFm";
 import { sanitizeLinks } from "@/utils/parseTexts";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface InfoPanelProps {
@@ -10,6 +12,7 @@ interface InfoPanelProps {
     bio?: string
     lastFmUrl?: string
     musicBrainzId?: string
+    autoPullFromLastFm?: "none" | "artist";
 }
 
 const containerClasses =
@@ -20,10 +23,25 @@ export default function InfoPanel({
     bio,
     lastFmUrl,
     musicBrainzId,
+    autoPullFromLastFm
 }: InfoPanelProps) {
     const { t } = useTranslation();
+    const [resolvedBio, setResolvedBio] = useState<string | undefined>(bio);
 
-    if (!bio) return null;
+    useEffect(() => {
+        const fetchLastFmBio = async (artistName: string) => {
+            const artistData = await fetchLastFmArtistInfo(artistName);
+            return artistData?.bio?.summary || "";
+        };
+
+        if (autoPullFromLastFm === "artist" && !bio && title) {
+            fetchLastFmBio(title).then((fetchedBio) => {
+                setResolvedBio(fetchedBio);
+            });
+        }
+    }, [bio, autoPullFromLastFm, title]);
+
+    if (!resolvedBio) return null;
 
     return (
         <div className={containerClasses} id="artist-biography">
@@ -32,7 +50,7 @@ export default function InfoPanel({
             </h3>
             <p
                 className="html leading-6 text-muted-foreground"
-                dangerouslySetInnerHTML={{ __html: sanitizeLinks(bio) }}
+                dangerouslySetInnerHTML={{ __html: sanitizeLinks(resolvedBio) }}
             />
 
             <div className="flex w-full mt-2 gap-2">

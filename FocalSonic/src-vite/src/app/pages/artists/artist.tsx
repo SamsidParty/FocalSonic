@@ -113,16 +113,13 @@ export default function Artist() {
                                         <RegularPreviewCard isLarge title={t("artist.topSong")} entry={topSongs[0]} />
                                     </div>
                                 </div>
-                                {
-                                    artistInfo?.biography && (
-                                        <InfoPanel
-                                            title={artistInfo?.name}
-                                            bio={artistInfo?.biography}
-                                            lastFmUrl={null}
-                                            musicBrainzId={null}
-                                        />
-                                    )
-                                }    
+                                <InfoPanel
+                                    title={artistInfo?.name}
+                                    bio={artistInfo?.biography}
+                                    lastFmUrl={null}
+                                    musicBrainzId={null}
+                                    autoPullFromLastFm="artist"
+                                />
                             </div>
                             <div className="w-full h-full rounded basis-4/6 py-4">
                                 <ArtistTopSongs embedded topSongs={topSongs} artist={artist} />

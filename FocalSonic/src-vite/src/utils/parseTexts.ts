@@ -62,7 +62,17 @@ export function sanitizeLinks(text: string) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(text, "text/html");
 
+    const tagWhiteList = ["a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "br", "span", "div"];
+
+    // Remove all tags not in the whitelist
+    doc.body.querySelectorAll("*").forEach((node) => {
+        if (!tagWhiteList.includes(node.tagName.toLowerCase())) {
+            node.remove();
+        }
+    });
+
     doc.querySelectorAll("a").forEach((link) => {
+
         const href = link.getAttribute("href") ?? "";
 
         if (href.includes("javascript")) {
@@ -72,6 +82,13 @@ export function sanitizeLinks(text: string) {
             link.setAttribute("target", "_blank");
             link.setAttribute("rel", "noreferrer nofollow");
         }
+
+        if (window?.igniteView) {
+            // In IgniteView change a tags to use window.open() instead of normal navigation
+            link.setAttribute("onclick", `window.open('${href}')`);
+            link.removeAttribute("href");
+        }
+
     });
 
     return doc.body.innerHTML;
