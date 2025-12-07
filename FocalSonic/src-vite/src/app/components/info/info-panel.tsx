@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
 import LastFmIcon from "@/app/components/icons/last-fm";
 import MusicbrainzIcon from "@/app/components/icons/musicbrainz";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { sanitizeLinks } from "@/utils/parseTexts";
+import { useTranslation } from "react-i18next";
 
 interface InfoPanelProps {
     title: string
@@ -13,7 +13,7 @@ interface InfoPanelProps {
 }
 
 const containerClasses =
-  "flex flex-col items-start gap-1 rounded-lg border p-5 text-left text-sm transition-all bg-background-foreground";
+  "flex flex-col items-start gap-1 rounded border p-5 text-left text-sm transition-all bg-background-foreground";
 
 export default function InfoPanel({
     title,

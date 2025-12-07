@@ -7,10 +7,11 @@ import { Fragment } from "react/jsx-runtime";
 import { ArtistButtons } from "./buttons";
 
 interface ArtistInfoProps {
-    artist: IArtist
+    artist: IArtist,
+    allowShowingInfo?: boolean,
 }
 
-export function ArtistInfo({ artist }: ArtistInfoProps) {
+export function ArtistInfo({ artist, allowShowingInfo }: ArtistInfoProps) {
     const { data: artistInfo } = useGetArtistInfo(artist.id);
     const { isAppleMusic } = checkServerType();
 
@@ -23,11 +24,11 @@ export function ArtistInfo({ artist }: ArtistInfoProps) {
         <Fragment>
             <ArtistButtons
                 artist={artist}
-                showInfoButton={hasInfoToShow}
+                showInfoButton={hasInfoToShow && allowShowingInfo}
                 isArtistEmpty={isArtistEmpty}
             />
 
-            {hasInfoToShow && (
+            {(hasInfoToShow && allowShowingInfo) && (
                 <CollapsibleInfo
                     title={artist.name}
                     bio={artistInfo.biography}

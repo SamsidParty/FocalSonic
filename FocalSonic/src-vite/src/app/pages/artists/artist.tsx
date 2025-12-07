@@ -8,6 +8,7 @@ import { PreviewListFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { TopSongsTableFallback } from "@/app/components/fallbacks/table-fallbacks";
 import { BadgesData } from "@/app/components/header-info";
 import PreviewList, { RegularPreviewCard } from "@/app/components/home/preview-list";
+import InfoPanel from "@/app/components/info/info-panel";
 import ListWrapper from "@/app/components/list-wrapper";
 import {
     useGetArtist,
@@ -98,16 +99,30 @@ export default function Artist() {
                 artists={[artistInfo || artist]}
                 badges={badges}
             >
-                <ArtistInfo artist={artist} />
+                <ArtistInfo artist={artist} allowShowingInfo={!showNewStyle} />
                 
                 {
                     (showNewStyle && !topSongsIsLoading) && (
                         <div className="flex flex-row mb-2 mt-4 gap-4 overflow-hidden">
-                            <div className="min-w-0 shrink-0 grow-0 basis-1/6">
-                                <RegularPreviewCard isLarge title={t("artist.latest")} entry={artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0]} />
-                            </div>
-                            <div className="min-w-0 shrink-0 grow-0 basis-1/6">
-                                <RegularPreviewCard isLarge title={t("artist.topSong")} entry={topSongs[0]} />
+                            <div className="flex flex-col mt-4 gap-4 basis-2/6">
+                                <div className="flex flex-row mb-2 gap-4 overflow-hidden">
+                                    <div className="min-w-0 grow-0 basis-1/2">
+                                        <RegularPreviewCard isLarge title={t("artist.latest")} entry={artistInfo?.appleMusic?.data?.[0]?.views?.["latest-release"].data?.[0]} />
+                                    </div>
+                                    <div className="min-w-0 grow-0 basis-1/2">
+                                        <RegularPreviewCard isLarge title={t("artist.topSong")} entry={topSongs[0]} />
+                                    </div>
+                                </div>
+                                {
+                                    artistInfo?.biography && (
+                                        <InfoPanel
+                                            title={artistInfo?.name}
+                                            bio={artistInfo?.biography}
+                                            lastFmUrl={null}
+                                            musicBrainzId={null}
+                                        />
+                                    )
+                                }    
                             </div>
                             <div className="w-full h-full rounded basis-4/6 py-4">
                                 <ArtistTopSongs embedded topSongs={topSongs} artist={artist} />
