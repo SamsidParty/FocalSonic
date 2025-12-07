@@ -135,6 +135,19 @@ export default function Artist() {
                     />
                 )}
 
+                {
+                    (Object.entries(artistInfo?.appleMusic?.data?.[0]?.views || {})).reverse?.().map((view, i) => {
+                        if (view[0] === "latest-release" || !(view[1]?.data?.length > 0)) return;
+                        return (
+                            <PreviewList
+                                title={view[1]?.attributes?.title}
+                                list={view[1].data}
+                                key={i}
+                            />
+                        );
+                    })
+                }
+
                 {artistInfoIsLoading && <PreviewListFallback />}
                 {artistInfo?.similarArtist && !artistInfoIsLoading && (
                     <RelatedArtistsList
