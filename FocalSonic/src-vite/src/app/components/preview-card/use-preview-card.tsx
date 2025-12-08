@@ -17,6 +17,7 @@ export default function usePreviewCard() {
 
     async function handlePlay(entry: AppleMusicRecommendationContent | Albums) {
 
+        console.log(entry);
 
         if (entry.type === "stations") {
             // Apple music radio
@@ -31,7 +32,7 @@ export default function usePreviewCard() {
                 return;
             }
         }
-        else {
+        else if (entry.id && entry.isDir) {
             const response = await service.albums.getOne(entry.id);
 
             if (response) {
@@ -39,7 +40,17 @@ export default function usePreviewCard() {
                 return;
             }
         }
+        else if (entry.id && !entry.isDir) {
+            const response = await service.albums.getOne(entry.id);
 
+            // Find the index of the song in the album
+            const songIndex = response.song.findIndex(song => song.id === entry.id);
+
+            if (response) {
+                setSongList(response.song, Math.max(songIndex, 0));
+                return;
+            }
+        }
 
 
         navigateToResource(entry);
