@@ -92,12 +92,15 @@ export function ArtistButtons({
                 <Actions.PlayIcon />
             </Actions.Button>
 
-            <Actions.Button
-                tooltip={buttonsTooltips.like()}
-                onClick={handleLikeButton}
-            >
-                <Actions.LikeIcon isStarred={isArtistStarred} />
-            </Actions.Button>
+            {!isAppleMusic && (
+                <Actions.Button
+                    tooltip={buttonsTooltips.like()}
+                    onClick={handleLikeButton}
+                >
+                    <Actions.LikeIcon isStarred={isArtistStarred} />
+                </Actions.Button>
+            )}
+
 
             {showInfoButton && (
                 <Actions.Button
