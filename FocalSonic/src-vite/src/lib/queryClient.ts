@@ -4,6 +4,7 @@ export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             refetchOnWindowFocus: false,
+            notifyOnChangeProps: ["data", "error"] 
         },
     },
 });
@@ -12,10 +13,10 @@ export const queryClient = new QueryClient({
 export const queryCacheStorage = {
     getItem: async (key: string) => {
         const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : null;
+        return data;
     },
-    setItem: async (key: string, value: unknown) => {
-        localStorage.setItem(key, JSON.stringify(value));
+    setItem: async (key: string, value: string) => {
+        localStorage.setItem(key, value);
     },
     removeItem: async (key: string) => {
         localStorage.removeItem(key);
@@ -23,10 +24,11 @@ export const queryCacheStorage = {
 };
 
 export const makeQueryPersistent = (options: UndefinedInitialDataOptions<any, Error, any, string[]>) => {
+
+    // TANSTACK IS DAMN GARBAGE RETARDED CODE
+    // I'll figure this out later icba
+
     return {
-        ...options,
-        staleTime: 0,                
-        gcTime: Infinity,          
-        placeholderData: (previousData, previousQuery) => previousData,
+        ...options
     } as UndefinedInitialDataOptions<any, Error, any, string[]>;
 };

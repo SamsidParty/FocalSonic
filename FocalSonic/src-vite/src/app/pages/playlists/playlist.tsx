@@ -29,13 +29,12 @@ export default function Playlist() {
     const {
         data: playlist,
         isLoading,
-        isFetching,
     } = useQuery(makeQueryPersistent({
         queryKey: [queryKeys.playlist.single, playlistId],
         queryFn: () => service.playlists.getOne(playlistId),
     }));
 
-    if (isFetching || isLoading) return <PlaylistFallback />;
+    if (isLoading) return <PlaylistFallback />;
     if (!playlist) return <ErrorPage status={404} statusText="Not Found" />;
 
     const columnsToShow: ColumnFilter[] = [
