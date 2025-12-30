@@ -9,7 +9,7 @@ import { getAppInfo } from "@/utils/appName";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, ExternalLink, HeartHandshake, MessagesSquare, Server, Sparkles } from "lucide-react";
+import { DollarSign, ExternalLink, HeartHandshake, MessagesSquare } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -36,17 +36,10 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
             >
                 <DialogTitle className="sr-only">{t("menu.about")}</DialogTitle>
                 
-                {/* Hero section with gradient background */}
                 <div className="relative overflow-hidden">
-                    {/* Purple gradient background with blur */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-primary/20 to-transparent" />
-                    <div className="absolute -top-20 -left-20 w-60 h-60 bg-primary/30 rounded-full blur-3xl" />
-                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl" />
-                    
                     {/* Content */}
                     <div className="relative flex flex-col items-center justify-center py-10 px-6">
                         <div className="relative">
-                            <div className="absolute inset-0 bg-primary/40 rounded-full blur-xl scale-150" />
                             <img
                                 src={favicon}
                                 alt="FocalSonic"
@@ -55,7 +48,6 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                         </div>
                         <h1 className="mt-4 font-bold text-3xl tracking-tight">{name}</h1>
                         <div className="mt-2 flex items-center gap-2">
-                            <Sparkles className="w-3.5 h-3.5 text-primary" />
                             <span className="text-sm font-medium text-muted-foreground">
                                 {t("about.version")} {version}
                             </span>
@@ -64,31 +56,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                 </div>
 
                 {/* Info cards section */}
-                <div className="p-5 space-y-4">
-                    {/* Server info card */}
-                    <div className="rounded-xl bg-primary/5 border border-primary/10 p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Server className="w-4 h-4 text-primary" />
-                            <span className="font-semibold text-sm">{t("about.server")}</span>
-                        </div>
-                        {isLoading && (
-                            <p className="text-sm text-muted-foreground">{t("generic.loading")}</p>
-                        )}
-                        {server && !isLoading && (
-                            <div className="flex flex-wrap gap-2">
-                                <div className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary/15 text-foreground px-3 py-1.5 rounded-full border border-primary/20">
-                                    <span className="text-muted-foreground">{t("about.type")}:</span>
-                                    <span>{server.type}</span>
-                                </div>
-                                <div className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary/15 text-foreground px-3 py-1.5 rounded-full border border-primary/20">
-                                    <span className="text-muted-foreground">
-                                        {isAppleMusic ? t("menu.region", { region: "" }).replace(":", "") : t("about.apiVersion", { region: "" }).replace(":", "")}:
-                                    </span>
-                                    <span>{isAppleMusic ? (localStorage.applemusic_region?.toUpperCase() || "US") : server.version}</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                <div className="p-5 space-y-2">
 
                     {/* Action buttons */}
                     <div className="grid grid-cols-2 gap-2">
@@ -102,7 +70,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                         
                         <button
                             className="group flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 hover:border-primary/30 transition-all duration-200 text-sm font-medium"
-                            onClick={() => window.open("https://discord.gg/W9wb7rpB94")}
+                            onClick={() => window.open("https://discord.gg/wdKd2Ghwes")}
                         >
                             <MessagesSquare className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                             <span>Discord</span>
