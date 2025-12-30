@@ -310,6 +310,7 @@
   "table": {
     "columns": {
       "title": "Title",
+      "id": "ID",
       "albumArtist": "Album artist",
       "artist": "Artist",
       "contributors": "Contributors",
@@ -600,7 +601,10 @@
   },
   "songInfo": {
     "title": "Song Details",
-    "error": "Unable to retrieve song information. Please try again later."
+    "error": "Unable to retrieve song information. Please try again later.",
+    "trackInfo": "Track Information",
+    "audioQuality": "Audio Quality",
+    "replayGain": "Replay Gain"
   },
   "warnings": {
     "reload": "There is a song playing!\nAre you sure you want to reload the page?",
