@@ -48,7 +48,16 @@ namespace FocalSonic.OverrideSystem
             var overrideDirectory = Path.Join(OverridesDirectory, overrideType);
             Directory.CreateDirectory(overrideDirectory);
             var filePath = Path.Join(overrideDirectory, $"{trackId}.txt");
-            await File.WriteAllTextAsync(filePath, content);
+
+            if (!string.IsNullOrEmpty(content))
+            {
+                await File.WriteAllTextAsync(filePath, content);
+            }
+            else if (File.Exists(filePath))
+            {
+                // Delete the override
+                File.Delete(filePath);
+            }
         }
 
         [Command("getCustomOverride")]
@@ -57,10 +66,12 @@ namespace FocalSonic.OverrideSystem
             var overrideDirectory = Path.Join(OverridesDirectory, overrideType);
             Directory.CreateDirectory(overrideDirectory);
             var filePath = Path.Join(overrideDirectory, $"{trackId}.txt");
+
             if (File.Exists(filePath))
             {
                 return await File.ReadAllTextAsync(filePath);
             }
+
             return null;
         }
 
