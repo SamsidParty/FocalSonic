@@ -6,10 +6,11 @@ import { Button } from "@/app/components/ui/button";
 import { SidebarItems } from "@/app/layout/sidebar-items";
 import { ROUTES } from "@/routes/routesList";
 import { useAppStore } from "@/store/app.store";
+import { convertAppleMusicPlaylistToSubsonic } from "@/types/applemusic/playlist";
 import { Playlist } from "@/types/responses/playlist";
 import { GridViewWrapperType, resetGridClickedItem } from "@/utils/gridTools";
 import clsx from "clsx";
-import { ListMusicIcon, PinIcon, Star } from "lucide-react";
+import { FolderIcon, ListMusicIcon, PinIcon, Star } from "lucide-react";
 import React, { ElementType, Fragment, memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -89,6 +90,11 @@ export function SidebarPlaylistGenerator({
 }) {
     const location = useLocation();
 
+    if (playlistFolderStructure?.data?.length > 0) {
+        // Use folder structure instead of playlist flat list
+        playlists = playlistFolderStructure.data.map(convertAppleMusicPlaylistToSubsonic);
+    }
+
     const isActive = useCallback(
         (id: string) => {
             return location.pathname === ROUTES.PLAYLIST.PAGE(id);
@@ -124,6 +130,29 @@ export function SidebarPlaylistGenerator({
         return a.name.localeCompare(b.name);
     });
 
+    const getPlaylistIcon = (playlist: Playlist) => {
+
+        if (playlist.isFavorites) {
+            return (<Star color="var(--primary)" className="mr-3 min-h-4 min-w-4 h-4 w-4" />);
+        }
+
+        if (playlist.appleMusic?.type?.includes("playlist-folders")) {
+            return (<FolderIcon color="var(--primary)" className="mr-3 min-h-4 min-w-4 h-4 w-4" />);
+        }
+
+        if (playlist.coverArt) {
+            return (
+                <img
+                    src={getCoverArtUrl(playlist.coverArt)}
+                    alt={playlist.name}
+                    className="mr-2 -ml-1 min-h-6 min-w-6 h-6 w-6 object-cover rounded-sm"
+                />
+            );
+        }
+
+        return (<ListMusic color="var(--primary)" className="mr-3 min-h-4 min-w-4 h-4 w-4" />);
+    };
+
     return (
         <Fragment>
             {sortedPlaylists.map((playlist) => (
@@ -156,19 +185,7 @@ export function SidebarPlaylistGenerator({
                                 )}
                             >
                                 {
-                                    playlist.isFavorites ? (
-                                        <Star color="var(--primary)" className="mr-3 min-h-4 min-w-4 h-4 w-4" />
-                                    ) : (<>
-                                        {
-                                            playlist.coverArt ? (
-                                                <img
-                                                    src={getCoverArtUrl(playlist.coverArt)}
-                                                    alt={playlist.name}
-                                                    className="mr-2 -ml-1 min-h-6 min-w-6 h-6 w-6 object-cover rounded-sm"
-                                                />
-                                            ) : (<ListMusic color="var(--primary)" className="mr-3 min-h-4 min-w-4 h-4 w-4" />)
-                                        }
-                                    </>)
+                                    getPlaylistIcon(playlist)
                                 }
                                 
                                 <span className="w-full truncate text-left">

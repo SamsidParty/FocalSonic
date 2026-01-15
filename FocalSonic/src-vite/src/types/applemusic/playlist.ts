@@ -51,7 +51,8 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
         starred: playlist.attributes?.inFavorites === true ? new Date().toISOString() : undefined,
         isFavorites: isFavoritesPlaylist,
         appleMusic: {
-            data: playlist?.attributes
+            data: playlist?.attributes,
+            type: playlist?.type,
         }
     });
 }
