@@ -1,3 +1,4 @@
+import { getCoverArtUrl } from "@/api/httpClient";
 import { PlaylistOptions } from "@/app/components/playlist/options";
 import { PodcastSidebarItem } from "@/app/components/podcasts/sidebar-item";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
@@ -8,7 +9,7 @@ import { useAppStore } from "@/store/app.store";
 import { Playlist } from "@/types/responses/playlist";
 import { GridViewWrapperType, resetGridClickedItem } from "@/utils/gridTools";
 import clsx from "clsx";
-import { ListMusicIcon, Star } from "lucide-react";
+import { ListMusicIcon, PinIcon, Star } from "lucide-react";
 import React, { ElementType, Fragment, memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -154,13 +155,32 @@ export function SidebarPlaylistGenerator({
                             >
                                 {
                                     playlist.isFavorites ? (
-                                        <Star color="var(--primary)" className="mr-2 min-h-4 min-w-4 h-4 w-4" />
-                                    ) : (<ListMusic color="var(--primary)" className="mr-2 min-h-4 min-w-4 h-4 w-4" />)
+                                        <Star color="var(--primary)" className="mr-3 min-h-4 min-w-4 h-4 w-4" />
+                                    ) : (<>
+                                        {
+                                            playlist.coverArt ? (
+                                                <img
+                                                    src={getCoverArtUrl(playlist.coverArt)}
+                                                    alt={playlist.name}
+                                                    className="mr-2 -ml-1 min-h-6 min-w-6 h-6 w-6 object-cover rounded-sm"
+                                                />
+                                            ) : (<ListMusic color="var(--primary)" className="mr-3 min-h-4 min-w-4 h-4 w-4" />)
+                                        }
+                                    </>)
                                 }
                                 
                                 <span className="w-full truncate text-left">
                                     {playlist.name}
                                 </span>
+
+                                {
+                                    pinnedIDs?.includes(playlist.id) && (
+                                        <PinIcon
+                                            color="var(--foreground)"
+                                            className="opacity-40 ml-auto min-h-4 min-w-4 h-4 w-4"
+                                        />
+                                    )
+                                }
                             </Button>
                         </MemoContextMenuProvider>
                     </Link>
