@@ -7,6 +7,7 @@ const appleMusic = {
 const playlist = {
     all: "get-all-playlists",
     single: "get-playlist",
+    display: "get-display-playlists",
 };
 
 const album = {

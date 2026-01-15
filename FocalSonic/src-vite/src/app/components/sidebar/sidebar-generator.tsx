@@ -6,7 +6,6 @@ import { Button } from "@/app/components/ui/button";
 import { SidebarItems } from "@/app/layout/sidebar-items";
 import { ROUTES } from "@/routes/routesList";
 import { useAppStore } from "@/store/app.store";
-import { convertAppleMusicPlaylistToSubsonic } from "@/types/applemusic/playlist";
 import { Playlist } from "@/types/responses/playlist";
 import { GridViewWrapperType, resetGridClickedItem } from "@/utils/gridTools";
 import clsx from "clsx";
@@ -82,18 +81,11 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
 export function SidebarPlaylistGenerator({
     playlists,
     pinnedIDs, // For Apple Music
-    playlistFolderStructure // For Apple Music
 }: {
     playlists: Playlist[]
     pinnedIDs?: string[]
-    playlistFolderStructure?: any
 }) {
     const location = useLocation();
-
-    if (playlistFolderStructure?.data?.length > 0) {
-        // Use folder structure instead of playlist flat list
-        playlists = playlistFolderStructure.data.map(convertAppleMusicPlaylistToSubsonic);
-    }
 
     const isActive = useCallback(
         (id: string) => {
