@@ -79,8 +79,10 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
 
 export function SidebarPlaylistGenerator({
     playlists,
+    pinnedIDs
 }: {
     playlists: Playlist[]
+    pinnedIDs?: string[]
 }) {
     const location = useLocation();
 
@@ -91,9 +93,37 @@ export function SidebarPlaylistGenerator({
         [location.pathname],
     );
 
+    // Duplicate the playlists array to then sort it
+    // Sort order:
+    // - "Favorite Songs" playlist always first
+    // - Then pinned playlists in the order of pinnedIDs
+    // - Then the rest of the playlists alphabetically
+    const sortedPlaylists = [...playlists];
+
+    sortedPlaylists.sort((a, b) => {
+        // "Favorite Songs" always first
+        if (a.isFavorites) return -1;
+        if (b.isFavorites) return 1;
+
+        // Pinned playlists next
+        const aPinnedIndex = pinnedIDs ? pinnedIDs.indexOf(a.id) : -1;
+        const bPinnedIndex = pinnedIDs ? pinnedIDs.indexOf(b.id) : -1;
+
+        if (aPinnedIndex !== -1 && bPinnedIndex !== -1) {
+            return aPinnedIndex - bPinnedIndex; // Both pinned, sort by their order in pinnedIDs
+        } else if (aPinnedIndex !== -1) {
+            return -1; // Only a is pinned
+        } else if (bPinnedIndex !== -1) {
+            return 1; // Only b is pinned
+        }
+
+        // Finally, sort alphabetically
+        return a.name.localeCompare(b.name);
+    });
+
     return (
         <Fragment>
-            {playlists.map((playlist) => (
+            {sortedPlaylists.map((playlist) => (
                 <Fragment key={playlist.id}>
                     <Link
                         to={ROUTES.PLAYLIST.PAGE(playlist.id)}

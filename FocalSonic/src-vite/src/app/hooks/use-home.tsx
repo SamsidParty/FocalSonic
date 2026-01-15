@@ -2,6 +2,7 @@ import { appleMusic } from "@/service/applemusic";
 import { service } from "@/service/service";
 import { convertMinutesToMs } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
+import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
 
 export const useGetRandomSongs = () => {
@@ -19,9 +20,11 @@ export const useGetAppleMusicHome = () => {
 };
 
 export const useGetAppleMusicPins = () => {
+    const { isAppleMusic } = checkServerType();
+
     return useQuery({
         queryKey: [queryKeys.appleMusic.pins],
-        queryFn: () => appleMusic.recommendations.getPins(),
+        queryFn: () => isAppleMusic ? appleMusic.recommendations.getPins() : Promise.resolve({ data: [], count: 0 }),
     });
 };
 
