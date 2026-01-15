@@ -1,6 +1,6 @@
 import { httpClient } from "@/api/httpClient";
 import { AppleMusicLyricsResponse } from "@/types/applemusic/song";
-import { GetLyricsData, getLyricsFromLyricOtter } from "../subsonic/lyrics";
+import { GetLyricsData, getLyricsFromLRCLib } from "../subsonic/lyrics";
 
 async function getLyrics(getLyricsData: GetLyricsData) {
     
@@ -31,8 +31,10 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         lyrics = null;
     }
 
-    const otterLyrics = (await getLyricsFromLyricOtter(getLyricsData)).value;
-    lyrics = otterLyrics || lyrics;
+    
+    if (!lyrics) {
+        lyrics = (await getLyricsFromLRCLib(getLyricsData)).value;
+    }
 
     /*if (window?.igniteView?.commandBridge?.saveCustomOverride && lyrics) {
         await window.igniteView.commandBridge.saveCustomOverride("AppleLyrics2", getLyricsData.id!, lyrics);
