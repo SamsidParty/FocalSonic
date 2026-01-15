@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { PlusIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -10,12 +9,9 @@ import ListWrapper from "@/app/components/list-wrapper";
 import { EmptyPlaylistsPage } from "@/app/components/playlist/empty-page";
 import { PlaylistGridCard } from "@/app/components/playlist/playlist-grid-card";
 import { Button } from "@/app/components/ui/button";
-import { playlistsColumns } from "@/app/tables/playlists-columns";
-import { service } from "@/service/service";
+import { useDisplayPlaylists } from "@/app/hooks/use-playlist";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylists } from "@/store/playlists.store";
-import { ColumnFilter } from "@/types/columnFilter";
-import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import React from "react";
 
@@ -25,30 +21,8 @@ export default function PlaylistsPage() {
     const { t } = useTranslation();
     const { isAppleMusic } = checkServerType();
 
-    const { data: playlists, isLoading } = useQuery({
-        queryKey: [queryKeys.playlist.all],
-        queryFn: service.playlists.getAll,
-    });
-
-    const columns = playlistsColumns();
-
-    const columnsToShow: ColumnFilter[] = [
-        "index",
-        "name",
-        (!isAppleMusic && "songCount"),
-        (!isAppleMusic && "public"),
-        (!isAppleMusic && "duration"),
-        "actions"
-    ];
-
-    async function handlePlayPlaylist(playlistId: string) {
-        const playlist = await service.playlists.getOne(playlistId);
-
-        if (playlist && playlist.entry.length > 0) {
-            setSongList(playlist.entry, 0);
-        }
-    }
-
+    const { data: playlists, isLoading } = useDisplayPlaylists();
+    
     if (isLoading) return <SongListFallback />;
     if (!playlists) return null;
 

@@ -4,7 +4,7 @@ import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { Playlists } from "@/types/responses/playlist";
-import { Shuffle } from "lucide-react";
+import { FolderIcon, Shuffle } from "lucide-react";
 import React, { memo } from "react";
 
 import { Button } from "../ui/button";
@@ -14,6 +14,24 @@ type PlaylistCardProps = {
 }
 
 function PlaylistCard({ playlist }: PlaylistCardProps) {
+
+    if (playlist?.appleMusic?.type?.includes("playlist-folders")) {
+        return (
+            <PreviewCard.Root>
+                <PreviewCard.ImageWrapper link={ROUTES.PLAYLIST.PAGE(playlist.id)}>
+                    <div className="flex items-center justify-center w-full h-full">  
+                        <FolderIcon color="var(--primary)" className="w-1/2 h-1/2 group-hover:opacity-40 transition-opacity duration-300" />
+                    </div>
+                </PreviewCard.ImageWrapper>
+                <PreviewCard.InfoWrapper>
+                    <PreviewCard.Title link={ROUTES.PLAYLIST.PAGE(playlist.id)}>
+                        {playlist.name}
+                    </PreviewCard.Title>
+                </PreviewCard.InfoWrapper>
+            </PreviewCard.Root>
+        );
+    }
+
     const { setSongList } = usePlayerActions();
 
     async function handlePlayPlaylist(shuffle = false) {
