@@ -1,6 +1,7 @@
 const appleMusic = {
     recommendations: "get-apple-music-recommendations",
     pins: "get-apple-music-pins",
+    playlistFolders: "get-apple-music-playlist-folders",
 };
 
 const playlist = {

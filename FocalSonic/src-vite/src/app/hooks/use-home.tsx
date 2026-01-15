@@ -28,6 +28,14 @@ export const useGetAppleMusicPins = () => {
     });
 };
 
+export const useGetAppleMusicPlaylistFolders = () => {
+    const { isAppleMusic } = checkServerType();
+
+    return useQuery({
+        queryKey: [queryKeys.appleMusic.playlistFolders],
+        queryFn: () => isAppleMusic ? appleMusic.playlists.getPlaylistFolders() : Promise.resolve({ }),
+    });
+};
 
 export const useGetRecentlyAdded = () => {
     return useQuery({

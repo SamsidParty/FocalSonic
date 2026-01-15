@@ -24,6 +24,15 @@ async function getAll() {
     return listData.map(convertAppleMusicPlaylistToSubsonic) ?? [];
 }
 
+async function getPlaylistFolders() {
+    const response = await httpClient<AppleMusicPlaylist[]>("/applemusic/me/library/playlist-folders/p.playlistsroot/children", { 
+        method: "GET",
+        query: defaultAppleMusicQuery
+    });
+
+    return response ?? {};
+}
+
 async function resolvePlaylists(href: string) {
     const targetURL = href.replace("/v1/", "/applemusic/");
 
@@ -211,4 +220,5 @@ export const playlists = {
     createWithDetails,
     resolveTracks,
     update,
+    getPlaylistFolders
 };

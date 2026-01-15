@@ -80,10 +80,12 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
 
 export function SidebarPlaylistGenerator({
     playlists,
-    pinnedIDs
+    pinnedIDs, // For Apple Music
+    playlistFolderStructure // For Apple Music
 }: {
     playlists: Playlist[]
     pinnedIDs?: string[]
+    playlistFolderStructure?: any
 }) {
     const location = useLocation();
 

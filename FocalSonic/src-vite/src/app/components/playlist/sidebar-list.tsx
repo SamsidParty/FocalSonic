@@ -1,7 +1,7 @@
 import { SidebarPlaylistButtons } from "@/app/components/playlist/sidebar-buttons";
 import { SidebarPlaylistGenerator } from "@/app/components/sidebar/sidebar-generator";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
-import { useGetAppleMusicPins } from "@/app/hooks/use-home";
+import { useGetAppleMusicPins, useGetAppleMusicPlaylistFolders } from "@/app/hooks/use-home";
 import { cn } from "@/lib/utils";
 import { service } from "@/service/service";
 import { queryKeys } from "@/utils/queryKeys";
@@ -18,7 +18,8 @@ export function SidebarPlaylists() {
         queryFn: service.playlists.getAll,
     });
 
-    const { data: pins, isLoading, isFetching } = useGetAppleMusicPins();
+    const { data: pins } = useGetAppleMusicPins();
+    const { data: folders } = useGetAppleMusicPlaylistFolders();
 
     return (
         <div className="flex flex-col flex-grow min-w-sidebar max-w-sidebar overflow-clip overflow-y-auto">
@@ -29,7 +30,7 @@ export function SidebarPlaylists() {
             <div className="flex flex-col overflow-y-auto">
                 <ScrollArea id="playlists" className="px-4 pb-2">
                     {playlists !== undefined && playlists.length > 0 ? (
-                        <SidebarPlaylistGenerator pinnedIDs={pins?.data?.map((pin) => pin.id)} playlists={playlists} />
+                        <SidebarPlaylistGenerator pinnedIDs={pins?.data?.map((pin) => pin.id)} playlistFolderStructure={folders} playlists={playlists} />
                     ) : (
                         <EmptyPlaylistsMessage />
                     )}
