@@ -124,6 +124,12 @@ export function getCoverArtUrl(
 
     // No point proxying apple music cover art URLs, let it get served through the CDN directly
     if (id?.startsWith("https://") || id?.startsWith("http://")) {
+
+        if (isBlobstorePresignedS3Url(id) && window?.igniteView) {
+            // Proxy through igniteview to cache the blobstore URL
+            return window.igniteView.resolverURL + "/s3imageproxy?" + encodeURIComponent(id);
+        }
+
         return id.replaceAll("{w}", size).replaceAll("{h}", size).replaceAll("{f}", "jpeg");
     }
 
@@ -138,6 +144,38 @@ export function getCoverArtUrl(
         id,
         size,
     });
+}
+
+function isBlobstorePresignedS3Url(urlStr: string): boolean {
+    let url: URL;
+    try {
+        url = new URL(urlStr);
+    } catch {
+        return false;
+    }
+
+    // Must match apple blobstore hostname
+    if (!url.hostname.includes(".blobstore.apple.com")) return false;
+
+    // Heuristic: presigned S3-style params
+    // Includes:
+    //  - X-Amz-Algorithm
+    //  - X-Amz-Date
+    //  - X-Amz-SignedHeaders
+    //  - X-Amz-Expires
+    //  - X-Amz-Credential
+    //  - X-Amz-Signature
+    const qp = url.searchParams;
+
+    const required = [
+        "X-Amz-Algorithm",
+        "X-Amz-Date",
+        "X-Amz-Expires",
+        "X-Amz-Credential",
+        "X-Amz-Signature",
+    ];
+
+    return required.every((k) => qp.has(k));
 }
 
 export function getSongStreamUrl(
