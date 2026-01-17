@@ -14,6 +14,7 @@ import { usePlayerActions } from "@/store/player.store";
 import { usePlaylists } from "@/store/playlists.store";
 import { checkServerType } from "@/utils/servers";
 import React from "react";
+import { useSearchParams } from "react-router-dom";
 
 export default function PlaylistsPage() {
     const { setPlaylistDialogState } = usePlaylists();
@@ -21,7 +22,11 @@ export default function PlaylistsPage() {
     const { t } = useTranslation();
     const { isAppleMusic } = checkServerType();
 
-    const { data: playlists, isLoading } = useDisplayPlaylists();
+    // Check for ?folderId parameter in URL for Apple Music playlist folders
+    const [searchParams] = useSearchParams();
+    const folderId = searchParams.get("folderId") || undefined;
+
+    const { data: playlists, isLoading } = useDisplayPlaylists(folderId);
     
     if (isLoading) return <SongListFallback />;
     if (!playlists) return null;

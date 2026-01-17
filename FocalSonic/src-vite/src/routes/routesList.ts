@@ -44,7 +44,14 @@ const SONGS = {
 };
 
 const PLAYLIST = {
-    PAGE: (playlistId: string) => `${LIBRARY.PLAYLISTS}/${playlistId}`,
+    PAGE: (playlistId: string) => {
+        if (playlistId.startsWith("folder:")) {
+            // Handle playlist folders
+            return `${LIBRARY.PLAYLISTS}?folderId=${encodeURIComponent(playlistId.substring(7))}`;
+        }
+
+        return `${LIBRARY.PLAYLISTS}/${playlistId}`;
+    },
     PATH: `${LIBRARY.PLAYLISTS}/:playlistId`,
 };
 

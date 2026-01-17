@@ -5,14 +5,14 @@ import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
 
-export const useDisplayPlaylists = () => {
+export const useDisplayPlaylists = (folderId?: string) => {
     const { isAppleMusic } = checkServerType();
 
     return useQuery({
-        queryKey: [queryKeys.playlist.display],
+        queryKey: [queryKeys.playlist.display, folderId],
         queryFn: async () => {
             if (isAppleMusic) {
-                const fetchedFolders = await  appleMusic.playlists.getPlaylistFolders();
+                const fetchedFolders = await  appleMusic.playlists.getPlaylistFolders(folderId);
                 return fetchedFolders?.data?.map(convertAppleMusicPlaylistToSubsonic) ?? [];
             }
 

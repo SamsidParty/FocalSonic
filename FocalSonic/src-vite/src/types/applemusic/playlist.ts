@@ -34,10 +34,12 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
     if (!playlist) { return; }
 
     const isFavoritesPlaylist = playlist.attributes?.inFavorites && !playlist.attributes.canEdit && !playlist.attributes.canDelete && !playlist.attributes.isPublic;
+    const isPlaylistFolder = playlist?.type?.includes("playlist-folders");
+    const id = isPlaylistFolder ? `folder:${playlist.id}` : playlist.id;
 
     return removeUndefined({
         isDir: true,
-        id: playlist.id,
+        id: id,
         name: playlist.attributes?.name || "Playlist",
         comment: playlist.attributes?.description?.standard || "",
         coverArt: isFavoritesPlaylist ? `${window.location.origin}/favorite_playlist.png` : (playlist.attributes?.artwork?.url || ""),

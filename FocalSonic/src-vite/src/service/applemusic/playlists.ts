@@ -24,8 +24,8 @@ async function getAll() {
     return listData.map(convertAppleMusicPlaylistToSubsonic) ?? [];
 }
 
-async function getPlaylistFolders() {
-    const response = await httpClient<AppleMusicPlaylist[]>("/applemusic/me/library/playlist-folders/p.playlistsroot/children", { 
+async function getPlaylistFolders(parentFolderId?: string) {
+    const response = await httpClient<AppleMusicPlaylist[]>(`/applemusic/me/library/playlist-folders/${parentFolderId || "p.playlistsroot"}/children`, { 
         method: "GET",
         query: defaultAppleMusicQuery
     });
