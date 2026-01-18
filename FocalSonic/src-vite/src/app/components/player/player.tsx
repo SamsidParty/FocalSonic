@@ -207,7 +207,7 @@ export function Player() {
 
     return (
         <>
-            <div className={playerStyle === "floating" ? "h-[--player-height] fixed left-0 right-0 z-40 bottom-0 bg-bar" : "hidden"} />
+            <div className={playerStyle === "floating" ? "h-[--player-height] fixed left-0 right-0 -z-10 bottom-0 bg-bar" : "hidden"} />
             <footer className={clsx(
                 "flex items-center fixed z-40",
                 playerStyle === "floating" && "h-[64px] left-[--sidebar-width] [--player-height:64px] right-[--sidebar-width] ml-5 mr-7 mb-8 rounded-full bg-background",
@@ -221,7 +221,11 @@ export function Player() {
                     playerStyle === "floating" && "[grid-template-areas:'controls_trackinfo_extrabuttons']",
                 )}>
                     {/* Track Info */}
-                    <div className="flex items-center gap-2 w-full xxs:hidden [grid-area:trackinfo]">
+                    <div className={clsx(
+                        "flex items-center gap-2 xxs:hidden [grid-area:trackinfo]",
+                        playerStyle === "floating" && "overflow-hidden",
+                        playerStyle !== "floating" && "w-full",
+                    )}>
                         {isSong && <MemoTrackInfo song={song} />}
                         {isRadio && <MemoRadioInfo radio={radio} />}
                         {isPodcast && <MemoPodcastInfo podcast={podcast} />}

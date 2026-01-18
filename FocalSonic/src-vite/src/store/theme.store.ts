@@ -106,5 +106,5 @@ export const usePlayerStyle = () => {
         return { playerStyle: "slim", isPlayerAtTop: false, isMiniPlayer, useSlimButtons: true };
     }
 
-    return { playerStyle, isPlayerAtTop, isMiniPlayer, useSlimButtons: playerStyle === "slim" };
+    return { playerStyle, isPlayerAtTop, isMiniPlayer, useSlimButtons: playerStyle === "slim" || playerStyle === "floating" };
 };

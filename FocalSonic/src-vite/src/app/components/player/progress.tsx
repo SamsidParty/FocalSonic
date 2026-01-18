@@ -159,12 +159,14 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
         return currentDuration >= 3600;
     }, [currentDuration]);
 
-    const { useSlimButtons } = usePlayerStyle();
+    const { useSlimButtons, playerStyle } = usePlayerStyle();
 
     return (
         <div
             className={clsx(
-                "flex w-full xxs:w-40 justify-center items-center gap-2",
+                "flex xxs:w-40 justify-center items-center gap-2",
+                playerStyle === "floating" && "absolute bottom-0 left-0 right-0 mx-8 -mb-1",
+                playerStyle !== "floating" && "w-full",
                 isEmpty && "opacity-50",
             )}
         >
@@ -208,6 +210,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
             <small
                 className={clsx(
                     "text-xs text-muted-foreground text-left",
+                    useSlimButtons && "hidden",
                     isDurationLarge ? "min-w-14" : "min-w-10",
                 )}
                 data-testid="player-duration-time"
