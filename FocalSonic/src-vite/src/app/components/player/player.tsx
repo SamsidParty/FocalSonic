@@ -207,10 +207,18 @@ export function Player() {
 
     return (
         <>
-            <div className={playerStyle === "floating" ? "h-[--player-height] fixed left-0 right-0 -z-10 bottom-0 bg-bar" : "hidden"} />
+            {
+                playerStyle === "floating" && (
+                    <div className={clsx(
+                        "h-[--player-height] fixed left-0 right-0 -z-10 bg-bar",
+                        isPlayerAtTop ? "top-header" : "bottom-0",
+                    )} />
+                )
+            }
+            
             <footer className={clsx(
                 "flex items-center fixed z-40",
-                playerStyle === "floating" && "h-[64px] left-[--sidebar-width] [--player-height:64px] right-[--sidebar-width] ml-5 mr-7 mb-8 rounded-full bg-background",
+                playerStyle === "floating" && "h-[64px] left-[--sidebar-width] [--player-height:64px] right-[--sidebar-width] ml-5 mr-7 mb-8 mt-8 rounded-full bg-background",
                 playerStyle !== "floating" && "h-[--player-height] w-full left-0 right-0 bg-bar",
                 isPlayerAtTop ? "top-header" : "bottom-0",
                 isFullscreen() || isMiniPlayer ? "player-idle-hide" : "",
