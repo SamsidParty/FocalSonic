@@ -210,14 +210,18 @@ export function Player() {
             <div className={playerStyle === "floating" ? "h-[--player-height] fixed left-0 right-0 z-40 bottom-0 bg-bar" : "hidden"} />
             <footer className={clsx(
                 "flex items-center fixed z-40",
-                playerStyle === "floating" && "h-[64px] left-[--sidebar-width] right-[--sidebar-width] ml-5 mr-7 mb-8 rounded-full bg-background",
+                playerStyle === "floating" && "h-[64px] left-[--sidebar-width] [--player-height:64px] right-[--sidebar-width] ml-5 mr-7 mb-8 rounded-full bg-background",
                 playerStyle !== "floating" && "h-[--player-height] w-full left-0 right-0 bg-bar",
                 isPlayerAtTop ? "top-header" : "bottom-0",
                 isFullscreen() || isMiniPlayer ? "player-idle-hide" : "",
             )}>
-                <div className="w-full h-full grid grid-cols-player xxs:flex xxs:flex-col xxs:justify-center gap-2 px-3">
+                <div className={clsx(
+                    "w-full h-full grid grid-cols-player xxs:flex xxs:flex-col xxs:justify-center gap-2 px-3",
+                    playerStyle !== "floating" && "[grid-template-areas:'trackinfo_controls_extrabuttons']",
+                    playerStyle === "floating" && "[grid-template-areas:'controls_trackinfo_extrabuttons']",
+                )}>
                     {/* Track Info */}
-                    <div className="flex items-center gap-2 w-full xxs:hidden">
+                    <div className="flex items-center gap-2 w-full xxs:hidden [grid-area:trackinfo]">
                         {isSong && <MemoTrackInfo song={song} />}
                         {isRadio && <MemoRadioInfo radio={radio} />}
                         {isPodcast && <MemoPodcastInfo podcast={podcast} />}
@@ -226,8 +230,9 @@ export function Player() {
                     <div 
                         className={clsx(
                             playerStyle === "default" && "col-span-2 xxs:w-full flex flex-col justify-center items-center px-4 gap-1",
-                            playerStyle === "floating" && "col-span-2 xxs:w-full flex flex-row justify-center items-center px-4 xxs:px-0 gap-1",
-                            playerStyle === "slim" && "col-span-2 xxs:w-full flex flex-row justify-center items-center px-4 xxs:px-0 gap-1"
+                            playerStyle === "floating" && "col-span-2 xxs:w-full flex flex-row justify-center items-center xxs:px-0 gap-1",
+                            playerStyle === "slim" && "col-span-2 xxs:w-full flex flex-row justify-center items-center px-4 xxs:px-0 gap-1",
+                            "[grid-area:controls]"
                         )}>
                         <MemoPlayerControls
                             song={song}
@@ -241,7 +246,7 @@ export function Player() {
                         )}
                     </div>
                     {/* Remaining Controls and Volume */}
-                    <div className="flex items-center w-full justify-end xxs:hidden">
+                    <div className="flex items-center w-full justify-end xxs:hidden [grid-area:extrabuttons]">
                         <div className="flex items-center gap-1">
                             {isSong && (
                                 <>

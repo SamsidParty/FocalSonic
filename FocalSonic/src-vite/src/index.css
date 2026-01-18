@@ -22,17 +22,17 @@
 
   :root[player-style="default"] {
     --player-height: 96px;
-    --grid-player: minmax(250px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 1fr);
+    --grid-player: minmax(250px, 1fr) 2fr minmax(0px, 1fr);
   }
 
   :root[player-style="slim"] {
     --player-height: 64px;
-    --grid-player: minmax(250px, 1fr) fit-content(200px) minmax(0px, 1fr) minmax(250px, 1fr);
+    --grid-player:  minmax(250px, 1fr) 2fr minmax(0px, 1fr);
   }
 
   :root[player-style="floating"] {
     --player-height: 12px;
-    --grid-player: minmax(250px, 1fr) minmax(0px, 1fr) minmax(0px, 1fr) minmax(250px, 1fr);
+    --grid-player: minmax(0px, 1fr) minmax(250px, 1fr) minmax(0px, 1fr);
   }
 
   :root {
