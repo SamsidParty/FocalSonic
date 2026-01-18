@@ -10,7 +10,7 @@ import { Location, Outlet, useLocation } from "react-router-dom";
 export function MainRoutes() {
     const { pathname } = useLocation() as Location;
     const { sidebarOpen, extraBarContent } = useAppStore().settings;
-    const { isPlayerAtTop } = usePlayerStyle();
+    const { isPlayerAtTop, playerStyle } = usePlayerStyle();
     const animationRef = useRef<HTMLDivElement>(null);
 
 
@@ -43,7 +43,10 @@ export function MainRoutes() {
             <div className="relative overflow-hidden flex h-full w-full rounded-md mr-3">
                 <ScrollArea
                     id="main-scroll-area"
-                    className="w-full bg-body main-page"
+                    className={clsx(
+                        "w-full bg-body main-page",
+                        (playerStyle === "floating" && !isPlayerAtTop) && "pb-[75px]",
+                    )}
                     ref={animationRef}
                     onAnimationEnd={(event: React.AnimationEvent<HTMLDivElement>) => event.currentTarget.style.animation = ""}
                 >
