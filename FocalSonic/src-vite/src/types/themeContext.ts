@@ -34,8 +34,8 @@ export interface IThemeContext {
     setLyricsFont: (font: string) => void
     isPlayerAtTop: boolean
     setIsPlayerAtTop: (isAtTop: boolean) => void
-    playerStyle: "default" | "slim"
-    setPlayerStyle: (style: "default" | "slim") => void
+    playerStyle: "default" | "slim" | "floating"
+    setPlayerStyle: (style: "default" | "slim" | "floating") => void
     enableLyricGlow: boolean
     setEnableLyricGlow: (value: boolean) => void
     enableLyricBlur: boolean
