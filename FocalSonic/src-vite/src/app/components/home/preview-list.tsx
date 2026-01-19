@@ -170,7 +170,7 @@ export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | 
                 style={(isLarge && isAppleMusic) ? {
                     backgroundImage: "url('" + getCoverArtUrl(entry.coverArt || entry?.attributes?.artwork?.url || entry?.attributes?.editorialArtwork?.brandLogo?.url) + "')",
                     backgroundPosition: "bottom",
-                    color: "#" + (entry as AppleMusicRecommendationContent).attributes?.artwork?.textColor1
+                    color: "white"
                 } : {}}
             >
                 <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl backdrop-brightness-[80%] px-4 grow text-center flex flex-col rounded-b-sm overflow-hidden justify-center align-center"}>
