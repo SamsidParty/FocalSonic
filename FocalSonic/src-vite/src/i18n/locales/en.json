@@ -677,7 +677,8 @@
         "bigPlayer": {
           "label": "Big Player",
           "blurSize": "Image Blur Size"
-        }
+        },
+        "accentColor": "Accent Color Override"
       },
       "player": {
         "showAtTop": "Player at top",

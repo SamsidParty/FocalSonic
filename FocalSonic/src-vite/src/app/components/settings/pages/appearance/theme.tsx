@@ -17,7 +17,10 @@ export function ThemeSettingsPicker() {
         <div className="h-full space-y-4">
             {
                 (currentTheme == Theme.System && window.igniteView && window.igniteView.platformHints.includes("win32")) && (
-                    <VibrancySelector/>
+                    <>
+                        <VibrancySelector/>
+                        <AccentColorPicker/>
+                    </>
                 )
             }
             <ContentItemTitle>{t("theme.label")}</ContentItemTitle>
@@ -88,6 +91,77 @@ export function ThemeTitle({ isActive, theme }: ThemeTitleProps) {
     );
 }
 
+function AccentColorPicker() {
+    const { accentColor, setAccentColor } = useTheme();
+    const { t } = useTranslation();
+
+
+    const [localColor, setLocalColor] = React.useState(accentColor || "#ffffff");
+    const timeoutRef = React.useRef<number | null>(null);
+    const pendingRef = React.useRef<string | null>(null);
+    const DEBOUNCE_MS = 300;
+
+    React.useEffect(() => {
+        setLocalColor(accentColor || "#ffffff");
+    }, [accentColor]);
+
+    React.useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                window.clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+        };
+    }, []);
+
+    const commit = React.useCallback(() => {
+        if (pendingRef.current != null) {
+            setAccentColor(pendingRef.current);
+            pendingRef.current = null;
+        }
+        if (timeoutRef.current) {
+            window.clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
+    }, [setAccentColor]);
+
+    const handleChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.currentTarget.value;
+        setLocalColor(value);
+        pendingRef.current = value;
+
+        if (timeoutRef.current) {
+            window.clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = window.setTimeout(commit, DEBOUNCE_MS);
+    }, [commit]);
+
+    // ensure final value is committed when user finishes interaction
+    const handleCommitInteraction = React.useCallback(() => commit(), [commit]);
+
+    return (
+        <Root>
+            <Content>
+                <ContentItem>
+                    <ContentItemTitle>{t("settings.appearance.colors.accentColor")}</ContentItemTitle>
+                    <ContentItemForm>
+                        <input
+                            type="color"
+                            value={localColor}
+                            onChange={handleChange}
+                            onBlur={handleCommitInteraction}
+                            onPointerUp={handleCommitInteraction}
+                            onMouseUp={handleCommitInteraction}
+                            className="w-10 h-8 p-0 border-0 bg-transparent cursor-pointer rounded-md"
+                        />
+                    </ContentItemForm>
+                </ContentItem>
+            </Content>
+            <ContentSeparator />
+        </Root>
+    );
+}
+
 function VibrancySelector() {
 
     const { vibrancyMode, setVibrancyMode } = useTheme();
@@ -147,7 +221,6 @@ function VibrancySelector() {
                     </ContentItemForm>
                 </ContentItem>
             </Content>
-            <ContentSeparator />
         </Root>
     );
 }

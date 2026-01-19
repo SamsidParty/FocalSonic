@@ -20,7 +20,7 @@
     --card-foreground: var(--system-foreground);
     --popover: var(--system-background2);
     --popover-foreground: var(--system-foreground);
-    --primary: var(--system-accent);
+    --primary: var(--system-accent-override, var(--system-accent));
     --primary-foreground: var(--system-accent-foreground);
     --secondary: color-mix(in hsl, var(--system-body), var(--origin-color) 40%);
     --secondary-foreground: var(--system-foreground);
@@ -34,7 +34,7 @@
     --input: var(--system-outline);
     --body: color-mix(in hsl, var(--system-body), var(--origin-color) 30%);
     --bar: color-mix(in srgb, transparent, var(--origin-color) 55%);
-    --ring: var(--system-accent);
+    --ring: var(--system-accent-override, var(--system-accent));
   }
 
   .light {

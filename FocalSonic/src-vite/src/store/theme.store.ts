@@ -16,6 +16,11 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                     setTheme: (theme: Theme) => {
                         set((state) => {
                             state.theme = theme;
+
+                            // Reset accent color if not using system theme
+                            if (theme != Theme.System) {
+                                state.accentColor = undefined;
+                            }
                         });
                     },
                     setUIFont(font) {
@@ -61,6 +66,12 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                         if (window.igniteView?.commandBridge?.setWindowVibrancy) {
                             window.igniteView.commandBridge.setWindowVibrancy(mode);
                         }
+                    },
+                    accentColor: undefined,
+                    setAccentColor(color: string) {
+                        set((state) => {
+                            state.accentColor = color;
+                        });
                     },
                 })),
                 {
