@@ -62,6 +62,9 @@ export function PlayerSettings() {
                         </Select>
                     </ContentItemForm>
                 </ContentItem>
+            </Content>
+            <ContentSeparator />
+            <Content className="mt-4">
                 <ContentItem>
                     <ContentItemTitle>
                         {t("settings.appearance.lyrics.lyricGlow")}
