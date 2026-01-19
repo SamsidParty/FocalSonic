@@ -3,6 +3,7 @@
 using IgniteView.Core;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -41,6 +42,9 @@ namespace FocalSonic.Windows
 
         static long OriginalStyle;
 
+        // Track which monitor fullscreen was entered on (so exit restores to same monitor)
+        private static Screen? _fullScreenScreen;
+
         [DllImport("user32.dll")]
         static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
@@ -61,6 +65,30 @@ namespace FocalSonic.Windows
         [DllImport("user32.dll")]
         public static extern int GetSystemMetrics(int nIndex);
 
+
+        private static Screen GetScreenForWindow(IntPtr hwnd)
+            => Screen.FromHandle(hwnd);
+
+        private static (int X, int Y) GetCenteredClampedPosition(Screen screen, int width, int height)
+        {
+            Rectangle wa = screen.WorkingArea;
+
+            if (width <= 0) width = 1;
+            if (height <= 0) height = 1;
+
+            // center in working area
+            int x = wa.Left + Math.Max(0, (wa.Width - width) / 2);
+            int y = wa.Top + Math.Max(0, (wa.Height - height) / 2);
+
+            // clamp into working area (handles negative coordinates / oversized windows)
+            int maxX = wa.Right - Math.Min(width, wa.Width);
+            int maxY = wa.Bottom - Math.Min(height, wa.Height);
+
+            x = Math.Min(Math.Max(x, wa.Left), maxX);
+            y = Math.Min(Math.Max(y, wa.Top), maxY);
+
+            return (x, y);
+        }
 
         [Command("enterMiniPlayer")]
         public static void EnterMiniPlayer(WebWindow ctx)
@@ -108,11 +136,17 @@ namespace FocalSonic.Windows
 
             ctx.Bounds = Program.DefaultBounds;
 
+            // Restore on the monitor the window is currently on (not a hardcoded primary-monitor position)
+            var screen = GetScreenForWindow(ctx.NativeHandle);
+            int w = Program.DefaultBounds.InitialWidth;
+            int h = Program.DefaultBounds.InitialHeight;
+            var (x, y) = GetCenteredClampedPosition(screen, w, h);
+
             SetWindowPos(
                 ctx.NativeHandle,
                 HWND_NOTOPMOST,
-                300, 100,
-                Program.DefaultBounds.InitialWidth, Program.DefaultBounds.InitialHeight,
+                x, y,
+                w, h,
                 SWP_FRAMECHANGED | SWP_NOZORDER);
         }
 
@@ -125,6 +159,9 @@ namespace FocalSonic.Windows
 
             PreviousBounds = ctx.Bounds;
 
+            // Capture the monitor we're entering fullscreen on
+            _fullScreenScreen = GetScreenForWindow(ctx.NativeHandle);
+
             ctx.Bounds = new WindowBounds()
             {
                 MinHeight = 1,
@@ -135,17 +172,16 @@ namespace FocalSonic.Windows
 
             OriginalStyle = (long)GetWindowLongPtr(ctx.NativeHandle, GWL_STYLE);
 
-            int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-            int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+            // Use the monitor bounds (not primary screen metrics)
+            Rectangle b = _fullScreenScreen.Bounds;
 
             SetWindowLongPtr(ctx.NativeHandle, GWL_STYLE, new IntPtr(WS_POPUP | WS_VISIBLE));
 
             SetWindowPos(
                 ctx.NativeHandle,
                 HWND_TOP,
-                0, 0,
-                screenWidth,
-                screenHeight,
+                b.Left, b.Top,
+                b.Width, b.Height,
                 SWP_FRAMECHANGED | SWP_NOZORDER);
         }
 
@@ -157,15 +193,23 @@ namespace FocalSonic.Windows
 
             SetWindowLongPtr(ctx.NativeHandle, GWL_STYLE, new IntPtr(OriginalStyle));
 
+            // Restore bounds first
+            var restoreBounds = PreviousBounds ?? Program.DefaultBounds;
+            ctx.Bounds = restoreBounds;
+
+            // Restore onto the same monitor we entered fullscreen on
+            var targetScreen = _fullScreenScreen ?? GetScreenForWindow(ctx.NativeHandle);
+
+            int w = restoreBounds.InitialWidth;
+            int h = restoreBounds.InitialHeight;
+            var (x, y) = GetCenteredClampedPosition(targetScreen, w, h);
 
             SetWindowPos(
                 ctx.NativeHandle,
                 HWND_NOTOPMOST,
-                300, 100,
-                Program.DefaultBounds.InitialWidth, Program.DefaultBounds.InitialHeight,
+                x, y,
+                w, h,
                 SWP_FRAMECHANGED | SWP_NOZORDER);
-
-            ctx.Bounds = PreviousBounds ?? Program.DefaultBounds;
         }
     }
 }
