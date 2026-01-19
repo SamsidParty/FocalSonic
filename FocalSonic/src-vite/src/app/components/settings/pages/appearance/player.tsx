@@ -34,14 +34,14 @@ export function PlayerSettings() {
                 </ContentItem>
                 <ContentItem>
                     <ContentItemTitle>
-                        {t("settings.appearance.player.slimPlayer")}
+                        {t("settings.appearance.player.variant")}
                     </ContentItemTitle>
                     <ContentItemForm>
                         <Select value={playerStyle} onValueChange={setPlayerStyle}>
                             <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
                                 <SelectValue>
                                     <span className="text-sm text-foreground">
-                                        {playerStyle}
+                                        {playerStyle.charAt(0).toUpperCase() + playerStyle.slice(1)}
                                     </span>
                                 </SelectValue>
                             </SelectTrigger>
@@ -53,7 +53,7 @@ export function PlayerSettings() {
                                             value={style}
                                         >
                                             <span className="text-sm text-foreground">
-                                                {style}
+                                                {style.charAt(0).toUpperCase() + style.slice(1)}
                                             </span>
                                         </SelectItem>
                                     ))}

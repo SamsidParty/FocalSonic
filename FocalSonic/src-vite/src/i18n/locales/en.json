@@ -78,7 +78,7 @@
     "nuclear-dark": "Nuclear Dark",
     "achiever": "Achiever",
     "dracula": "Dracula",
-    "discord": "Discord",
+    "discord": "Blurple",
     "tinacious-design": "Tinacious Design",
     "vue-dark": "Vue Dark",
     "vim-dark-soft": "Vim Dark Soft",
@@ -680,8 +680,8 @@
         }
       },
       "player": {
-        "showAtTop": "Integrate player in titlebar",
-        "slimPlayer": "Slim player",
+        "showAtTop": "Player at top",
+        "variant": "Player Style",
         "alternateLyric": "Alternate Lyrics"
       },
       "lyrics": {
