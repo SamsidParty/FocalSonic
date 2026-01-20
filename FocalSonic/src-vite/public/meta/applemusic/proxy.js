@@ -606,10 +606,14 @@
         return getWebPlaybackPssh();
     }
 
+    // Track active renewal timers for cleanup
+    const licenseRenewalTimers = new WeakMap();
     function tryAcquireLicense(hls) {
         if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
             hls.licenseExpired = false;
             hls.licenseAcquired = true;
+            // Clear any existing renewal timer
+            clearLicenseRenewalTimer(hls);
             console.log("Acquiring license for content ID:", hls.contentID);
             licenseForWebPlayback(hls, hls.contentID).then(() => {
                 console.log("License acquired, attaching media");
@@ -694,6 +698,71 @@
         }
         return response;
     }
+    /**
+     * Schedule a license renewal before the current license expires
+     */
+    function scheduleLicenseRenewal(hls, session, renewAfterSeconds, contentID) {
+        // Clear any existing timer
+        clearLicenseRenewalTimer(hls);
+        // Schedule renewal at 80% of the renew-after time to ensure we renew before expiration
+        const renewalDelayMs = Math.max((renewAfterSeconds * 0.8) * 1000, 30000); // At least 30 seconds
+        console.log(`Scheduling license renewal in ${renewalDelayMs / 1000} seconds for content ID:`, contentID);
+        const timerId = window.setTimeout(async () => {
+            if (!hls || hls.licenseExpired)
+                return;
+            console.log("Proactively renewing license for content ID:", contentID);
+            try {
+                // Generate a new license request for renewal
+                await renewLicenseSession(hls, session, contentID);
+            }
+            catch (err) {
+                console.error("Failed to renew license:", err);
+                hls.licenseExpired = true;
+            }
+        }, renewalDelayMs);
+        licenseRenewalTimers.set(hls, timerId);
+    }
+    /**
+     * Renew an existing license session
+     */
+    async function renewLicenseSession(hls, session, contentID) {
+        return new Promise((resolve, reject) => {
+            const messageHandler = async (event) => {
+                if (event.messageType === 'license-request' || event.messageType === 'license-renewal') {
+                    try {
+                        const challengeBase64 = uint8ArrayToBase64(new Uint8Array(event.message));
+                        const license = await acquireWebPlaybackLicense(challengeBase64, contentID, hls.magicDataURI);
+                        await session.update(license.license);
+                        // Schedule the next renewal
+                        if (license["renew-after"] && license["renew-after"] > 0) {
+                            scheduleLicenseRenewal(hls, session, license["renew-after"], contentID);
+                        }
+                        session.removeEventListener('message', messageHandler);
+                        resolve();
+                    }
+                    catch (err) {
+                        session.removeEventListener('message', messageHandler);
+                        reject(err);
+                    }
+                }
+            };
+            session.addEventListener('message', messageHandler);
+            // Trigger license renewal by updating with an empty response to prompt a new challenge
+            // This causes the CDM to generate a new license-renewal message
+            const initData = getPssh(hls.magicDataURI);
+            session.generateRequest("cenc", initData).catch(reject);
+        });
+    }
+    /**
+     * Clear the license renewal timer for an HLS instance
+     */
+    function clearLicenseRenewalTimer(hls) {
+        const existingTimer = licenseRenewalTimers.get(hls);
+        if (existingTimer) {
+            window.clearTimeout(existingTimer);
+            licenseRenewalTimers.delete(hls);
+        }
+    }
     function licenseForWebPlayback(hls, contentID) {
         if (!hls.mediaToAttach)
             return;
@@ -701,8 +770,11 @@
         return new Promise(async (resolve, reject) => {
             if (!hls.magicDataURI)
                 reject();
-            const widevine = await acquireWidevineAccess();
-            const certificate = await acquireWidevineCert();
+            // Run Widevine access and certificate requests concurrently for faster startup
+            const [widevine, certificate] = await Promise.all([
+                acquireWidevineAccess(),
+                acquireWidevineCert()
+            ]);
             const mediaKeys = await widevine.createMediaKeys();
             await mediaKeys.setServerCertificate(certificate);
             const session = mediaKeys.createSession();
@@ -713,7 +785,13 @@
                 const license = await acquireWebPlaybackLicense(challenge, contentID, hls.magicDataURI);
                 console.log("License acquired for content ID:", contentID);
                 await session.update(license.license);
+                // Schedule proactive license renewal based on renew-after
+                if (license["renew-after"] && license["renew-after"] > 0) {
+                    scheduleLicenseRenewal(hls, session, license["renew-after"], contentID);
+                }
             };
+            // Store session reference for potential renewal
+            hls.mediaKeySession = session;
             session.addEventListener('message', async (event) => {
                 console.log("License Message Event:", event);
                 if (event.messageType === 'license-request') {
@@ -729,13 +807,37 @@
                     }
                     resolve();
                 }
+                else if (event.messageType === 'license-renewal') {
+                    // Handle renewal requests from the CDM
+                    const challengeBase64 = uint8ArrayToBase64(new Uint8Array(event.message));
+                    await getLicenseFromChallenge(challengeBase64);
+                    console.log("License renewed for content ID:", contentID);
+                }
             }, false);
             session.addEventListener('keystatuseschange', (event) => {
-                if (session.expiration && Date.now() >= session.expiration) {
-                    // Tells the HLS instance to renew the license after unpausing
-                    console.warn("License expired for content ID:", contentID);
-                    hls.licenseAcquired = false;
-                    hls.licenseExpired = true;
+                // Check key statuses for expiration
+                session.keyStatuses.forEach((status, keyId) => {
+                    if (status === 'expired') {
+                        console.warn("Key expired for content ID:", contentID);
+                        hls.licenseAcquired = false;
+                        hls.licenseExpired = true;
+                    }
+                });
+                // Also check session expiration time
+                if (session.expiration && session.expiration !== Infinity) {
+                    const timeUntilExpiration = session.expiration - Date.now();
+                    if (timeUntilExpiration <= 0) {
+                        console.warn("License expired for content ID:", contentID);
+                        hls.licenseAcquired = false;
+                        hls.licenseExpired = true;
+                    }
+                    else if (timeUntilExpiration < 60000 && !licenseRenewalTimers.has(hls)) {
+                        // Less than 1 minute until expiration and no renewal scheduled, try to renew now
+                        console.log("License expiring soon, attempting immediate renewal");
+                        renewLicenseSession(hls, session, contentID).catch(err => {
+                            console.error("Emergency license renewal failed:", err);
+                        });
+                    }
                 }
             }, false);
             console.log("Generating license request with initData:", uint8ArrayToBase64(initData));
@@ -762,6 +864,89 @@
             console.log("Generating additional atmos license request");
             session.generateRequest("cenc", base64ToUint8Array("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
         });
+    }
+
+    function getAudioElement() {
+        let audioElement = document.getElementById('apple-music-player');
+        if (!audioElement) {
+            audioElement = document.createElement('audio');
+            audioElement.id = 'apple-music-player';
+            audioElement.className = 'focalmk-dummy-audio-element';
+            // Don't create an HLS instance here - it will be created when needed by QueueItem
+            document.body.appendChild(audioElement);
+        }
+        return audioElement;
+    }
+
+    async function getContentSources(contentID) {
+        try {
+            const isNumericId = !Number.isNaN(parseInt(contentID));
+            const body = isNumericId ? { salableAdamId: contentID } : { universalLibraryId: contentID };
+            // Run enhanced HLS and webPlayback requests concurrently for faster startup
+            const [enhancedHls, webPlaybackResponse] = await Promise.all([
+                // Enhanced HLS request (only for Atmos-enabled numeric IDs)
+                (isAtmosEnabled() && isNumericId)
+                    ? tryGetEnhancedHLS(contentID)
+                    : Promise.resolve(undefined),
+                // Main webPlayback request
+                fetch(webPlaybackURL, {
+                    method: "POST",
+                    headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                }).then(res => res.json())
+            ]);
+            // Merge enhanced HLS assets into the response if available
+            if (enhancedHls && webPlaybackResponse?.songList?.[0]?.assets) {
+                enhancedHls.forEach((asset) => webPlaybackResponse.songList[0].assets.push(asset));
+            }
+            return webPlaybackResponse?.songList || null;
+        }
+        catch { }
+        return null;
+    }
+    async function tryGetEnhancedHLS(contentID) {
+        try {
+            if (!isAtmosEnabled())
+                return [{ URL: null, flavor: null }];
+            const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}?extend=extendedAssetUrls`);
+            const request = await fetch(catalogURL);
+            const response = await request.json();
+            const assets = response?.data?.[0]?.attributes?.extendedAssetUrls;
+            return Object.entries(assets).map((asset) => {
+                return { URL: asset[1], flavor: asset[0], desirable: response?.data?.[0]?.attributes?.audioTraits?.includes("atmos") && isAtmosEnabled() };
+            });
+        }
+        catch { }
+        return [{ URL: null, flavor: null }];
+    }
+    function findBestContentSource(sources) {
+        if (sources != null && sources.length > 0) {
+            const song = sources[0];
+            const validAssets = song?.assets?.filter((asset) => {
+                const hasURL = asset.URL;
+                const hasFlavor = asset.flavor;
+                const isCtrp = asset.flavor?.toLowerCase().includes("ctrp"); // ctrp = compatible with widevine
+                const isEnhancedHls = asset.flavor?.toLowerCase().includes("enhancedhls");
+                return hasURL && (isCtrp || isEnhancedHls || !hasFlavor);
+            });
+            // Find the asset with the highest bitrate
+            let bestAsset = null;
+            let backupAsset = null;
+            let highestBitrate = -1;
+            for (const asset of validAssets) {
+                if (asset.metadata?.bitRate > highestBitrate) {
+                    highestBitrate = asset.metadata?.bitRate;
+                    bestAsset = asset;
+                    backupAsset = asset;
+                }
+                if (asset.desirable) {
+                    bestAsset = asset;
+                    break;
+                }
+            }
+            return { bestAsset, backupAsset };
+        }
+        return { bestAsset: null, backupAsset: null };
     }
 
     function getDefaultExportFromCjs (x) {
@@ -38464,85 +38649,6 @@
     var hlsExports = requireHls();
     var Hls = /*@__PURE__*/getDefaultExportFromCjs(hlsExports);
 
-    function getAudioElement() {
-        let audioElement = document.getElementById('apple-music-player');
-        if (!audioElement) {
-            audioElement = document.createElement('audio');
-            audioElement.id = 'apple-music-player';
-            audioElement.className = 'focalmk-dummy-audio-element';
-            audioElement.attachedHls = new Hls();
-            document.body.appendChild(audioElement);
-        }
-        else {
-            document.querySelectorAll('.focalmk-dummy-audio-element').forEach(elem => elem.remove());
-        }
-        return audioElement;
-    }
-
-    async function getContentSources(contentID) {
-        try {
-            let enhancedHls;
-            if (isAtmosEnabled() && !Number.isNaN(parseInt(contentID))) {
-                enhancedHls = await tryGetEnhancedHLS(contentID);
-            }
-            const body = (!Number.isNaN(parseInt(contentID))) ? { salableAdamId: contentID } : { universalLibraryId: contentID };
-            const request = await fetch(webPlaybackURL, {
-                method: "POST",
-                headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-            const response = await request.json();
-            enhancedHls?.forEach((asset) => response?.songList[0]?.assets?.push(asset));
-            return response?.songList || null;
-        }
-        catch { }
-        return null;
-    }
-    async function tryGetEnhancedHLS(contentID) {
-        try {
-            if (!isAtmosEnabled())
-                return [{ URL: null, flavor: null }];
-            const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}?extend=extendedAssetUrls`);
-            const request = await fetch(catalogURL);
-            const response = await request.json();
-            const assets = response?.data?.[0]?.attributes?.extendedAssetUrls;
-            return Object.entries(assets).map((asset) => {
-                return { URL: asset[1], flavor: asset[0], desirable: response?.data?.[0]?.attributes?.audioTraits?.includes("atmos") && isAtmosEnabled() };
-            });
-        }
-        catch { }
-        return [{ URL: null, flavor: null }];
-    }
-    function findBestContentSource(sources) {
-        if (sources != null && sources.length > 0) {
-            const song = sources[0];
-            const validAssets = song?.assets?.filter((asset) => {
-                const hasURL = asset.URL;
-                const hasFlavor = asset.flavor;
-                const isCtrp = asset.flavor?.toLowerCase().includes("ctrp"); // ctrp = compatible with widevine
-                const isEnhancedHls = asset.flavor?.toLowerCase().includes("enhancedhls");
-                return hasURL && (isCtrp || isEnhancedHls || !hasFlavor);
-            });
-            // Find the asset with the highest bitrate
-            let bestAsset = null;
-            let backupAsset = null;
-            let highestBitrate = -1;
-            for (const asset of validAssets) {
-                if (asset.metadata?.bitRate > highestBitrate) {
-                    highestBitrate = asset.metadata?.bitRate;
-                    bestAsset = asset;
-                    backupAsset = asset;
-                }
-                if (asset.desirable) {
-                    bestAsset = asset;
-                    break;
-                }
-            }
-            return { bestAsset, backupAsset };
-        }
-        return { bestAsset: null, backupAsset: null };
-    }
-
     async function loadContent(hls, contentID) {
         try {
             const sources = await getContentSources(contentID);
@@ -38671,9 +38777,13 @@
         hls = null;
         audio;
         parent;
+        // Bound event handler for proper cleanup
+        boundHandleEnded;
         constructor(param, parent) {
             this.song = param.song;
             this.parent = parent;
+            // Pre-bind the event handler so we can remove it later
+            this.boundHandleEnded = this.handleEnded.bind(this);
             this.audio = document.createElement('audio');
             this.audio.className = `focalmk-audio-${this.song}`;
             this.audio.setAttribute('data-focalmk-id', this.song);
@@ -38690,16 +38800,24 @@
             getAudioElement().removeAttribute("id");
             // Set the current audio element to the main one
             this.audio.id = "apple-music-player";
-            this.audio.addEventListener('ended', this.handleEnded.bind(this));
+            this.audio.addEventListener('ended', this.boundHandleEnded);
         }
         setInactive() {
             console.log(`[FocalMK] Deactivating song: ${this.song}`);
-            this.audio.removeEventListener('ended', this.handleEnded.bind(this));
+            this.audio.removeEventListener('ended', this.boundHandleEnded);
             this.audio.src = "";
             this.audio.removeAttribute("id");
             setTimeout(() => this.dispose(), 5000); // Delay disposal to allow any pending operations to complete
         }
         dispose() {
+            // Clear any license renewal timers before destroying HLS
+            if (this.hls) {
+                clearLicenseRenewalTimer(this.hls);
+                // Close the media key session if it exists
+                if (this.hls.mediaKeySession) {
+                    this.hls.mediaKeySession.close().catch(() => { });
+                }
+            }
             this.audio?.remove();
             this.hls?.destroy();
             this.hls = null;

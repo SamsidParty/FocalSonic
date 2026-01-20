@@ -19,22 +19,29 @@ export interface PlaybackSource {
 
 export async function getContentSources(contentID: string) {
     try {
-        let enhancedHls: PlaybackAsset[] | undefined;
+        const isNumericId = !Number.isNaN(parseInt(contentID));
+        const body = isNumericId ? { salableAdamId: contentID } : { universalLibraryId: contentID };
+        
+        // Run enhanced HLS and webPlayback requests concurrently for faster startup
+        const [enhancedHls, webPlaybackResponse] = await Promise.all([
+            // Enhanced HLS request (only for Atmos-enabled numeric IDs)
+            (isAtmosEnabled() && isNumericId) 
+                ? tryGetEnhancedHLS(contentID) 
+                : Promise.resolve(undefined),
+            // Main webPlayback request
+            fetch(webPlaybackURL, {
+                method: "POST",
+                headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            }).then(res => res.json())
+        ]);
 
-        if (isAtmosEnabled() && !Number.isNaN(parseInt(contentID))) {
-            enhancedHls = await tryGetEnhancedHLS(contentID);
+        // Merge enhanced HLS assets into the response if available
+        if (enhancedHls && webPlaybackResponse?.songList?.[0]?.assets) {
+            enhancedHls.forEach((asset) => webPlaybackResponse.songList[0].assets.push(asset));
         }
-
-        const body = (!Number.isNaN(parseInt(contentID))) ? { salableAdamId: contentID } : { universalLibraryId: contentID };
-        const request = await fetch(webPlaybackURL, {
-            method: "POST",
-            headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
-
-        const response = await request.json();
-        enhancedHls?.forEach((asset) => response?.songList[0]?.assets?.push(asset));
-        return response?.songList || null;
+        
+        return webPlaybackResponse?.songList || null;
     }
     catch { }
 

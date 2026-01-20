@@ -12,10 +12,17 @@ interface LicenseResponse {
     customerMessage?: string;   
 }
 
+// Track active renewal timers for cleanup
+const licenseRenewalTimers = new WeakMap<FocalHls, number>();
+
 export function tryAcquireLicense(hls: FocalHls) {
     if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
         hls.licenseExpired = false;
         hls.licenseAcquired = true;
+        
+        // Clear any existing renewal timer
+        clearLicenseRenewalTimer(hls);
+        
         console.log("Acquiring license for content ID:", hls.contentID);
         licenseForWebPlayback(hls, hls.contentID!).then(() => {
             console.log("License acquired, attaching media");
@@ -110,13 +117,87 @@ export async function acquireWebPlaybackLicense(challenge: string, contentID: st
     const response: LicenseResponse = await request.json();
 
     if (response?.license) {
-        response.license = base64ToUint8Array(response.license);
+        response.license = base64ToUint8Array(response.license as string);
     }
     else if (response?.customerMessage) {
         window.igniteView?.commandBridge?.displayError?.("Something went wrong with Apple Music", response.customerMessage);
     }
 
     return response;
+}
+
+/**
+ * Schedule a license renewal before the current license expires
+ */
+function scheduleLicenseRenewal(hls: FocalHls, session: MediaKeySession, renewAfterSeconds: number, contentID: string) {
+    // Clear any existing timer
+    clearLicenseRenewalTimer(hls);
+    
+    // Schedule renewal at 80% of the renew-after time to ensure we renew before expiration
+    const renewalDelayMs = Math.max((renewAfterSeconds * 0.8) * 1000, 30000); // At least 30 seconds
+    
+    console.log(`Scheduling license renewal in ${renewalDelayMs / 1000} seconds for content ID:`, contentID);
+    
+    const timerId = window.setTimeout(async () => {
+        if (!hls || hls.licenseExpired) return;
+        
+        console.log("Proactively renewing license for content ID:", contentID);
+        try {
+            // Generate a new license request for renewal
+            await renewLicenseSession(hls, session, contentID);
+        } catch (err) {
+            console.error("Failed to renew license:", err);
+            hls.licenseExpired = true;
+        }
+    }, renewalDelayMs);
+    
+    licenseRenewalTimers.set(hls, timerId);
+}
+
+/**
+ * Renew an existing license session
+ */
+async function renewLicenseSession(hls: FocalHls, session: MediaKeySession, contentID: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const messageHandler = async (event: MediaKeyMessageEvent) => {
+            if (event.messageType === 'license-request' || event.messageType === 'license-renewal') {
+                try {
+                    const challengeBase64 = uint8ArrayToBase64(new Uint8Array(event.message));
+                    const license = await acquireWebPlaybackLicense(challengeBase64, contentID, hls.magicDataURI!);
+                    await session.update(license.license as Uint8Array);
+                    
+                    // Schedule the next renewal
+                    if (license["renew-after"] && license["renew-after"] > 0) {
+                        scheduleLicenseRenewal(hls, session, license["renew-after"], contentID);
+                    }
+                    
+                    session.removeEventListener('message', messageHandler);
+                    resolve();
+                } catch (err) {
+                    session.removeEventListener('message', messageHandler);
+                    reject(err);
+                }
+            }
+        };
+        
+        session.addEventListener('message', messageHandler);
+        
+        // Trigger license renewal by updating with an empty response to prompt a new challenge
+        // This causes the CDM to generate a new license-renewal message
+        const initData = getPssh(hls.magicDataURI!);
+        session.generateRequest("cenc", initData).catch(reject);
+    });
+}
+
+/**
+ * Clear the license renewal timer for an HLS instance
+ */
+export function clearLicenseRenewalTimer(hls: FocalHls) {
+    const existingTimer = licenseRenewalTimers.get(hls);
+    if (existingTimer) {
+        window.clearTimeout(existingTimer);
+        licenseRenewalTimers.delete(hls);
+    }
 }
 
 export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
@@ -128,8 +209,11 @@ export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
 
         if (!hls.magicDataURI) reject();
 
-        const widevine = await acquireWidevineAccess();
-        const certificate = await acquireWidevineCert();
+        // Run Widevine access and certificate requests concurrently for faster startup
+        const [widevine, certificate] = await Promise.all([
+            acquireWidevineAccess(),
+            acquireWidevineCert()
+        ]);
 
         const mediaKeys = await widevine.createMediaKeys();
         await mediaKeys.setServerCertificate(certificate);
@@ -143,8 +227,16 @@ export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
             const license = await acquireWebPlaybackLicense(challenge, contentID, hls.magicDataURI!);
 
             console.log("License acquired for content ID:", contentID);
-            await session.update(license.license);
+            await session.update(license.license as Uint8Array);
+            
+            // Schedule proactive license renewal based on renew-after
+            if (license["renew-after"] && license["renew-after"] > 0) {
+                scheduleLicenseRenewal(hls, session, license["renew-after"], contentID);
+            }
         }
+
+        // Store session reference for potential renewal
+        hls.mediaKeySession = session;
 
         session.addEventListener('message', async (event) => {
             console.log("License Message Event:", event);
@@ -163,14 +255,38 @@ export function licenseForWebPlayback(hls: FocalHls, contentID: string) {
             
                 resolve();
             }
+            else if (event.messageType === 'license-renewal') {
+                // Handle renewal requests from the CDM
+                const challengeBase64 = uint8ArrayToBase64(new Uint8Array(event.message));
+                await getLicenseFromChallenge(challengeBase64);
+                console.log("License renewed for content ID:", contentID);
+            }
         }, false);
 
         session.addEventListener('keystatuseschange', (event) => {
-            if (session.expiration && Date.now() >= session.expiration) {
-                // Tells the HLS instance to renew the license after unpausing
-                console.warn("License expired for content ID:", contentID);
-                hls.licenseAcquired = false;
-                hls.licenseExpired = true;
+            // Check key statuses for expiration
+            session.keyStatuses.forEach((status, keyId) => {
+                if (status === 'expired') {
+                    console.warn("Key expired for content ID:", contentID);
+                    hls.licenseAcquired = false;
+                    hls.licenseExpired = true;
+                }
+            });
+            
+            // Also check session expiration time
+            if (session.expiration && session.expiration !== Infinity) {
+                const timeUntilExpiration = session.expiration - Date.now();
+                if (timeUntilExpiration <= 0) {
+                    console.warn("License expired for content ID:", contentID);
+                    hls.licenseAcquired = false;
+                    hls.licenseExpired = true;
+                } else if (timeUntilExpiration < 60000 && !licenseRenewalTimers.has(hls)) {
+                    // Less than 1 minute until expiration and no renewal scheduled, try to renew now
+                    console.log("License expiring soon, attempting immediate renewal");
+                    renewLicenseSession(hls, session, contentID).catch(err => {
+                        console.error("Emergency license renewal failed:", err);
+                    });
+                }
             }
         }, false);
 

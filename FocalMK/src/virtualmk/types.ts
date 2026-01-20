@@ -1,3 +1,4 @@
+import { clearLicenseRenewalTimer } from "../drm/license";
 import { FocalAudioElement, getAudioElement } from "../helpers/dom";
 import { createHlsInstance, FocalHls } from "../helpers/hls-instance";
 import { MusicKitInstance } from "./instance";
@@ -12,10 +13,16 @@ export class QueueItem  {
     hls: FocalHls | null = null;
     audio: FocalAudioElement;
     parent: MusicKitInstance;
+    
+    // Bound event handler for proper cleanup
+    private boundHandleEnded: () => void;
 
     constructor(param: QueueItemParam, parent: MusicKitInstance) {
         this.song = param.song;
         this.parent = parent;
+        
+        // Pre-bind the event handler so we can remove it later
+        this.boundHandleEnded = this.handleEnded.bind(this);
 
         this.audio = document.createElement('audio');
         this.audio.className = `focalmk-audio-${this.song}`;
@@ -37,18 +44,28 @@ export class QueueItem  {
 
         // Set the current audio element to the main one
         this.audio.id = "apple-music-player";
-        this.audio.addEventListener('ended', this.handleEnded.bind(this));
+        this.audio.addEventListener('ended', this.boundHandleEnded);
     }
 
     setInactive() {
         console.log(`[FocalMK] Deactivating song: ${this.song}`);
-        this.audio.removeEventListener('ended', this.handleEnded.bind(this));
+        this.audio.removeEventListener('ended', this.boundHandleEnded);
         this.audio.src = "";
         this.audio.removeAttribute("id");
         setTimeout(() => this.dispose(), 5000); // Delay disposal to allow any pending operations to complete
     }
 
     dispose() {
+        // Clear any license renewal timers before destroying HLS
+        if (this.hls) {
+            clearLicenseRenewalTimer(this.hls);
+            
+            // Close the media key session if it exists
+            if (this.hls.mediaKeySession) {
+                this.hls.mediaKeySession.close().catch(() => {});
+            }
+        }
+        
         this.audio?.remove();
         this.hls?.destroy();
         this.hls = null;
