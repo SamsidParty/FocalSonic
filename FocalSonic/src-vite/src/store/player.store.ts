@@ -1127,5 +1127,13 @@ export const useDynamicColors = () => {
     };
 };
 
+export const useCustomFullscreenBackground = () => {
+    return {
+        hideAlbumArt: true,
+        videoBackgroundURL: "",
+        customBackgroundType: "youtube",
+    };
+};
+
 export const usePlayerCurrentList = () =>
     usePlayerStore((state) => state.songlist.currentList);

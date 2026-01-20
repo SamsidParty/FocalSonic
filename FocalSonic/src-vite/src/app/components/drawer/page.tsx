@@ -7,6 +7,7 @@ import { Drawer, DrawerContent } from "@/app/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import { useAppSettings } from "@/store/app.store";
 import {
+    useCustomFullscreenBackground,
     useLyricsState,
     useMainDrawerState,
     useQueueState
@@ -26,6 +27,7 @@ export function MainDrawerPage() {
     const { extraBarContent, setExtraBarContent } = useAppSettings();
     const { lyricsState } = useLyricsState();
     const { isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
+    const { hideAlbumArt } = useCustomFullscreenBackground();
     const hasExtraContent = extraBarContent != "none";
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
 
@@ -98,7 +100,7 @@ export function MainDrawerPage() {
 
                     </div>
                     <div className="flex items-center w-full h-full mt-12 xxs:mt-0 mb-0">
-                        <CurrentSongInfo fillWidth={!hasExtraContent} />
+                        {!hideAlbumArt && <CurrentSongInfo fillWidth={!hasExtraContent} />}
 
                         <div className={clsx("flex self-stretch flex-1 justify-center relative", !hasExtraContent && "hidden")}>
                             <ActiveContent active={queueState}>

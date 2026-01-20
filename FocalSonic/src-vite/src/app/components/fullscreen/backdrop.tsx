@@ -1,9 +1,10 @@
 import { getCoverArtUrl } from "@/api/httpClient.js";
-import { useDynamicColors, usePlayerCurrentSong } from "@/store/player.store";
+import { useCustomFullscreenBackground, useDynamicColors, usePlayerCurrentSong } from "@/store/player.store";
 import { hexToRgba } from "@/utils/getAverageColor";
 import clsx from "clsx";
-import { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { LyricsScene } from "../../../lib/lyricsScene.js";
+import VideoBackground from "./video-background.js";
 
 let GlobalLyricsScene: LyricsScene = null;
 
@@ -13,8 +14,20 @@ interface BackdropProps {
 
 export function useFullscreenBackdrop(props: BackdropProps) {
     const { useDynamicColorsOnQueue } = useDynamicColors();
+    const { customBackgroundType, videoBackgroundURL } = useCustomFullscreenBackground();
 
     return useMemo(() => {
+
+        if (customBackgroundType === "youtube" && videoBackgroundURL) {
+            return <div
+                className={clsx(
+                    "absolute inset-0 w-full h-full -z-1",
+                )}
+            >
+                <VideoBackground  videoUrl={videoBackgroundURL} />
+            </div>;
+        }
+
         if (!useDynamicColorsOnQueue) {
             return <DynamicColorBackdrop {...props}></DynamicColorBackdrop>;
         }
