@@ -18,13 +18,13 @@ export function useFullscreenBackdrop(props: BackdropProps) {
 
     return useMemo(() => {
 
-        if (customBackgroundType === "youtube" && videoBackgroundURL) {
+        if (customBackgroundType === "video" && videoBackgroundURL) {
             return <div
                 className={clsx(
                     "absolute inset-0 w-full h-full -z-1",
                 )}
             >
-                <VideoBackground  videoUrl={videoBackgroundURL} />
+                <VideoBackground videoUrl={videoBackgroundURL} />
             </div>;
         }
 

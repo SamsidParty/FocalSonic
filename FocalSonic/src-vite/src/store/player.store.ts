@@ -1130,8 +1130,8 @@ export const useDynamicColors = () => {
 export const useCustomFullscreenBackground = () => {
     return {
         hideAlbumArt: true,
-        videoBackgroundURL: "",
-        customBackgroundType: "youtube",
+        videoBackgroundURL: "http://127.0.0.1:5173/testmv1.mp4",
+        customBackgroundType: "video",
     };
 };
 
