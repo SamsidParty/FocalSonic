@@ -1,3 +1,4 @@
+import { getAudioElement } from "../helpers/dom.js";
 import { getAudioEffectController } from "../playback/audio-effects.js";
 
 window.isCurrentSongRadio = false;
@@ -57,7 +58,6 @@ async function checkAuthState() {
     }
 }
 
-const findAudioElement = () => document.getElementById("apple-music-player");
 
 
 window.executeInjectedQueue = async () => {
@@ -90,18 +90,18 @@ window.executeInjectedQueue = async () => {
         
         if (item.type === "play") {
             if (window.pauseTimeout) { clearTimeout(window.pauseTimeout); window.pauseTimeout = null; }
-            findAudioElement() && getAudioEffectController(findAudioElement()).adjustVolume(1);
+            getAudioElement() && getAudioEffectController(getAudioElement()).adjustVolume(1);
             if (!window.proxyMusicInstance.isPlaying) {
                 await window.proxyMusicInstance.play();
             }
         }
         else if (item.type === "pause") {
             if (window.pauseTimeout) { clearTimeout(window.pauseTimeout); window.pauseTimeout = null; }
-            findAudioElement() && getAudioEffectController(findAudioElement()).adjustVolume(0);
+            getAudioElement() && getAudioEffectController(getAudioElement()).adjustVolume(0);
             window.pauseTimeout = setTimeout(() => window.proxyMusicInstance.pause(), 420);
         }
         else if (item.type === "seek") {
-            findAudioElement() && getAudioEffectController(findAudioElement()).resetFade();
+            getAudioElement() && getAudioEffectController(getAudioElement()).resetFade();
             !!window.proxyMusicInstance.nowPlayingItem && await window.proxyMusicInstance.seekToTime(item.time);
         }
         else if (item.type === "setLoopMode") {
@@ -111,22 +111,22 @@ window.executeInjectedQueue = async () => {
             window.enableAtmos = item.enabled;
         }
         else if (item.type === "setVolume") {
-            findAudioElement() && getAudioEffectController(findAudioElement()).setBaseVolume(item.volume);
+            getAudioElement() && getAudioEffectController(getAudioElement()).setBaseVolume(item.volume);
         }
         else if (item.type === "setSpeed") {
             if (item.speed < 0) { item.speed = 1; }
             window.proxyMusicInstance.playbackRate = item.speed;
-            findAudioElement() && (findAudioElement().preservesPitch = false);
+            getAudioElement() && (getAudioElement().preservesPitch = false);
         }
         else if (item.type === "setFilterData") {
-            findAudioElement() && getAudioEffectController(findAudioElement()).setFilters(item.filterData);
+            getAudioElement() && getAudioEffectController(getAudioElement()).setFilters(item.filterData);
         }
         else if (item.type === "setOutputDevice") {
             window.outputDevice = item.outputDevice;
-            findAudioElement() && getAudioEffectController(findAudioElement()).updateVolume();
+            getAudioElement() && getAudioEffectController(getAudioElement()).updateVolume();
         }
         else if (item.type === "setSource") {
-            findAudioElement() && getAudioEffectController(findAudioElement()).resetFade();
+            getAudioElement() && getAudioEffectController(getAudioElement()).resetFade();
             await window.proxyMusicInstance.stop();
 
             if (!window.isCurrentSongRadio) {
@@ -153,7 +153,7 @@ window.executeInjectedQueue = async () => {
         }
     }
 
-    await window.igniteView?.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, findAudioElement()?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
+    await window.igniteView?.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, getAudioElement()?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
 };
 
 setInterval(window.executeInjectedQueue, 250);

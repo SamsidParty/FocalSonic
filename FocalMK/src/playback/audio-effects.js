@@ -13,6 +13,8 @@ const _effectInstances = new WeakMap();
  * @returns {AudioEffectController} - AudioEffectController instance
  */
 export function getAudioEffectController(source) {
+    if (!source) return undefined;  
+
     if (_effectInstances.has(source)) {
         return _effectInstances.get(source);
     }
@@ -71,6 +73,29 @@ class AudioEffectController {
         if (this.isAudioElement) {
             this.audioCtx.resume();
         }
+    }
+
+    dispose() {
+        console.log("[FocalSonic] Disposing AudioEffectController");
+
+        this._disconnectNodeOutputs(this.sourceNode);
+        this._disconnectNodeOutputs(this.dryGain);
+        this._disconnectNodeOutputs(this.convolver);
+        this._disconnectNodeOutputs(this.wetGain);
+
+        this.eqNodes.forEach(node => this._disconnectNodeOutputs(node));
+        this.eqNodes = [];
+
+        if (this.isAudioElement) {
+            this.audioCtx.close();
+        }
+
+        this.rawSource = null;
+        this.sourceNode = null;
+        this.audioCtx = null;
+        this.convolver = null;
+        this.dryGain = null;
+        this.wetGain = null;
     }
 
     async _loadImpulseResponse(impulseUrl) {

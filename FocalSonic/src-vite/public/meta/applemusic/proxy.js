@@ -3,6 +3,16 @@
     factory();
 })((function () { 'use strict';
 
+    const dummyAudioElement = document.createElement('audio');
+    dummyAudioElement.id = 'focalmk-dummy-audio-element';
+    function getAudioElement() {
+        let audioElement = document.getElementById('apple-music-player');
+        if (!audioElement) {
+            return dummyAudioElement;
+        }
+        return audioElement;
+    }
+
     function swing(p) {
         return 0.5 - Math.cos(p * Math.PI) / 2;
     }
@@ -17,6 +27,8 @@
      * @returns {AudioEffectController} - AudioEffectController instance
      */
     function getAudioEffectController(source) {
+        if (!source) return undefined;  
+
         if (_effectInstances.has(source)) {
             return _effectInstances.get(source);
         }
@@ -75,6 +87,29 @@
             if (this.isAudioElement) {
                 this.audioCtx.resume();
             }
+        }
+
+        dispose() {
+            console.log("[FocalSonic] Disposing AudioEffectController");
+
+            this._disconnectNodeOutputs(this.sourceNode);
+            this._disconnectNodeOutputs(this.dryGain);
+            this._disconnectNodeOutputs(this.convolver);
+            this._disconnectNodeOutputs(this.wetGain);
+
+            this.eqNodes.forEach(node => this._disconnectNodeOutputs(node));
+            this.eqNodes = [];
+
+            if (this.isAudioElement) {
+                this.audioCtx.close();
+            }
+
+            this.rawSource = null;
+            this.sourceNode = null;
+            this.audioCtx = null;
+            this.convolver = null;
+            this.dryGain = null;
+            this.wetGain = null;
         }
 
         async _loadImpulseResponse(impulseUrl) {
@@ -404,7 +439,6 @@
         }
     }
 
-    const findAudioElement = () => document.getElementById("apple-music-player");
 
 
     window.executeInjectedQueue = async () => {
@@ -437,18 +471,18 @@
             
             if (item.type === "play") {
                 if (window.pauseTimeout) { clearTimeout(window.pauseTimeout); window.pauseTimeout = null; }
-                findAudioElement() && getAudioEffectController(findAudioElement()).adjustVolume(1);
+                getAudioElement() && getAudioEffectController(getAudioElement()).adjustVolume(1);
                 if (!window.proxyMusicInstance.isPlaying) {
                     await window.proxyMusicInstance.play();
                 }
             }
             else if (item.type === "pause") {
                 if (window.pauseTimeout) { clearTimeout(window.pauseTimeout); window.pauseTimeout = null; }
-                findAudioElement() && getAudioEffectController(findAudioElement()).adjustVolume(0);
+                getAudioElement() && getAudioEffectController(getAudioElement()).adjustVolume(0);
                 window.pauseTimeout = setTimeout(() => window.proxyMusicInstance.pause(), 420);
             }
             else if (item.type === "seek") {
-                findAudioElement() && getAudioEffectController(findAudioElement()).resetFade();
+                getAudioElement() && getAudioEffectController(getAudioElement()).resetFade();
                 !!window.proxyMusicInstance.nowPlayingItem && await window.proxyMusicInstance.seekToTime(item.time);
             }
             else if (item.type === "setLoopMode") {
@@ -458,22 +492,22 @@
                 window.enableAtmos = item.enabled;
             }
             else if (item.type === "setVolume") {
-                findAudioElement() && getAudioEffectController(findAudioElement()).setBaseVolume(item.volume);
+                getAudioElement() && getAudioEffectController(getAudioElement()).setBaseVolume(item.volume);
             }
             else if (item.type === "setSpeed") {
                 if (item.speed < 0) { item.speed = 1; }
                 window.proxyMusicInstance.playbackRate = item.speed;
-                findAudioElement() && (findAudioElement().preservesPitch = false);
+                getAudioElement() && (getAudioElement().preservesPitch = false);
             }
             else if (item.type === "setFilterData") {
-                findAudioElement() && getAudioEffectController(findAudioElement()).setFilters(item.filterData);
+                getAudioElement() && getAudioEffectController(getAudioElement()).setFilters(item.filterData);
             }
             else if (item.type === "setOutputDevice") {
                 window.outputDevice = item.outputDevice;
-                findAudioElement() && getAudioEffectController(findAudioElement()).updateVolume();
+                getAudioElement() && getAudioEffectController(getAudioElement()).updateVolume();
             }
             else if (item.type === "setSource") {
-                findAudioElement() && getAudioEffectController(findAudioElement()).resetFade();
+                getAudioElement() && getAudioEffectController(getAudioElement()).resetFade();
                 await window.proxyMusicInstance.stop();
 
                 if (!window.isCurrentSongRadio) {
@@ -500,7 +534,7 @@
             }
         }
 
-        await window.igniteView?.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, findAudioElement()?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
+        await window.igniteView?.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, getAudioElement()?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
     };
 
     setInterval(window.executeInjectedQueue, 250);
@@ -864,18 +898,6 @@
             console.log("Generating additional atmos license request");
             session.generateRequest("cenc", base64ToUint8Array("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
         });
-    }
-
-    function getAudioElement() {
-        let audioElement = document.getElementById('apple-music-player');
-        if (!audioElement) {
-            audioElement = document.createElement('audio');
-            audioElement.id = 'apple-music-player';
-            audioElement.className = 'focalmk-dummy-audio-element';
-            // Don't create an HLS instance here - it will be created when needed by QueueItem
-            document.body.appendChild(audioElement);
-        }
-        return audioElement;
     }
 
     async function getContentSources(contentID) {
@@ -38806,6 +38828,7 @@
             console.log(`[FocalMK] Deactivating song: ${this.song}`);
             this.audio.removeEventListener('ended', this.boundHandleEnded);
             this.audio.src = "";
+            this.audio.load();
             this.audio.removeAttribute("id");
             setTimeout(() => this.dispose(), 5000); // Delay disposal to allow any pending operations to complete
         }
@@ -38818,11 +38841,14 @@
                     this.hls.mediaKeySession.close().catch(() => { });
                 }
             }
+            getAudioEffectController(this.audio)?.dispose?.();
             this.audio?.remove();
+            this.hls && (this.hls.mediaToAttach = undefined);
             this.hls?.destroy();
             this.hls = null;
             this.audio = null;
             this.hasInitialized = false;
+            // Tell the client that Atmos is no longer available
             if (window.igniteView) {
                 window.igniteView.commandBridge.setPlayerCallbackData(`atmos-state-${this.song}`, "");
             }
