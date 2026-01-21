@@ -26,7 +26,9 @@ interface LyricProps {
     lyrics: string,
     leftAlign?: boolean,
     small?: boolean,
-    visible?: boolean
+    oneLine?: boolean,
+    visible?: boolean,
+    containerClassName?: string,
 }
 
 export function LyricsTab(props: LyricProps) {
@@ -88,7 +90,7 @@ function SyncedLyrics(props: LyricProps) {
     const { width, height, isResizing } = useDebouncedWindowSize(100);
     const rafRef = useRef<number | null>(null);
 
-    let { lyrics, leftAlign, small } = props;
+    let { lyrics, leftAlign, small, oneLine } = props;
 
     const { data: convertedLyrics, isLoading } = useQuery({
         queryKey: ["convert-and-translate-lyrics", lyrics, altLyricsMode],
@@ -194,7 +196,9 @@ function SyncedLyrics(props: LyricProps) {
         <div 
             className={
                 clsx(
-                    "w-full h-full text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics maskImage-big-player-lyrics text-[var(--lyric-color)]",
+                    "text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics text-[var(--lyric-color)]",
+                    oneLine ? "pointer-events-none justify-center lyrics-one-line" : "w-full h-full maskImage-big-player-lyrics ",
+                    props.containerClassName || ""
                 )
             }
             style={{
@@ -204,12 +208,13 @@ function SyncedLyrics(props: LyricProps) {
             <Lrc
                 key={`debouncedlyrics_${width}x${height}`}
                 lrc={formattedLyrics!}
-                recoverAutoScrollInterval={1000}
+                recoverAutoScrollInterval={oneLine ? 1000 : 0}
+
                 currentMillisecond={timestamp}
                 id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
-                className={clsx("h-full z-40", !isSafari && "scroll-smooth")}
+                className={clsx("z-40 h-full", !isSafari && "scroll-smooth", oneLine && "overflow-hidden", oneLine && "pt-4")}
                 onLineUpdate={onLineUpdate}
-                verticalSpace={true}
+                verticalSpace={!oneLine}
                 lineRenderer={lineRenderer}
             />
         </div>
@@ -223,11 +228,12 @@ const MemoizedLrcLineRenderer = React.memo(LrcLineRenderer, (prevProps, nextProp
         prevProps.line.id === nextProps.line.id &&
         prevProps.timestamp === nextProps.timestamp &&
         prevProps.small === nextProps.small &&
-        prevProps.leftAlign === nextProps.leftAlign
+        prevProps.leftAlign === nextProps.leftAlign &&
+        prevProps.oneLine === nextProps.oneLine
     );
 });
 
-function LrcLineRenderer({ line, active, skipToTime, timestamp, small, leftAlign }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean, leftAlign?: boolean }) {
+function LrcLineRenderer({ line, active, skipToTime, timestamp, small, leftAlign, oneLine }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean, leftAlign?: boolean, oneLine?: boolean }) {
 
     const { enableLyricBlur, enableLyricGlow } = useTheme();
 
@@ -294,6 +300,10 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small, leftAlign
         skipToTime(line.startMillisecond);
     }, [skipToTime, line.startMillisecond]);
 
+    if (oneLine && !active) {
+        return null;
+    }
+
     return (
         <p
             key={line?.id}
@@ -303,7 +313,8 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small, leftAlign
                 "transition-[opacity,transform,filter] motion-reduce:transition-none ease-long xxs:leading-normal",
                 leftAlign && "text-left",
                 (active) && "lyric-line-active",
-                (active && !line?.isSubLyric) ? `opacity-100 scale-110 font-bold translate-x-[${leftAlign ? 7 : 0}%]` : "opacity-60",
+                (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold" : "opacity-60",
+                (active && !line?.isSubLyric && leftAlign) ? "translate-x-[7%]" : "",
                 (!subLyric && !small) ? "my-10 !2xl:my-30 !xxs:my-5" : "my-0",
                 (line?.isSubLyric && !small) && "text-xl 2xl:text-3xl xxs:text-xs opacity-100 mt-0 mb-10 !2xl:mb-30 xxs:mb-2",
                 (line?.isSubLyric && small) && "!text-[12px] !mb-2 leading-normal",

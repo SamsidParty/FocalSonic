@@ -488,8 +488,9 @@ export default function YouTubeBackground({
                     </div>
                 </div>
 
-                {/* Dark overlay to make content readable */}
-                <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+
+                {/* Gradient overlay, dark at bottom and transparent at top */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent via-35% to-transparent pointer-events-none" />
             </div>
 
             {/* Error / fallback */}

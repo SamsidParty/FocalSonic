@@ -26,7 +26,7 @@ export function MainDrawerPage() {
     const { queueState } = useQueueState();
     const { extraBarContent, setExtraBarContent } = useAppSettings();
     const { lyricsState } = useLyricsState();
-    const { isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
+    const { isPlayerAtTop, isMiniPlayer, playerStyle } = usePlayerStyle();
     const { hideAlbumArt } = useCustomFullscreenBackground();
     const hasExtraContent = extraBarContent != "none";
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
@@ -107,7 +107,17 @@ export function MainDrawerPage() {
                                 <QueueSongList />
                             </ActiveContent>
                             <ActiveContent active={lyricsState && (!isMiniPlayer || (document.documentElement.clientWidth > document.documentElement.clientHeight))}>
-                                <LyricsTab leftAlign={!hideAlbumArt} visible={mainDrawerState && lyricsState} />
+                                <LyricsTab
+                                    leftAlign={!hideAlbumArt}
+                                    oneLine={hideAlbumArt} 
+                                    visible={mainDrawerState && lyricsState}
+                                    containerClassName={
+                                        hideAlbumArt ? clsx(
+                                            "absolute left-0 right-0",
+                                            playerStyle == "floating" ? "bottom-14" : "bottom-0"
+                                        ) : ""
+                                    }
+                                />
                             </ActiveContent>
                             <ActiveContent active={extraBarContent === "effects"}>
                                 <Equalizer orientation="horizontal" />
