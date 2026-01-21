@@ -1,4 +1,6 @@
 import { Button } from "@/app/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/app/components/ui/dialog";
+import { Input } from "@/app/components/ui/input";
 import {
     Popover,
     PopoverContent,
@@ -10,9 +12,10 @@ import { Slider } from "@/app/components/ui/slider";
 import { Switch } from "@/app/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app.store";
+import { usePersongOverrides } from "@/store/persong.store";
 import { useDynamicColors } from "@/store/player.store";
-import { SlidersHorizontal } from "lucide-react";
-import React, { ComponentPropsWithoutRef, ReactNode } from "react";
+import { ImageOffIcon, ImagePlusIcon, SlidersHorizontal } from "lucide-react";
+import React, { ComponentPropsWithoutRef, ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function FullscreenSettings(props) {
@@ -29,6 +32,7 @@ export function QueueSettings() {
             <>
                 <QueueDynamicColorOption showSeparator={false} />
                 {!useDynamicColorsOnQueue && <ColorIntensityOption showSeparator={false} />}
+                <CustomBackgroundOption />
                 <AlternateLyricOption />
             </>
         </DynamicSettingsPopover>
@@ -95,6 +99,54 @@ function ColorIntensityOption(props: OptionProps) {
                 tooltipValue={intensityTooltip}
                 onValueChange={([value]) => setCurrentSongIntensity(value)}
             />
+        </SettingWrapper>
+    );
+}
+
+function CustomBackgroundOption() {
+    const { data, setVideoBackgroundURL, clearCustomBackground } = usePersongOverrides();
+    const [open, setOpen] = useState(false);
+    const [url, setUrl] = useState<string>(data.videoBackgroundURL ?? "");
+
+    useEffect(() => {
+        if (open) setUrl(data.videoBackgroundURL ?? "");
+    }, [open, data.videoBackgroundURL]);
+
+    return (
+        <SettingWrapper showSeparator={false} text="Custom background">
+            {data.videoBackgroundURL ? (
+                <Button variant="outline" size="sm" onClick={() => clearCustomBackground()}>
+                    <ImageOffIcon className="size-4" />
+                </Button>
+            ) : (
+                <>
+                    <Dialog open={open} onOpenChange={setOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                                <ImagePlusIcon className="size-4" />
+                            </Button>
+                            
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Set custom background</DialogTitle>
+                                <DialogDescription>Enter a URL for a video background.</DialogDescription>
+                            </DialogHeader>
+                            <div className="pt-2">
+                                <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com/video.mp4" />
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+                                </DialogClose>
+                                <DialogClose asChild>
+                                    <Button onClick={() => { setVideoBackgroundURL(url); }}>Apply</Button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </>
+            )}
         </SettingWrapper>
     );
 }

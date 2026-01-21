@@ -12,21 +12,6 @@ async function savePersongData(songID: string, data: IPersongContext) {
 
 async function loadPersongData(songID: string): Promise<IPersongContext | null> {
     // Loads per-song data
-
-    if (songID === "1679278167") {
-        return {
-            id: songID,
-            customBackgroundType: "video",
-            videoBackgroundURL: "http://127.0.0.1:5173/testmv1.mp4"
-        };
-    }
-    else if (songID === "1866463539") {
-        return {
-            id: songID,
-            customBackgroundType: "video",
-            videoBackgroundURL: "https://www.youtube.com/watch?v=5B-ZPcq8KxQ&pp=ygUMcmV2ZW5nZSBvZiBi"
-        };
-    }    
     
     if (window.igniteView?.commandBridge?.getCustomOverride) {
         const data = await window.igniteView?.commandBridge?.getCustomOverride("PersongOverrides", songID);
@@ -133,10 +118,7 @@ export function usePersongOverrides(): {
                 videoBackgroundURL: undefined,
             };
 
-            // only save if not default (this will usually be default -> no save)
-            if (!isDefaultPersongData(songID, next)) {
-                void savePersongData(songID, next);
-            }
+            void savePersongData(songID, next);
 
             return next;
         });
