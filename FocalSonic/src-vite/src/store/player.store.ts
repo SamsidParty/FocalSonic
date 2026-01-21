@@ -15,6 +15,7 @@ import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { useAppSettings, useAppStore } from "./app.store";
+import { usePersongOverrides } from "./persong.store";
 
 const blurSettings = {
     min: 20,
@@ -1128,10 +1129,13 @@ export const useDynamicColors = () => {
 };
 
 export const useCustomFullscreenBackground = () => {
+
+    const persongOverrides = usePersongOverrides();
+
     return {
-        hideAlbumArt: true,
-        videoBackgroundURL: "http://127.0.0.1:5173/testmv1.mp4",
-        customBackgroundType: "video",
+        hideAlbumArt: !!persongOverrides.data.customBackgroundType,
+        videoBackgroundURL: persongOverrides.data.videoBackgroundURL || null,
+        customBackgroundType: persongOverrides.data.customBackgroundType,
     };
 };
 
