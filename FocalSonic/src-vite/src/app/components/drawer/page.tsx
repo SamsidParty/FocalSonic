@@ -107,7 +107,7 @@ export function MainDrawerPage() {
                                 <QueueSongList />
                             </ActiveContent>
                             <ActiveContent active={lyricsState && (!isMiniPlayer || (document.documentElement.clientWidth > document.documentElement.clientHeight))}>
-                                <LyricsTab leftAlign visible={mainDrawerState && lyricsState} />
+                                <LyricsTab leftAlign={!hideAlbumArt} visible={mainDrawerState && lyricsState} />
                             </ActiveContent>
                             <ActiveContent active={extraBarContent === "effects"}>
                                 <Equalizer orientation="horizontal" />

@@ -222,11 +222,12 @@ const MemoizedLrcLineRenderer = React.memo(LrcLineRenderer, (prevProps, nextProp
         prevProps.active === nextProps.active &&
         prevProps.line.id === nextProps.line.id &&
         prevProps.timestamp === nextProps.timestamp &&
-        prevProps.small === nextProps.small
+        prevProps.small === nextProps.small &&
+        prevProps.leftAlign === nextProps.leftAlign
     );
 });
 
-function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean }) {
+function LrcLineRenderer({ line, active, skipToTime, timestamp, small, leftAlign }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean, leftAlign?: boolean }) {
 
     const { enableLyricBlur, enableLyricGlow } = useTheme();
 
@@ -299,9 +300,10 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
             onClick={handleClick}
             className={clsx(
                 "lyric-line drop-shadow-lg z-40 cursor-pointer hover:opacity-100 duration-700",
-                "transition-[opacity,transform,filter] motion-reduce:transition-none ease-long text-left xxs:leading-normal",
+                "transition-[opacity,transform,filter] motion-reduce:transition-none ease-long xxs:leading-normal",
+                leftAlign && "text-left",
                 (active) && "lyric-line-active",
-                (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold translate-x-[7%]" : "opacity-60",
+                (active && !line?.isSubLyric) ? `opacity-100 scale-110 font-bold translate-x-[${leftAlign ? 7 : 0}%]` : "opacity-60",
                 (!subLyric && !small) ? "my-10 !2xl:my-30 !xxs:my-5" : "my-0",
                 (line?.isSubLyric && !small) && "text-xl 2xl:text-3xl xxs:text-xs opacity-100 mt-0 mb-10 !2xl:mb-30 xxs:mb-2",
                 (line?.isSubLyric && small) && "!text-[12px] !mb-2 leading-normal",
@@ -321,7 +323,7 @@ function LrcLineRenderer({ line, active, skipToTime, timestamp, small }: { line:
                 </span>
             ))}
             {
-                subLyric && <MemoizedLrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} small={small} />
+                subLyric && <MemoizedLrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} small={small} leftAlign={leftAlign} />
             }
         </p>
     );
