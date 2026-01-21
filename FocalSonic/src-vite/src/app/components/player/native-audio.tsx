@@ -146,6 +146,10 @@ class NativeVirtualAudioPlayer {
         }, 0);
     }
 
+    get playbackRate() {
+        return this._playbackRate;
+    }
+
     get readyState() {
         
         if (!this.paused && (this._state !== "created" || this._currentTime === 0 || !this.duration)) {

@@ -21,6 +21,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 export type VideoBackgroundAudioRef = {
     /** seconds */
     currentTime: number;
+    playbackRate: number;
     /** true if audio is paused */
     paused: boolean;
 };
@@ -69,9 +70,10 @@ export function RegularVideoBackground({
 }: VideoBackgroundProps) {
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    const audioSnapshotRef = useRef<{ t: number; paused: boolean }>({
+    const audioSnapshotRef = useRef<{ t: number; paused: boolean; playbackRate: number }>({
         t: 0,
         paused: true,
+        playbackRate: 1,
     });
 
     const videoMetaRef = useRef<{ duration: number; ready: boolean }>({
@@ -95,7 +97,8 @@ export function RegularVideoBackground({
         const tick = () => {
             const t = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
             const paused = !!audio.paused;
-            audioSnapshotRef.current = { t, paused };
+            const playbackRate = Number.isFinite(audio.playbackRate) && audio.playbackRate > 0 ? audio.playbackRate : 1;
+            audioSnapshotRef.current = { t, paused, playbackRate };
         };
 
         tick();
@@ -140,13 +143,12 @@ export function RegularVideoBackground({
         const SYNC_MS = 120; // balanced: responsive without spamming seeks
 
         const sync = () => {
-            const { t: audioTime, paused: audioPaused } = audioSnapshotRef.current;
+            const { t: audioTime, paused: audioPaused, playbackRate } = audioSnapshotRef.current;
             const { duration, ready } = videoMetaRef.current;
 
             if (!ready || duration <= 0) return;
 
             // Wrap video time to match audio timeline
-            // (audioTime could be huge; modulo keeps it in [0, duration))
             const targetVideoTime = ((audioTime % duration) + duration) % duration;
 
             // If audio paused, we generally pause video too
@@ -164,9 +166,14 @@ export function RegularVideoBackground({
                 return;
             }
 
+            // Ensure video playbackRate matches audio
+            try {
+                const pr = Number.isFinite(playbackRate) && playbackRate > 0 ? playbackRate : 1;
+                if (v.playbackRate !== pr) v.playbackRate = pr;
+            } catch {}
+
             // Audio playing -> ensure video playing
             if (v.paused) {
-                // Must be muted for autoplay on most browsers (we set muted by default)
                 v.play().catch(() => {
                     // Autoplay might still be blocked; ignore
                 });

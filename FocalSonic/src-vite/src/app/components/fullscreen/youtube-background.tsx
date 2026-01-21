@@ -127,9 +127,10 @@ export default function YouTubeBackground({
     const [containerSize, setContainerSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
 
     // Keep latest audio snapshot (polled) for sync loop without re-render spam
-    const audioSnapshotRef = useRef<{ t: number; paused: boolean }>({
+    const audioSnapshotRef = useRef<{ t: number; paused: boolean; playbackRate: number }>({
         t: 0,
         paused: true,
+        playbackRate: 1,
     });
     const qualityCheckRef = useRef<number>(0);
 
@@ -141,11 +142,11 @@ export default function YouTubeBackground({
         const POLL_MS = 100;
 
         const tick = () => {
-            // Defensive reads
             const t = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
             const paused = !!audio.paused;
+            const playbackRate = Number.isFinite(audio.playbackRate) && audio.playbackRate > 0 ? audio.playbackRate : 1;
 
-            audioSnapshotRef.current = { t, paused };
+            audioSnapshotRef.current = { t, paused, playbackRate };
         };
 
         tick();
@@ -344,7 +345,7 @@ export default function YouTubeBackground({
         };
 
         const ensureState = () => {
-            const { t: audioTime, paused: audioPaused } = audioSnapshotRef.current;
+            const { t: audioTime, paused: audioPaused, playbackRate } = audioSnapshotRef.current;
 
             // If audio is paused, we generally want video paused too
             if (audioPaused && !allowVideoWhenAudioPaused) {
@@ -355,6 +356,24 @@ export default function YouTubeBackground({
                 } catch {}
                 return;
             }
+
+            // Keep player playback rate in sync with audio (pick closest available if possible)
+            try {
+                const desired = Number.isFinite(playbackRate) && playbackRate > 0 ? playbackRate : 1;
+                const rates: number[] = player.getAvailablePlaybackRates?.() ?? [];
+                if (rates && rates.length > 0) {
+                    let pick = rates[0];
+                    pick = rates.reduce(
+                        (prev: number, curr: number) =>
+                            Math.abs(curr - desired) < Math.abs(prev - desired) ? curr : prev
+                        , rates[0]
+                    );
+                    player.setPlaybackRate?.(pick);
+                } else {
+                    // best-effort: try to set desired directly
+                    player.setPlaybackRate?.(desired);
+                }
+            } catch {}
 
             // Audio playing -> video should be playing
             try {
