@@ -463,10 +463,10 @@ export default function YouTubeBackground({
         const containerAspect = w / h;
         if (containerAspect >= videoAspect) {
             const height = w / videoAspect;
-            return { width: `${w+24}px`, height: `${height+24}px` };
+            return { width: `${w*1.1}px`, height: `${height*1.1}px` };
         }
         const width = h * videoAspect;
-        return { width: `${width+24}px`, height: `${h+24}px` };
+        return { width: `${width*1.1}px`, height: `${h*1.1}px` };
     }, [containerSize, videoAspect]);
 
     return (

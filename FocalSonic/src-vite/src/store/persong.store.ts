@@ -2,11 +2,19 @@ import { IPersongContext, IPersongInterface } from "@/types/persongContext";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePlayerCurrentSong } from "./player.store";
 
+const PERSONG_OVERRIDES_EVENT = "persongOverridesChanged";
+
 async function savePersongData(songID: string, data: IPersongContext) {
     // Saves per-song data
 
     if (window.igniteView?.commandBridge?.saveCustomOverride) {
         await window.igniteView?.commandBridge?.saveCustomOverride("PersongOverrides", songID, JSON.stringify(data));
+
+        try {
+            window.dispatchEvent(new CustomEvent(PERSONG_OVERRIDES_EVENT, { detail: { songID } }));
+        } catch (e) {
+            // ignore dispatch errors
+        }
     }
 }
 
@@ -83,8 +91,32 @@ export function usePersongOverrides(): {
             }
         })();
 
+        const onOverridesChanged = (ev: Event) => {
+            const ce = ev as CustomEvent<{ songID: string }>;
+            if (!ce?.detail?.songID) return;
+            if (ce.detail.songID !== songID) return;
+
+            const myToken = loadTokenRef.current;
+            void (async () => {
+                try {
+                    const loaded = await loadPersongData(songID);
+
+                    if (!alive) return;
+                    if (myToken !== loadTokenRef.current) return;
+
+                    setData(loaded ?? getDefaultPersongData(songID));
+                    setIsLoaded(true);
+                } catch (err) {
+                    // ignore reload errors
+                }
+            })();
+        };
+
+        window.addEventListener(PERSONG_OVERRIDES_EVENT, onOverridesChanged as EventListener);
+
         return () => {
             alive = false;
+            window.removeEventListener(PERSONG_OVERRIDES_EVENT, onOverridesChanged as EventListener);
         };
     }, [songID]);
 
