@@ -307,15 +307,21 @@ export class LyricsRenderer {
 
         // Scroll to active line if changed or recovering from user scroll
         const now = performance.now();
-        const shouldAutoScroll = !this.isUserScrolling || (now - this.userScrollTime > this.userScrollRecoveryDelay);
+        const recoveryExpired = now - this.userScrollTime > this.userScrollRecoveryDelay;
+        const shouldAutoScroll = !this.isUserScrolling || recoveryExpired;
 
-        if (shouldAutoScroll && this.isUserScrolling && now - this.userScrollTime > this.userScrollRecoveryDelay) {
-            // Recovering from user scroll
+        // Track if we're recovering from user scroll this frame
+        const isRecovering = this.isUserScrolling && recoveryExpired;
+
+        if (isRecovering) {
+            // Recovering from user scroll - clear flag and force scroll to current line
             this.isUserScrolling = false;
-        }
-
-        if (shouldAutoScroll && newActiveIndex >= 0 &&
+            if (newActiveIndex >= 0) {
+                this.scrollToLine(newActiveIndex);
+            }
+        } else if (shouldAutoScroll && newActiveIndex >= 0 &&
             (newActiveIndex !== this.currentActiveIndex || this.currentActiveIndex === -1)) {
+            // Normal auto-scroll on line change
             this.scrollToLine(newActiveIndex);
         }
 
