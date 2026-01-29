@@ -374,7 +374,9 @@
     "queue": "Queue",
     "playing": "Playing now",
     "lyrics": "Lyrics",
-    "switchButton": "Switch to Big Player"
+    "switchButton": "Switch to Big Player",
+    "customBackground": "Video Background",
+    "customBackgroundDescription": "Add a custom video background, stored on a per-song basis. YouTube videos are supported only if embedding is enabled."
   },
   "logout": {
     "dialog": {
