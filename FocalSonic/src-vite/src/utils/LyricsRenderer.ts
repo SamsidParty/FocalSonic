@@ -33,8 +33,14 @@ export class LyricsRenderer {
     private lyrics: ParsedLyrics;
     private options: LyricsRendererOptions;
     private currentActiveIndex: number = -1;
-    private lastScrollTime: number = 0;
-    private scrollCooldown: number = 100; // ms between scroll updates
+    private lastAutoScrollTime: number = 0;
+    private autoScrollCooldown: number = 100; // ms between auto-scroll updates
+    private userScrollTime: number = 0; // When user last scrolled
+    private userScrollRecoveryDelay: number = 500; // ms to wait before recovering auto-scroll
+    private isUserScrolling: boolean = false;
+    private isProgrammaticScroll: boolean = false; // Flag to ignore programmatic scroll events
+    private programmaticScrollTimeout: number | null = null;
+    private scrollHandler: (() => void) | null = null;
 
     constructor(lyrics: ParsedLyrics, options: LyricsRendererOptions = {}) {
         this.lyrics = lyrics;
@@ -86,6 +92,17 @@ export class LyricsRenderer {
         }
 
         this.container.appendChild(this.lyricsContainer);
+
+        // Add scroll event listener to detect user scrolling
+        // Ignore scroll events triggered by programmatic scrollTo()
+        this.scrollHandler = () => {
+            if (this.isProgrammaticScroll) {
+                return; // Ignore programmatic scroll
+            }
+            this.userScrollTime = performance.now();
+            this.isUserScrolling = true;
+        };
+        this.lyricsContainer.addEventListener('scroll', this.scrollHandler, { passive: true });
     }
 
     /**
@@ -288,8 +305,17 @@ export class LyricsRenderer {
             }
         }
 
-        // Scroll to active line if changed
-        if (newActiveIndex !== this.currentActiveIndex && newActiveIndex >= 0) {
+        // Scroll to active line if changed or recovering from user scroll
+        const now = performance.now();
+        const shouldAutoScroll = !this.isUserScrolling || (now - this.userScrollTime > this.userScrollRecoveryDelay);
+
+        if (shouldAutoScroll && this.isUserScrolling && now - this.userScrollTime > this.userScrollRecoveryDelay) {
+            // Recovering from user scroll
+            this.isUserScrolling = false;
+        }
+
+        if (shouldAutoScroll && newActiveIndex >= 0 &&
+            (newActiveIndex !== this.currentActiveIndex || this.currentActiveIndex === -1)) {
             this.scrollToLine(newActiveIndex);
         }
 
@@ -378,8 +404,8 @@ export class LyricsRenderer {
         if (!this.lyricsContainer || this.options.oneLine) return;
 
         const now = performance.now();
-        if (now - this.lastScrollTime < this.scrollCooldown) return;
-        this.lastScrollTime = now;
+        if (now - this.lastAutoScrollTime < this.autoScrollCooldown) return;
+        this.lastAutoScrollTime = now;
 
         const lineEl = this.lineElements[lineIndex]?.container;
         if (!lineEl) return;
@@ -391,10 +417,24 @@ export class LyricsRenderer {
 
         const targetScroll = scrollTop + lineRect.top - containerRect.top - (containerRect.height / 2) + (lineRect.height / 2);
 
+        // Set flag to ignore scroll events triggered by this programmatic scroll
+        this.isProgrammaticScroll = true;
+
+        // Clear any existing timeout
+        if (this.programmaticScrollTimeout !== null) {
+            clearTimeout(this.programmaticScrollTimeout);
+        }
+
         this.lyricsContainer.scrollTo({
             top: targetScroll,
             behavior: this.isSafari() ? "auto" : "smooth",
         });
+
+        // Clear the flag after scroll completes (use longer timeout for smooth scroll)
+        this.programmaticScrollTimeout = window.setTimeout(() => {
+            this.isProgrammaticScroll = false;
+            this.programmaticScrollTimeout = null;
+        }, this.isSafari() ? 50 : 400);
     }
 
     /**
@@ -418,14 +458,60 @@ export class LyricsRenderer {
      * Force scroll to a specific line (e.g., after user interaction)
      */
     forceScrollToLine(lineIndex: number): void {
-        this.lastScrollTime = 0; // Reset cooldown
+        this.lastAutoScrollTime = 0; // Reset cooldown
+        this.isUserScrolling = false; // Reset user scroll state
         this.scrollToLine(lineIndex);
+    }
+
+    /**
+     * Reset the renderer state (call when switching songs)
+     */
+    reset(): void {
+        this.currentActiveIndex = -1;
+        this.lastAutoScrollTime = 0;
+        this.userScrollTime = 0;
+        this.isUserScrolling = false;
+
+        // Reset all line states to inactive
+        for (const { container, wordSpans, subLyricContainer, subLyricWordSpans, line } of this.lineElements) {
+            container.className = this.buildLineClasses(line, false, false);
+            container.style.filter = "";
+
+            for (const span of wordSpans) {
+                span.classList.remove("lyric-wipe-active");
+            }
+
+            if (subLyricContainer) {
+                subLyricContainer.className = this.buildLineClasses(line, false, true);
+            }
+
+            for (const span of subLyricWordSpans) {
+                span.classList.remove("lyric-wipe-active");
+            }
+        }
+
+        // Scroll to top
+        if (this.lyricsContainer) {
+            this.lyricsContainer.scrollTop = 0;
+        }
     }
 
     /**
      * Clean up and destroy the renderer
      */
     destroy(): void {
+        // Clear programmatic scroll timeout
+        if (this.programmaticScrollTimeout !== null) {
+            clearTimeout(this.programmaticScrollTimeout);
+            this.programmaticScrollTimeout = null;
+        }
+
+        // Remove scroll event listener
+        if (this.lyricsContainer && this.scrollHandler) {
+            this.lyricsContainer.removeEventListener('scroll', this.scrollHandler);
+            this.scrollHandler = null;
+        }
+
         if (this.container) {
             this.container.innerHTML = "";
         }

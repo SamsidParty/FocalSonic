@@ -195,6 +195,10 @@ function SyncedLyrics(props: LyricProps) {
             return;
         }
 
+        // Force an immediate update to sync with current playback position
+        const timestampMs = (playerRef?.currentTime || 0) * 1000;
+        rendererRef.current.update(timestampMs);
+
         const updateFrame = () => {
             const timestampMs = (playerRef?.currentTime || 0) * 1000;
             rendererRef.current?.update(timestampMs);
@@ -208,7 +212,7 @@ function SyncedLyrics(props: LyricProps) {
                 cancelAnimationFrame(rafRef.current);
             }
         };
-    }, [props.visible, playerRef]);
+    }, [props.visible, playerRef, parsedLyrics]);
 
     if (isResizing || isLoading) return null;
 
