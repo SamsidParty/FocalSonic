@@ -7,19 +7,17 @@ import { useAppStore } from "@/store/app.store";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
 import { usePlayerStyle, useTheme } from "@/store/theme.store";
 import { stripLRCLine } from "@/utils/lyricUtils";
-import { isSafari } from "@/utils/osType";
 import { translateText } from "@/utils/translate";
 import useDebouncedWindowSize from "@/utils/useDebouncedWindowSize";
+import { parseLrc } from "@/utils/lrcParser";
+import { LyricsRenderer } from "@/utils/LyricsRenderer";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import React, { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Lrc, LrcLine } from "react-lrc";
 import { areLyricsSynced, areLyricsTTML, convertTTMLToLRC } from "../lyrics/lyric-helpers";
 
 // Move regex patterns outside component to avoid recreation
-const ELRC_REGEX = /<(\d{2}):(\d{2})\.(\d{2})>([^<]+)/g;
-const ELRC_TEST_REGEX = /^\s*(<\d{2}:\d{2}\.\d+>[^<]*)+\s*$/;
 const NON_LATIN_REGEX = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Oriya}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Thai}\p{Script=Khmer}\p{Script=Lao}\p{Script=Myanmar}\p{Script=Ethiopic}\p{Script=Georgian}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Yi}]/u;
 
 interface LyricProps {
@@ -39,8 +37,7 @@ export function LyricsTab(props: LyricProps) {
 
     const { data: lyrics, isLoading } = useQuery({
         queryKey: ["get-lyrics", artist, title, duration],
-        queryFn: async () =>
-        {
+        queryFn: async () => {
 
             if (window?.igniteView) {
                 // Check for overriden lyrics
@@ -80,22 +77,24 @@ export function LyricsTab(props: LyricProps) {
     }
 }
 
-let currentLineNumber = -1;
-
 function SyncedLyrics(props: LyricProps) {
     const playerRef = usePlayerRef();
-    const [timestamp, setTimestamp] = useState<number>(0);
     const { altLyricsMode } = useAppStore().settings;
     const { isMiniPlayer } = usePlayerStyle();
     const { width, height, isResizing } = useDebouncedWindowSize(100);
+    const { enableLyricBlur, enableLyricGlow } = useTheme();
+
+    // Refs for imperative rendering
+    const containerRef = useRef<HTMLDivElement>(null);
+    const rendererRef = useRef<LyricsRenderer | null>(null);
     const rafRef = useRef<number | null>(null);
 
     let { lyrics, leftAlign, small, oneLine } = props;
 
+    // Convert and translate lyrics
     const { data: convertedLyrics, isLoading } = useQuery({
         queryKey: ["convert-and-translate-lyrics", lyrics, altLyricsMode],
-        queryFn: async () =>
-        {
+        queryFn: async () => {
             if (areLyricsTTML(lyrics)) {
                 lyrics = convertTTMLToLRC(lyrics!, altLyricsMode);
             }
@@ -143,13 +142,52 @@ function SyncedLyrics(props: LyricProps) {
         },
     });
 
-    const formattedLyrics = useMemo(() => {
-        return convertedLyrics || "";
+    // Parse lyrics once when they change
+    const parsedLyrics = useMemo(() => {
+        if (!convertedLyrics) return null;
+        return parseLrc(convertedLyrics);
     }, [convertedLyrics]);
 
-    // Optimized timestamp update using useEffect instead of inline RAF
+    // Seek callback
+    const skipToTime = useCallback((timeMs: number) => {
+        if (playerRef) {
+            playerRef.currentTime = timeMs / 1000;
+        }
+    }, [playerRef]);
+
+    // Mount/unmount renderer
     useEffect(() => {
-        if (!props.visible) {
+        if (!containerRef.current || !parsedLyrics || isResizing) {
+            return;
+        }
+
+        // Clean up existing renderer
+        if (rendererRef.current) {
+            rendererRef.current.destroy();
+        }
+
+        // Create new renderer
+        const renderer = new LyricsRenderer(parsedLyrics, {
+            leftAlign,
+            small,
+            oneLine,
+            enableBlur: enableLyricBlur,
+            enableGlow: enableLyricGlow,
+            onSeek: skipToTime,
+        });
+
+        renderer.mount(containerRef.current);
+        rendererRef.current = renderer;
+
+        return () => {
+            renderer.destroy();
+            rendererRef.current = null;
+        };
+    }, [parsedLyrics, leftAlign, small, oneLine, enableLyricBlur, enableLyricGlow, skipToTime, width, height, isResizing]);
+
+    // Animation loop - updates renderer without React rerenders
+    useEffect(() => {
+        if (!props.visible || !rendererRef.current) {
             if (rafRef.current) {
                 cancelAnimationFrame(rafRef.current);
                 rafRef.current = null;
@@ -157,13 +195,13 @@ function SyncedLyrics(props: LyricProps) {
             return;
         }
 
-        const updateTimestamp = () => {
-            const newTimestamp = (playerRef?.currentTime || 0) * 1000;
-            setTimestamp(prev => prev !== newTimestamp ? newTimestamp : newTimestamp + 0.001);
-            rafRef.current = requestAnimationFrame(updateTimestamp);
+        const updateFrame = () => {
+            const timestampMs = (playerRef?.currentTime || 0) * 1000;
+            rendererRef.current?.update(timestampMs);
+            rafRef.current = requestAnimationFrame(updateFrame);
         };
 
-        rafRef.current = requestAnimationFrame(updateTimestamp);
+        rafRef.current = requestAnimationFrame(updateFrame);
 
         return () => {
             if (rafRef.current) {
@@ -172,28 +210,11 @@ function SyncedLyrics(props: LyricProps) {
         };
     }, [props.visible, playerRef]);
 
-    // Memoize skipToTime callback
-    const skipToTime = useCallback((timeMs: number) => {
-        if (playerRef) {
-            playerRef.currentTime = timeMs / 1000;
-        }
-    }, [playerRef]);
-
-    // Memoize the line renderer to prevent recreation
-    const lineRenderer = useCallback(
-        (_props: any) => <MemoizedLrcLineRenderer {..._props} {...props} skipToTime={skipToTime} timestamp={timestamp / 1000} />,
-        [props.leftAlign, props.small, skipToTime, timestamp]
-    );
-
-    // Memoize onLineUpdate callback
-    const onLineUpdate = useCallback((l: any) => {
-        currentLineNumber = l?.index;
-    }, []);
-
-    if (isResizing) return null;
+    if (isResizing || isLoading) return null;
 
     return (
-        <div 
+        <div
+            ref={containerRef}
             className={
                 clsx(
                     "text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics text-[var(--lyric-color)]",
@@ -203,140 +224,8 @@ function SyncedLyrics(props: LyricProps) {
             }
             style={{
                 "--lyric-color": small ? "var(--foreground)" : "white"
-            }}
-        >
-            <Lrc
-                key={`debouncedlyrics_${width}x${height}`}
-                lrc={formattedLyrics!}
-                recoverAutoScrollInterval={oneLine ? 1000 : 0}
-
-                currentMillisecond={timestamp}
-                id={"sync-lyrics-box-" + (leftAlign ? "left" : "center")}
-                className={clsx("z-40 h-full", !isSafari && "scroll-smooth", oneLine && "overflow-hidden", oneLine && "pt-4")}
-                onLineUpdate={onLineUpdate}
-                verticalSpace={!oneLine}
-                lineRenderer={lineRenderer}
-            />
-        </div>
-    );
-}
-
-// Memoized LrcLineRenderer component
-const MemoizedLrcLineRenderer = React.memo(LrcLineRenderer, (prevProps, nextProps) => {
-    return (
-        prevProps.active === nextProps.active &&
-        prevProps.line.id === nextProps.line.id &&
-        prevProps.timestamp === nextProps.timestamp &&
-        prevProps.small === nextProps.small &&
-        prevProps.leftAlign === nextProps.leftAlign &&
-        prevProps.oneLine === nextProps.oneLine
-    );
-});
-
-function LrcLineRenderer({ line, active, skipToTime, timestamp, small, leftAlign, oneLine }: { line: LrcLine, active: boolean, skipToTime: (time: number) => void, timestamp: number, small?: boolean, leftAlign?: boolean, oneLine?: boolean }) {
-
-    const { enableLyricBlur, enableLyricGlow } = useTheme();
-
-    let subLyric: string | null = null;
-    let lyric = line?.content;
-
-    if (line?.content.split("⏩").length > 1) {
-        subLyric = line.content.split("⏩")[1];
-        lyric = line.content.split("⏩")[0];
-    }
-
-    const elrcValues = useMemo(() => {
-        const isElrc = ELRC_TEST_REGEX.test(lyric);
-        const elrcPortions: any[] = [];
-
-        const displayLyric = isElrc ? lyric : `⏩<00:00.00>${lyric}<00:00.00>`;
-
-        // Create new regex instance for exec to avoid stateful issues
-        const regex = new RegExp(ELRC_REGEX.source, ELRC_REGEX.flags);
-        let match;
-
-        while ((match = regex.exec(displayLyric)) !== null) {
-            const lastElement = elrcPortions[elrcPortions.length - 1];
-            const minutes = parseInt(match[1], 10);
-            const seconds = parseInt(match[2], 10);
-            const fractionOfSeconds = parseInt(match[3], 10);
-            const totalSeconds = minutes * 60 + seconds + fractionOfSeconds / 100;
-
-            if (totalSeconds > 0.05 || !lastElement) {
-                elrcPortions.push({
-                    time: Math.max(totalSeconds, 0),
-                    text: match[4],
-                });
-            }
-            else {
-                lastElement && (lastElement.text += match[4]);
-            }
-        }
-
-        if (elrcPortions.length === 1 && elrcPortions[0].time === 0) {
-            elrcPortions[0].time = line.startMillisecond / 1000;
-            elrcPortions[0].duration = 0.3;
-        }
-
-        for (let i = 0; i < elrcPortions.length; i++) {
-            if (i < elrcPortions.length - 1) {
-                elrcPortions[i].duration = (elrcPortions[i + 1].time - elrcPortions[i].time);
-            } else {
-                elrcPortions[i].duration = 0.3;
-            }
-        }
-        
-        return { isElrc, elrcPortions };
-    }, [lyric, line.startMillisecond]);
-
-    // Remove memoization - currentLineNumber is external and changes frequently
-    let timeDiff = Math.abs((currentLineNumber || 0) - line.lineNumber);
-    if (timeDiff > 5) timeDiff = 5;
-    if (active || small || !enableLyricBlur) timeDiff = 0;
-    const blurStyle = { filter: `blur(${timeDiff * 1.2}px)` };
-
-    // Memoize click handler
-    const handleClick = useCallback(() => {
-        skipToTime(line.startMillisecond);
-    }, [skipToTime, line.startMillisecond]);
-
-    if (oneLine && !active) {
-        return null;
-    }
-
-    return (
-        <p
-            key={line?.id}
-            onClick={handleClick}
-            className={clsx(
-                "lyric-line drop-shadow-lg z-40 cursor-pointer hover:opacity-100 duration-700",
-                "transition-[opacity,transform,filter] motion-reduce:transition-none ease-long xxs:leading-normal",
-                leftAlign && "text-left",
-                (active) && "lyric-line-active",
-                (active && !line?.isSubLyric) ? "opacity-100 scale-110 font-bold" : "opacity-60",
-                (active && !line?.isSubLyric && leftAlign) ? "translate-x-[7%]" : "",
-                (!subLyric && !small) ? "my-10 !2xl:my-30 !xxs:my-5" : "my-0",
-                (line?.isSubLyric && !small) && "text-xl 2xl:text-3xl xxs:text-xs opacity-100 mt-0 mb-10 !2xl:mb-30 xxs:mb-2",
-                (line?.isSubLyric && small) && "!text-[12px] !mb-2 leading-normal",
-                (!line?.isSubLyric && !small) && "xxs:text-[18px] 2xl:my-20 !xxs:my-0",
-                (!line?.isSubLyric && small) && "text-[18px] !my-0 !mt-8 leading-normal",
-            )}
-            style={blurStyle}
-        >
-            {elrcValues.elrcPortions.map((portion, index) => (
-                <span
-                    data-time={portion.time}
-                    key={index}
-                    className={clsx((timestamp >= portion.time - 0.2) ? "lyric-wipe lyric-wipe-active" : "lyric-wipe", !enableLyricGlow && "lyric-glow-disabled")}
-                    style={{ transitionDuration: `${portion.duration * 2}s` }}
-                >
-                    {portion.text}
-                </span>
-            ))}
-            {
-                subLyric && <MemoizedLrcLineRenderer line={{...line, content: subLyric, isSubLyric: true }} active={active} skipToTime={skipToTime} timestamp={timestamp} small={small} leftAlign={leftAlign} />
-            }
-        </p>
+            } as React.CSSProperties}
+        />
     );
 }
 
@@ -347,7 +236,7 @@ function UnsyncedLyrics({ lyrics }: LyricProps) {
     // Memoize lines array
     const lines = useMemo(() => lyrics!.split("\n"), [lyrics]);
 
-    // ...existing useEffect...
+    // Scroll to top when song changes
     useEffect(() => {
         if (lyricsBoxRef.current) {
             const scrollArea = lyricsBoxRef.current.querySelector(
@@ -395,4 +284,3 @@ function CenteredMessage({ children }: CenteredMessageProps) {
         </div>
     );
 }
-
