@@ -3,7 +3,7 @@
  * Updates DOM directly without React rerenders for optimal performance
  */
 
-import { ParsedLyrics, ParsedLyricLine, findActiveLine } from './lrcParser';
+import { ParsedLyricLine, ParsedLyrics, findActiveLine } from "./lrcParser";
 
 export interface LyricsRendererOptions {
     leftAlign?: boolean;
@@ -56,18 +56,18 @@ export class LyricsRenderer {
         if (!this.container) return;
 
         // Clear existing content
-        this.container.innerHTML = '';
+        this.container.innerHTML = "";
         this.lineElements = [];
 
         // Create scrollable lyrics container
-        this.lyricsContainer = document.createElement('div');
-        this.lyricsContainer.id = `sync-lyrics-box-${this.options.leftAlign ? 'left' : 'center'}`;
+        this.lyricsContainer = document.createElement("div");
+        this.lyricsContainer.id = `sync-lyrics-box-${this.options.leftAlign ? "left" : "center"}`;
         this.lyricsContainer.className = this.buildContainerClasses();
 
         // Add vertical space at start
         if (!this.options.oneLine) {
-            const spacer = document.createElement('div');
-            spacer.style.height = '40vh';
+            const spacer = document.createElement("div");
+            spacer.style.height = "40vh";
             this.lyricsContainer.appendChild(spacer);
         }
 
@@ -80,8 +80,8 @@ export class LyricsRenderer {
 
         // Add vertical space at end
         if (!this.options.oneLine) {
-            const spacer = document.createElement('div');
-            spacer.style.height = '40vh';
+            const spacer = document.createElement("div");
+            spacer.style.height = "40vh";
             this.lyricsContainer.appendChild(spacer);
         }
 
@@ -92,20 +92,20 @@ export class LyricsRenderer {
      * Build CSS classes for the lyrics container
      */
     private buildContainerClasses(): string {
-        const classes = ['z-40', 'h-full'];
+        const classes = ["z-40", "h-full"];
 
         // Safari doesn't handle scroll-smooth well with frequent updates
         if (!this.isSafari()) {
-            classes.push('scroll-smooth');
+            classes.push("scroll-smooth");
         }
 
         if (this.options.oneLine) {
-            classes.push('overflow-hidden', 'pt-4', 'flex', 'flex-col', 'items-center', 'justify-center');
+            classes.push("overflow-hidden", "pt-4", "flex", "flex-col", "items-center", "justify-center");
         } else {
-            classes.push('overflow-y-auto', 'overflow-x-hidden');
+            classes.push("overflow-y-auto", "overflow-x-hidden");
         }
 
-        return classes.join(' ');
+        return classes.join(" ");
     }
 
     /**
@@ -119,15 +119,15 @@ export class LyricsRenderer {
      * Create DOM elements for a single lyric line
      */
     private createLineElement(line: ParsedLyricLine): LineElement {
-        const p = document.createElement('p');
+        const p = document.createElement("p");
         p.className = this.buildLineClasses(line, false, false);
         p.dataset.lineId = line.id;
         p.dataset.startTime = String(line.startTime);
 
         // Add click handler for seeking
         if (this.options.onSeek) {
-            p.style.cursor = 'pointer';
-            p.addEventListener('click', () => {
+            p.style.cursor = "pointer";
+            p.addEventListener("click", () => {
                 this.options.onSeek?.(line.startTime);
             });
         }
@@ -137,7 +137,7 @@ export class LyricsRenderer {
         // Create word spans for main lyrics (ELRC)
         for (let i = 0; i < line.words.length; i++) {
             const word = line.words[i];
-            const span = document.createElement('span');
+            const span = document.createElement("span");
             span.className = this.buildWordClasses(false);
             span.dataset.time = String(word.time);
             span.dataset.duration = String(word.duration);
@@ -151,12 +151,12 @@ export class LyricsRenderer {
         const subLyricWordSpans: HTMLSpanElement[] = [];
 
         if (line.altContent && line.altWords.length > 0) {
-            subLyricContainer = document.createElement('p');
+            subLyricContainer = document.createElement("p");
             subLyricContainer.className = this.buildLineClasses(line, false, true);
 
             for (let i = 0; i < line.altWords.length; i++) {
                 const word = line.altWords[i];
-                const span = document.createElement('span');
+                const span = document.createElement("span");
                 span.className = this.buildWordClasses(false);
                 span.dataset.time = String(word.time);
                 span.dataset.duration = String(word.duration);
@@ -177,64 +177,71 @@ export class LyricsRenderer {
      */
     private buildLineClasses(line: ParsedLyricLine, active: boolean, isSubLyric: boolean = false): string {
         const classes = [
-            'lyric-line',
-            'drop-shadow-lg',
-            'z-40',
-            'cursor-pointer',
-            'hover:opacity-100',
-            'duration-700',
-            'transition-[opacity,transform,filter]',
-            'motion-reduce:transition-none',
-            'ease-long',
-            'xxs:leading-normal',
+            "lyric-line",
+            "drop-shadow-lg",
+            "z-40",
+            "cursor-pointer",
+            "hover:opacity-100",
+            "duration-700",
+            "transition-[opacity,transform,filter]",
+            "motion-reduce:transition-none",
+            "ease-long",
+            "xxs:leading-normal",
         ];
 
         if (this.options.leftAlign) {
-            classes.push('text-left');
+            classes.push("text-left");
         }
 
         if (active) {
-            classes.push('lyric-line-active');
+            classes.push("lyric-line-active");
+        }
+
+        if (isSubLyric) {
+            classes.push("lyric-subline");
+        }
+        else {
+            classes.push("lyric-mainline");
         }
 
         if (active && !isSubLyric) {
-            classes.push('opacity-100', 'scale-110', 'font-bold');
+            classes.push("opacity-100", "scale-110", "font-bold");
             if (this.options.leftAlign) {
-                classes.push('translate-x-[7%]');
+                classes.push("translate-x-[7%]");
             }
         } else {
-            classes.push('opacity-60');
+            classes.push("opacity-60");
         }
 
         // Margin classes based on line type
         if (!isSubLyric && !this.options.small) {
-            classes.push('my-10', '!2xl:my-30', '!xxs:my-5', 'xxs:text-[18px]', '2xl:my-20', '!xxs:my-0');
+            classes.push("my-10", "!2xl:my-30", "!xxs:my-5", "xxs:text-[18px]", "2xl:my-20", "!xxs:my-0");
         } else if (!isSubLyric && this.options.small) {
-            classes.push('text-[18px]', '!my-0', '!mt-8', 'leading-normal');
+            classes.push("text-[18px]", "!my-0", "!mt-8", "leading-normal");
         } else if (isSubLyric && !this.options.small) {
-            classes.push('text-xl', '2xl:text-3xl', 'xxs:text-xs', 'opacity-100', 'mt-0', 'mb-10', '!2xl:mb-30', 'xxs:mb-2');
+            classes.push("text-xl", "2xl:text-3xl", "xxs:text-xs", "opacity-100", "mt-0", "mb-10", "!2xl:mb-30", "xxs:mb-2");
         } else if (isSubLyric && this.options.small) {
-            classes.push('!text-[12px]', '!mb-2', 'leading-normal');
+            classes.push("!text-[12px]", "!mb-2", "leading-normal");
         }
 
-        return classes.join(' ');
+        return classes.join(" ");
     }
 
     /**
      * Build CSS classes for a word span
      */
     private buildWordClasses(active: boolean): string {
-        const classes = ['lyric-wipe'];
+        const classes = ["lyric-wipe"];
 
         if (active) {
-            classes.push('lyric-wipe-active');
+            classes.push("lyric-wipe-active");
         }
 
         if (!this.options.enableGlow) {
-            classes.push('lyric-glow-disabled');
+            classes.push("lyric-glow-disabled");
         }
 
-        return classes.join(' ');
+        return classes.join(" ");
     }
 
     /**
@@ -302,7 +309,7 @@ export class LyricsRenderer {
         isActive: boolean
     ): void {
         if (!this.options.enableBlur || isActive || this.options.small) {
-            container.style.filter = '';
+            container.style.filter = "";
             return;
         }
 
@@ -322,18 +329,18 @@ export class LyricsRenderer {
         isLineActive: boolean
     ): void {
         for (const span of wordSpans) {
-            const wordTime = parseFloat(span.dataset.time || '0');
-            const duration = parseFloat(span.dataset.duration || '0.3');
+            const wordTime = parseFloat(span.dataset.time || "0");
+            const duration = parseFloat(span.dataset.duration || "0.3");
             const isWordActive = timestampSec >= wordTime - 0.2;
 
             // Update class for word highlight animation
-            const hasActiveClass = span.classList.contains('lyric-wipe-active');
+            const hasActiveClass = span.classList.contains("lyric-wipe-active");
 
             if (isWordActive && !hasActiveClass) {
-                span.classList.add('lyric-wipe-active');
+                span.classList.add("lyric-wipe-active");
                 span.style.transitionDuration = `${duration * 2}s`;
             } else if (!isWordActive && hasActiveClass) {
-                span.classList.remove('lyric-wipe-active');
+                span.classList.remove("lyric-wipe-active");
             }
         }
     }
@@ -347,7 +354,7 @@ export class LyricsRenderer {
             const isActive = i === activeIndex;
 
             // Show/hide based on active state
-            container.style.display = isActive ? '' : 'none';
+            container.style.display = isActive ? "" : "none";
 
             if (isActive) {
                 container.className = this.buildLineClasses(line, true, false);
@@ -386,7 +393,7 @@ export class LyricsRenderer {
 
         this.lyricsContainer.scrollTo({
             top: targetScroll,
-            behavior: this.isSafari() ? 'auto' : 'smooth',
+            behavior: this.isSafari() ? "auto" : "smooth",
         });
     }
 
@@ -420,7 +427,7 @@ export class LyricsRenderer {
      */
     destroy(): void {
         if (this.container) {
-            this.container.innerHTML = '';
+            this.container.innerHTML = "";
         }
         this.lineElements = [];
         this.container = null;

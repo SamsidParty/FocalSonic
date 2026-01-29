@@ -217,7 +217,7 @@ function SyncedLyrics(props: LyricProps) {
             ref={containerRef}
             className={
                 clsx(
-                    "text-center font-semibold text-4xl 2xl:text-6xl px-[calc(10%)] lrc-box font-lyrics text-[var(--lyric-color)]",
+                    "text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics text-[var(--lyric-color)]",
                     oneLine ? "pointer-events-none justify-center lyrics-one-line" : "w-full h-full maskImage-big-player-lyrics ",
                     props.containerClassName || ""
                 )

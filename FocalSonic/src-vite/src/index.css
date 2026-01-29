@@ -397,11 +397,11 @@ svg#bars .eq-bar--4 {
   font-family: var(--theme-lyrics-font);
 }
 
-#sync-lyrics-box-left .react-lrc-line {
+#sync-lyrics-box-left .lyric-mainline  {
   @apply ml-[7%] max-w-[70%] text-balance;
 }
 
-#sync-lyrics-box-center .react-lrc-line {
+#sync-lyrics-box-center .lyric-mainline {
   @apply w-fit m-auto max-w-[80%] text-balance;
 }
 
