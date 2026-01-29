@@ -557,16 +557,6 @@ export default function YouTubeBackground({
                 {/* Gradient overlay, dark at bottom and transparent at top */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent via-35% to-transparent pointer-events-none" style={{ zIndex: 20 }} />
             </div>
-
-            {/* Error / fallback */}
-            {embedError && (
-                <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 30 }}>
-                    <div className="mx-4 max-w-md rounded-2xl bg-black/70 p-4 text-center text-white shadow-lg">
-                        <div className="text-sm font-semibold">Video unavailable</div>
-                        <div className="mt-1 text-xs opacity-80">{embedError}</div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
