@@ -6,11 +6,11 @@ import { service } from "@/service/service";
 import { useAppStore } from "@/store/app.store";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
 import { usePlayerStyle, useTheme } from "@/store/theme.store";
+import { parseLrc } from "@/utils/lrcParser";
+import { LyricsRenderer } from "@/utils/LyricsRenderer";
 import { stripLRCLine } from "@/utils/lyricUtils";
 import { translateText } from "@/utils/translate";
 import useDebouncedWindowSize from "@/utils/useDebouncedWindowSize";
-import { parseLrc } from "@/utils/lrcParser";
-import { LyricsRenderer } from "@/utils/LyricsRenderer";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef } from "react";
@@ -217,7 +217,7 @@ function SyncedLyrics(props: LyricProps) {
             ref={containerRef}
             className={
                 clsx(
-                    "text-center font-semibold text-4xl 2xl:text-6xl px-2 lrc-box font-lyrics text-[var(--lyric-color)]",
+                    "text-center font-semibold text-4xl 2xl:text-6xl px-[calc(10%)] lrc-box font-lyrics text-[var(--lyric-color)]",
                     oneLine ? "pointer-events-none justify-center lyrics-one-line" : "w-full h-full maskImage-big-player-lyrics ",
                     props.containerClassName || ""
                 )

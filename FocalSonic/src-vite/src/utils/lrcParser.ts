@@ -22,7 +22,6 @@ export interface ParsedLyricLine {
     words: ParsedLyricWord[]; // ELRC word-level data
     altContent: string | null; // Alternate lyrics (translation/transliteration)
     altWords: ParsedLyricWord[]; // Alternate lyrics word-level data
-    isSubLyric?: boolean;
 }
 
 export interface ParsedLyrics {
@@ -153,21 +152,6 @@ export function parseLrc(lrcString: string): ParsedLyrics {
         const parsed = parseLrcLine(trimmedLine, lineNumber);
         if (parsed) {
             parsedLines.push(parsed);
-
-            // If there's alternate content, add it as a sub-lyric line
-            if (parsed.altContent && parsed.altWords.length > 0) {
-                parsedLines.push({
-                    id: `${parsed.id}-alt`,
-                    lineNumber: lineNumber,
-                    startTime: parsed.startTime,
-                    content: parsed.altContent,
-                    words: parsed.altWords,
-                    altContent: null,
-                    altWords: [],
-                    isSubLyric: true,
-                });
-            }
-
             lineNumber++;
         }
     }
@@ -183,8 +167,6 @@ export function findActiveLine(lyrics: ParsedLyrics, timestampMs: number): numbe
 
     for (let i = 0; i < lyrics.lines.length; i++) {
         const line = lyrics.lines[i];
-        if (line.isSubLyric) continue; // Skip sub-lyrics for active line detection
-
         if (line.startTime <= timestampMs) {
             activeIndex = i;
         } else {
@@ -193,17 +175,4 @@ export function findActiveLine(lyrics: ParsedLyrics, timestampMs: number): numbe
     }
 
     return activeIndex;
-}
-
-/**
- * Get the main lyric line number (excluding sub-lyrics) for a given line
- */
-export function getMainLineNumber(lyrics: ParsedLyrics, lineIndex: number): number {
-    let mainLineIndex = 0;
-    for (let i = 0; i <= lineIndex && i < lyrics.lines.length; i++) {
-        if (!lyrics.lines[i].isSubLyric) {
-            mainLineIndex = i;
-        }
-    }
-    return mainLineIndex;
 }

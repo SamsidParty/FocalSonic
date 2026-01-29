@@ -17,6 +17,8 @@ export interface LyricsRendererOptions {
 interface LineElement {
     container: HTMLElement;
     wordSpans: HTMLSpanElement[];
+    subLyricContainer: HTMLElement | null;
+    subLyricWordSpans: HTMLSpanElement[];
     line: ParsedLyricLine;
 }
 
@@ -118,7 +120,7 @@ export class LyricsRenderer {
      */
     private createLineElement(line: ParsedLyricLine): LineElement {
         const p = document.createElement('p');
-        p.className = this.buildLineClasses(line, false);
+        p.className = this.buildLineClasses(line, false, false);
         p.dataset.lineId = line.id;
         p.dataset.startTime = String(line.startTime);
 
@@ -132,7 +134,7 @@ export class LyricsRenderer {
 
         const wordSpans: HTMLSpanElement[] = [];
 
-        // Create word spans for ELRC
+        // Create word spans for main lyrics (ELRC)
         for (let i = 0; i < line.words.length; i++) {
             const word = line.words[i];
             const span = document.createElement('span');
@@ -144,13 +146,36 @@ export class LyricsRenderer {
             p.appendChild(span);
         }
 
-        return { container: p, wordSpans, line };
+        // Create sub-lyrics as a child element if present
+        let subLyricContainer: HTMLElement | null = null;
+        const subLyricWordSpans: HTMLSpanElement[] = [];
+
+        if (line.altContent && line.altWords.length > 0) {
+            subLyricContainer = document.createElement('p');
+            subLyricContainer.className = this.buildLineClasses(line, false, true);
+
+            for (let i = 0; i < line.altWords.length; i++) {
+                const word = line.altWords[i];
+                const span = document.createElement('span');
+                span.className = this.buildWordClasses(false);
+                span.dataset.time = String(word.time);
+                span.dataset.duration = String(word.duration);
+                span.textContent = word.text;
+                subLyricWordSpans.push(span);
+                subLyricContainer.appendChild(span);
+            }
+
+            // Append sub-lyric as child of parent line
+            p.appendChild(subLyricContainer);
+        }
+
+        return { container: p, wordSpans, subLyricContainer, subLyricWordSpans, line };
     }
 
     /**
      * Build CSS classes for a lyric line
      */
-    private buildLineClasses(line: ParsedLyricLine, active: boolean): string {
+    private buildLineClasses(line: ParsedLyricLine, active: boolean, isSubLyric: boolean = false): string {
         const classes = [
             'lyric-line',
             'drop-shadow-lg',
@@ -172,7 +197,7 @@ export class LyricsRenderer {
             classes.push('lyric-line-active');
         }
 
-        if (active && !line.isSubLyric) {
+        if (active && !isSubLyric) {
             classes.push('opacity-100', 'scale-110', 'font-bold');
             if (this.options.leftAlign) {
                 classes.push('translate-x-[7%]');
@@ -182,13 +207,13 @@ export class LyricsRenderer {
         }
 
         // Margin classes based on line type
-        if (!line.isSubLyric && !this.options.small) {
+        if (!isSubLyric && !this.options.small) {
             classes.push('my-10', '!2xl:my-30', '!xxs:my-5', 'xxs:text-[18px]', '2xl:my-20', '!xxs:my-0');
-        } else if (!line.isSubLyric && this.options.small) {
+        } else if (!isSubLyric && this.options.small) {
             classes.push('text-[18px]', '!my-0', '!mt-8', 'leading-normal');
-        } else if (line.isSubLyric && !this.options.small) {
+        } else if (isSubLyric && !this.options.small) {
             classes.push('text-xl', '2xl:text-3xl', 'xxs:text-xs', 'opacity-100', 'mt-0', 'mb-10', '!2xl:mb-30', 'xxs:mb-2');
-        } else if (line.isSubLyric && this.options.small) {
+        } else if (isSubLyric && this.options.small) {
             classes.push('!text-[12px]', '!mb-2', 'leading-normal');
         }
 
@@ -228,21 +253,32 @@ export class LyricsRenderer {
 
         // Update line states
         for (let i = 0; i < this.lineElements.length; i++) {
-            const { container, wordSpans, line } = this.lineElements[i];
-            const isActive = this.isLineActive(i, newActiveIndex);
+            const { container, wordSpans, subLyricContainer, subLyricWordSpans, line } = this.lineElements[i];
+            const isActive = i === newActiveIndex;
 
             // Update line classes if active state changed
             if (i === newActiveIndex && this.currentActiveIndex !== newActiveIndex) {
-                container.className = this.buildLineClasses(line, true);
+                container.className = this.buildLineClasses(line, true, false);
+                if (subLyricContainer) {
+                    subLyricContainer.className = this.buildLineClasses(line, true, true);
+                }
             } else if (i === this.currentActiveIndex && this.currentActiveIndex !== newActiveIndex) {
-                container.className = this.buildLineClasses(line, false);
+                container.className = this.buildLineClasses(line, false, false);
+                if (subLyricContainer) {
+                    subLyricContainer.className = this.buildLineClasses(line, false, true);
+                }
             }
 
             // Update blur based on distance from active line
             this.updateLineBlur(container, line, i, newActiveIndex, isActive);
 
-            // Update word highlights
+            // Update word highlights for main lyrics
             this.updateWordHighlights(wordSpans, timestampSec, isActive);
+
+            // Update word highlights for sub-lyrics
+            if (subLyricWordSpans.length > 0) {
+                this.updateWordHighlights(subLyricWordSpans, timestampSec, isActive);
+            }
         }
 
         // Scroll to active line if changed
@@ -253,23 +289,7 @@ export class LyricsRenderer {
         this.currentActiveIndex = newActiveIndex;
     }
 
-    /**
-     * Check if a line should be considered active
-     */
-    private isLineActive(lineIndex: number, activeIndex: number): boolean {
-        if (lineIndex === activeIndex) return true;
 
-        // Sub-lyrics following their parent are also active
-        const line = this.lineElements[lineIndex]?.line;
-        const activeLine = this.lineElements[activeIndex]?.line;
-
-        if (line?.isSubLyric && activeLine && !activeLine.isSubLyric) {
-            // Check if this sub-lyric belongs to the active line
-            return line.lineNumber === activeLine.lineNumber;
-        }
-
-        return false;
-    }
 
     /**
      * Update blur effect based on distance from active line
@@ -323,15 +343,23 @@ export class LyricsRenderer {
      */
     private updateOneLineMode(activeIndex: number, timestampSec: number): void {
         for (let i = 0; i < this.lineElements.length; i++) {
-            const { container, wordSpans, line } = this.lineElements[i];
-            const isActive = this.isLineActive(i, activeIndex);
+            const { container, wordSpans, subLyricContainer, subLyricWordSpans, line } = this.lineElements[i];
+            const isActive = i === activeIndex;
 
             // Show/hide based on active state
             container.style.display = isActive ? '' : 'none';
 
             if (isActive) {
-                container.className = this.buildLineClasses(line, true);
+                container.className = this.buildLineClasses(line, true, false);
                 this.updateWordHighlights(wordSpans, timestampSec, true);
+
+                // Update sub-lyrics too
+                if (subLyricContainer) {
+                    subLyricContainer.className = this.buildLineClasses(line, true, true);
+                }
+                if (subLyricWordSpans.length > 0) {
+                    this.updateWordHighlights(subLyricWordSpans, timestampSec, true);
+                }
             }
         }
     }
