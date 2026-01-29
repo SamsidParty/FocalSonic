@@ -125,6 +125,10 @@ export default function YouTubeBackground({
     const [embedError, setEmbedError] = useState<string | null>(null);
     const [videoAspect, setVideoAspect] = useState<number>(16 / 9);
     const [containerSize, setContainerSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+    
+    // Fade/Buffer states
+    const [isBuffering, setIsBuffering] = useState(false);
+    const [isLoopFading, setIsLoopFading] = useState(false);
 
     // Keep latest audio snapshot (polled) for sync loop without re-render spam
     const audioSnapshotRef = useRef<{ t: number; paused: boolean; playbackRate: number }>({
@@ -133,6 +137,10 @@ export default function YouTubeBackground({
         playbackRate: 1,
     });
     const qualityCheckRef = useRef<number>(0);
+
+    // Buffering detection refs
+    const lastAudioPosRef = useRef<number>(0);
+    const lastAudioMoveTimeRef = useRef<number>(0);
 
     // 1) Poll native audio state at a balanced interval
     //    100ms is responsive enough without being a battery murderer.
@@ -147,6 +155,25 @@ export default function YouTubeBackground({
             const playbackRate = Number.isFinite(audio.playbackRate) && audio.playbackRate > 0 ? audio.playbackRate : 1;
 
             audioSnapshotRef.current = { t, paused, playbackRate };
+
+            // Buffering Logic
+            const now = performance.now();
+            if (paused) {
+                setIsBuffering(false);
+                lastAudioMoveTimeRef.current = now;
+            } else {
+                // If position hasn't changed much
+                if (Math.abs(t - lastAudioPosRef.current) < 0.05) {
+                    // If stuck for > 200ms, mark buffering
+                    if (now - lastAudioMoveTimeRef.current > 200) {
+                        setIsBuffering(true);
+                    }
+                } else {
+                    setIsBuffering(false);
+                    lastAudioMoveTimeRef.current = now;
+                }
+            }
+            lastAudioPosRef.current = t;
         };
 
         tick();
@@ -330,6 +357,9 @@ export default function YouTubeBackground({
         const player = playerRef.current;
         if (!player) return;
 
+        // Local tracking to avoid setting state every frame
+        let currentFadeState = false;
+
         const wrapTime = (t: number, duration: number) => {
             if (!Number.isFinite(t) || duration <= 0) return 0;
             const mod = t % duration;
@@ -346,6 +376,23 @@ export default function YouTubeBackground({
 
         const ensureState = () => {
             const { t: audioTime, paused: audioPaused, playbackRate } = audioSnapshotRef.current;
+
+            // Define effective loop parameters
+            const rawDuration = player.getDuration?.() ?? 0;
+            // Kick in 1s earlier to avoid recommendations
+            const effectiveDuration = Math.max(0, rawDuration - 1);
+
+            // -- Fading Logic --
+            if (effectiveDuration > 0) {
+                const playhead = wrapTime(audioTime, effectiveDuration);
+                const FADE_WINDOW = 1; // Fade out/in for 1s around the wrap
+                const shouldFade = playhead < FADE_WINDOW || playhead > (effectiveDuration - FADE_WINDOW);
+                
+                if (shouldFade !== currentFadeState) {
+                    currentFadeState = shouldFade;
+                    setIsLoopFading(shouldFade);
+                }
+            }
 
             // If audio is paused, we generally want video paused too
             if (audioPaused && !allowVideoWhenAudioPaused) {
@@ -382,10 +429,20 @@ export default function YouTubeBackground({
                 if (st === 2 || st === 5 || st === -1) {
                     player.playVideo();
                 }
-                // 0 = ended (loop video if audio continues)
+                
+                // Enforce early wrap (forbidden zone)
+                const videoTime = player.getCurrentTime?.() ?? 0;
+                // If we are past the effective end, force wrap immediately
+                if (effectiveDuration > 0 && videoTime >= effectiveDuration) {
+                    const target = wrapTime(audioTime, effectiveDuration);
+                    player.seekTo(target, true);
+                    player.playVideo();
+                    return; // Skip drift check this frame
+                }
+
+                // Standard end check: 0 = ended
                 if (st === 0) {
-                    const duration = player.getDuration?.() ?? 0;
-                    const target = wrapTime(audioTime, duration);
+                    const target = wrapTime(audioTime, effectiveDuration);
                     player.seekTo(target, true);
                     player.playVideo();
                 }
@@ -393,10 +450,9 @@ export default function YouTubeBackground({
 
             // Drift correction
             try {
-                const duration = player.getDuration?.() ?? 0;
-                const target = wrapTime(audioTime, duration);
+                const target = wrapTime(audioTime, effectiveDuration);
                 const videoTime = player.getCurrentTime?.() ?? 0;
-                const drift = circularDelta(target, videoTime, duration);
+                const drift = circularDelta(target, videoTime, effectiveDuration);
 
                 // Big drift -> hard seek
                 if (Math.abs(drift) >= hardSeekThresholdSeconds) {
@@ -469,6 +525,8 @@ export default function YouTubeBackground({
         return { width: `${width*1.1}px`, height: `${h*1.1}px` };
     }, [containerSize, videoAspect]);
 
+    const shouldBlackout = !ready || isBuffering || isLoopFading;
+
     return (
         <div ref={containerRef} className={`relative w-full h-full overflow-hidden ${className}`}>
             {/* Full-cover video layer */}
@@ -488,14 +546,21 @@ export default function YouTubeBackground({
                     </div>
                 </div>
 
+                {/* Fade to black overlay */}
+                <div
+                    className={`absolute inset-0 bg-black transition-opacity duration-500 pointer-events-none ${
+                        shouldBlackout ? "opacity-100" : "opacity-0"
+                    }`}
+                    style={{ zIndex: 10 }}
+                />
 
                 {/* Gradient overlay, dark at bottom and transparent at top */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent via-35% to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent via-35% to-transparent pointer-events-none" style={{ zIndex: 20 }} />
             </div>
 
             {/* Error / fallback */}
             {embedError && (
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 30 }}>
                     <div className="mx-4 max-w-md rounded-2xl bg-black/70 p-4 text-center text-white shadow-lg">
                         <div className="text-sm font-semibold">Video unavailable</div>
                         <div className="mt-1 text-xs opacity-80">{embedError}</div>

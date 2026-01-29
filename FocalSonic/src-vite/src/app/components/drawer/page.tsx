@@ -102,7 +102,7 @@ export function MainDrawerPage() {
                     <div className="flex items-center w-full h-full mt-12 xxs:mt-0 mb-0">
                         {!hideAlbumArt && <CurrentSongInfo fillWidth={!hasExtraContent} />}
 
-                        <div className={clsx("flex self-stretch flex-1 justify-center relative", !hasExtraContent && "hidden")}>
+                        <div className={clsx("flex self-stretch flex-1 justify-center relative z-40", !hasExtraContent && "hidden")}>
                             <ActiveContent active={queueState}>
                                 <QueueSongList />
                             </ActiveContent>
