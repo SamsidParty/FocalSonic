@@ -735,7 +735,7 @@
     /**
      * Schedule a license renewal before the current license expires
      */
-    function scheduleLicenseRenewal(hls, session, renewAfterSeconds, contentID) {
+    function scheduleLicenseRenewal(hls, mediaKeys, renewAfterSeconds, contentID) {
         // Clear any existing timer
         clearLicenseRenewalTimer(hls);
         // Schedule renewal at 80% of the renew-after time to ensure we renew before expiration
@@ -746,8 +746,8 @@
                 return;
             console.log("Proactively renewing license for content ID:", contentID);
             try {
-                // Generate a new license request for renewal
-                await renewLicenseSession(hls, session, contentID);
+                // Create a new session and acquire a fresh license
+                await renewLicenseWithNewSession(hls, mediaKeys, contentID);
             }
             catch (err) {
                 console.error("Failed to renew license:", err);
@@ -757,34 +757,49 @@
         licenseRenewalTimers.set(hls, timerId);
     }
     /**
-     * Renew an existing license session
+     * Renew license by creating a new session with the existing MediaKeys
+     * This is the correct way to renew - you cannot call generateRequest twice on the same session
      */
-    async function renewLicenseSession(hls, session, contentID) {
+    async function renewLicenseWithNewSession(hls, mediaKeys, contentID) {
+        const initData = getPssh(hls.magicDataURI);
         return new Promise((resolve, reject) => {
-            const messageHandler = async (event) => {
-                if (event.messageType === 'license-request' || event.messageType === 'license-renewal') {
+            // Create a NEW session for the renewal
+            const newSession = mediaKeys.createSession();
+            newSession.addEventListener('message', async (event) => {
+                if (event.messageType === 'license-request') {
                     try {
                         const challengeBase64 = uint8ArrayToBase64(new Uint8Array(event.message));
                         const license = await acquireWebPlaybackLicense(challengeBase64, contentID, hls.magicDataURI);
-                        await session.update(license.license);
+                        await newSession.update(license.license);
+                        console.log("License renewed successfully for content ID:", contentID);
+                        // Update the stored session reference
+                        // Close the old session if it exists
+                        if (hls.mediaKeySession && hls.mediaKeySession !== newSession) {
+                            hls.mediaKeySession.close().catch(() => { });
+                        }
+                        hls.mediaKeySession = newSession;
                         // Schedule the next renewal
                         if (license["renew-after"] && license["renew-after"] > 0) {
-                            scheduleLicenseRenewal(hls, session, license["renew-after"], contentID);
+                            scheduleLicenseRenewal(hls, mediaKeys, license["renew-after"], contentID);
                         }
-                        session.removeEventListener('message', messageHandler);
                         resolve();
                     }
                     catch (err) {
-                        session.removeEventListener('message', messageHandler);
                         reject(err);
                     }
                 }
-            };
-            session.addEventListener('message', messageHandler);
-            // Trigger license renewal by updating with an empty response to prompt a new challenge
-            // This causes the CDM to generate a new license-renewal message
-            const initData = getPssh(hls.magicDataURI);
-            session.generateRequest("cenc", initData).catch(reject);
+            }, false);
+            newSession.addEventListener('keystatuseschange', () => {
+                newSession.keyStatuses.forEach((status, keyId) => {
+                    if (status === 'expired') {
+                        console.warn("Renewed key expired for content ID:", contentID);
+                        hls.licenseAcquired = false;
+                        hls.licenseExpired = true;
+                    }
+                });
+            }, false);
+            // Generate a new license request
+            newSession.generateRequest("cenc", initData).catch(reject);
         });
     }
     /**
@@ -821,11 +836,12 @@
                 await session.update(license.license);
                 // Schedule proactive license renewal based on renew-after
                 if (license["renew-after"] && license["renew-after"] > 0) {
-                    scheduleLicenseRenewal(hls, session, license["renew-after"], contentID);
+                    scheduleLicenseRenewal(hls, mediaKeys, license["renew-after"], contentID);
                 }
             };
-            // Store session reference for potential renewal
+            // Store session and mediaKeys references for potential renewal
             hls.mediaKeySession = session;
+            hls.mediaKeys = mediaKeys;
             session.addEventListener('message', async (event) => {
                 console.log("License Message Event:", event);
                 if (event.messageType === 'license-request') {
@@ -868,7 +884,7 @@
                     else if (timeUntilExpiration < 60000 && !licenseRenewalTimers.has(hls)) {
                         // Less than 1 minute until expiration and no renewal scheduled, try to renew now
                         console.log("License expiring soon, attempting immediate renewal");
-                        renewLicenseSession(hls, session, contentID).catch(err => {
+                        renewLicenseWithNewSession(hls, mediaKeys, contentID).catch(err => {
                             console.error("Emergency license renewal failed:", err);
                         });
                     }
