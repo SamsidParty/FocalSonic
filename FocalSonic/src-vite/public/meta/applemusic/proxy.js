@@ -525,7 +525,7 @@
                 await window.proxyMusicInstance.preloadNextSource?.({ song: item.source });
             }
             else if (item.type === "transitionSources") {
-                window.proxyMusicInstance.transitionSources?.();
+                window.proxyMusicInstance.transitionSources?.(item.duration);
             }
         }
 
@@ -39005,7 +39005,7 @@
             this.queue.push(qItem);
             qItem.prepareForPlayback();
         }
-        transitionSources() {
+        transitionSources(fadeDuration = 3000) {
             console.log("[FocalMK] Transitioning sources");
             if (this.queue.length < 2) {
                 console.warn("[FocalMK] Not enough items in queue to transition sources");
@@ -39020,7 +39020,6 @@
             currentSource.enableTransitionLock();
             nextSource.audio.volume = 0;
             nextSource.audio.play().then(() => {
-                const fadeDuration = 3000; // ms
                 currentEffectCtrl.adjustVolume(0, fadeDuration);
                 nextEffectCtrl.adjustVolume(1, fadeDuration);
             }).catch((error) => {

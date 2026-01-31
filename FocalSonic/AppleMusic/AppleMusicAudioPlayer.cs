@@ -29,7 +29,7 @@ namespace FocalSonic.AppleMusic
         public override string ChromecastCredential =>  AppleMusicKeys.MediaUserToken;
 
         public const int NEXT_TRACK_PRELOAD_OFFSET = 15;
-        public const int NEXT_TRACK_TRANSITION_OFFSET = 5;
+        public const int NEXT_TRACK_TRANSITION_OFFSET = 2;
 
         public AppleMusicAudioPlayer(string id) : base(id) {
 
@@ -83,10 +83,11 @@ namespace FocalSonic.AppleMusic
             )
             {
                 var appleMusicPlayer = (owningPlayer as AppleMusicAudioPlayer);
+                var distanceFromEnd = (currentPlaybackDuration - currentPlaybackTime);
 
                 if (
-                    (currentPlaybackDuration - currentPlaybackTime) <= NEXT_TRACK_PRELOAD_OFFSET && // Ensure in preload zone
-                    (currentPlaybackDuration - currentPlaybackTime) > NEXT_TRACK_TRANSITION_OFFSET && // Ignore if in transition zone
+                    distanceFromEnd <= NEXT_TRACK_PRELOAD_OFFSET && // Ensure in preload zone
+                    distanceFromEnd > (NEXT_TRACK_TRANSITION_OFFSET + 5) && // Ignore if in transition zone
                     !appleMusicPlayer.IsNextSourcePreloaded
                 )
                 {
@@ -94,7 +95,7 @@ namespace FocalSonic.AppleMusic
                     appleMusicPlayer.PreloadNextSource(ctx);
                 }
                 else if (
-                    (currentPlaybackDuration - currentPlaybackTime) <= NEXT_TRACK_TRANSITION_OFFSET && // Ensure in transition zone
+                    distanceFromEnd <= (NEXT_TRACK_TRANSITION_OFFSET + 1) && // Ensure in transition zone
                     appleMusicPlayer.IsNextSourcePreloaded &&
                     !appleMusicPlayer.IsTransitioning
                 )
@@ -175,7 +176,7 @@ namespace FocalSonic.AppleMusic
 
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'transitionSources' }});" +
+                $"window.injectedQueue.push({{ type: 'transitionSources', duration: {NEXT_TRACK_TRANSITION_OFFSET * 1000f} }});" +
                 InjectionSuffix
             );
 

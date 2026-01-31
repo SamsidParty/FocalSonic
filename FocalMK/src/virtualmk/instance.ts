@@ -142,7 +142,7 @@ export class MusicKitInstance {
         qItem.prepareForPlayback();
     }
 
-    transitionSources() {
+    transitionSources(fadeDuration: number = 3000) {
         console.log("[FocalMK] Transitioning sources");
         
         if (this.queue.length < 2) {
@@ -162,7 +162,6 @@ export class MusicKitInstance {
 
         nextSource.audio.volume = 0;
         nextSource.audio.play().then(() => {
-            const fadeDuration = 3000; // ms
             currentEffectCtrl.adjustVolume(0, fadeDuration);
             nextEffectCtrl.adjustVolume(1, fadeDuration);
         }).catch((error) => {
