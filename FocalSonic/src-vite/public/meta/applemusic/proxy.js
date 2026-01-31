@@ -510,27 +510,21 @@
                 getAudioElement() && getAudioEffectController(getAudioElement()).resetFade();
                 await window.proxyMusicInstance.stop();
 
-                if (!window.isCurrentSongRadio) {
-                    await window.proxyMusicInstance.clearQueue();
-                }
-
-                if (item.source.startsWith("ra.")) { // Radio station
-                    window.isCurrentSongRadio = true;
-                    await window.proxyMusicInstance.setQueue({ station: item.source });
+                if (window.isCurrentSongRadio) {
+                    await window.proxyMusicInstance.setQueue({ song: item.source });
                     await window.proxyMusicInstance.play();
                 }
                 else {
-                    if (window.isCurrentSongRadio) {
-                        await window.proxyMusicInstance.setQueue({ song: item.source });
-                        await window.proxyMusicInstance.play();
-                    }
-                    else {
-                        await window.proxyMusicInstance.playNext({ song: item.source }, true);
-                        await window.proxyMusicInstance.skipToNextItem();
-                    }
-                    window.isCurrentSongRadio = false;
+                    await window.proxyMusicInstance.playNext({ song: item.source }, true);
+                    await window.proxyMusicInstance.skipToNextItem();
                 }
-
+                window.isCurrentSongRadio = false;
+            }
+            else if (item.type === "preloadNextSource") {
+                await window.proxyMusicInstance.preloadNextSource?.({ song: item.source });
+            }
+            else if (item.type === "transitionSources") {
+                window.proxyMusicInstance.transitionSources?.();
             }
         }
 
@@ -914,77 +908,6 @@
             console.log("Generating additional atmos license request");
             session.generateRequest("cenc", base64ToUint8Array("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
         });
-    }
-
-    async function getContentSources(contentID) {
-        try {
-            const isNumericId = !Number.isNaN(parseInt(contentID));
-            const body = isNumericId ? { salableAdamId: contentID } : { universalLibraryId: contentID };
-            // Run enhanced HLS and webPlayback requests concurrently for faster startup
-            const [enhancedHls, webPlaybackResponse] = await Promise.all([
-                // Enhanced HLS request (only for Atmos-enabled numeric IDs)
-                (isAtmosEnabled() && isNumericId)
-                    ? tryGetEnhancedHLS(contentID)
-                    : Promise.resolve(undefined),
-                // Main webPlayback request
-                fetch(webPlaybackURL, {
-                    method: "POST",
-                    headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
-                    body: JSON.stringify(body),
-                }).then(res => res.json())
-            ]);
-            // Merge enhanced HLS assets into the response if available
-            if (enhancedHls && webPlaybackResponse?.songList?.[0]?.assets) {
-                enhancedHls.forEach((asset) => webPlaybackResponse.songList[0].assets.push(asset));
-            }
-            return webPlaybackResponse?.songList || null;
-        }
-        catch { }
-        return null;
-    }
-    async function tryGetEnhancedHLS(contentID) {
-        try {
-            if (!isAtmosEnabled())
-                return [{ URL: null, flavor: null }];
-            const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}?extend=extendedAssetUrls`);
-            const request = await fetch(catalogURL);
-            const response = await request.json();
-            const assets = response?.data?.[0]?.attributes?.extendedAssetUrls;
-            return Object.entries(assets).map((asset) => {
-                return { URL: asset[1], flavor: asset[0], desirable: response?.data?.[0]?.attributes?.audioTraits?.includes("atmos") && isAtmosEnabled() };
-            });
-        }
-        catch { }
-        return [{ URL: null, flavor: null }];
-    }
-    function findBestContentSource(sources) {
-        if (sources != null && sources.length > 0) {
-            const song = sources[0];
-            const validAssets = song?.assets?.filter((asset) => {
-                const hasURL = asset.URL;
-                const hasFlavor = asset.flavor;
-                const isCtrp = asset.flavor?.toLowerCase().includes("ctrp"); // ctrp = compatible with widevine
-                const isEnhancedHls = asset.flavor?.toLowerCase().includes("enhancedhls");
-                return hasURL && (isCtrp || isEnhancedHls || !hasFlavor);
-            });
-            // Find the asset with the highest bitrate
-            let bestAsset = null;
-            let backupAsset = null;
-            let highestBitrate = -1;
-            for (const asset of validAssets) {
-                if (asset.metadata?.bitRate > highestBitrate) {
-                    highestBitrate = asset.metadata?.bitRate;
-                    bestAsset = asset;
-                    backupAsset = asset;
-                }
-                if (asset.desirable) {
-                    bestAsset = asset;
-                    break;
-                }
-            }
-            return { bestAsset, backupAsset };
-        }
-        return { bestAsset: null, backupAsset: null };
     }
 
     function getDefaultExportFromCjs (x) {
@@ -38687,37 +38610,6 @@
     var hlsExports = requireHls();
     var Hls = /*@__PURE__*/getDefaultExportFromCjs(hlsExports);
 
-    async function loadContent(hls, contentID) {
-        try {
-            const sources = await getContentSources(contentID);
-            const mainSource = findBestContentSource(sources);
-            if (!mainSource)
-                throw new Error("[FocalMK] No valid content source found");
-            let sourceURL = mainSource.bestAsset?.URL;
-            if (!sourceURL?.endsWith(".m3u8")) {
-                console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
-                getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
-                getAudioElement().src = sourceURL;
-                return;
-            }
-            console.log("[FocalMK] Using content source:", mainSource.bestAsset?.flavor);
-            await new Promise((resolve) => {
-                hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-                    console.log("[FocalMK] Playback ready");
-                    resolve();
-                });
-                hls.playbackSource = mainSource;
-                hls.useDesirableAsset = mainSource.bestAsset?.desirable || false;
-                hls.contentID = contentID;
-                hls.loadSource(sourceURL);
-            });
-        }
-        catch (err) {
-            // TODO: Handle error
-            console.error("Error loading content:", err);
-        }
-    }
-
     function createHlsInstance(audio) {
         const instance = new Hls({
             debug: false,
@@ -38809,6 +38701,108 @@
         return instance;
     }
 
+    async function getContentSources(contentID) {
+        try {
+            const isNumericId = !Number.isNaN(parseInt(contentID));
+            const body = isNumericId ? { salableAdamId: contentID } : { universalLibraryId: contentID };
+            // Run enhanced HLS and webPlayback requests concurrently for faster startup
+            const [enhancedHls, webPlaybackResponse] = await Promise.all([
+                // Enhanced HLS request (only for Atmos-enabled numeric IDs)
+                (isAtmosEnabled() && isNumericId)
+                    ? tryGetEnhancedHLS(contentID)
+                    : Promise.resolve(undefined),
+                // Main webPlayback request
+                fetch(webPlaybackURL, {
+                    method: "POST",
+                    headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                }).then(res => res.json())
+            ]);
+            // Merge enhanced HLS assets into the response if available
+            if (enhancedHls && webPlaybackResponse?.songList?.[0]?.assets) {
+                enhancedHls.forEach((asset) => webPlaybackResponse.songList[0].assets.push(asset));
+            }
+            return webPlaybackResponse?.songList || null;
+        }
+        catch { }
+        return null;
+    }
+    async function tryGetEnhancedHLS(contentID) {
+        try {
+            if (!isAtmosEnabled())
+                return [{ URL: null, flavor: null }];
+            const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}?extend=extendedAssetUrls`);
+            const request = await fetch(catalogURL);
+            const response = await request.json();
+            const assets = response?.data?.[0]?.attributes?.extendedAssetUrls;
+            return Object.entries(assets).map((asset) => {
+                return { URL: asset[1], flavor: asset[0], desirable: response?.data?.[0]?.attributes?.audioTraits?.includes("atmos") && isAtmosEnabled() };
+            });
+        }
+        catch { }
+        return [{ URL: null, flavor: null }];
+    }
+    function findBestContentSource(sources) {
+        if (sources != null && sources.length > 0) {
+            const song = sources[0];
+            const validAssets = song?.assets?.filter((asset) => {
+                const hasURL = asset.URL;
+                const hasFlavor = asset.flavor;
+                const isCtrp = asset.flavor?.toLowerCase().includes("ctrp"); // ctrp = compatible with widevine
+                const isEnhancedHls = asset.flavor?.toLowerCase().includes("enhancedhls");
+                return hasURL && (isCtrp || isEnhancedHls || !hasFlavor);
+            });
+            // Find the asset with the highest bitrate
+            let bestAsset = null;
+            let backupAsset = null;
+            let highestBitrate = -1;
+            for (const asset of validAssets) {
+                if (asset.metadata?.bitRate > highestBitrate) {
+                    highestBitrate = asset.metadata?.bitRate;
+                    bestAsset = asset;
+                    backupAsset = asset;
+                }
+                if (asset.desirable) {
+                    bestAsset = asset;
+                    break;
+                }
+            }
+            return { bestAsset, backupAsset };
+        }
+        return { bestAsset: null, backupAsset: null };
+    }
+
+    async function loadContent(hls, contentID) {
+        try {
+            const sources = await getContentSources(contentID);
+            const mainSource = findBestContentSource(sources);
+            if (!mainSource)
+                throw new Error("[FocalMK] No valid content source found");
+            let sourceURL = mainSource.bestAsset?.URL;
+            if (!sourceURL?.endsWith(".m3u8")) {
+                console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
+                getAudioElement().crossOrigin = "anonymous"; // Set CORS to anonymous for direct playback through blob storage
+                getAudioElement().src = sourceURL;
+                return;
+            }
+            console.log("[FocalMK] Using content source:", mainSource.bestAsset?.flavor);
+            await new Promise((resolve) => {
+                hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                    console.log("[FocalMK] Playback ready");
+                    resolve();
+                });
+                hls.playbackSource = mainSource;
+                hls.useDesirableAsset = mainSource.bestAsset?.desirable || false;
+                hls.contentID = contentID;
+                hls.loadSource(sourceURL);
+            });
+        }
+        catch (err) {
+            // TODO: Handle error
+            console.error("Error loading content:", err);
+        }
+    }
+
     class QueueItem {
         song;
         hasInitialized = false;
@@ -38830,10 +38824,25 @@
         handleEnded() {
             this.parent.handleSongEnded();
         }
-        setActive() {
+        ensureHLS() {
+            if (this.hls)
+                return;
             console.log(`[FocalMK] Initializing HLS for song: ${this.song}`);
             this.hls = createHlsInstance(this.audio);
             this.audio.attachedHls = this.hls;
+        }
+        async prepareForPlayback() {
+            this.ensureHLS();
+            if (!this.hasInitialized && this.hls) {
+                this.hasInitialized = true;
+                await loadContent(this.hls, this.song);
+            }
+            else if (this.hls?.licenseExpired) {
+                await tryAcquireLicense(this.hls);
+            }
+        }
+        setActive() {
+            this.ensureHLS();
             // Find the previous audio element and remove it from being the main one
             getAudioElement().removeAttribute("id");
             // Set the current audio element to the main one
@@ -38942,13 +38951,7 @@
             this.nowPlayingItem = itemToPlay.song;
             console.log(`[FocalMK] Now playing: ${itemToPlay.song}`);
             itemToPlay.setActive();
-            if (!itemToPlay.hasInitialized && itemToPlay.hls) {
-                itemToPlay.hasInitialized = true;
-                await loadContent(itemToPlay.hls, itemToPlay.song);
-            }
-            else if (itemToPlay.hls?.licenseExpired) {
-                await tryAcquireLicense(itemToPlay.hls);
-            }
+            await itemToPlay.prepareForPlayback();
             getAudioElement().playbackRate = this._playbackRate;
             getAudioElement().play();
         }
@@ -38973,9 +38976,53 @@
             console.log("[FocalMK] Queue set to:", q.song);
             this.queue = [new QueueItem(q, this)];
         }
-        playNext(q) {
+        playNext(q, clearIfNeeded = false) {
+            // Determine if the item is already next in the queue (if preloadNextSource was called)
+            if (this.queue.length === 2 && this.queue[1].song === q.song) {
+                console.log("[FocalMK] Using preloaded source from queue:", q.song);
+                return;
+            }
+            else if (clearIfNeeded) {
+                this.clearQueue();
+            }
             console.log("[FocalMK] Added to queue:", q.song);
             this.queue.push(new QueueItem(q, this));
+        }
+        preloadNextSource(q) {
+            console.log("[FocalMK] Preloading next source:", q.song);
+            const qItem = new QueueItem(q, this);
+            this.queue.push(qItem);
+            qItem.prepareForPlayback();
+        }
+        transitionSources() {
+            console.log("[FocalMK] Transitioning sources");
+            if (this.queue.length < 2) {
+                console.warn("[FocalMK] Not enough items in queue to transition sources");
+                return;
+            }
+            // Create a smooth crossfade between the two audio elements
+            const currentAudio = this.queue[0].audio;
+            const nextAudio = this.queue[1].audio;
+            nextAudio.volume = 0;
+            nextAudio.play().then(() => {
+                const fadeDuration = 3; // seconds
+                const fadeSteps = 30;
+                let currentStep = 0;
+                const fadeInterval = setInterval(() => {
+                    currentStep++;
+                    const progress = currentStep / fadeSteps;
+                    currentAudio.volume = Math.max(1 - progress, 0);
+                    nextAudio.volume = Math.min(progress, 1);
+                    if (currentStep >= fadeSteps) {
+                        clearInterval(fadeInterval);
+                        currentAudio.pause();
+                        currentAudio.volume = 1; // Reset volume for future use
+                        this.queue.shift(); // Remove the finished item from the queue
+                    }
+                }, (fadeDuration / fadeSteps) * 1000);
+            }).catch((error) => {
+                console.error("[FocalMK] Error during source transition:", error);
+            });
         }
         skipToNextItem() {
             console.log("[FocalMK] Skipping to next item in queue");

@@ -2,6 +2,7 @@
 using FocalSonic.Presence;
 using IgniteView.Core;
 using Newtonsoft.Json;
+using SamsidParty.Subsonic.Common.Types;
 using System.Dynamic;
 using System.Web;
 
@@ -21,6 +22,7 @@ namespace FocalSonic.AppleMusic
         const string InjectionSuffix = "\nif (window.executeInjectedQueue) { window.executeInjectedQueue(); }";
 
         public bool IsPlaying = false;
+        public bool IsNextSourcePreloaded = false;
         public string LoadStatus = "loading";
 
         public override string ChromecastCredential =>  AppleMusicKeys.MediaUserToken;
@@ -67,6 +69,22 @@ namespace FocalSonic.AppleMusic
         public static void RecieveTimeUpdate(WebWindow ctx, bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration)
         {
             var owningPlayer = GetOwningPlayer(ctx);
+
+            // Handle preloading next source (should happen once 15s before the track ends)
+            if (
+                owningPlayer is AppleMusicAudioPlayer &&
+                isPlaying &&
+                currentPlaybackDuration > 0 &&
+                currentPlaybackTime > 0 &&
+                (currentPlaybackDuration - currentPlaybackTime) <= 15 && // Up to 15 seconds before end
+                (currentPlaybackDuration - currentPlaybackTime) > 5 && // Ignore if less than 5 seconds near end
+                !(owningPlayer as AppleMusicAudioPlayer).IsNextSourcePreloaded
+            )
+            {
+                // TODO: Add try catch block
+                (owningPlayer as AppleMusicAudioPlayer).PreloadNextSource(ctx);
+            }
+
             owningPlayer.HandleTimeUpdate(isPlaying, currentPlaybackTime, currentPlaybackDuration);
         }
 
@@ -96,10 +114,33 @@ namespace FocalSonic.AppleMusic
             Source = src;
             HasLoaded = false;
             IsPlaying = true;
+            IsNextSourcePreloaded = false;
 
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
                 $"window.injectedQueue.push({{ type: 'setSource', source: {JsonConvert.SerializeObject(src)} }});" +
+                InjectionSuffix
+            );
+
+            await UpdatePlaybackParameters();
+        }
+
+        // Apple Music only: Handles all the licensing and DRM stuff early to create a smooth transition to the next track
+        public async Task PreloadNextSource(WebWindow ctx)
+        {
+            if (IsNextSourcePreloaded) { return; }
+            IsNextSourcePreloaded = true;
+
+            // Try to determine the next source based on the queue
+            if (MediaPlaybackInfo.Instance == null || MediaPlaybackInfo.Instance.NextQueueItem == null) { return; }
+            var trackID = MediaPlaybackInfo.Instance.NextQueueItem.Id;
+            var src = MediaPlaybackInfo.Instance.Store.ExtraProperties.GetStreamURLForSong(trackID);
+
+            if (Source == src || string.IsNullOrEmpty(src)) { return; }
+
+            ProxyWindow?.ExecuteJavaScript(
+                InjectionPrefix +
+                $"window.injectedQueue.push({{ type: 'preloadNextSource', source: {JsonConvert.SerializeObject(src)} }});" +
                 InjectionSuffix
             );
 

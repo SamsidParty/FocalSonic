@@ -1,6 +1,7 @@
-import { clearLicenseRenewalTimer } from "../drm/license";
+import { clearLicenseRenewalTimer, tryAcquireLicense } from "../drm/license";
 import { FocalAudioElement, getAudioElement } from "../helpers/dom";
 import { createHlsInstance, FocalHls } from "../helpers/hls-instance";
+import { loadContent } from "../interface/low-level";
 import { getAudioEffectController } from "../playback/audio-effects.js";
 import { MusicKitInstance } from "./instance";
 
@@ -35,10 +36,30 @@ export class QueueItem  {
         this.parent.handleSongEnded();
     }
 
-    setActive() {
+    ensureHLS() {
+        if (this.hls) return;
+
         console.log(`[FocalMK] Initializing HLS for song: ${this.song}`);
         this.hls = createHlsInstance(this.audio);
         this.audio.attachedHls = this.hls;
+    }
+
+    async prepareForPlayback() {    
+
+        this.ensureHLS();
+
+        if (!this.hasInitialized && this.hls) {
+            this.hasInitialized = true;
+            await loadContent(this.hls, this.song);
+        }
+        else if (this.hls?.licenseExpired) {
+            await tryAcquireLicense(this.hls);
+        }   
+    }
+
+    setActive() {
+
+        this.ensureHLS();
 
         // Find the previous audio element and remove it from being the main one
         getAudioElement().removeAttribute("id");

@@ -1,6 +1,4 @@
-import { tryAcquireLicense } from "../drm/license";
 import { getAudioElement } from "../helpers/dom";
-import { loadContent } from "../interface/low-level";
 import { QueueItem, QueueItemParam } from "./types";
 import { PlaybackStates } from "./virtualmk-constants";
 
@@ -89,15 +87,9 @@ export class MusicKitInstance {
         const itemToPlay = this.queue[0]!;
         this.nowPlayingItem = itemToPlay.song;
         console.log(`[FocalMK] Now playing: ${itemToPlay.song}`);
-
+        
         itemToPlay.setActive();
-        if (!itemToPlay.hasInitialized && itemToPlay.hls) {
-            itemToPlay.hasInitialized = true;
-            await loadContent(itemToPlay.hls, itemToPlay.song);
-        }
-        else if (itemToPlay.hls?.licenseExpired) {
-            await tryAcquireLicense(itemToPlay.hls);
-        }
+        await itemToPlay.prepareForPlayback();
 
         getAudioElement().playbackRate = this._playbackRate;
         getAudioElement().play();
@@ -128,9 +120,61 @@ export class MusicKitInstance {
         this.queue = [new QueueItem(q, this)];
     }
 
-    playNext(q: QueueItemParam) {
+    playNext(q: QueueItemParam, clearIfNeeded: boolean = false) {
+        // Determine if the item is already next in the queue (if preloadNextSource was called)
+        if (this.queue.length === 2 && this.queue[1]!.song === q.song) {
+            console.log("[FocalMK] Using preloaded source from queue:", q.song);
+            return;
+        }
+        else if (clearIfNeeded) {
+            this.clearQueue();
+        }
+
         console.log("[FocalMK] Added to queue:", q.song);
         this.queue.push(new QueueItem(q, this));
+    }
+
+    preloadNextSource(q: QueueItemParam) {
+        console.log("[FocalMK] Preloading next source:", q.song);
+        const qItem = new QueueItem(q, this);
+        this.queue.push(qItem);
+        qItem.prepareForPlayback();
+    }
+
+    transitionSources() {
+        console.log("[FocalMK] Transitioning sources");
+        
+        if (this.queue.length < 2) {
+            console.warn("[FocalMK] Not enough items in queue to transition sources");
+            return;
+        }
+
+        // Create a smooth crossfade between the two audio elements
+        const currentAudio = this.queue[0]!.audio;
+        const nextAudio = this.queue[1]!.audio;
+
+        nextAudio.volume = 0;
+        nextAudio.play().then(() => {
+            const fadeDuration = 3; // seconds
+            const fadeSteps = 30;
+            let currentStep = 0;
+
+            const fadeInterval = setInterval(() => {
+                currentStep++;
+                const progress = currentStep / fadeSteps;
+                currentAudio.volume = Math.max(1 - progress, 0);
+                nextAudio.volume = Math.min(progress, 1);
+
+                if (currentStep >= fadeSteps) {
+                    clearInterval(fadeInterval);
+                    currentAudio.pause();
+                    currentAudio.volume = 1; // Reset volume for future use
+                    this.queue.shift(); // Remove the finished item from the queue
+                }
+            }, (fadeDuration / fadeSteps) * 1000);
+        }).catch((error) => {
+            console.error("[FocalMK] Error during source transition:", error);
+        });
     }
 
     skipToNextItem() {

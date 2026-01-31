@@ -129,27 +129,21 @@ window.executeInjectedQueue = async () => {
             getAudioElement() && getAudioEffectController(getAudioElement()).resetFade();
             await window.proxyMusicInstance.stop();
 
-            if (!window.isCurrentSongRadio) {
-                await window.proxyMusicInstance.clearQueue();
-            }
-
-            if (item.source.startsWith("ra.")) { // Radio station
-                window.isCurrentSongRadio = true;
-                await window.proxyMusicInstance.setQueue({ station: item.source });
+            if (window.isCurrentSongRadio) {
+                await window.proxyMusicInstance.setQueue({ song: item.source });
                 await window.proxyMusicInstance.play();
             }
             else {
-                if (window.isCurrentSongRadio) {
-                    await window.proxyMusicInstance.setQueue({ song: item.source });
-                    await window.proxyMusicInstance.play();
-                }
-                else {
-                    await window.proxyMusicInstance.playNext({ song: item.source }, true);
-                    await window.proxyMusicInstance.skipToNextItem();
-                }
-                window.isCurrentSongRadio = false;
+                await window.proxyMusicInstance.playNext({ song: item.source }, true);
+                await window.proxyMusicInstance.skipToNextItem();
             }
-
+            window.isCurrentSongRadio = false;
+        }
+        else if (item.type === "preloadNextSource") {
+            await window.proxyMusicInstance.preloadNextSource?.({ song: item.source });
+        }
+        else if (item.type === "transitionSources") {
+            window.proxyMusicInstance.transitionSources?.();
         }
     }
 
