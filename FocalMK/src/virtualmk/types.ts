@@ -45,7 +45,6 @@ export class QueueItem  {
     }
 
     async prepareForPlayback() {    
-
         this.ensureHLS();
 
         if (!this.hasInitialized && this.hls) {
@@ -58,7 +57,6 @@ export class QueueItem  {
     }
 
     setActive() {
-
         this.ensureHLS();
 
         // Find the previous audio element and remove it from being the main one

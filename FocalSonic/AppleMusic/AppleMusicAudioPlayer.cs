@@ -22,10 +22,14 @@ namespace FocalSonic.AppleMusic
         const string InjectionSuffix = "\nif (window.executeInjectedQueue) { window.executeInjectedQueue(); }";
 
         public bool IsPlaying = false;
+        public bool IsTransitioning = false;
         public bool IsNextSourcePreloaded = false;
         public string LoadStatus = "loading";
 
         public override string ChromecastCredential =>  AppleMusicKeys.MediaUserToken;
+
+        public const int NEXT_TRACK_PRELOAD_OFFSET = 15;
+        public const int NEXT_TRACK_TRANSITION_OFFSET = 5;
 
         public AppleMusicAudioPlayer(string id) : base(id) {
 
@@ -70,19 +74,34 @@ namespace FocalSonic.AppleMusic
         {
             var owningPlayer = GetOwningPlayer(ctx);
 
-            // Handle preloading next source (should happen once 15s before the track ends)
+            // Handle preloading next source and transitions
             if (
                 owningPlayer is AppleMusicAudioPlayer &&
                 isPlaying &&
                 currentPlaybackDuration > 0 &&
-                currentPlaybackTime > 0 &&
-                (currentPlaybackDuration - currentPlaybackTime) <= 15 && // Up to 15 seconds before end
-                (currentPlaybackDuration - currentPlaybackTime) > 5 && // Ignore if less than 5 seconds near end
-                !(owningPlayer as AppleMusicAudioPlayer).IsNextSourcePreloaded
+                currentPlaybackTime > 0
             )
             {
-                // TODO: Add try catch block
-                (owningPlayer as AppleMusicAudioPlayer).PreloadNextSource(ctx);
+                var appleMusicPlayer = (owningPlayer as AppleMusicAudioPlayer);
+
+                if (
+                    (currentPlaybackDuration - currentPlaybackTime) <= NEXT_TRACK_PRELOAD_OFFSET && // Ensure in preload zone
+                    (currentPlaybackDuration - currentPlaybackTime) > NEXT_TRACK_TRANSITION_OFFSET && // Ignore if in transition zone
+                    !appleMusicPlayer.IsNextSourcePreloaded
+                )
+                {
+                    // Preload
+                    appleMusicPlayer.PreloadNextSource(ctx);
+                }
+                else if (
+                    (currentPlaybackDuration - currentPlaybackTime) <= NEXT_TRACK_TRANSITION_OFFSET && // Ensure in transition zone
+                    appleMusicPlayer.IsNextSourcePreloaded &&
+                    !appleMusicPlayer.IsTransitioning
+                )
+                {
+                    // Transition
+                    appleMusicPlayer.TransitionSources(ctx);
+                }  
             }
 
             owningPlayer.HandleTimeUpdate(isPlaying, currentPlaybackTime, currentPlaybackDuration);
@@ -114,6 +133,7 @@ namespace FocalSonic.AppleMusic
             Source = src;
             HasLoaded = false;
             IsPlaying = true;
+            IsTransitioning = false;
             IsNextSourcePreloaded = false;
 
             ProxyWindow?.ExecuteJavaScript(
@@ -141,6 +161,21 @@ namespace FocalSonic.AppleMusic
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
                 $"window.injectedQueue.push({{ type: 'preloadNextSource', source: {JsonConvert.SerializeObject(src)} }});" +
+                InjectionSuffix
+            );
+
+            await UpdatePlaybackParameters();
+        }
+
+        // Apple Music only: Creates a smooth transition to the next track
+        public async Task TransitionSources(WebWindow ctx)
+        {
+            if (!IsNextSourcePreloaded || IsTransitioning) { return; }
+            IsTransitioning = true;
+
+            ProxyWindow?.ExecuteJavaScript(
+                InjectionPrefix +
+                $"window.injectedQueue.push({{ type: 'transitionSources' }});" +
                 InjectionSuffix
             );
 

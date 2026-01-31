@@ -87,7 +87,7 @@ export class MusicKitInstance {
         const itemToPlay = this.queue[0]!;
         this.nowPlayingItem = itemToPlay.song;
         console.log(`[FocalMK] Now playing: ${itemToPlay.song}`);
-        
+
         itemToPlay.setActive();
         await itemToPlay.prepareForPlayback();
 
@@ -150,11 +150,11 @@ export class MusicKitInstance {
         }
 
         // Create a smooth crossfade between the two audio elements
-        const currentAudio = this.queue[0]!.audio;
-        const nextAudio = this.queue[1]!.audio;
+        const currentSource = this.queue[0];
+        const nextSource = this.queue[1];
 
-        nextAudio.volume = 0;
-        nextAudio.play().then(() => {
+        nextSource.audio.volume = 0;
+        nextSource.audio.play().then(() => {
             const fadeDuration = 3; // seconds
             const fadeSteps = 30;
             let currentStep = 0;
@@ -162,15 +162,14 @@ export class MusicKitInstance {
             const fadeInterval = setInterval(() => {
                 currentStep++;
                 const progress = currentStep / fadeSteps;
-                currentAudio.volume = Math.max(1 - progress, 0);
-                nextAudio.volume = Math.min(progress, 1);
+                currentSource.audio.volume = Math.max(1 - progress, 0);
+                nextSource.audio.volume = Math.min(progress, 1);
 
                 if (currentStep >= fadeSteps) {
                     clearInterval(fadeInterval);
-                    currentAudio.pause();
-                    currentAudio.volume = 1; // Reset volume for future use
-                    this.queue.shift(); // Remove the finished item from the queue
+                    currentSource.audio.volume = 0; // Pin to 0
                 }
+
             }, (fadeDuration / fadeSteps) * 1000);
         }).catch((error) => {
             console.error("[FocalMK] Error during source transition:", error);
