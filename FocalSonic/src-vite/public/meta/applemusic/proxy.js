@@ -7,7 +7,8 @@
     dummyAudioElement.id = 'focalmk-dummy-audio-element';
     function getAudioElement() {
         let audioElement = document.getElementById('apple-music-player');
-        if (!audioElement) {
+        // Fallback to dummy audio element if not found or transition lock is active
+        if (!audioElement || audioElement?.getAttribute("data-focalmk-transition-lock") === "true") {
             return dummyAudioElement;
         }
         return audioElement;
@@ -38821,6 +38822,13 @@
             this.audio.setAttribute('data-focalmk-id', this.song);
             document.body.appendChild(this.audio);
         }
+        enableTransitionLock() {
+            // Locks the audio element to prevent interruptions during transitions
+            this.audio.setAttribute("data-focalmk-transition-lock", "true");
+        }
+        disableTransitionLock() {
+            this.audio.removeAttribute("data-focalmk-transition-lock");
+        }
         handleEnded() {
             this.parent.handleSongEnded();
         }
@@ -38830,6 +38838,9 @@
             console.log(`[FocalMK] Initializing HLS for song: ${this.song}`);
             this.hls = createHlsInstance(this.audio);
             this.audio.attachedHls = this.hls;
+            // Mount the audio effects controller
+            // Do this now so that it loads the impulse response (otherwise you get an annoying clicking sound after it loads)
+            getAudioEffectController(this.audio);
         }
         async prepareForPlayback() {
             this.ensureHLS();
@@ -39003,21 +39014,15 @@
             // Create a smooth crossfade between the two audio elements
             const currentSource = this.queue[0];
             const nextSource = this.queue[1];
+            const currentEffectCtrl = getAudioEffectController(currentSource.audio);
+            const nextEffectCtrl = getAudioEffectController(nextSource.audio);
+            // Prevents interruptions during the transition
+            currentSource.enableTransitionLock();
             nextSource.audio.volume = 0;
             nextSource.audio.play().then(() => {
-                const fadeDuration = 3; // seconds
-                const fadeSteps = 30;
-                let currentStep = 0;
-                const fadeInterval = setInterval(() => {
-                    currentStep++;
-                    const progress = currentStep / fadeSteps;
-                    currentSource.audio.volume = Math.max(1 - progress, 0);
-                    nextSource.audio.volume = Math.min(progress, 1);
-                    if (currentStep >= fadeSteps) {
-                        clearInterval(fadeInterval);
-                        currentSource.audio.volume = 0; // Pin to 0
-                    }
-                }, (fadeDuration / fadeSteps) * 1000);
+                const fadeDuration = 3000; // ms
+                currentEffectCtrl.adjustVolume(0, fadeDuration);
+                nextEffectCtrl.adjustVolume(1, fadeDuration);
             }).catch((error) => {
                 console.error("[FocalMK] Error during source transition:", error);
             });

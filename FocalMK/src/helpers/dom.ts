@@ -10,7 +10,8 @@ export interface FocalAudioElement extends HTMLAudioElement {
 export function getAudioElement(): FocalAudioElement {
     let audioElement = document.getElementById('apple-music-player') as FocalAudioElement;
 
-    if (!audioElement) {
+    // Fallback to dummy audio element if not found or transition lock is active
+    if (!audioElement || audioElement?.getAttribute("data-focalmk-transition-lock") === "true") {
         return dummyAudioElement;
     }
     

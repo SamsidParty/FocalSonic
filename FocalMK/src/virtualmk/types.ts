@@ -32,6 +32,15 @@ export class QueueItem  {
         document.body.appendChild(this.audio);
     }
 
+    enableTransitionLock() {
+        // Locks the audio element to prevent interruptions during transitions
+        this.audio.setAttribute("data-focalmk-transition-lock", "true");
+    }
+
+    disableTransitionLock() {
+        this.audio.removeAttribute("data-focalmk-transition-lock");
+    }
+
     handleEnded() {
         this.parent.handleSongEnded();
     }
@@ -42,6 +51,10 @@ export class QueueItem  {
         console.log(`[FocalMK] Initializing HLS for song: ${this.song}`);
         this.hls = createHlsInstance(this.audio);
         this.audio.attachedHls = this.hls;
+
+        // Mount the audio effects controller
+        // Do this now so that it loads the impulse response (otherwise you get an annoying clicking sound after it loads)
+        getAudioEffectController(this.audio);
     }
 
     async prepareForPlayback() {    

@@ -1,4 +1,5 @@
 import { getAudioElement } from "../helpers/dom";
+import { getAudioEffectController } from "../playback/audio-effects.js";
 import { QueueItem, QueueItemParam } from "./types";
 import { PlaybackStates } from "./virtualmk-constants";
 
@@ -153,24 +154,17 @@ export class MusicKitInstance {
         const currentSource = this.queue[0];
         const nextSource = this.queue[1];
 
+        const currentEffectCtrl = getAudioEffectController(currentSource.audio);
+        const nextEffectCtrl = getAudioEffectController(nextSource.audio);
+
+        // Prevents interruptions during the transition
+        currentSource.enableTransitionLock();
+
         nextSource.audio.volume = 0;
         nextSource.audio.play().then(() => {
-            const fadeDuration = 3; // seconds
-            const fadeSteps = 30;
-            let currentStep = 0;
-
-            const fadeInterval = setInterval(() => {
-                currentStep++;
-                const progress = currentStep / fadeSteps;
-                currentSource.audio.volume = Math.max(1 - progress, 0);
-                nextSource.audio.volume = Math.min(progress, 1);
-
-                if (currentStep >= fadeSteps) {
-                    clearInterval(fadeInterval);
-                    currentSource.audio.volume = 0; // Pin to 0
-                }
-
-            }, (fadeDuration / fadeSteps) * 1000);
+            const fadeDuration = 3000; // ms
+            currentEffectCtrl.adjustVolume(0, fadeDuration);
+            nextEffectCtrl.adjustVolume(1, fadeDuration);
         }).catch((error) => {
             console.error("[FocalMK] Error during source transition:", error);
         });
