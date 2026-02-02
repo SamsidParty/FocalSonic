@@ -31,7 +31,7 @@
     --destructive: hsl(0 84.2% 60.2%);
     --destructive-foreground: hsl(210 20% 98%);
     --border: var(--system-outline);
-    --input: var(--system-outline);
+    --input: color-mix(in hsl, var(--system-body), var(--origin-color) 30%);
     --body: color-mix(in hsl, var(--system-body), var(--origin-color) 30%);
     --bar: color-mix(in srgb, transparent, var(--origin-color) 55%);
     --ring: var(--system-accent-override, var(--system-accent));

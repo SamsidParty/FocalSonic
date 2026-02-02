@@ -10,7 +10,6 @@ export class MusicKitInstance {
     _developerToken: string | null = null;
     
     get musicUserToken() {
-
         if (!this._musicUserToken) {
             this._musicUserToken = localStorage.getItem("applemusic_media_user_token");
         }
@@ -19,7 +18,6 @@ export class MusicKitInstance {
     }
 
     get developerToken() {
-
         if (!this._developerToken) {
             this._developerToken = localStorage.getItem("applemusic_developer_token");
         }
@@ -29,6 +27,10 @@ export class MusicKitInstance {
 
     get isAuthorized() {
         return this.musicUserToken !== null && this.developerToken !== null;
+    }
+
+    get isLocked() {
+        return getAudioElement().getAttribute("data-focalmk-transition-lock") === "true";
     }
 
     // Playback
@@ -76,6 +78,8 @@ export class MusicKitInstance {
     }
 
     async play() {
+        if (this.isLocked) return;
+
         this.isPlaying = true;
         console.log("[FocalMK] Playback request started");
 
@@ -104,12 +108,16 @@ export class MusicKitInstance {
     }
 
     pause() {
+        if (this.isLocked) return;
+
         this.isPlaying = false;
         console.log("[FocalMK] Playback paused");
         getAudioElement().pause();
     }
 
     seekToTime(time: number) {
+        if (this.isLocked) return;
+
         try {
             getAudioElement().currentTime = time;
         }

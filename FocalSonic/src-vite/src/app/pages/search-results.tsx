@@ -27,8 +27,11 @@ export default function SearchResults({ query }: { query: string }) {
             {
                 searchResult !== undefined && (
                     <>
+                        <PreviewList title={t("sidebar.top")} list={searchResult?.top} showMore={false} />
                         <PreviewList title={t("sidebar.songs")} list={searchResult?.song} showMore={false} />
                         <PreviewList title={t("sidebar.albums")} list={searchResult?.album} showMore={false} />
+                        <PreviewList title={t("sidebar.artists")} list={searchResult?.artist} showMore={false} />
+                        <PreviewList title={t("sidebar.playlists")} list={searchResult?.playlist} showMore={false} />
                     </>
                 )
             }

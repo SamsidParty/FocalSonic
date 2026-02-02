@@ -18,7 +18,7 @@ import { SearchIcon } from "lucide-react";
 import React, { KeyboardEvent, useCallback, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { CommandAlbumResult } from "./album-result";
 import { CommandArtistResult } from "./artist-result";
@@ -39,6 +39,8 @@ export default function CommandMenu() {
 
     const [query, setQuery] = useState("");
     const [pages, setPages] = useState<CommandPages[]>(["HOME"]);
+    const [searchParams] = useSearchParams();
+    const urlQuery = searchParams.get("q");
 
     const activePage = pages[pages.length - 1];
     const isHome = activePage === "HOME";
@@ -59,6 +61,7 @@ export default function CommandMenu() {
         enabled: enableQuery,
         staleTime: convertMinutesToMs(5),
     });
+
 
     const albums = searchResult?.album ?? [];
     const artists = searchResult?.artist ?? [];
@@ -127,18 +130,14 @@ export default function CommandMenu() {
     return (
         <>
             <Button
-                variant="outline"
-                className="flex justify-start w-full px-2 gap-2 relative"
+                variant={"outline"}
+                className="flex justify-start w-full px-3 gap-2 bg-input relative"
                 onClick={() => navigate(ROUTES.LIBRARY.SEARCH)}
             >
-                <SearchIcon className="h-4 w-4 text-muted-foreground" />
-                <span className="inline-flex text-muted-foreground text-sm">
-                    {t("sidebar.search")}
+                <SearchIcon  className="h-4 w-4 text-primary" />
+                <span className="inline-flex text-foreground text-sm">
+                    {query || urlQuery || t("sidebar.search")}
                 </span>
-
-                <div className="absolute right-2">
-                    <Keyboard text="/" />
-                </div>
             </Button>
             <CommandDialog
                 open={open}

@@ -14,6 +14,7 @@ interface LicenseResponse {
 
 // Track active renewal timers for cleanup
 const licenseRenewalTimers = new WeakMap<FocalHls, number>();
+window.licenseRenewalTimers = licenseRenewalTimers;
 
 export function tryAcquireLicense(hls: FocalHls) {
     if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
@@ -110,7 +111,7 @@ export async function acquireWebPlaybackLicense(challenge: string, contentID: st
 
     const request = await fetch(tryWrapAppleMusicURL(licenseURL), {
         method: "POST",
-        headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
+        headers: { ...await getFetchHeaders(), "Content-Type": "application/json", "X-Apple-Renewal": "true" /* Prevents multiple device error on individual plan */ },
         body: JSON.stringify(reqBody),
     });
     

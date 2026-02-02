@@ -55,6 +55,7 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
         appleMusic: {
             data: playlist?.attributes,
             type: playlist?.type,
-        }
+        },
+        type: playlist?.type || "playlists",
     });
 }

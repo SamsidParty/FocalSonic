@@ -1,6 +1,7 @@
 import { httpClient } from "@/api/httpClient";
 import { convertAppleMusicAlbumToSubsonic } from "@/types/applemusic/albums";
 import { convertAppleMusicArtistToSubsonic } from "@/types/applemusic/artist";
+import { convertAppleMusicPlaylistToSubsonic } from "@/types/applemusic/playlist";
 import { AppleMusicSong, convertAppleMusicSongToSubsonic } from "@/types/applemusic/song";
 import { SearchQueryOptions } from "../subsonic/search";
 
@@ -76,9 +77,11 @@ async function get({
 
 
         return {
+            //top: response["top"]?.data.map(convertAppleMusicAlbumToSubsonic) || [], // Disabled for now
             song: response["song"]?.data.map(convertAppleMusicSongToSubsonic) || [],
             artist: response["artist"]?.data.map(convertAppleMusicArtistToSubsonic) || [],
             album: response["album"]?.data.map(convertAppleMusicAlbumToSubsonic) || [],
+            playlist: response["playlist"]?.data.map(convertAppleMusicPlaylistToSubsonic) || [],
         };
     }
 }

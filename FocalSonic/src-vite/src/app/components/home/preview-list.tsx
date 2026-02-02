@@ -45,7 +45,7 @@ export default function PreviewList({
 
     moreTitle = moreTitle || t("generic.seeMore");
 
-    if (list.length > 16) {
+    if (list?.length > 16) {
         list = list.slice(0, 16);
     }
 
@@ -65,6 +65,9 @@ export default function PreviewList({
     }, [api]);
 
  
+    if (list?.length === 0 || !list) {
+        return;
+    }
 
     return (
         <div className="w-full flex flex-col mt-4">

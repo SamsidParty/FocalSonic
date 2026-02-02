@@ -27,6 +27,7 @@ export function convertAppleMusicArtistToSubsonic(artist: AppleMusicArtist, appl
         coverArt: artist.attributes?.artwork?.url || "",
         artistImageUrl: artist.attributes?.artwork?.url || "",
         biography: artist.attributes?.artistBio || "",
-        appleMusic: appleMusicData || { data: [artist] }
+        appleMusic: appleMusicData || { data: [artist] },
+        type: artist?.type || "artists",
     };
 }

@@ -20,7 +20,7 @@ export default function LargeSidebar() {
             <div className="p-4 pt-0">
                 <MemoCommandMenu />
             </div>
-            <div className="space-y-4 py-4 pt-0">
+            <div className="space-y-4 pb-4 pt-0">
                 <SidebarSection>
                     <div>
                         <MemoSidebarGenerator list={mainMenuItems.slice(1)} />

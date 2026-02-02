@@ -5,6 +5,7 @@
 
     const dummyAudioElement = document.createElement('audio');
     dummyAudioElement.id = 'focalmk-dummy-audio-element';
+    dummyAudioElement.isDummy = true;
     function getAudioElement() {
         let audioElement = document.getElementById('apple-music-player');
         // Fallback to dummy audio element if not found or transition lock is active
@@ -637,6 +638,7 @@
 
     // Track active renewal timers for cleanup
     const licenseRenewalTimers = new WeakMap();
+    window.licenseRenewalTimers = licenseRenewalTimers;
     function tryAcquireLicense(hls) {
         if (hls?.contentID && hls.magicDataURI && !hls.licenseAcquired) {
             hls.licenseExpired = false;
@@ -715,7 +717,7 @@
         };
         const request = await fetch(tryWrapAppleMusicURL(licenseURL), {
             method: "POST",
-            headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
+            headers: { ...await getFetchHeaders(), "Content-Type": "application/json", "X-Apple-Renewal": "true" /* Prevents multiple device error on individual plan */ },
             body: JSON.stringify(reqBody),
         });
         const response = await request.json();
@@ -38914,6 +38916,9 @@
         get isAuthorized() {
             return this.musicUserToken !== null && this.developerToken !== null;
         }
+        get isLocked() {
+            return getAudioElement().getAttribute("data-focalmk-transition-lock") === "true";
+        }
         // Playback
         _repeatMode = 0;
         _playbackRate = 1;
@@ -38951,6 +38956,8 @@
             getAudioElement().playbackRate = rate;
         }
         async play() {
+            if (this.isLocked)
+                return;
             this.isPlaying = true;
             console.log("[FocalMK] Playback request started");
             if (this.queue.length < 1) {
@@ -38973,11 +38980,15 @@
             this.queue[0]?.setInactive?.();
         }
         pause() {
+            if (this.isLocked)
+                return;
             this.isPlaying = false;
             console.log("[FocalMK] Playback paused");
             getAudioElement().pause();
         }
         seekToTime(time) {
+            if (this.isLocked)
+                return;
             try {
                 getAudioElement().currentTime = time;
             }
