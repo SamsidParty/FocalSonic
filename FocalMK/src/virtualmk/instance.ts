@@ -150,7 +150,7 @@ export class MusicKitInstance {
         qItem.prepareForPlayback();
     }
 
-    transitionSources(fadeDuration: number = 3000) {
+    transitionSources(nextSongID: string, fadeDuration: number = 3000) {
         console.log("[FocalMK] Transitioning sources");
         
         if (this.queue.length < 2) {
@@ -158,10 +158,23 @@ export class MusicKitInstance {
             return;
         }
 
-        // Create a smooth crossfade between the two audio elements
+
         const currentSource = this.queue[0];
         const nextSource = this.queue[1];
 
+        // Sometimes a user will queue a song just before the transition starts but after the next song is preloaded
+        // In this case, abort the transition
+        if (nextSource.song !== nextSongID) {
+            console.warn("[FocalMK] Next song ID does not match the queued item, transition aborted");
+
+            // Dispose the preloaded item
+            nextSource.setInactive();
+            this.queue.splice(1, 1);
+
+            return;
+        }
+
+        // Create a smooth crossfade between the two audio elements
         const currentEffectCtrl = getAudioEffectController(currentSource.audio);
         const nextEffectCtrl = getAudioEffectController(nextSource.audio);
 

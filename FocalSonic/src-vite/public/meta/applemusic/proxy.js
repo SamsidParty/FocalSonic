@@ -526,7 +526,7 @@
                 await window.proxyMusicInstance.preloadNextSource?.({ song: item.source });
             }
             else if (item.type === "transitionSources") {
-                window.proxyMusicInstance.transitionSources?.(item.duration);
+                window.proxyMusicInstance.transitionSources?.(item.nextSongID, item.duration);
             }
         }
 
@@ -39016,15 +39016,24 @@
             this.queue.push(qItem);
             qItem.prepareForPlayback();
         }
-        transitionSources(fadeDuration = 3000) {
+        transitionSources(nextSongID, fadeDuration = 3000) {
             console.log("[FocalMK] Transitioning sources");
             if (this.queue.length < 2) {
                 console.warn("[FocalMK] Not enough items in queue to transition sources");
                 return;
             }
-            // Create a smooth crossfade between the two audio elements
             const currentSource = this.queue[0];
             const nextSource = this.queue[1];
+            // Sometimes a user will queue a song just before the transition starts but after the next song is preloaded
+            // In this case, abort the transition
+            if (nextSource.song !== nextSongID) {
+                console.warn("[FocalMK] Next song ID does not match the queued item, transition aborted");
+                // Dispose the preloaded item
+                nextSource.setInactive();
+                this.queue.splice(1, 1);
+                return;
+            }
+            // Create a smooth crossfade between the two audio elements
             const currentEffectCtrl = getAudioEffectController(currentSource.audio);
             const nextEffectCtrl = getAudioEffectController(nextSource.audio);
             // Prevents interruptions during the transition

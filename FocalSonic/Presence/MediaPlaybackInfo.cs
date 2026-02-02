@@ -1,14 +1,15 @@
-﻿using IgniteView.Core;
+﻿using FocalSonic.AppleMusic;
+using FocalSonic.AudioPlayer;
+using IgniteView.Core;
 using Newtonsoft.Json;
+using SamsidParty.Subsonic.Common;
 using SamsidParty.Subsonic.Common.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using FocalSonic.AudioPlayer;
-using SamsidParty.Subsonic.Common;
-using FocalSonic.AppleMusic;
 
 namespace FocalSonic.Presence
 {
@@ -63,7 +64,7 @@ namespace FocalSonic.Presence
                     nextSongIndex = 0;
                 }
                 if (nextSongIndex > Queue?.Count - 1) {
-                    if (LoopState == PlayerLoopState.InfiniteRadio) return 0; // Radio loop mode always has a next song
+                    if (LoopState == PlayerLoopState.InfiniteRadio) return 0; // Tells the resolver to contact server for new track
                     // Playback finished, no next song
                     return null;
                 }  
@@ -103,22 +104,45 @@ namespace FocalSonic.Presence
                 return;
             }
 
-            await PlaySong(NextQueueItem, NextSongIndex);
+            await PlaySong(await ResolveNextSong(), NextSongIndex);
+        }
+
+        // Similar to NextQueueItem, but supports radio stations
+        public async Task<Song> ResolveNextSong()
+        {
+            var song = NextQueueItem;
+
+            if ((song == null || NextSongIndex == 0) && LoopState == PlayerLoopState.InfiniteRadio && !string.IsNullOrEmpty(Store.State.SongList.CurrentRadioID))
+            {
+                // Ask apple servers what to play, ignore song and index params
+                song = await AppleMusicRadioResolver.GetNextTrack(Store.State.SongList.CurrentRadioID);
+
+                if (song == null) { return NextQueueItem; }
+
+                // Overwrite the queue
+                await PlayerStore.Mutate(async (s) =>
+                {
+                    s.State.SongList.CurrentList.Add(song);
+                    s.State.SongList.OriginalList.Add(song);
+                    s.State.SongList.ShuffledList.Add(song);
+                    s.State.SongList.CurrentSongIndex = 0;
+                    s.State.SongList.CurrentSong = song;
+                });
+            }
+
+            return song;
         }
 
         public async Task PreviousSong(bool fromUserAction = true) => await PlaySong(PreviousQueueItem, PreviousSongIndex);
 
         public async Task PlaySong(Song? song, int? index)
         {
-            if (index == 0 && LoopState == PlayerLoopState.InfiniteRadio && !string.IsNullOrEmpty(Store.State.SongList.CurrentRadioID))
+            if (song == null) { return; }
+
+            // If we're at the end of the queue and in infinite radio mode, ensure the song is the only one in the queue
+            if (index >= (Queue?.Count - 1) && LoopState == PlayerLoopState.InfiniteRadio && !string.IsNullOrEmpty(Store.State.SongList.CurrentRadioID))
             {
-                // Ask apple servers what to play, ignore song and index params
-                song = await AppleMusicRadioResolver.GetNextTrack(Store.State.SongList.CurrentRadioID);
-                index = 0; // Always play the first song in radio mode
-
-                if (song == null) { return; }
-
-                // Overwrite the queue
+                // Ensure this song will be the only one in the queue
                 await PlayerStore.Mutate(async (s) =>
                 {
                     s.State.SongList.CurrentList = new List<Song> { song };
@@ -127,9 +151,10 @@ namespace FocalSonic.Presence
                     s.State.SongList.CurrentSongIndex = 0;
                     s.State.SongList.CurrentSong = song;
                 });
+
+                index = 0;
             }
 
-            if (song == null) { return; }
 
             // Modify the player store to reflect these changes
             await PlayerStore.Mutate(async (s) =>

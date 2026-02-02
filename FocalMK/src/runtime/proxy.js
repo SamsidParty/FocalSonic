@@ -143,7 +143,7 @@ window.executeInjectedQueue = async () => {
             await window.proxyMusicInstance.preloadNextSource?.({ song: item.source });
         }
         else if (item.type === "transitionSources") {
-            window.proxyMusicInstance.transitionSources?.(item.duration);
+            window.proxyMusicInstance.transitionSources?.(item.nextSongID, item.duration);
         }
     }
 

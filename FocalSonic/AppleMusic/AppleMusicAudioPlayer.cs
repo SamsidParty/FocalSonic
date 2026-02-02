@@ -28,8 +28,8 @@ namespace FocalSonic.AppleMusic
 
         public override string ChromecastCredential =>  AppleMusicKeys.MediaUserToken;
 
-        public const int NEXT_TRACK_PRELOAD_OFFSET = 15;
-        public const int NEXT_TRACK_TRANSITION_OFFSET = 2;
+        public const int NEXT_TRACK_PRELOAD_OFFSET = 30;
+        public const int NEXT_TRACK_TRANSITION_OFFSET = 10;
 
         public AppleMusicAudioPlayer(string id) : base(id) {
 
@@ -154,7 +154,7 @@ namespace FocalSonic.AppleMusic
 
             // Try to determine the next source based on the queue
             if (MediaPlaybackInfo.Instance == null || MediaPlaybackInfo.Instance.NextQueueItem == null) { return; }
-            var trackID = MediaPlaybackInfo.Instance.NextQueueItem.Id;
+            var trackID = (await MediaPlaybackInfo.Instance.ResolveNextSong()).Id;
             var src = MediaPlaybackInfo.Instance.Store.ExtraProperties.GetStreamURLForSong(trackID);
 
             if (Source == src || string.IsNullOrEmpty(src)) { return; }
@@ -172,11 +172,13 @@ namespace FocalSonic.AppleMusic
         public async Task TransitionSources(WebWindow ctx)
         {
             if (!IsNextSourcePreloaded || IsTransitioning) { return; }
+            if (MediaPlaybackInfo.Instance == null || MediaPlaybackInfo.Instance.NextQueueItem == null) { return; }
+
             IsTransitioning = true;
 
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'transitionSources', duration: {NEXT_TRACK_TRANSITION_OFFSET * 1000f} }});" +
+                $"window.injectedQueue.push({{ type: 'transitionSources', duration: {NEXT_TRACK_TRANSITION_OFFSET * 1000f}, nextSongID: {JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.NextQueueItem.Id)} }});" +
                 InjectionSuffix
             );
 
