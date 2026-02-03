@@ -20,6 +20,16 @@ export default function Coverflow({
     className,
     visibleCount = 20,
 }: CoverflowProps) {
+
+    let effectiveItems = items;
+    if (items.length <= visibleCount) {
+        // Fill and wrap to visibleCount
+        effectiveItems = [];
+        for (let i = 0; i < visibleCount + 1; i++) {
+            effectiveItems.push(JSON.parse(JSON.stringify(items[i % items.length])));
+        }
+    }
+
     const {
         currentIndex,
         goToNext,
@@ -28,17 +38,17 @@ export default function Coverflow({
         getVisibleItems,
         containerRef,
     } = useCoverflow({
-        items,
+        items: effectiveItems,
         visibleCount,
-        initialIndex: Math.floor(items.length / 2),
+        initialIndex: Math.floor(effectiveItems.length / 2),
     });
 
-    if (items.length === 0) {
+    if (effectiveItems.length === 0) {
         return null;
     }
 
     const visibleItems = getVisibleItems();
-    const currentItem = items[currentIndex];
+    const currentItem = effectiveItems[currentIndex];
     
     // Get subtitle link based on item type
     const getSubtitleLink = () => {
@@ -77,9 +87,9 @@ export default function Coverflow({
                             transformStyle: "preserve-3d",
                         }}
                     >
-                        {visibleItems.map(({ item, position, virtualIndex }) => (
+                        {visibleItems.map(({ item, position, virtualIndex }, i) => (
                             <CoverflowItemCard
-                                key={`${item.id}-${virtualIndex}`}
+                                key={`${virtualIndex}`}
                                 item={item}
                                 position={position}
                                 isCenter={position === 0}
@@ -128,24 +138,6 @@ export default function Coverflow({
                                     )}
                                 </p>
                             )}
-                    
-                            {/* Progress indicator */}
-                            <div className="mt-4 flex items-center justify-center gap-2">
-                                <span className="text-sm text-muted-foreground tabular-nums">
-                                    {currentIndex + 1}
-                                </span>
-                                <div className="w-32 h-1 bg-muted rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-primary rounded-full transition-all duration-300"
-                                        style={{
-                                            width: `${((currentIndex + 1) / items.length) * 100}%`,
-                                        }}
-                                    />
-                                </div>
-                                <span className="text-sm text-muted-foreground tabular-nums">
-                                    {items.length}
-                                </span>
-                            </div>
                         </div>
                     </div>
                 </div>

@@ -38,6 +38,13 @@ function CoverflowItemCardComponent({
     const opacity = isCenter ? 1 : Math.max(1 - absPosition * 0.15, 0.4);
     const zIndex = 100 - absPosition;
 
+    // Workaround for Chromium subpixel blurring:
+    // - Force GPU compositing and preserve 3D
+    // - Round translate values for the center item to avoid fractional pixel placement
+    const roundedTranslateX = isCenter ? Math.round(translateX) : translateX;
+    const roundedTranslateZ = isCenter ? Math.round(translateZ) : translateZ;
+    const transformString = `translate(-50%, -50%) translate3d(${roundedTranslateX}px, 0, ${roundedTranslateZ}px) rotateY(${rotateY}deg) scale(${scale})`;
+
 
     const handleClick = () => {
         if (isCenter) {
@@ -59,10 +66,15 @@ function CoverflowItemCardComponent({
         <div
             className="absolute left-1/2 top-1/2"
             style={{
-                transform: `translate(-50%, -50%) translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                transform: transformString,
                 opacity,
                 zIndex,
                 transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+                willChange: "transform, opacity",
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+                transformStyle: "preserve-3d",
+                WebkitTransformStyle: "preserve-3d",
             }}
             onClick={handleClick}
             onDoubleClick={handleDoubleClick}
@@ -79,6 +91,12 @@ function CoverflowItemCardComponent({
                     src={getCoverArtUrl(item.coverArt, coverArtType, "800")}
                     alt={item.name}
                     className="absolute inset-0 w-full h-full object-cover"
+                    style={isCenter ? {
+                        transform: "translateZ(0.1px)",
+                        imageRendering: "auto",
+                        backfaceVisibility: "hidden",
+                        WebkitBackfaceVisibility: "hidden",
+                    } : undefined}
                 />
                 
                 {/* Reflection gradient overlay for non-center items */}
@@ -118,6 +136,11 @@ function CoverflowItemCardComponent({
                     src={getCoverArtUrl(item.coverArt, coverArtType, "800")}
                     alt=""
                     className="w-full h-[280px] object-cover blur-[2px]"
+                    style={{
+                        transform: "translateZ(0)",
+                        backfaceVisibility: "hidden",
+                        WebkitBackfaceVisibility: "hidden",
+                    }}
                 />
             </div>
         </div>
