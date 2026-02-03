@@ -44,7 +44,7 @@ export function MainDrawerPage() {
             <DrawerContent
                 className={clsx(
                     "main-drawer rounded-t-none border-none select-none cursor-default outline-none",
-                    isPlayerAtTop ? "mt-player h-content" : "h-drawer"
+                    isPlayerAtTop ? "mt-fsplayer h-content" : "h-drawer"
                 )}
                 showHandle={false}
                 aria-describedby={undefined}
@@ -54,8 +54,7 @@ export function MainDrawerPage() {
                     className={clsx(
                         "flex flex-col w-full transition-[margin]",
                         "transition-[background-image,background-color] ease-long duration-1000",
-                        "default-gradient",
-                        (isFullscreen() || isMiniPlayer) ? "h-content" : "h-[calc(var(--drawer-height)-var(--player-height))] ",
+                        (isFullscreen() || isMiniPlayer) ? "h-content" : "h-[calc(var(--drawer-height)-var(--fs-player-height))] ",
                         isPlayerAtTop ? "mt-vertical-shift" : "mb-vertical-shift"
                     )}
                 >
@@ -113,8 +112,7 @@ export function MainDrawerPage() {
                                     visible={mainDrawerState && lyricsState}
                                     containerClassName={
                                         hideAlbumArt ? clsx(
-                                            "absolute left-0 right-0",
-                                            playerStyle == "floating" ? "bottom-14" : "bottom-0"
+                                            "absolute left-0 right-0 bottom-4 lyrics-bottom",
                                         ) : ""
                                     }
                                 />
@@ -143,7 +141,7 @@ function ActiveContent({
     return (
         <div
             className={cn(
-                "w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300 bg-black/0",
+                "w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300",
                 active && "opacity-100 pointer-events-auto",
                 className,
             )}

@@ -23,6 +23,7 @@ module.exports = {
                 sidebar: "var(--sidebar-width)",
                 "mini-sidebar": "var(--mini-sidebar-width)",
                 player: "var(--player-height)",
+                fsplayer: "var(--fs-player-height)",
                 content: "var(--content-height)",
                 drawer: "var(--drawer-height)",
                 "shadow-header": "var(--shadow-header-height)",

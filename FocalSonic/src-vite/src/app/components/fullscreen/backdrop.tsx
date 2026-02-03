@@ -24,7 +24,7 @@ export function useFullscreenBackdrop(props: BackdropProps) {
                     "absolute inset-0 w-full h-full -z-1",
                 )}
             >
-                <VideoBackground videoUrl={videoBackgroundURL} />
+                <VideoBackground className={clsx("transition-opacity duration-300", props.lightenBackground && "opacity-40")} videoUrl={videoBackgroundURL} />
             </div>;
         }
 

@@ -102,7 +102,7 @@ export class LyricsRenderer {
             this.userScrollTime = performance.now();
             this.isUserScrolling = true;
         };
-        this.lyricsContainer.addEventListener('scroll', this.scrollHandler, { passive: true });
+        this.lyricsContainer.addEventListener("scroll", this.scrollHandler, { passive: true });
     }
 
     /**
@@ -514,7 +514,7 @@ export class LyricsRenderer {
 
         // Remove scroll event listener
         if (this.lyricsContainer && this.scrollHandler) {
-            this.lyricsContainer.removeEventListener('scroll', this.scrollHandler);
+            this.lyricsContainer.removeEventListener("scroll", this.scrollHandler);
             this.scrollHandler = null;
         }
 

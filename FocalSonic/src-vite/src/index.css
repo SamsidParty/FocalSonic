@@ -22,16 +22,19 @@
 
   :root[player-style="default"] {
     --player-height: 96px;
+    --fs-player-height: 96px;
     --grid-player: minmax(250px, 1fr) 2fr minmax(0px, 1fr);
   }
 
   :root[player-style="slim"] {
     --player-height: 64px;
+    --fs-player-height: 64px;
     --grid-player:  minmax(250px, 1fr) 2fr minmax(0px, 1fr);
   }
 
   :root[player-style="floating"] {
     --player-height: 12px;
+    --fs-player-height: 96px;
     --grid-player: auto 1fr auto;
   }
 
@@ -55,7 +58,7 @@
     --header-height: 0px;
     --drawer-height: 100vh;
     --content-height: 100vh;
-    --vertical-shift: var(--player-height);
+    --vertical-shift: var(--fs-player-height);
   }
 
   :root .fullscreen.idle {
@@ -427,6 +430,10 @@ svg#bars .eq-bar--4 {
 .lyric-wipe-active.lyric-glow-disabled {
   animation: none !important;
   text-shadow: none !important;
+}
+
+.lyrics-bottom .lyric-subline {
+  margin-bottom: 0 !important;
 }
 
 .default-gradient {

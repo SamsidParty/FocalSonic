@@ -1,7 +1,7 @@
 import { useCustomFullscreenBackground, usePlayerRef } from "@/store/player.store";
 import YouTubeBackground from "./youtube-background";
 
-export default function VideoBackground({ videoUrl }: { videoUrl: string }) {
+export default function VideoBackground({ videoUrl, className }: { videoUrl: string, className?: string }) {
     const { videoBackgroundURL } = useCustomFullscreenBackground();
 
     if (!videoBackgroundURL) return;
@@ -10,9 +10,9 @@ export default function VideoBackground({ videoUrl }: { videoUrl: string }) {
     const isYouTubeLink = videoBackgroundURL.includes("youtube.com") || videoBackgroundURL.includes("youtu.be");
 
     if (isYouTubeLink) {        
-        return <YouTubeBackground videoUrl={videoUrl} />;
+        return <YouTubeBackground className={className} videoUrl={videoUrl} />;
     } else {
-        return <RegularVideoBackground videoUrl={videoUrl} />;
+        return <RegularVideoBackground className={className} videoUrl={videoUrl} />;
     }
 }
 
