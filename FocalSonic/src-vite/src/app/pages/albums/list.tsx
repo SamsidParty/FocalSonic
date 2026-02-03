@@ -1,6 +1,7 @@
 import { AlbumGridCard } from "@/app/components/albums/album-grid-card";
 import { EmptyAlbums } from "@/app/components/albums/empty-page";
 import { AlbumsHeader } from "@/app/components/albums/header";
+import Coverflow from "@/app/components/coverflow/coverflow";
 import { AlbumsFallback } from "@/app/components/fallbacks/album-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
 import { ListDisplayMode } from "@/types/listDisplayMode";
@@ -15,7 +16,12 @@ export default function AlbumsList() {
     if (isLoading) return <AlbumsFallback />;
     if (isEmpty) return <EmptyAlbums />;
 
-    const ListDisplay = AlbumsListGrid;
+    let ListDisplay = AlbumsListGrid;
+
+    if (displayMode === "3dshelf") {
+        ListDisplay = AlbumsListCoverflow;
+    }
+
 
     return (
         <div className="w-full h-full">
@@ -34,5 +40,15 @@ function AlbumsListGrid({ albums }) {
                 }
             </div>
         </ListWrapper>
+    );
+}
+
+function AlbumsListCoverflow({ albums }) {
+    return (
+        <div className="w-full h-fs-content flex flex-col overflow-hidden">
+            <div className="flex-1 h-full">
+                <Coverflow items={albums} />
+            </div>
+        </div>
     );
 }

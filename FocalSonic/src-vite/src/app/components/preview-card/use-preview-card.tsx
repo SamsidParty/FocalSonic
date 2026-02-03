@@ -17,8 +17,6 @@ export default function usePreviewCard() {
 
     async function handlePlay(entry: AppleMusicRecommendationContent | Albums) {
 
-        console.log(entry);
-
         if (entry.type === "stations") {
             // Apple music radio
             setPlayAppleMusicRadio(entry);
