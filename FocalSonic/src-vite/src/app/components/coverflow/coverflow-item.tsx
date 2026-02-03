@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { usePlayerActions } from "@/store/player.store";
 import { SingleAlbum } from "@/types/responses/album";
 import { Play } from "lucide-react";
-import React, { memo } from "react";
+import React, { memo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CoverArtImage from "../cover-art";
 import usePreviewCard from "../preview-card/use-preview-card";
@@ -61,6 +61,26 @@ function CoverflowItemCardComponent({
     };
 
     const coverArtType = item.type === "artist" ? "artist" : "album";
+
+    // Bind Enter key to navigate to resource when this card is center.
+    useEffect(() => {
+        if (!isCenter) return;
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            // ignore when user is typing in inputs or contenteditable
+            if (target && (["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable)) {
+                return;
+            }
+
+            if (e.key === "Enter" || e.key === "Return" || (e as any).keyCode === 13) {
+                navigateToResource(item);
+            }
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [isCenter, item, navigateToResource]);
 
     return (
         <div
