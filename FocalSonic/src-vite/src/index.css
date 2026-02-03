@@ -380,6 +380,18 @@ svg#bars .eq-bar--4 {
   }
 }
 
+@keyframes lyric-one-line-in {
+  0% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 #sync-lyrics-box-left,
 #sync-lyrics-box-center,
 .lrc-box,
@@ -425,6 +437,10 @@ svg#bars .eq-bar--4 {
   transition: background-position;
   background-position: 0% 50%;
   animation: lyric-glow 2s forwards;
+}
+
+.lyrics-one-line .lyric-line-active.lyric-mainline {
+  animation: lyric-one-line-in 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .lyric-wipe-active.lyric-glow-disabled {
