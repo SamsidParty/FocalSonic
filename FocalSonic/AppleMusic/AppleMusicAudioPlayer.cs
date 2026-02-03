@@ -29,7 +29,8 @@ namespace FocalSonic.AppleMusic
         public override string ChromecastCredential =>  AppleMusicKeys.MediaUserToken;
 
         public const int NEXT_TRACK_PRELOAD_OFFSET = 30;
-        public const int NEXT_TRACK_TRANSITION_OFFSET = 10;
+        public const int NEXT_TRACK_TRANSITION_OFFSET = 5;
+        public const int NEXT_TRACK_TRANSITION_DURATION = 10;
 
         public AppleMusicAudioPlayer(string id) : base(id) {
 
@@ -178,7 +179,7 @@ namespace FocalSonic.AppleMusic
 
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'transitionSources', duration: {NEXT_TRACK_TRANSITION_OFFSET * 1000f}, nextSongID: {JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.NextQueueItem.Id)} }});" +
+                $"window.injectedQueue.push({{ type: 'transitionSources', duration: {NEXT_TRACK_TRANSITION_DURATION * 1000f}, nextSongID: {JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.NextQueueItem.Id)} }});" +
                 InjectionSuffix
             );
 
