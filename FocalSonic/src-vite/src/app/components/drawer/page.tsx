@@ -61,7 +61,7 @@ export function MainDrawerPage() {
                     <div 
                         className={clsx(
                             "absolute text-white hide-in-fullscreen-idle transition-opacity duration-600 ease-long flex w-full h-14 min-h-14 items-center justify-end gap-2",
-                            "px-2",
+                            "px-2 z-[60]",
                             isMiniPlayer && "hide-on-idle"
                         )}
                         {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }
@@ -88,7 +88,7 @@ export function MainDrawerPage() {
                         <Button
                             variant="ghost"
                             data-webview-ignore={""}
-                            className="w-10 h-10 z-10 hide-in-fullscreen rounded-full p-0 hover:bg-foreground/20"
+                            className="w-10 h-10 hide-in-fullscreen rounded-full p-0 hover:bg-foreground/20"
                             onClick={closeDrawer}
                         >
                             {
