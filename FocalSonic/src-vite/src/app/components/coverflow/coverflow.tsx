@@ -2,8 +2,10 @@ import { getCoverArtUrl } from "@/api/httpClient";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
 import { SingleAlbum } from "@/types/responses/album";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
+import { Button } from "../ui/button";
 import { CoverflowItemCard } from "./coverflow-item";
 import { useCoverflow } from "./use-coverflow";
 
@@ -87,24 +89,22 @@ export default function Coverflow({
                     </div>
 
                     {/* Navigation arrows */}
-                    <button
+                    <Button
+                        className="p-2 transition-all duration-300 hover:scale-110 rounded-full absolute left-4 top-1/2 -translate-y-1/2 z-50 w-10 h-10"
+                        variant="secondary"
                         onClick={goToPrevious}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-background/50 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-background/70 transition-colors"
-                        aria-label="Previous"
+                        data-testid="card-play-button"
                     >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
-                    <button
+                        <ChevronLeft className="w-full h-full" />
+                    </Button>
+                    <Button
+                        className="p-2 transition-all duration-300 hover:scale-110 rounded-full absolute right-4 top-1/2 -translate-y-1/2 z-50 w-10 h-10"
+                        variant="secondary"
                         onClick={goToNext}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-background/50 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-background/70 transition-colors"
-                        aria-label="Next"
+                        data-testid="card-play-button"
                     >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
+                        <ChevronRight className="w-full h-full" />
+                    </Button>
 
                     <div className="absolute bottom-16 left-0 right-0 h-12 x-20">
                         <div className="max-w-2xl mx-auto text-center">
@@ -156,12 +156,12 @@ export default function Coverflow({
 
             {/* Background blur effect */}
             <div
-                className="absolute inset-0 -z-10 scale-110"
+                className="absolute inset-0 -z-10 scale-110 opacity-40"
                 style={{
                     backgroundImage: `url(${getCoverArtUrl(currentItem?.coverArt, "album", "100")})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
-                    filter: "blur(80px) brightness(0.4)",
+                    filter: "blur(80px)",
                     transition: "background-image 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
             />
