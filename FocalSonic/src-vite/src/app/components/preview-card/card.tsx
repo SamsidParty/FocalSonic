@@ -16,7 +16,7 @@ type RootProps = ComponentPropsWithoutRef<"div">
 
 function Root({ className, children, ...props }: RootProps) {
     return (
-        <div className={cn("cursor-default", className)} {...props}>
+        <div className={cn("cursor-default transform-gpu", className)} {...props}>
             {children}
         </div>
     );

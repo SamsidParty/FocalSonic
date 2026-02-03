@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 import { ExpandableSearchInput } from "@/app/components/search/expandable-input";
 import { AlbumListType } from "@/types/responses/album";
 import { AlbumsFilters, AlbumsSearchParams } from "@/utils/albumsFilter";
 import { SearchParamsHandler } from "@/utils/searchParamsHandler";
+import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { AlbumsFilterByGenre } from "./filters/by-genre";
 import { AlbumsFilterByYear } from "./filters/by-year";
 import { AlbumsMainFilter } from "./filters/main";
@@ -19,7 +19,7 @@ export function AlbumsFilter() {
     );
 
     return (
-        <div className="flex gap-2 flex-1 justify-end">
+        <div className="flex gap-2">
             {currentFilter === AlbumsFilters.ByYear && <AlbumsFilterByYear />}
 
             {currentFilter === AlbumsFilters.ByGenre && <AlbumsFilterByGenre />}

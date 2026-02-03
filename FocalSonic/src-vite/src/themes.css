@@ -4,19 +4,21 @@
   :root {
     --radius: 0.5rem;
     --origin-color: white;
+    --origin-color-flipped: black;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
       --origin-color: black;
+      --origin-color-flipped: white;
     }
   }
 
   .system {
-    --background: color-mix(in hsl, var(--system-background2), var(--origin-color) 70%);
+    --background: color-mix(in hsl, var(--system-background2), var(--origin-color) 40%);
     --background-foreground: var(--system-background2);
     --foreground: var(--system-foreground);
-    --card: var(--system-background);
+    --card: color-mix(in lch, var(--origin-color-flipped), var(--origin-color) 90%);
     --card-foreground: var(--system-foreground);
     --popover: var(--system-background2);
     --popover-foreground: var(--system-foreground);
@@ -30,10 +32,10 @@
     --accent-foreground: var(--system-foreground);
     --destructive: hsl(0 84.2% 60.2%);
     --destructive-foreground: hsl(210 20% 98%);
-    --border: var(--system-outline);
-    --input: color-mix(in hsl, var(--system-body), var(--origin-color) 30%);
-    --body: color-mix(in hsl, var(--system-body), var(--origin-color) 30%);
-    --bar: color-mix(in srgb, transparent, var(--origin-color) 55%);
+    --border: color-mix(in lch, var(--system-background), var(--origin-color-flipped) 10%);
+    --input: color-mix(in lch, var(--system-background), var(--origin-color-flipped) 15%);
+    --body: color-mix(in hsl, var(--system-body), var(--origin-color) 20%);
+    --bar: color-mix(in srgb, transparent, var(--origin-color) 50%);
     --ring: var(--system-accent-override, var(--system-accent));
   }
 

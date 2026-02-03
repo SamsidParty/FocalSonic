@@ -131,7 +131,7 @@ export default function CommandMenu() {
         <>
             <Button
                 variant={"outline"}
-                className="flex justify-start w-full px-3 gap-2 bg-input relative"
+                className="flex justify-start w-full px-3 gap-2 bg-card relative"
                 onClick={() => navigate(ROUTES.LIBRARY.SEARCH)}
             >
                 <SearchIcon  className="h-4 w-4 text-primary" />

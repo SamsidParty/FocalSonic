@@ -21,7 +21,7 @@ export function ShadowHeader({
     return (
         <div
             className={cn(
-                "flex items-center justify-start px-8 h-[--shadow-header-height] border-b bg-background mr-3 rounded-t-md",
+                "flex items-center justify-start px-8 h-[--shadow-header-height] border-b bg-card mr-3 rounded-t-md",
                 fixed && "absolute top-0 left-0 right-0 mr-0 z-[30]",
                 "transition-[left] duration-500 ease-long",
                 className,

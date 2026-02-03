@@ -1,0 +1,1 @@
+export type ListDisplayMode = "grid" | "3dshelf" | "list";

@@ -45,7 +45,7 @@ export function MainRoutes() {
                     id="main-scroll-area"
                     className={clsx(
                         "w-full bg-body main-page",
-                        (playerStyle === "floating" && !isPlayerAtTop) && "pb-[75px]",
+                        (playerStyle === "floating" && !isPlayerAtTop) && "pb-[90px]",
                     )}
                     ref={animationRef}
                     onAnimationEnd={(event: React.AnimationEvent<HTMLDivElement>) => event.currentTarget.style.animation = ""}
