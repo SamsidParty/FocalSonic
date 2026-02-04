@@ -5,7 +5,6 @@ import { useTheme } from "@/store/theme.store";
 import { SingleAlbum } from "@/types/responses/album";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React from "react";
-import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { CoverflowItemCard } from "./coverflow-item";
 import { useCoverflow } from "./use-coverflow";
@@ -119,28 +118,12 @@ export default function Coverflow({
                         <ChevronRight className="w-full h-full" />
                     </Button>
 
-                    <div className="absolute bottom-16 left-0 right-0 h-12 x-20">
+                    <div className="absolute bottom-[4%] left-0 right-0 h-12 x-20">
                         <div className="max-w-2xl mx-auto text-center">
                             {/* Title */}
                             <h2 className="text-2xl font-bold truncate mb-1">
                                 {currentItem?.name}
                             </h2>
-                    
-                            {/* Subtitle with optional link */}
-                            {currentItem?.subtitle && (
-                                <p className="text-lg text-muted-foreground truncate">
-                                    {subtitleLink ? (
-                                        <Link 
-                                            to={subtitleLink}
-                                            className="hover:text-primary hover:underline transition-colors"
-                                        >
-                                            {currentItem.subtitle}
-                                        </Link>
-                                    ) : (
-                                        currentItem.subtitle
-                                    )}
-                                </p>
-                            )}
                         </div>
                     </div>
                 </div>

@@ -37,6 +37,12 @@ function CoverflowItemCardComponent({
     const opacity = isCenter ? 1 : Math.max(1 - absPosition * 0.15, 0.4);
     const zIndex = 100 - absPosition;
 
+    let filter = isCenter ? "none" : "";
+
+    if (coverflowStyle === "modern" && !isCenter) {
+        filter += ` blur(${Math.max(absPosition * 1.3, 0.4)}px)`;
+    }
+
     // Workaround for Chromium subpixel blurring:
     // - Force GPU compositing and preserve 3D
     // - Round translate values for the center item to avoid fractional pixel placement
@@ -83,13 +89,13 @@ function CoverflowItemCardComponent({
 
     return (
         <div
-            className="absolute left-1/2 top-1/2"
+            className="absolute left-1/2 top-1/2 "
             style={{
                 transform: transformString,
-                opacity,
                 zIndex,
+                filter,
                 transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-                willChange: "transform, opacity",
+                willChange: "transform, opacity, filter",
                 backfaceVisibility: "hidden",
                 WebkitBackfaceVisibility: "hidden",
                 transformStyle: "preserve-3d",
@@ -100,7 +106,7 @@ function CoverflowItemCardComponent({
         >
             <div
                 className={cn(
-                    "relative w-[280px] h-[280px] rounded-lg overflow-hidden",
+                    "relative w-[320px] h-[320px] 2xl:w-[430px] 2xl:h-[430px] bg-card rounded-lg overflow-hidden",
                     "shadow-2xl shadow-black/40",
                     "ring-1 ring-white/10 transform-gpu",
                 )}
@@ -109,19 +115,11 @@ function CoverflowItemCardComponent({
                 <CoverArtImage
                     src={getCoverArtUrl(item.coverArt, coverArtType, "800")}
                     alt={item.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={isCenter ? {
-                        transform: "translateZ(0.1px)",
-                        imageRendering: "auto",
-                        backfaceVisibility: "hidden",
-                        WebkitBackfaceVisibility: "hidden",
-                    } : undefined}
+                    className={cn("absolute inset-0 w-full h-full object-cover transition-opacity duration-400 ease-long")}
+                    style={{
+                        opacity,
+                    }}
                 />
-                
-                {/* Reflection gradient overlay for non-center items */}
-                {!isCenter && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
-                )}
                 
                 {/* Hover overlay for center item */}
                 {isCenter && (

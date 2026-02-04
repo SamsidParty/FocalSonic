@@ -34,7 +34,7 @@
 
   :root[player-style="floating"] {
     --player-height: 12px;
-    --fs-player-height: 96px;
+    --fs-player-height: 104px;
     --grid-player: auto 1fr auto;
   }
 
