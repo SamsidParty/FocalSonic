@@ -27,8 +27,14 @@ async function getOne(id: string) {
 
     let url = `/applemusic/me/library/artists/${id}`;
 
-    if (id.startsWith("authorof:")) {
-        url = `/applemusic/catalog/{storefront}/songs/${id.replace("authorof:", "")}/artists`;
+    if (id.startsWith("authorof_songs:")) {
+        url = `/applemusic/catalog/{storefront}/songs/${id.replace("authorof_songs:", "")}/artists`;
+    }
+    else if (id.startsWith("authorof_albums:")) {
+        url = `/applemusic/catalog/{storefront}/albums/${id.replace("authorof_albums:", "")}/artists`;
+    }
+    else if (id.startsWith("authorof_library-albums:")) {
+        url = `/applemusic/me/library/albums/${id.replace("authorof_library-albums:", "")}/artists`;
     }
 
     const query = { 

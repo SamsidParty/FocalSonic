@@ -43,6 +43,7 @@ const MemoDataTableListHeader = memo(
 declare module "@tanstack/react-table" {
     interface TableMeta<TData extends RowData> {
         handlePlaySong: ((row: Row<TData>) => void) | undefined
+        handleLeftClick: ((row: Row<TData>) => void) | undefined
     }
     interface SortingFns {
         customSortFn: SortingFn<unknown>
@@ -53,6 +54,7 @@ interface DataTableProps<TData, TValue> {
     columns: ColumnDefType<TData, TValue>[]
     data: TData[]
     handlePlaySong?: (row: Row<TData>) => void
+    handleLeftClick?: (row: Row<TData>) => void
     columnFilter?: ColumnFilter[]
     noRowsMessage?: string
     showHeader?: boolean
@@ -70,6 +72,7 @@ export function DataTableList<TData, TValue>({
     columns,
     data,
     handlePlaySong,
+    handleLeftClick,
     columnFilter,
     noRowsMessage = "No results.",
     showHeader = true,
@@ -121,6 +124,7 @@ export function DataTableList<TData, TValue>({
             },
             meta: {
                 handlePlaySong,
+                handleLeftClick,
             },
             state: {
                 columnFilters: columnSearch,
@@ -134,6 +138,7 @@ export function DataTableList<TData, TValue>({
             newColumns,
             columnFilter,
             handlePlaySong,
+            handleLeftClick,
             columnSearch,
             sorting,
             rowSelection,
@@ -207,9 +212,9 @@ export function DataTableList<TData, TValue>({
         [dataType, showContextMenu, table],
     );
 
-    const handleLeftClick = useCallback(
+    const _handleLeftClick = useCallback(
         (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
-            if (!allowRowSelection) return;
+            if (!allowRowSelection) { handleLeftClick?.(row); return; };
 
             // Check the correct key depending on the OS (Meta for macOS, Ctrl for others)
             const isMultiSelectKey = isMacOs ? e.metaKey : e.ctrlKey;
@@ -228,6 +233,8 @@ export function DataTableList<TData, TValue>({
                 table.setRowSelection(selectedRowsUpdater);
                 return;
             }
+
+            handleLeftClick?.(row);
 
             // Deselect all rows, except current one
             table.setRowSelection({
@@ -258,13 +265,13 @@ export function DataTableList<TData, TValue>({
     const handleClicks = useCallback(
         (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => {
             if (e.nativeEvent.button === MouseButton.Left) {
-                handleLeftClick(e, row);
+                _handleLeftClick(e, row);
             }
             if (e.nativeEvent.button === MouseButton.Right) {
                 handleRightClick(row);
             }
         },
-        [handleLeftClick, handleRightClick],
+        [_handleLeftClick, handleRightClick],
     );
 
     const handleRowDbClick = useCallback(

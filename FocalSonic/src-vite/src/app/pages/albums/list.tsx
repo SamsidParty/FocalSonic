@@ -4,7 +4,12 @@ import { AlbumsHeader } from "@/app/components/albums/header";
 import Coverflow from "@/app/components/coverflow/coverflow";
 import { AlbumsFallback } from "@/app/components/fallbacks/album-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
+import usePreviewCard from "@/app/components/preview-card/use-preview-card";
+import { DataTableList } from "@/app/components/ui/data-table-list";
+import { songsColumns } from "@/app/tables/songs-columns";
+import { ColumnFilter } from "@/types/columnFilter";
 import { ListDisplayMode } from "@/types/listDisplayMode";
+import { t } from "i18next";
 import React, { useState } from "react";
 import { useAlbumsListModel } from "./list.model";
 
@@ -16,10 +21,13 @@ export default function AlbumsList() {
     if (isLoading) return <AlbumsFallback />;
     if (isEmpty) return <EmptyAlbums />;
 
-    let ListDisplay = AlbumsListGrid;
+    let ListDisplay = AlbumsListStandard;
 
     if (displayMode === "3dshelf") {
         ListDisplay = AlbumsListCoverflow;
+    }
+    else if (displayMode === "grid") {
+        ListDisplay = AlbumsListGrid;
     }
 
 
@@ -39,6 +47,32 @@ function AlbumsListGrid({ albums }) {
                     albums && albums.map((album) => <AlbumGridCard key={album.id} album={album} />)
                 }
             </div>
+        </ListWrapper>
+    );
+}
+
+function AlbumsListStandard({ albums }) {
+
+    const columns = songsColumns();
+    const { navigateToResource, handlePlay } = usePreviewCard();
+
+    const columnsToShow: ColumnFilter[] = [
+        "index",
+        "title",
+        "year"
+    ];
+
+    return (
+        <ListWrapper className="pt-shadow-header px-0 pb-0">
+            <DataTableList
+                columns={columns}
+                data={albums}
+                handlePlaySong={(row) => handlePlay(albums[row.index])}
+                handleLeftClick={(row) => navigateToResource(albums[row.index])}
+                allowRowSelection={false}
+                columnFilter={columnsToShow}
+                noRowsMessage={t("album.list.empty.title")}
+            />
         </ListWrapper>
     );
 }

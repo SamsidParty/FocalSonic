@@ -178,9 +178,9 @@
         "albumsByArtist": "Albums by {{artist}}"
       },
       "empty": {
-        "title": "Oops, no albums here!",
-        "info": "Looks like there are no albums with the current filter.",
-        "action": "Maybe try tweaking the filters?"
+        "title": "No albums found",
+        "info": "Couldn't find any albums with the current filter",
+        "action": "Please try tweaking the filters or search term"
       },
       "genre": {
         "label": "Select a genre…",

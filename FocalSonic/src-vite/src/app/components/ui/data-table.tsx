@@ -70,7 +70,7 @@ interface DataTableProps<TData, TValue> {
     showHeader?: boolean
     showDiscNumber?: boolean
     variant?: "classic" | "modern"
-    dataType?: "song" | "artist" | "playlist" | "radio"
+    dataType?: "song" | "artist" | "playlist" | "radio" | "album"
 }
 
 let isTap = false;

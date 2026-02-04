@@ -6,7 +6,6 @@ import {
     ChevronsRightIcon,
 } from "lucide-react";
 
-import { useTranslation } from "react-i18next";
 import { Button } from "@/app/components/ui/button";
 import {
     Select,
@@ -15,6 +14,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/app/components/ui/select";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 interface DataTablePaginationProps<TData> {
     table: Table<TData>
@@ -24,6 +25,11 @@ export function DataTablePagination<TData>({
     table,
 }: DataTablePaginationProps<TData>) {
     const { t } = useTranslation();
+
+    // Set default page size to 50
+    useEffect(() => {
+        table.setPageSize(50);
+    }, [table]);
 
     return (
         <div className="flex items-center justify-end mt-4">
@@ -42,7 +48,7 @@ export function DataTablePagination<TData>({
                             <SelectValue placeholder={table.getState().pagination.pageSize} />
                         </SelectTrigger>
                         <SelectContent side="top">
-                            {[10, 20, 30, 40, 50].map((pageSize) => (
+                            {[50, 100, 200, 300, 400, 500].map((pageSize) => (
                                 <SelectItem key={pageSize} value={`${pageSize}`}>
                                     {pageSize}
                                 </SelectItem>
