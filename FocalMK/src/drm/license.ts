@@ -111,7 +111,7 @@ export async function acquireWebPlaybackLicense(challenge: string, contentID: st
 
     const request = await fetch(tryWrapAppleMusicURL(licenseURL), {
         method: "POST",
-        headers: { ...await getFetchHeaders(), "Content-Type": "application/json", "X-Apple-Renewal": "true" /* Prevents multiple device error on individual plan */ },
+        headers: { ...await getFetchHeaders(), "Content-Type": "application/json" /* Prevents multiple device error on individual plan */ },
         body: JSON.stringify(reqBody),
     });
     
