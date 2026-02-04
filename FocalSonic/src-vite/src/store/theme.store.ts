@@ -73,6 +73,12 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                             state.accentColor = color;
                         });
                     },
+                    coverflowStyle: "modern",
+                    setCoverflowStyle(style: "modern" | "classic") {
+                        set((state) => {
+                            state.coverflowStyle = style;
+                        });
+                    }
                 })),
                 {
                     name: "theme_store",

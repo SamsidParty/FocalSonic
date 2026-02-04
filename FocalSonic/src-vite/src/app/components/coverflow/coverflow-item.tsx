@@ -1,10 +1,9 @@
 import { getCoverArtUrl } from "@/api/httpClient";
 import { cn } from "@/lib/utils";
-import { usePlayerActions } from "@/store/player.store";
+import { useTheme } from "@/store/theme.store";
 import { SingleAlbum } from "@/types/responses/album";
 import { Play } from "lucide-react";
 import React, { memo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import CoverArtImage from "../cover-art";
 import usePreviewCard from "../preview-card/use-preview-card";
 import { Button } from "../ui/button";
@@ -22,9 +21,9 @@ function CoverflowItemCardComponent({
     isCenter,
     onClick,
 }: CoverflowItemCardProps) {
-    const navigate = useNavigate();
-    const { setSongList } = usePlayerActions();
     const { handlePlay, navigateToResource } = usePreviewCard();
+
+    const { coverflowStyle } = useTheme();
 
     // Calculate 3D transforms based on position
     const absPosition = Math.abs(position);
@@ -144,25 +143,29 @@ function CoverflowItemCardComponent({
             </div>
             
             {/* Reflection */}
-            <div
-                className="absolute left-0 right-0 -bottom-[140px] h-[140px] rounded-xl overflow-hidden pointer-events-none"
-                style={{
-                    transform: "scaleY(-1)",
-                    maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 50%)",
-                    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 50%)",
-                }}
-            >
-                <CoverArtImage
-                    src={getCoverArtUrl(item.coverArt, coverArtType, "800")}
-                    alt=""
-                    className="w-full h-[280px] object-cover blur-[2px]"
-                    style={{
-                        transform: "translateZ(0)",
-                        backfaceVisibility: "hidden",
-                        WebkitBackfaceVisibility: "hidden",
-                    }}
-                />
-            </div>
+            {
+                coverflowStyle === "classic" && (
+                    <div
+                        className="absolute left-0 right-0 -bottom-[140px] h-[140px] rounded-xl overflow-hidden pointer-events-none"
+                        style={{
+                            transform: "scaleY(-1)",
+                            maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 50%)",
+                            WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 50%)",
+                        }}
+                    >
+                        <CoverArtImage
+                            src={getCoverArtUrl(item.coverArt, coverArtType, "800")}
+                            alt=""
+                            className="w-full h-[280px] object-cover blur-[2px]"
+                            style={{
+                                transform: "translateZ(0)",
+                                backfaceVisibility: "hidden",
+                                WebkitBackfaceVisibility: "hidden",
+                            }}
+                        />
+                    </div>
+                )
+            }
         </div>
     );
 }

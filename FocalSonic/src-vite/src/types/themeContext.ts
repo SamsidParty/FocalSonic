@@ -44,4 +44,6 @@ export interface IThemeContext {
     setVibrancyMode: (mode: "mica" | "mica-alt" | "acrylic" | "blurbehind") => void
     accentColor?: string
     setAccentColor: (color: string) => void
+    coverflowStyle: "modern" | "classic",
+    setCoverflowStyle: (style: "modern" | "classic") => void
 }

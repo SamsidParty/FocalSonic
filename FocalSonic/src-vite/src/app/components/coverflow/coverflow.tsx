@@ -1,6 +1,7 @@
 import { getCoverArtUrl } from "@/api/httpClient";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
+import { useTheme } from "@/store/theme.store";
 import { SingleAlbum } from "@/types/responses/album";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React from "react";
@@ -29,6 +30,8 @@ export default function Coverflow({
             effectiveItems.push(JSON.parse(JSON.stringify(items[i % items.length])));
         }
     }
+
+    const { coverflowStyle } = useTheme();
 
     const {
         currentIndex,
@@ -145,18 +148,37 @@ export default function Coverflow({
 
             </div>
 
+            {
+                coverflowStyle === "modern" && ( // Modern background (centered blur)
+                    <div
+                        className="absolute w-[40%] h-[60%] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 scale-110 opacity-40"
+                        style={{
+                            backgroundImage: `url(${getCoverArtUrl(currentItem?.coverArt, "album", "800")})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            filter: "blur(80px) brightness(110%) saturate(500%)",
+                            transition: "background-image 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                            borderRadius: "50%",
+                        }}
+                    />
+                )
+            }
 
-            {/* Background blur effect */}
-            <div
-                className="absolute inset-0 -z-10 scale-110 opacity-40"
-                style={{
-                    backgroundImage: `url(${getCoverArtUrl(currentItem?.coverArt, "album", "100")})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    filter: "blur(80px)",
-                    transition: "background-image 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                }}
-            />
+            {
+                coverflowStyle === "classic" && ( // Classic background (fullscreen blur)
+                    <div
+                        className="absolute inset-0 -z-10 scale-110 opacity-40"
+                        style={{
+                            backgroundImage: `url(${getCoverArtUrl(currentItem?.coverArt, "album", "800")})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            filter: "blur(80px)",
+                            transition: "background-image 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                        }}
+                    />
+                )
+            }
+            
         </>
     );
 }
