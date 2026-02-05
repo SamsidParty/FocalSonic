@@ -53,7 +53,23 @@ namespace FocalSonic.LastFM
         {
             IsWaitingForToken = false;
 
-            Console.WriteLine(token);
+            // Redeem auth token into session key
+            await RedeemAuthToken(token);
+
+            var username = LocalStorage.GetItem("lastfm_username", "default"); ;
+            Console.WriteLine(username);
+        }
+
+        public static async Task RedeemAuthToken(string authToken)
+        {
+            // TODO: Implement this based on https://www.last.fm/api/show/auth.getSession
+            // Use LastFMHttpClient to make the request, and then store the session key and username
+
+            var sessionKey = "placeholder";
+            var username = "placeholder";
+
+            LocalStorage.SetItem("lastfm_session_key", sessionKey, "default");
+            LocalStorage.SetItem("lastfm_username", username, "default");
         }
     }
 }
