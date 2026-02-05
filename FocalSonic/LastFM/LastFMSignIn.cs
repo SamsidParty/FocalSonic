@@ -67,8 +67,8 @@ namespace FocalSonic.LastFM
         [Command("logoutOfLastFM")]
         public static async Task LogOutOfLastFM()
         {
-            LocalStorage.RemoveItem("lastfm_session_key", "default");
-            LocalStorage.RemoveItem("lastfm_username", "default");
+            LocalStorage.SetItem("lastfm_session_key", "", "default");
+            LocalStorage.SetItem("lastfm_username", "", "default");
 
             Program.MainWindow?.CallFunction("window._localStorage.hydrate", LocalStorage.GetAllItems("default")); // Reload localStorage
             Program.MainWindow?.CallFunction("window.reloadLastFMAuthState");

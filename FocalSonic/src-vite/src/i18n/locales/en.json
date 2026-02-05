@@ -737,15 +737,22 @@
     "integrations": {
       "services": {
         "group": "Integrations",
-        "description": "Manage integrations with other services.",
+        "description": "Manage integrations with other services",
         "lrclib": {
-          "info": "LRCLIB is used to find song lyrics.",
-          "info_apple": "If Apple Music doesn't have the lyrics for a song, LRCLIB will be used as a backup source.",
+          "info": "LRCLIB is used to find song lyrics",
+          "info_apple": "If Apple Music doesn't have the lyrics for a song, LRCLIB will be used as a backup source",
           "label": "LRCLIB"
         },
         "discord": {
-          "info": "Display what you're listening to publicly on Discord.",
+          "info": "Display what you're listening to publicly on Discord",
           "label": "Discord Rich Presence"
+        },
+        "lastfm": {
+          "info": "Scrobble your listening activity to Last.fm",
+          "link": "Link Account",
+          "unlink": "Unlink Account",
+          "toggle_active": "Linked to your account '{{username}}'",
+          "toggle_inactive": "Sign in with Last.fm to enable scrobbling"
         }
       }
     },
