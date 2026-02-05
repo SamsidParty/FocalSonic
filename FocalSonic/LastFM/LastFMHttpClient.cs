@@ -1,4 +1,5 @@
 ﻿using FocalSonic.AppleMusic;
+using IgniteView.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace FocalSonic.LastFM
         }
 
         // Creates an API signature per https://www.last.fm/api/authspec
-        public static string CreateApiSignature(IDictionary<string, string> parameters, string apiSecret)
+        public static string CreateApiSignature(IDictionary<string, string> parameters)
         {
             // Exclude format param if present when signing
             var items = parameters
@@ -28,7 +29,7 @@ namespace FocalSonic.LastFM
                 .OrderBy(kv => kv.Key, StringComparer.Ordinal)
                 .Select(kv => kv.Key + kv.Value);
 
-            var concatenated = string.Concat(items) + (apiSecret ?? string.Empty);
+            var concatenated = string.Concat(items) + (LastFMConstants.APISecret ?? string.Empty);
 
             using (var md5 = MD5.Create())
             {
@@ -40,26 +41,53 @@ namespace FocalSonic.LastFM
             }
         }
 
-        // Calls auth.getSession with the provided token and returns (sessionKey, username)
-        public async Task<(string sessionKey, string username)> GetSessionAsync(string apiKey, string apiSecret, string token)
+        // Calls an authenticated endpoint
+        public async Task<JsonElement> CallAPIAsync(string method, Dictionary<string, string> parameters)
         {
-            if (string.IsNullOrEmpty(apiKey)) throw new ArgumentNullException(nameof(apiKey));
-            if (string.IsNullOrEmpty(apiSecret)) throw new ArgumentNullException(nameof(apiSecret));
+            parameters["method"] = method;
+            parameters["format"] = "json"; // Aint nobody wanna parse XML its not 2008 anymore
+
+            // Insert secret keys
+            parameters["sk"] = LocalStorage.GetItem("lastfm_session_key", "default");
+            parameters["api_key"] = LastFMConstants.APIKey;
+
+            // Sign the request
+            var postData = new Dictionary<string, string>(parameters)
+            {
+                ["api_sig"] = CreateApiSignature(parameters)
+            };
+
+            using (var content = new FormUrlEncodedContent(postData))
+            {
+                var resp = await this.PostAsync(string.Empty, content);
+                resp.EnsureSuccessStatusCode();
+                var body = await resp.Content.ReadAsStringAsync();
+
+                // Parse JSON response
+                using (var doc = JsonDocument.Parse(body))
+                {
+                    return doc.RootElement;
+                }
+            }
+        }
+
+        // Calls auth.getSession with the provided token and returns (sessionKey, username)
+        public async Task<(string sessionKey, string username)> GetSessionAsync(string token)
+        {
             if (string.IsNullOrEmpty(token)) throw new ArgumentNullException(nameof(token));
 
             var parameters = new Dictionary<string, string>
             {
                 ["method"] = "auth.getSession",
-                ["api_key"] = apiKey,
+                ["api_key"] = LastFMConstants.APIKey,
                 ["token"] = token,
                 ["format"] = "json"
             };
 
-            var apiSig = CreateApiSignature(parameters, apiSecret);
-            // Add signature to post data
+            // Sign the request
             var postData = new Dictionary<string, string>(parameters)
             {
-                ["api_sig"] = apiSig
+                ["api_sig"] = CreateApiSignature(parameters)
             };
 
             using (var content = new FormUrlEncodedContent(postData))

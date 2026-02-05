@@ -11,11 +11,6 @@ namespace FocalSonic.LastFM
 {
     public class LastFMSignIn
     {
-        // This key and callback server belong to SamsidParty
-        // Derivatives of FocalSonic not affiliated with SamsidParty should change these
-        const string APIKey = "7746ab31f725273e9ae23f25b1e29e12";
-        const string APISecret = "f22c961d06ce812df55182de6bcdd393";
-        const string CallbackURL = "https://samsidparty.com/Services/focalsonic/integrations/lastfm.php";
 
         public static bool IsWaitingForToken = false;
 
@@ -31,7 +26,7 @@ namespace FocalSonic.LastFM
 
                 var signInWindow = WebWindow.Create()
                     .WithTitle("Sign in to Last.FM")
-                    .WithURL($"https://www.last.fm/api/auth?api_key={Uri.EscapeDataString(APIKey)}&cb={Uri.EscapeDataString(CallbackURL)}")
+                    .WithURL($"https://www.last.fm/api/auth?api_key={Uri.EscapeDataString(LastFMConstants.APIKey)}&cb={Uri.EscapeDataString(LastFMConstants.CallbackURL)}")
                     .WithBounds(new LockedWindowBounds(1200, 720))
                     .WithPlatformBasedAdditions()
                     .WithSharedContext("LastFMSignIn", "")
@@ -77,7 +72,7 @@ namespace FocalSonic.LastFM
         public static async Task RedeemAuthToken(string authToken)
         {
             // Implemented according to https://www.last.fm/api/show/auth.getSession
-            var (sessionKey, username) = await LastFMHttpClient.Instance.GetSessionAsync(APIKey, APISecret, authToken);
+            var (sessionKey, username) = await LastFMHttpClient.Instance.GetSessionAsync(authToken);
 
             LocalStorage.SetItem("lastfm_session_key", sessionKey, "default");
             LocalStorage.SetItem("lastfm_username", username, "default");

@@ -1,4 +1,6 @@
-﻿using FocalSonic.Windows;
+﻿using FocalSonic.AppleMusic;
+using FocalSonic.LastFM;
+using FocalSonic.Windows;
 using IgniteView.Core;
 using System;
 using System.Collections.Generic;
@@ -22,6 +24,7 @@ namespace FocalSonic.Presence
             #endif
             Instance.RegisterProvider(new DiscordPresenceProvider());
             Instance.RegisterProvider(new AppleMusicPresenceProvider());
+            Instance.RegisterProvider(new LastFMPresenceProvider());
         }
 
         public Presence() { Instance = this; }
@@ -41,7 +44,15 @@ namespace FocalSonic.Presence
 
             foreach (var provider in Providers)
             {
-                provider.UpdateMediaStatus(playbackInfo);
+                try
+                {
+                    provider.UpdateMediaStatus(playbackInfo);
+                }
+                catch (Exception ex)
+                {
+                    // Silent fail but log the error for debugging purposes
+                    Console.WriteLine($"Error updating media status with provider {provider.GetType().Name}: {ex.Message}");
+                }
             }
         }
 
@@ -52,7 +63,14 @@ namespace FocalSonic.Presence
         {
             foreach (var provider in Providers)
             {
-                provider.Scrobble(playbackInfo);
+                try
+                {
+                    provider.Scrobble(playbackInfo);
+                }
+                catch (Exception ex) {
+                    // Silent fail but log the error for debugging purposes
+                    Console.WriteLine($"Error scrobbling with provider {provider.GetType().Name}: {ex.Message}");
+                }
             }
         }
     }
