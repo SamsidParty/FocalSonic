@@ -92,8 +92,8 @@ namespace FocalSonic.AppleMusic
                     !appleMusicPlayer.IsNextSourcePreloaded
                 )
                 {
-                    // Preload
-                    appleMusicPlayer.PreloadNextSource(ctx);
+                    // Preload (Disabled For Now)
+                    //appleMusicPlayer.PreloadNextSource(ctx);
                 }
                 else if (
                     distanceFromEnd <= (NEXT_TRACK_TRANSITION_OFFSET + 1) && // Ensure in transition zone
@@ -101,9 +101,9 @@ namespace FocalSonic.AppleMusic
                     !appleMusicPlayer.IsTransitioning
                 )
                 {
-                    // Transition
-                    appleMusicPlayer.TransitionSources(ctx);
-                }  
+                    // Transition (Disabled For Now)
+                    //appleMusicPlayer.TransitionSources(ctx);
+                }
             }
 
             owningPlayer.HandleTimeUpdate(isPlaying, currentPlaybackTime, currentPlaybackDuration);
@@ -296,7 +296,7 @@ namespace FocalSonic.AppleMusic
             // Close any existing sign in windows
             Program.App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("AppleMusicSignIn")).FirstOrDefault()?.Close();
 
-           await Program.App.InvokeOnMainThread(() => {
+            await Program.App.InvokeOnMainThread(() => {
                 var signInWindow = WebWindow.Create()
                     .WithTitle("Apple Music")
                     .WithURL("https://beta.music.apple.com/us/login")
