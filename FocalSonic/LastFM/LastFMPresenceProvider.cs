@@ -37,12 +37,23 @@ namespace FocalSonic.LastFM
 
             // Send to the API
             var response = await LastFMHttpClient.Instance.CallAPIAsync("track.updateNowPlaying", request);
-            Console.WriteLine(response);
         }
 
         public override async Task Scrobble(MediaPlaybackInfo playbackInfo)
         {
-            if (!IsEnabled) return;
+            if (!IsEnabled || playbackInfo?.CurrentSong == null || playbackInfo!.Duration.TotalSeconds < 30) return;
+
+            var request = new Dictionary<string, string>();
+            request["artist[0]"] = playbackInfo.CurrentSong!.Artist;
+            request["track[0]"] = playbackInfo.CurrentSong!.Title;
+            request["album[0]"] = playbackInfo.CurrentSong!.Album;
+            request["timestamp[0]"] = ((DateTimeOffset)(DateTime.UtcNow - playbackInfo.Position)).ToUnixTimeSeconds().ToString();
+            request["duration[0]"] = playbackInfo.Duration.TotalSeconds.ToString();
+
+            if (playbackInfo.CurrentSong.Track >= 0) request["trackNumber[0]"] = playbackInfo.CurrentSong!.Track.ToString();
+
+            // Send to the API
+            var response = await LastFMHttpClient.Instance.CallAPIAsync("track.scrobble", request);
         }
     }
 }

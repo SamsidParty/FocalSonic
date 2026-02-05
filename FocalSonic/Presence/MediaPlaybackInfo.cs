@@ -34,6 +34,7 @@ namespace FocalSonic.Presence
         public TimeSpan Duration = TimeSpan.Zero;
         public TimeSpan Position = TimeSpan.Zero;
 
+
         // A combination of different values so that when this value changes, then the presence should be updated
         public string PresenceHash
         {

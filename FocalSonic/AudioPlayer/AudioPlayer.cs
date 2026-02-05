@@ -21,6 +21,7 @@ namespace FocalSonic.AudioPlayer
         public string Source;
         public string OutputDevice = "local";
         public bool HasLoaded;
+        public bool HasScrobbled = false;
         public bool Looping;
         public float Volume = 1.0f;
         public float Speed = 1.0f;
@@ -91,6 +92,16 @@ namespace FocalSonic.AudioPlayer
             {
                 if (currentPlaybackTime >= 0) AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", currentPlaybackTime);
                 if (currentPlaybackDuration >= 0) AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "durationupdate", currentPlaybackDuration);
+
+                // Conditions for scrobbling as defined by Last.FM (https://www.last.fm/api/scrobbling):
+                // The track must be longer than 30 seconds.
+                // And the track has been played for at least half its duration, or for 4 minutes(whichever occurs earlier.)
+                var scrobbleThreshold = Math.Min(currentPlaybackDuration / 2, 60 * 4);
+
+                if (!HasScrobbled && currentPlaybackDuration >= 30 && currentPlaybackTime >= scrobbleThreshold) { 
+                    HasScrobbled = true;
+                    Presence.Presence.Instance.Scrobble(MediaPlaybackInfo.Instance); // Don't await this, it's not a critical component and failure is not a big deal either
+                }
             }
 
 
@@ -109,7 +120,6 @@ namespace FocalSonic.AudioPlayer
                 AssociatedWindowID = ctx.ID;
             }
 
-
             await Casting.Casting.LoadMedia(src);
         }
 
@@ -117,6 +127,7 @@ namespace FocalSonic.AudioPlayer
         {
             Source = null;
             HasLoaded = false;
+            HasScrobbled = false;
         }
 
         public virtual async Task PlayAudio() {

@@ -5,7 +5,6 @@ import { ping } from "./applemusic/ping";
 import { playlists } from "./applemusic/playlists";
 import { radios } from "./applemusic/radios";
 import { recommendations } from "./applemusic/recommendations";
-import { scrobble } from "./applemusic/scrobble";
 import { search } from "./applemusic/search";
 import { songs } from "./applemusic/songs";
 import { star } from "./applemusic/star";
@@ -20,6 +19,5 @@ export const appleMusic = {
     artists,
     recommendations,
     radios,
-    scrobble,
     lyrics
 };

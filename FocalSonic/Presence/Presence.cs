@@ -56,8 +56,6 @@ namespace FocalSonic.Presence
             }
         }
 
-        [Command("scrobble")]
-        public static void Scrobble() => Instance.Scrobble(MediaPlaybackInfo.Instance);
 
         public override async Task Scrobble(MediaPlaybackInfo playbackInfo)
         {

@@ -50,7 +50,7 @@ namespace FocalSonic.AudioPlayer
 
         public static async Task UpdateTimeForAllPlayers()
         {
-            foreach (var player in SoundFlowAudioPlayer.ActivePlayers.Values)
+            foreach (var player in AudioPlayer.ActivePlayers.Values)
             {
                 await player.SendTimeUpdate(true);
             }

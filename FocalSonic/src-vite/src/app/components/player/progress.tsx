@@ -1,5 +1,4 @@
 import { ProgressSlider } from "@/app/components/ui/slider";
-import { service } from "@/service/service";
 import { podcasts } from "@/service/subsonic/podcasts";
 import {
     usePlayerActions,
@@ -78,10 +77,6 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
         [currentDuration],
     );
 
-    const sendScrobble = useCallback(async (songId: string) => {
-        await service.scrobble.send(songId);
-    }, []);
-
     const progressTicks = useRef(0);
 
     useEffect(() => {
@@ -102,7 +97,6 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
             progressTicks.current >= 60 * 4) &&
           !isScrobbleSentRef.current
                 ) {
-                    sendScrobble(currentSong.id);
                     isScrobbleSentRef.current = true;
                 }
             }
@@ -111,7 +105,6 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
         progress,
         currentDuration,
         isSong,
-        sendScrobble,
         currentSong.id,
         isPlaying,
     ]);
