@@ -673,18 +673,9 @@
                         audioCapabilities: [
                             {
                                 contentType: 'audio/mp4; codecs="mp4a.40.2"'
-                            },
-                            {
-                                contentType: 'audio/mp4; codecs="ec-3"',
-                                robustness: 'SW_SECURE_DECODE'
                             }
                         ],
-                        videoCapabilities: [
-                            {
-                                contentType: 'video/mp4; codecs="avc1.42E01E"',
-                                robustness: 'SW_SECURE_DECODE'
-                            }
-                        ],
+                        videoCapabilities: [],
                         distinctiveIdentifier: 'optional',
                         persistentState: 'required',
                         sessionTypes: ['temporary']
@@ -717,7 +708,7 @@
         };
         const request = await fetch(tryWrapAppleMusicURL(licenseURL), {
             method: "POST",
-            headers: { ...await getFetchHeaders(), "Content-Type": "application/json", "X-Apple-Renewal": "true" /* Prevents multiple device error on individual plan */ },
+            headers: { ...await getFetchHeaders(), "Content-Type": "application/json" /* Prevents multiple device error on individual plan */ },
             body: JSON.stringify(reqBody),
         });
         const response = await request.json();

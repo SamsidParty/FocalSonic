@@ -55,18 +55,9 @@ export function acquireWidevineAccess() {
                 audioCapabilities: [
                     {
                         contentType: 'audio/mp4; codecs="mp4a.40.2"'
-                    },
-                    {
-                        contentType: 'audio/mp4; codecs="ec-3"',
-                        robustness: 'SW_SECURE_DECODE'
                     }
                 ],
-                videoCapabilities: [
-                    {
-                        contentType: 'video/mp4; codecs="avc1.42E01E"',
-                        robustness: 'SW_SECURE_DECODE'
-                    }
-                ],
+                videoCapabilities: [],
                 distinctiveIdentifier: 'optional' as MediaKeysRequirement,
                 persistentState: 'required' as MediaKeysRequirement,
                 sessionTypes: ['temporary' as MediaKeySessionType]
