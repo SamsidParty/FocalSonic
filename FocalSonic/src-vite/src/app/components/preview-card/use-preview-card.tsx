@@ -1,3 +1,4 @@
+import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
@@ -10,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 export default function usePreviewCard() {
 
     const { setSongList, setPlayAppleMusicRadio } = usePlayerActions();
+    const { playArtistRadio } = usePlayArtistRadio();
     const { t } = useTranslation();
     const { isAppleMusic } = checkServerType();
     const navigate = useNavigate();
@@ -29,6 +31,10 @@ export default function usePreviewCard() {
                 setSongList(response.entry, 0);
                 return;
             }
+        }
+        else if (entry.type?.includes("artist") && entry.id) {
+            playArtistRadio(entry);
+            return;
         }
         else if (entry.id && entry.isDir) {
             const response = await service.albums.getOne(entry.id);

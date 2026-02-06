@@ -1,5 +1,5 @@
 import { Actions } from "@/app/components/actions";
-import { useSongList } from "@/app/hooks/use-song-list";
+import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
 import { service } from "@/service/service";
 import { useAppPages } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
@@ -24,8 +24,7 @@ export function ArtistButtons({
     const { t } = useTranslation();
     const { setSongList } = usePlayerActions();
     const { showInfoPanel, toggleShowInfoPanel } = useAppPages();
-    const { getArtistAllSongs } = useSongList();
-    const { setPlayAppleMusicRadio } = usePlayerActions();
+    const { playArtistRadio } = usePlayArtistRadio();
     const { isAppleMusic } = checkServerType();
 
     const isArtistStarred = artist.starred !== undefined;
@@ -49,20 +48,6 @@ export function ArtistButtons({
         });
     }
 
-    async function handlePlayArtistRadio(shuffle = false) {
-
-        if (isAppleMusic) {
-            const station = "ra.a-" + artist.id;
-            setPlayAppleMusicRadio({ id: station });
-            return;
-        }
-
-        const songList = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
-
-        if (songList) {
-            setSongList(songList, 0, shuffle);
-        }
-    }
 
     const buttonsTooltips = {
         play: t("playlist.buttons.play", { name: artist.name }),
@@ -87,7 +72,7 @@ export function ArtistButtons({
             <Actions.Button
                 tooltip={buttonsTooltips.play}
                 buttonStyle="primary"
-                onClick={() => handlePlayArtistRadio()}
+                onClick={() => playArtistRadio(artist)}
             >
                 <Actions.PlayIcon />
             </Actions.Button>

@@ -16,7 +16,7 @@ import { useAlbumsListModel } from "./list.model";
 export default function AlbumsList() {
     const { isLoading, isEmpty, albums, albumsCount } = useAlbumsListModel();
 
-    const { displayMode, setDisplayMode } = useListDisplayMode("primary_albums");
+    const { displayMode, setDisplayMode } = useListDisplayMode("primary_albums", "3dshelf");
 
     if (isLoading) return <AlbumsFallback />;
     if (isEmpty) return <EmptyAlbums />;

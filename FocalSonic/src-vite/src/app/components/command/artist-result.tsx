@@ -1,4 +1,5 @@
 import { CommandGroup, CommandItem } from "@/app/components/ui/command";
+import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
@@ -24,11 +25,7 @@ export function CommandArtistResult({
     const { getArtistAllSongs } = useSongList();
     const { setSongList } = usePlayerActions();
     const { isAppleMusic } = checkServerType();
-
-    async function handlePlayArtistRadio(artist: ISimilarArtist) {
-        const artistSongs = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
-        if (artistSongs) setSongList(artistSongs, 0);
-    }
+    const { playArtistRadio } = usePlayArtistRadio();
 
     return (
         <CustomGroup>
@@ -53,7 +50,7 @@ export function CommandArtistResult({
                       artist={t("artist.info.albumsCount", {
                           count: artist.albumCount,
                       })}
-                      onClick={() => handlePlayArtistRadio(artist)}
+                      onClick={() => playArtistRadio(artist)}
                   />
               </CommandItem>
           ))}

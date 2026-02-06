@@ -1,11 +1,12 @@
 import { getCoverArtUrl } from "@/api/httpClient";
 import { PreviewCard } from "@/app/components/preview-card/card";
+import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
 import { ISimilarArtist } from "@/types/responses/artist";
 import { checkServerType } from "@/utils/servers";
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 type ArtistCardProps = {
@@ -17,14 +18,7 @@ function ArtistCard({ artist }: ArtistCardProps) {
     const { getArtistAllSongs } = useSongList();
     const { setSongList } = usePlayerActions();
     const { isAppleMusic } = checkServerType();
-
-    const handlePlayArtistRadio = useCallback(async () => {
-        const songList = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
-
-        if (songList) {
-            setSongList(songList, 0);
-        }
-    }, [artist.name, getArtistAllSongs, setSongList]);
+    const { playArtistRadio } = usePlayArtistRadio();
 
     return (
         <PreviewCard.Root className="flex flex-col w-full h-full">
@@ -33,7 +27,7 @@ function ArtistCard({ artist }: ArtistCardProps) {
                     src={getCoverArtUrl(artist.coverArt, "artist")}
                     alt={artist.name}
                 />
-                <PreviewCard.PlayButton onClick={handlePlayArtistRadio} />
+                <PreviewCard.PlayButton onClick={() => playArtistRadio(artist)} />
             </PreviewCard.ImageWrapper>
             <PreviewCard.InfoWrapper>
                 <PreviewCard.Title link={ROUTES.ARTIST.PAGE(artist.id)}>

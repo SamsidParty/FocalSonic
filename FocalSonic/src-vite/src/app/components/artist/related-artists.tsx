@@ -7,13 +7,13 @@ import {
     CarouselItem,
 } from "@/app/components/ui/carousel";
 import { CarouselButton } from "@/app/components/ui/carousel-button";
+import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
 import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
 import { usePlayerActions } from "@/store/player.store";
 import { ISimilarArtist } from "@/types/responses/artist";
 import { checkServerType } from "@/utils/servers";
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface RelatedArtistsListProps {
     title: string
@@ -31,15 +31,12 @@ export default function RelatedArtistsList({
     const [canScrollNext, setCanScrollNext] = useState<boolean>();
     const { setSongList } = usePlayerActions();
     const { isAppleMusic } = checkServerType();
+    const { playArtistRadio } = usePlayArtistRadio();
 
     if (similarArtists.length > 16) {
         similarArtists = similarArtists.slice(0, 16);
     }
 
-    async function handlePlayArtistRadio(artist: ISimilarArtist) {
-        const songList = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
-        if (songList) setSongList(songList, 0);
-    }
 
     useEffect(() => {
         if (!api) {
@@ -95,7 +92,7 @@ export default function RelatedArtistsList({
                                             alt={artist.name}
                                         />
                                         <PreviewCard.PlayButton
-                                            onClick={() => handlePlayArtistRadio(artist)}
+                                            onClick={() => playArtistRadio(artist)}
                                         />
                                     </PreviewCard.ImageWrapper>
                                     <PreviewCard.InfoWrapper>
