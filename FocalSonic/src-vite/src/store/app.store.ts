@@ -1,5 +1,6 @@
 import { pingServer } from "@/api/pingServer";
 import { queryServerInfo } from "@/api/queryServerInfo";
+import { ListDisplayMode } from "@/types/listDisplayMode";
 import { AuthType, IAppContext, IServerConfig } from "@/types/serverConfig";
 import { logger } from "@/utils/logger";
 import {
@@ -154,7 +155,13 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                             set((state) => {
                                 state.settings.extraBarContent = value;
                             });
-                        }
+                        },
+                        listDisplayModes: {} as Record<string, ListDisplayMode>,
+                        setListDisplayMode: (listName, mode) => {
+                            set((state) => {
+                                state.settings.listDisplayModes[listName] = mode;
+                            });
+                        }   
                     },
                     runtimeState: {
                         settingsDialogState: false,

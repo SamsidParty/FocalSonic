@@ -1,4 +1,5 @@
 import { SettingsOptions } from "@/app/components/settings/options";
+import { ListDisplayMode } from "./listDisplayMode";
 
 export type ExtraBarContent = "none" | "lyrics" | "queue" | "effects";
 
@@ -90,6 +91,8 @@ export interface IAppSettings {
     setExtraBarContent: (value: ExtraBarContent) => void
     lyricBackgroundIntensity: number
     setLyricBackgroundIntensity: (value: number) => void
+    listDisplayModes: Record<string, ListDisplayMode>
+    setListDisplayMode: (listName: string, mode: ListDisplayMode) => void
 }
 
 export interface IAppContext {

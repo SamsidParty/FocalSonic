@@ -8,15 +8,15 @@ import usePreviewCard from "@/app/components/preview-card/use-preview-card";
 import { DataTableList } from "@/app/components/ui/data-table-list";
 import { songsColumns } from "@/app/tables/songs-columns";
 import { ColumnFilter } from "@/types/columnFilter";
-import { ListDisplayMode } from "@/types/listDisplayMode";
+import { useListDisplayMode } from "@/types/listDisplayMode";
 import { t } from "i18next";
-import React, { useState } from "react";
+import React from "react";
 import { useAlbumsListModel } from "./list.model";
 
 export default function AlbumsList() {
     const { isLoading, isEmpty, albums, albumsCount } = useAlbumsListModel();
 
-    const [displayMode, setDisplayMode] = useState<ListDisplayMode>("grid");
+    const { displayMode, setDisplayMode } = useListDisplayMode("primary_albums");
 
     if (isLoading) return <AlbumsFallback />;
     if (isEmpty) return <EmptyAlbums />;

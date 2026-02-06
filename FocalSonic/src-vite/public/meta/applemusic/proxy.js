@@ -38712,6 +38712,7 @@
                     body: JSON.stringify(body),
                 }).then(res => res.json())
             ]);
+            console.log("[FocalMK] Web playback response:", webPlaybackResponse);
             // Merge enhanced HLS assets into the response if available
             if (enhancedHls && webPlaybackResponse?.songList?.[0]?.assets) {
                 enhancedHls.forEach((asset) => webPlaybackResponse.songList[0].assets.push(asset));
