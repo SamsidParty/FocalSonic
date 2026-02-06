@@ -19,7 +19,13 @@ export default function Login() {
                     </div>
                 </header>
             )}
-            <main className="flex flex-col w-full h-full justify-center items-center bg-body">
+            <main className="flex flex-col w-full h-full justify-center items-center bg-bar">
+
+                {/* Blurred logo effect */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 blur-[120px] saturate-150 opacity-40">
+                    <div className="rounded-full w-[50vh] h-[50vh] bg-[#7C81F5]"/>
+                </div>
+
                 <LoginForm />
             </main>
         </div>

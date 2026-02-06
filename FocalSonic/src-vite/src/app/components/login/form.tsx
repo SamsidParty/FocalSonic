@@ -1,22 +1,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Loader2, Music } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { queryServerInfo } from "@/api/queryServerInfo";
-import { LangToggle } from "@/app/components/login/lang-toggle";
 import { Button } from "@/app/components/ui/button";
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+    CardFooter
 } from "@/app/components/ui/card";
 import {
     Dialog,
@@ -42,6 +38,7 @@ import { isTauri } from "@/utils/tauriTools";
 import isWidevineSupported from "@/utils/widevine";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { AppleMusicIconLarge } from "../icons/apple";
 import { Separator } from "../ui/separator";
 
 const loginSchema = z.object({
@@ -148,18 +145,9 @@ export function LoginForm() {
 
     return (
         <>
-            <Card className="w-[450px] bg-background-foreground">
+            <Card className="z-20 bg-transparent border-none shadow-none">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit((data) => onSubmit(data))}>
-                        <CardHeader className="flex">
-                            <CardTitle className="flex flex-row justify-between items-center">
-                                {t("login.form.server")}
-                                <div className="flex gap-2 items-center">
-                                    <LangToggle />
-                                </div>
-                            </CardTitle>
-                            <CardDescription>{t("login.form.description")}</CardDescription>
-                        </CardHeader>
 
                         {
                             enableSubsonic && (
@@ -256,10 +244,14 @@ export function LoginForm() {
                                 )
                             }
 
-                            <img src="/screenshots/screenshot-home.webp" alt="FocalSonic Preview" className="w-full h-auto rounded-lg overflow-hidden" />
-                            <Button type="button" onClick={signInToAppleMusic} className="w-full bg-[#FC3C44]" disabled={loading}>
-                                <Music className="mr-2 h-4 w-4" />
+                            <div className="flex flex-col gap-2 items-center justify-center">
+                                <img src="/favicon.png" alt="FocalSonic Logo" className="w-[12rem] rounded-lg overflow-hidden" />
+                                <h1 className="text-[3rem] font-bold font-[EpicPro]">FocalSonic</h1>
+                            </div>
+                            <Button type="button" onClick={signInToAppleMusic} className="w-full bg-[#ff0436]" style={{ "--foreground": "white" }} disabled={loading}>
                                 {t("login.appleMusic.connect")}
+                                <span className="ml-1"/>
+                                <AppleMusicIconLarge />
                             </Button>
                         </CardFooter>
 

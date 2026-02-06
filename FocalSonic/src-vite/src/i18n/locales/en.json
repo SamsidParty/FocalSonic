@@ -407,8 +407,8 @@
       }
     },
     "appleMusic": {
-      "connect": "Sign in with Apple Music",
-      "loading": "Signing you into apple music...",
+      "connect": "Continue with",
+      "loading": "Signing you into Apple Music...",
       "loadingDescription": "This can take up to 30 seconds",
       "loadingStuck": "If loading seems stuck,",
       "resolveIssues": "click here to log out",
