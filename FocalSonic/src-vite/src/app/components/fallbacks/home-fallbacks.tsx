@@ -24,9 +24,7 @@ export function HeaderFallback() {
 
 export function HomeFallback() {
     return (
-        <div className="w-full px-8 py-6">
-            <HeaderFallback />
-
+        <div className="w-full px-8">
             <PreviewListFallback />
             <PreviewListFallback />
             <PreviewListFallback />

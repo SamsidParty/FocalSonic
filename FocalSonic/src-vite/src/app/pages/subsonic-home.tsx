@@ -1,8 +1,6 @@
 import {
-    HeaderFallback,
-    PreviewListFallback,
+    PreviewListFallback
 } from "@/app/components/fallbacks/home-fallbacks";
-import HomeHeader from "@/app/components/home/carousel/header";
 import PreviewList from "@/app/components/home/preview-list";
 import {
     useGetMostPlayed,
@@ -52,13 +50,7 @@ export default function SubsonicHome() {
     ];
 
     return (
-        <div className="w-full px-8 py-6">
-            {isFetching || isLoading ? (
-                <HeaderFallback />
-            ) : (
-                <HomeHeader songs={randomSongs || []} />
-            )}
-
+        <div className="w-full px-8">
             {sections.map((section) => {
                 if (section.loader) {
                     return <PreviewListFallback key={section.title} />;
@@ -71,6 +63,7 @@ export default function SubsonicHome() {
                         key={section.title}
                         title={section.title}
                         moreRoute={section.route}
+                        showMore={false}
                         list={section.data.list}
                     />
                 );

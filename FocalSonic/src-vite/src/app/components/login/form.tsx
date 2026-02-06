@@ -39,7 +39,6 @@ import isWidevineSupported from "@/utils/widevine";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { AppleMusicIconLarge } from "../icons/apple";
-import { Separator } from "../ui/separator";
 
 const loginSchema = z.object({
     url: z
@@ -149,6 +148,19 @@ export function LoginForm() {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit((data) => onSubmit(data))}>
 
+
+                        <CardFooter className="flex flex-col gap-5">
+                            <div className="flex flex-col gap-2 items-center justify-center">
+                                <img src="/favicon.png" alt="FocalSonic Logo" className="w-[12rem] rounded-lg overflow-hidden" />
+                                <h1 className="text-[3rem] font-bold font-[EpicPro] text-white">FocalSonic</h1>
+                            </div>
+                            <Button type="button" onClick={signInToAppleMusic} className="w-full bg-[#ff0436]" style={{ "--foreground": "white" }} disabled={loading}>
+                                {t("login.appleMusic.connect")}
+                                <span className="ml-1"/>
+                                <AppleMusicIconLarge />
+                            </Button>
+                        </CardFooter>
+
                         {
                             enableSubsonic && (
                                 <CardContent className="space-y-2">
@@ -219,41 +231,20 @@ export function LoginForm() {
                                             </FormItem>
                                         )}
                                     />
+
+                                    <Button type="submit" className="w-full" disabled={loading}>
+                                        {loading ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                {t("login.form.connecting")}
+                                            </>
+                                        ) : (
+                                            <>{t("login.form.connect")}</>
+                                        )}
+                                    </Button>
                                 </CardContent>
                             )
                         }
-
-
-                        <CardFooter className="flex flex-col gap-5">
-                            {
-                                enableSubsonic && (
-                                    <>
-                                        <Button type="submit" className="w-full" disabled={loading}>
-                                            {loading ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    {t("login.form.connecting")}
-                                                </>
-                                            ) : (
-                                                <>{t("login.form.connect")}</>
-                                            )}
-                                        </Button>
-
-                                        <Separator />
-                                    </>
-                                )
-                            }
-
-                            <div className="flex flex-col gap-2 items-center justify-center">
-                                <img src="/favicon.png" alt="FocalSonic Logo" className="w-[12rem] rounded-lg overflow-hidden" />
-                                <h1 className="text-[3rem] font-bold font-[EpicPro] text-white">FocalSonic</h1>
-                            </div>
-                            <Button type="button" onClick={signInToAppleMusic} className="w-full bg-[#ff0436]" style={{ "--foreground": "white" }} disabled={loading}>
-                                {t("login.appleMusic.connect")}
-                                <span className="ml-1"/>
-                                <AppleMusicIconLarge />
-                            </Button>
-                        </CardFooter>
 
                     </form>
                 </Form>
