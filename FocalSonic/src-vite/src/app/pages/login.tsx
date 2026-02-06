@@ -2,6 +2,7 @@ import { Windows } from "@/app/components/controls/windows";
 import { LoginForm } from "@/app/components/login/form";
 import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { isLinux, isWindows } from "@/utils/osType";
+import { SwirlBackdrop } from "../components/fullscreen/backdrop";
 import DefaultTitlebar from "../components/header/default-titlebar";
 
 export default function Login() {
@@ -19,13 +20,8 @@ export default function Login() {
                     </div>
                 </header>
             )}
-            <main className="flex flex-col w-full h-full justify-center items-center bg-bar">
-
-                {/* Blurred logo effect */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 blur-[120px] saturate-150 opacity-40">
-                    <div className="rounded-full w-[50vh] h-[50vh] bg-[#7C81F5]"/>
-                </div>
-
+            <main className="flex flex-col w-full h-full justify-center items-center bg-bar relative">
+                <SwirlBackdrop overrideArtSample="/favicon.png" />
                 <LoginForm />
             </main>
         </div>

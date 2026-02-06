@@ -246,7 +246,7 @@ export function LoginForm() {
 
                             <div className="flex flex-col gap-2 items-center justify-center">
                                 <img src="/favicon.png" alt="FocalSonic Logo" className="w-[12rem] rounded-lg overflow-hidden" />
-                                <h1 className="text-[3rem] font-bold font-[EpicPro]">FocalSonic</h1>
+                                <h1 className="text-[3rem] font-bold font-[EpicPro] text-white">FocalSonic</h1>
                             </div>
                             <Button type="button" onClick={signInToAppleMusic} className="w-full bg-[#ff0436]" style={{ "--foreground": "white" }} disabled={loading}>
                                 {t("login.appleMusic.connect")}

@@ -9,7 +9,8 @@ import VideoBackground from "./video-background.js";
 let GlobalLyricsScene: LyricsScene = null;
 
 interface BackdropProps {
-    lightenBackground: boolean
+    lightenBackground: boolean,
+    overrideArtSample?: string
 }
 
 export function useFullscreenBackdrop(props: BackdropProps) {
@@ -36,11 +37,11 @@ export function useFullscreenBackdrop(props: BackdropProps) {
     }, [useDynamicColorsOnQueue, props]);
 }
 
-function SwirlBackdrop(props: BackdropProps) {
+export function SwirlBackdrop(props: BackdropProps) {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { coverArt } = usePlayerCurrentSong();
-    const coverArtUrl = getCoverArtUrl(coverArt, "song", "300");
+    const coverArtUrl = props.overrideArtSample || getCoverArtUrl(coverArt, "song", "300");
 
     useEffect(() => {
         if (canvasRef.current && !GlobalLyricsScene) {
