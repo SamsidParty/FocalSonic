@@ -17,7 +17,7 @@ type SliderProps = React.ComponentPropsWithoutRef<
 > & {
     variant?: Variant
     tooltipValue?: string
-    handleStyle?: "default" | "large"
+    handleStyle?: "default" | "default-always-visible" | "large"
 }
 
 const Slider = React.forwardRef<
@@ -74,7 +74,7 @@ const Slider = React.forwardRef<
                         "border-2 ring-offset-background transition-[background-color,opacity]",
                         "focus-visible:outline-none focus-visible:ring-transparent",
                         "disabled:pointer-events-none disabled:opacity-50 transform-gpu",
-                        (showTooltip || handleStyle === "large") && "opacity-100",
+                        (showTooltip || handleStyle === "large" || handleStyle.includes("always-visible")) && "opacity-100",
                         variant === "default" && "bg-foreground border-foreground",
                         variant === "secondary" && "bg-secondary-foreground border-secondary-foreground",
                         handleStyle === "large" ? "h-5 w-10 shadow-lg" : "h-3 w-3",

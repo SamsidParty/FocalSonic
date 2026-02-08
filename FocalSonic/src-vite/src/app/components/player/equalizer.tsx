@@ -1,4 +1,5 @@
-import { usePlayerFilterData, usePlayerRef } from "@/store/player.store";
+import { cn } from "@/lib/utils";
+import { usePlayerFilterData, usePlayerRef, usePlayerSpeed } from "@/store/player.store";
 import clsx from "clsx";
 import {
     CompositeCurve,
@@ -11,7 +12,10 @@ import {
     GraphThemeOverride
 } from "dsssp";
 import React, { useState } from "react";
+import { Button } from "../ui/button";
+import { Slider } from "../ui/slider";
 import EffectSliders from "./effect-sliders";
+
 
 const getCSSColor = (col: string) => window.getComputedStyle(document.documentElement).getPropertyValue(col);
 
@@ -59,13 +63,16 @@ const scale = {
 };
 
 const defaultPreset: GraphFilter[] = [
-    { freq: 100, gain: 0, q: 0.7, type: "PEAK" },
-    { freq: 200, gain: 0, q: 0.7, type: "PEAK" },
-    { freq: 400, gain: 0, q: 0.7, type: "PEAK" },
-    { freq: 800, gain: 0, q: 0.7, type: "PEAK" },
-    { freq: 1600, gain: 0, q: 0.7, type: "PEAK" },
-    { freq: 3200, gain: 0, q: 0.7, type: "PEAK" },
-    { freq: 6400, gain: 0, q: 0.7, type: "PEAK" }
+    { freq: 31, gain: 0, q: 1.41, type: "PEAK" },   // Sub-bass
+    { freq: 62, gain: 0, q: 1.41, type: "PEAK" },   // Bass
+    { freq: 125, gain: 0, q: 1.41, type: "PEAK" },  // Low-mids
+    { freq: 250, gain: 0, q: 1.41, type: "PEAK" },  // Low-mids
+    { freq: 500, gain: 0, q: 1.41, type: "PEAK" },  // Midrange
+    { freq: 1000, gain: 0, q: 1.41, type: "PEAK" }, // Midrange
+    { freq: 2000, gain: 0, q: 1.41, type: "PEAK" }, // Upper-mids
+    { freq: 4000, gain: 0, q: 1.41, type: "PEAK" }, // Presence
+    { freq: 8000, gain: 0, q: 1.41, type: "PEAK" }, // Brilliance
+    { freq: 16000, gain: 0, q: 1.41, type: "PEAK" } // Air/Extreme Highs
 ];
 
 const glowFilter = () => ({
@@ -79,6 +86,7 @@ export default function Equalizer({ orientation = "vertical" }: { orientation?: 
 
     const { filterData, setFilterData } = usePlayerFilterData();
     const [filters, setFilters] = useState(filterData ? JSON.parse(filterData) : defaultPreset);
+    const { speed, setSpeed } = usePlayerSpeed();
     const playerRef = usePlayerRef();
 
     const reverb = filters[0]?.reverb || 0;
@@ -95,6 +103,7 @@ export default function Equalizer({ orientation = "vertical" }: { orientation?: 
         setFilters([...filters]);
     };
 
+    
     const handleFilterChange = (filterEvent: FilterChangeEvent) => {
         const { index, ...filter } = filterEvent;
 
@@ -106,78 +115,142 @@ export default function Equalizer({ orientation = "vertical" }: { orientation?: 
         });
     };
 
+    const resetFilters = () => {
+        setReverb(0);
+        setSpeed(1);
+        setImpulse("");
+        setFilterData(JSON.stringify(defaultPreset));
+        setFilters([...defaultPreset]);
+    };
+
+    const EqualizerComponent = SliderBasedEqualizer;
 
     return (
-        <div className={clsx("flex flex-col justify-center", orientation == "horizontal" ? "h-full frequency-graph" : "")}>
-            <FrequencyResponseGraph
-                width={orientation == "vertical" ? 268 : 600}
-                height={orientation == "vertical" ? 350 : 268}
-                scale={scale}
-                theme={theme}
-                className={clsx(
-                    "overflow-visible",
-                    orientation == "horizontal" ? "self-center" : ""
-                )}
-            >
-                <FilterGradient
-                    fill
-                    opacity={0.2}
-                    color={getCSSColor("--primary")}
-                    id="composite-curve"
-                />
-                <CompositeCurve
-                    color={getCSSColor("--primary")}
-                    filters={filters}
-                    gradientId="composite-curve"
-                />
-                <CompositeCurve
-                    color={getCSSColor("--primary")}
-                    filters={filters}
-                    style={glowFilter()}
-                />
+        <div className={clsx("flex flex-col justify-center items-center", orientation == "horizontal" ? "h-full frequency-graph" : "")}>
+            <EqualizerComponent handleFilterChange={handleFilterChange} filters={filters} orientation={orientation} />
+            <EffectSliders reverb={reverb} setReverb={setReverb} impulse={impulse} setImpulse={setImpulse} orientation={orientation} />
+            <Button className="mx-4 mt-2" onClick={resetFilters}>Reset</Button>
+        </div>
+    );
+}
 
+function SliderBasedEqualizer({
+    handleFilterChange,
+    filters,
+}: {
+    handleFilterChange: (event: FilterChangeEvent) => void;
+    filters: GraphFilter[];
+}) {
+
+    const maxDB = 16;
+
+    const formatHz = (freq: number) => {
+        if (freq >= 1000) {
+            return `${(freq / 1000).toFixed(0)}\nkHz`;
+        }
+        return `${freq}\nHz`;
+    };
+
+    return (
+        <div className={clsx("flex items-end justify-between px-4 my-4 flex-col w-full max-w-[28rem]")}>
+            <div className={clsx("flex items-end w-full justify-between")}>
                 {filters.map((filter, index) => (
-                    <FilterPoint
-                        key={index}
+                    <div key={index} className="flex flex-col items-center select-none min-w-[1.5rem]">
+                        <div className="text-[8px] mb-2 text-center whitespace-pre">{formatHz(Math.round(filter.freq))}</div>
+
+                        <div className="flex items-center">
+                            <Slider
+                                className={cn(
+                                    "cursor-pointer h-full h-40"
+                                )}
+                                tooltipValue={filter.gain.toString()}
+                                value={[filter.gain]}
+                                min={-maxDB}
+                                max={maxDB}
+                                step={0.01}
+                                orientation="vertical"  
+                                handleStyle="default-always-visible"  
+                                onValueChange={([value]) => handleFilterChange({ index, gain: value } as unknown as FilterChangeEvent)}
+                            />
+                        </div>
+
+                        <div className="text-[8px] mt-2 text-center whitespace-pre">{filter.gain.toFixed(1)}<br/>dB</div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function GraphEqualizer({ handleFilterChange, filters, orientation }: { handleFilterChange: (event: FilterChangeEvent) => void, filters: GraphFilter[], orientation: "horizontal" | "vertical" }) {
+    
+    return (
+        <FrequencyResponseGraph
+            width={orientation == "vertical" ? 268 : 600}
+            height={orientation == "vertical" ? 350 : 268}
+            scale={scale}
+            theme={theme}
+            className={clsx(
+                "overflow-visible",
+                orientation == "horizontal" ? "self-center" : ""
+            )}
+        >
+            <FilterGradient
+                fill
+                opacity={0.2}
+                color={getCSSColor("--primary")}
+                id="composite-curve"
+            />
+            <CompositeCurve
+                color={getCSSColor("--primary")}
+                filters={filters}
+                gradientId="composite-curve"
+            />
+            <CompositeCurve
+                color={getCSSColor("--primary")}
+                filters={filters}
+                style={glowFilter()}
+            />
+
+            {filters.map((filter, index) => (
+                <FilterPoint
+                    key={index}
+                    index={index}
+                    filter={filter}
+                    radius={4}
+                    color={getCSSColor("--primary")}
+                    dragColor="#ffffff"
+                    activeColor="#ffffff"
+                    background="transparent"
+                    dragBackground="transparent"
+                    activeBackground="transparent"
+                    backgroundOpacity={1}
+                    dragBackgroundOpacity={1}
+                    activeBackgroundOpacity={1}
+                    onChange={handleFilterChange}
+                />
+            ))}
+
+            {filters.map((filter, index) => (
+                <>
+                    <FilterGradient
+                        fill
+                        key={index + "_gradient"}
                         index={index}
                         filter={filter}
-                        radius={4}
-                        color={getCSSColor("--primary")}
-                        dragColor="#ffffff"
-                        activeColor="#ffffff"
-                        background="transparent"
-                        dragBackground="transparent"
-                        activeBackground="transparent"
-                        backgroundOpacity={1}
-                        dragBackgroundOpacity={1}
-                        activeBackgroundOpacity={1}
-                        onChange={handleFilterChange}
+                        id={`filter-${index}`}
                     />
-                ))}
 
-                {filters.map((filter, index) => (
-                    <>
-                        <FilterGradient
-                            fill
-                            key={index + "_gradient"}
-                            index={index}
-                            filter={filter}
-                            id={`filter-${index}`}
-                        />
-
-                        <FilterCurve
-                            showPin
-                            key={index + "_curve"}
-                            index={index}
-                            filter={filter}
-                            active={false}
-                            gradientId={`filter-${index}`}
-                        />
-                    </>
-                ))}
-            </FrequencyResponseGraph>
-
-            <EffectSliders reverb={reverb} setReverb={setReverb} impulse={impulse} setImpulse={setImpulse} orientation={orientation} />
-        </div>
+                    <FilterCurve
+                        showPin
+                        key={index + "_curve"}
+                        index={index}
+                        filter={filter}
+                        active={false}
+                        gradientId={`filter-${index}`}
+                    />
+                </>
+            ))}
+        </FrequencyResponseGraph>
     );
 }

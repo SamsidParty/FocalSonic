@@ -42,7 +42,7 @@ export default function EffectSliders(props: EffectSliderControls) {
     };
 
     return (
-        <div className={clsx("flex px-4 gap-2", props.orientation == "horizontal" ? "flex-row justify-center" : "flex-col")}>
+        <div className={clsx("flex px-4 gap-2 w-full", props.orientation == "horizontal" ? "flex-row justify-center" : "flex-col")}>
             <div className={clsx("flex flex-row gap-2")}>
                 <EffectControlContainerVertical isActive={speed > 0} onToggle={() => setSpeed(-speed)}>
                     <Label>{t("player.effects.speed")}</Label>
