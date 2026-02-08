@@ -29,7 +29,7 @@ export function MainDrawerPage() {
     const { isPlayerAtTop, isMiniPlayer, playerStyle } = usePlayerStyle();
     const { hideAlbumArt } = useCustomFullscreenBackground();
     const hasExtraContent = extraBarContent != "none";
-    const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: queueState });
+    const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: extraBarContent == "queue" || extraBarContent == "effects" });
 
     return (
         <Drawer
