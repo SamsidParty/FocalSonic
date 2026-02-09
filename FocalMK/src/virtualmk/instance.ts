@@ -1,4 +1,5 @@
 import { getAudioElement } from "../helpers/dom";
+import handleError from "../helpers/error-handler";
 import { getAudioEffectController } from "../playback/audio-effects.js";
 import { QueueItem, QueueItemParam } from "./types";
 import { PlaybackStates } from "./virtualmk-constants";
@@ -186,7 +187,7 @@ export class MusicKitInstance {
             currentEffectCtrl.adjustVolume(0, fadeDuration);
             nextEffectCtrl.adjustVolume(1, fadeDuration);
         }).catch((error) => {
-            console.error("[FocalMK] Error during source transition:", error);
+            handleError(error);
         });
     }
 

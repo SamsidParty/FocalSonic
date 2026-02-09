@@ -6,7 +6,7 @@ import typescript from '@rollup/plugin-typescript';
 export default {
     input: 'src/index.ts',
     output: {
-        file: 'dist/focalmk.js',
+        file: '../FocalSonic/src-vite/public/meta/applemusic/proxy.js',
         format: 'umd',
         name: 'focalmk',
     },

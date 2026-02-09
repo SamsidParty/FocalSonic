@@ -1,5 +1,6 @@
 import { base64ToUint8Array } from "../helpers/base64";
 import { appleMagic1, appleMagic2 } from "../helpers/constants";
+import handleError from "../helpers/error-handler";
 
 
 export function getWebPlaybackPssh() {
@@ -16,11 +17,11 @@ export function getEnhancedPssh(licenseURL: string) {
         const base64Decoded = base64ToUint8Array(split[1]);
         return base64Decoded;
     }
-    throw new Error("Invalid enhanced PSSH license URL");
+    handleError("Invalid enhanced PSSH license URL", true);
 }
 
 export function getPssh(licenseURL: string) {
-    if (!licenseURL) throw new Error("No license URL provided for PSSH generation");
+    if (!licenseURL) handleError("No license URL provided for PSSH generation", true);
     if (licenseURL.startsWith("enhanced/")) {
         return getEnhancedPssh(licenseURL.replace("enhanced/", ""));
     }

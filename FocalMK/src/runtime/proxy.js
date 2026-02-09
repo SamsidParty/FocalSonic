@@ -1,4 +1,5 @@
 import { getAudioElement } from "../helpers/dom.js";
+import handleError from "../helpers/error-handler.ts";
 import { getAudioEffectController } from "../playback/audio-effects.js";
 
 window.isCurrentSongRadio = false;
@@ -31,12 +32,12 @@ async function onMusicKitLoad() {
 
     // This doesn't even work bruh and Apple has horrible documentation so I don't know how to fix it
     window.proxyMusicInstance.addEventListener("mediaPlaybackError", (error) => {
-        console.error(`Apple music MKError: ${error}`);
+        handleError(error);
     });
 
     window.addEventListener("unhandledrejection", function (e) {
         if (e.reason.name === "MKError") {
-            window.igniteView?.commandBridge.displayError("Something went wrong with Apple Music", e.reason.reason);
+            handleError(e);
             e.preventDefault();
         }
     })

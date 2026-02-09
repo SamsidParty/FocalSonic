@@ -1,4 +1,5 @@
 import { tryAcquireLicense } from "../drm/license";
+import handleError from "../helpers/error-handler";
 import Hls from "../playback/hls.js";
 import { isAtmosEnabled } from "./atmos";
 import { base64ToUint8Array, uint8ArrayToBase64 } from "./base64";
@@ -120,6 +121,28 @@ export function createHlsInstance(audio: HTMLAudioElement): FocalHls {
         }
 
         tryAcquireLicense(instance);
+    });
+
+    // Propagate fatal HLS errors to the global handler so playback can show a message
+    instance.on(Hls.Events.ERROR, (event, data) => {
+        console.error("HLS error event:", data);
+
+        // If the didn't occur on the primary audio element, ignore it
+        if (getActiveHlsInstance() !== instance) {
+            console.warn("Ignoring HLS error from non-active instance");
+            return;
+        }
+
+        try {
+            if (data && (data as any).fatal) {
+                const details = (data as any).error?.message || JSON.stringify(data);
+                handleError(details);
+            }
+        }
+        catch (e) {
+            // Swallow handler errors but log
+            console.error("Error while handling HLS error:", e);
+        }
     });
 
     return instance;

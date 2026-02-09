@@ -1,4 +1,5 @@
 import { getAudioElement } from "../helpers/dom";
+import handleError from "../helpers/error-handler";
 import { FocalHls } from "../helpers/hls-instance";
 import { findBestContentSource, getContentSources } from "../helpers/sources";
 import Hls from "../playback/hls.js";
@@ -7,7 +8,7 @@ export async function loadContent(hls: FocalHls, contentID: string) {
     try {
         const sources = await getContentSources(contentID);
         const mainSource = findBestContentSource(sources);
-        if (!mainSource) throw new Error("[FocalMK] No valid content source found");
+        if (!mainSource) handleError("[FocalMK] No valid content source found", true);
 
         let sourceURL = mainSource.bestAsset?.URL;
         
@@ -35,6 +36,6 @@ export async function loadContent(hls: FocalHls, contentID: string) {
     }
     catch (err) {
         // TODO: Handle error
-        console.error("Error loading content:", err);
+        handleError(err as Error);
     }
 }

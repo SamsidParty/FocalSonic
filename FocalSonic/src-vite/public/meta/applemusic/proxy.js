@@ -15,6 +15,18 @@
         return audioElement;
     }
 
+    function handleError(error, throwError) {
+        const errorMessage = error?.reason?.reason || error?.reason || error.toString();
+        console.error("[FocalMK] Fatal error occured: ", errorMessage);
+        // Show message box if in igniteView
+        if (window.igniteView?.commandBridge?.displayError) {
+            window.igniteView.commandBridge.displayError("Something went wrong with audio playback", errorMessage);
+        }
+        if (throwError) {
+            throw new Error(errorMessage);
+        }
+    }
+
     function swing(p) {
         return 0.5 - Math.cos(p * Math.PI) / 2;
     }
@@ -415,12 +427,12 @@
 
         // This doesn't even work bruh and Apple has horrible documentation so I don't know how to fix it
         window.proxyMusicInstance.addEventListener("mediaPlaybackError", (error) => {
-            console.error(`Apple music MKError: ${error}`);
+            handleError(error);
         });
 
         window.addEventListener("unhandledrejection", function (e) {
             if (e.reason.name === "MKError") {
-                window.igniteView?.commandBridge.displayError("Something went wrong with Apple Music", e.reason.reason);
+                handleError(e);
                 e.preventDefault();
             }
         });
@@ -625,11 +637,11 @@
             const base64Decoded = base64ToUint8Array(split[1]);
             return base64Decoded;
         }
-        throw new Error("Invalid enhanced PSSH license URL");
+        handleError("Invalid enhanced PSSH license URL", true);
     }
     function getPssh(licenseURL) {
         if (!licenseURL)
-            throw new Error("No license URL provided for PSSH generation");
+            handleError("No license URL provided for PSSH generation", true);
         if (licenseURL.startsWith("enhanced/")) {
             return getEnhancedPssh(licenseURL.replace("enhanced/", ""));
         }
@@ -38692,7 +38704,29 @@
             }
             tryAcquireLicense(instance);
         });
+        // Propagate fatal HLS errors to the global handler so playback can show a message
+        instance.on(Hls.Events.ERROR, (event, data) => {
+            console.error("HLS error event:", data);
+            // If the didn't occur on the primary audio element, ignore it
+            if (getActiveHlsInstance() !== instance) {
+                console.warn("Ignoring HLS error from non-active instance");
+                return;
+            }
+            try {
+                if (data && data.fatal) {
+                    const details = data.error?.message || JSON.stringify(data);
+                    handleError(details);
+                }
+            }
+            catch (e) {
+                // Swallow handler errors but log
+                console.error("Error while handling HLS error:", e);
+            }
+        });
         return instance;
+    }
+    function getActiveHlsInstance() {
+        return getAudioElement().attachedHls;
     }
 
     async function getContentSources(contentID) {
@@ -38712,7 +38746,6 @@
                     body: JSON.stringify(body),
                 }).then(res => res.json())
             ]);
-            console.log("[FocalMK] Web playback response:", webPlaybackResponse);
             // Merge enhanced HLS assets into the response if available
             if (enhancedHls && webPlaybackResponse?.songList?.[0]?.assets) {
                 enhancedHls.forEach((asset) => webPlaybackResponse.songList[0].assets.push(asset));
@@ -38772,7 +38805,7 @@
             const sources = await getContentSources(contentID);
             const mainSource = findBestContentSource(sources);
             if (!mainSource)
-                throw new Error("[FocalMK] No valid content source found");
+                handleError("[FocalMK] No valid content source found", true);
             let sourceURL = mainSource.bestAsset?.URL;
             if (!sourceURL?.endsWith(".m3u8")) {
                 console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
@@ -38794,7 +38827,7 @@
         }
         catch (err) {
             // TODO: Handle error
-            console.error("Error loading content:", err);
+            handleError(err);
         }
     }
 
@@ -39035,7 +39068,7 @@
                 currentEffectCtrl.adjustVolume(0, fadeDuration);
                 nextEffectCtrl.adjustVolume(1, fadeDuration);
             }).catch((error) => {
-                console.error("[FocalMK] Error during source transition:", error);
+                handleError(error);
             });
         }
         skipToNextItem() {
