@@ -8,8 +8,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/app/components/ui/alert-dialog";
-import { ROUTES } from "@/routes/routesList";
-import { useAppActions, useAppRuntimeState } from "@/store/app.store";
+import { useAppActions, useAppRuntimeState, useSignOut } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
 import { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,16 +28,12 @@ export function LogoutConfirmDialog({
     const navigate = useNavigate();
     const { clearPlayerState, resetConfig, disposePlayer } = usePlayerActions();
     const { t } = useTranslation();
+    const signOut = useSignOut();   
 
     function handleRemoveConfig(e: MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
-        disposePlayer();
-        setTimeout;
-        removeConfig();
-        clearPlayerState();
-        resetConfig();
         setLogoutDialogState(false);
-        navigate(ROUTES.SERVER_CONFIG, { replace: true });
+        signOut();
     }
 
     return (

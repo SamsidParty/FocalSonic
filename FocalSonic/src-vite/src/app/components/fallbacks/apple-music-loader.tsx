@@ -1,9 +1,11 @@
+import { useSignOut } from "@/store/app.store";
 import { t } from "i18next";
 import { useEffect, useState } from "react";
 
 export default function AppleMusicLoader() {
 
     const [loadingIsStuck, setLoadingIsStuck] = useState(false);
+    const signOut = useSignOut();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -14,8 +16,7 @@ export default function AppleMusicLoader() {
     }, []);
 
     const resolveSignInIssues = async () => {
-        await window.igniteView?.commandBridge.logOutOfAppleMusic();
-        location.reload();
+        signOut();
     };
 
     return (

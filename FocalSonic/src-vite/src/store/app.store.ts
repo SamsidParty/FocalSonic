@@ -1,5 +1,6 @@
 import { pingServer } from "@/api/pingServer";
 import { queryServerInfo } from "@/api/queryServerInfo";
+import { ROUTES } from "@/routes/routesList";
 import { ListDisplayMode } from "@/types/listDisplayMode";
 import { AuthType, IAppContext, IServerConfig } from "@/types/serverConfig";
 import { logger } from "@/utils/logger";
@@ -13,11 +14,12 @@ import {
 } from "@/utils/salt";
 import merge from "lodash/merge";
 import omit from "lodash/omit";
+import { useNavigate } from "react-router-dom";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
-import { usePlayerStore } from "./player.store";
+import { usePlayerActions, usePlayerStore } from "./player.store";
 
 const { SERVER_URL, HIDE_SERVER, SHOW_RADIOS_SECTION, SERVER_TYPE } = window;
 
@@ -381,3 +383,23 @@ export const useAppArtistsViewType = () =>
             isGridView,
         };
     });
+
+
+export function useSignOut() {
+    const { clearPlayerState, resetConfig, disposePlayer } = usePlayerActions();
+    const { removeConfig } = useAppActions();
+    const navigate = useNavigate();
+
+    return async () => {
+        disposePlayer();
+        removeConfig();
+        clearPlayerState();
+        resetConfig();
+
+        if (window.igniteView?.commandBridge) {
+            await window.igniteView?.commandBridge.logOutOfAppleMusic();
+        }
+
+        navigate(ROUTES.SERVER_CONFIG, { replace: true });
+    };
+}
