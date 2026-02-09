@@ -118,7 +118,7 @@ export function MainDrawerPage() {
                                 />
                             </ActiveContent>
                             <ActiveContent active={extraBarContent === "effects"}>
-                                <Equalizer orientation="horizontal" />
+                                <Equalizer small={false} orientation="horizontal" />
                             </ActiveContent>
                         </div>
                     </div>

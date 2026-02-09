@@ -11,6 +11,8 @@ import {
     GraphFilter,
     GraphThemeOverride
 } from "dsssp";
+import { t } from "i18next";
+import { ListX } from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
@@ -82,7 +84,7 @@ const glowFilter = () => ({
     `
 });
 
-export default function Equalizer({ orientation = "vertical" }: { orientation?: "horizontal" | "vertical" }) {
+export default function Equalizer({ orientation = "vertical", small = true }: { orientation?: "horizontal" | "vertical", small?: boolean }) {
 
     const { filterData, setFilterData } = usePlayerFilterData();
     const [filters, setFilters] = useState(filterData ? JSON.parse(filterData) : defaultPreset);
@@ -126,11 +128,23 @@ export default function Equalizer({ orientation = "vertical" }: { orientation?: 
     const EqualizerComponent = SliderBasedEqualizer;
 
     return (
-        <div className={clsx("flex flex-col justify-center items-center", orientation == "horizontal" ? "h-full frequency-graph" : "")}>
-            <EqualizerComponent handleFilterChange={handleFilterChange} filters={filters} orientation={orientation} />
-            <EffectSliders reverb={reverb} setReverb={setReverb} impulse={impulse} setImpulse={setImpulse} orientation={orientation} />
-            <Button className="mx-4 mt-2" onClick={resetFilters}>Reset</Button>
-        </div>
+        <>
+            <div className={clsx("flex flex-col justify-center items-center max-w-[50vw]", orientation == "horizontal" ? "h-full frequency-graph" : "")}>
+                <span className={clsx("mr-auto mt-2 text-foreground w-full font-bold items-center flex", small ? "px-2" : "px-32")}>
+                    <div className="flex ml-1">
+                        <p className={clsx("text-foreground font-bold")}>{t("player.effects.title")}</p>
+                    </div>
+                    <div className="flex ml-auto">
+                        <Button className="h-8 gap-1 p-2" size="sm" variant="secondary" onClick={resetFilters}>
+                            <ListX size={16} />
+                            {t("queue.clear")}
+                        </Button>
+                    </div>
+                </span>
+                <EqualizerComponent handleFilterChange={handleFilterChange} filters={filters} orientation={orientation} />
+                <EffectSliders reverb={reverb} setReverb={setReverb} impulse={impulse} setImpulse={setImpulse} orientation={orientation} />
+            </div>
+        </>
     );
 }
 

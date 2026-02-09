@@ -10,8 +10,9 @@ import {
 import { ColumnFilter } from "@/types/columnFilter";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import clsx from "clsx";
-import { ListXIcon } from "lucide-react";
-import { useMemo } from "react";
+import { ListX } from "lucide-react";
+import React, { useMemo } from "react";
+
 import { useTranslation } from "react-i18next";
 
 export function QueueSongList({ small } : { small?: boolean } ) {
@@ -76,13 +77,9 @@ export function QueueSongList({ small } : { small?: boolean } ) {
                 </div>
 
                 <div>
-                    <Button
-                        variant="ghost"
-                        className="px-4 h-8 rounded-full py-0 flex items-center justify-center hover:bg-foreground/20"
-                        onClick={clearPlayerState}
-                    >
-                        <ListXIcon className="mr-1 w-5 h-5" />
-                        <span className="text-sm">{t("queue.clear")}</span>
+                    <Button className="h-8 gap-1 p-2" size="sm" variant="secondary" onClick={clearPlayerState}>
+                        <ListX size={16} />
+                        {t("queue.clear")}
                     </Button>
                 </div>
             </div>

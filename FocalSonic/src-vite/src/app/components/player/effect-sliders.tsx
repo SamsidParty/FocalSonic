@@ -108,7 +108,7 @@ export default function EffectSliders(props: EffectSliderControls) {
 
 function EffectControlContainer({ children, label }: { children: React.ReactNode, label?: string }) {
     return (
-        <div className="flex flex-col px-2 py-2 gap-1 max-w-80 bg-background w-full rounded-md">
+        <div className="flex flex-col py-2 gap-1 max-w-80 w-full rounded-md">
             <Label>{label}</Label>
             {children}
         </div>
@@ -117,7 +117,7 @@ function EffectControlContainer({ children, label }: { children: React.ReactNode
 
 function EffectControlContainerVertical({ children, onToggle, isActive }: { children: React.ReactNode, onToggle?: () => void, isActive?: boolean }) {
     return (
-        <div className={clsx("flex flex-col relative px-2 py-4 gap-4 bg-background items-center rounded-md w-full h-40", !isActive && "opacity-50")}>
+        <div className={clsx("flex flex-col relative py-4 gap-4 items-center rounded-md w-full h-40 min-w-20", !isActive && "opacity-50")}>
             {children}
             <Button 
                 className={
