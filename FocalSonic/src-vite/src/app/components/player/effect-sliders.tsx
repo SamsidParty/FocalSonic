@@ -16,7 +16,7 @@ export interface EffectSliderControls {
     orientation?: "horizontal" | "vertical"
 }
 
-const impulsePresets = new Array(36).fill(null).map((_, i) => `spatial${i}`);
+const impulsePresets = new Array(36).fill(null).map((_, i) => ({ id: `spatial${i}`, name: `Spatial ${i}` }));
 
 export default function EffectSliders(props: EffectSliderControls) {
 
@@ -82,7 +82,7 @@ export default function EffectSliders(props: EffectSliderControls) {
                     <SelectTrigger className="h-8 mt-1 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
                         <SelectValue>
                             <span className="text-sm text-foreground">
-                                {props.impulse || "spatial0"}
+                                {impulsePresets.find(preset => preset.id === (props.impulse || "spatial0"))?.name || impulsePresets[0].name}
                             </span>
                         </SelectValue>
                     </SelectTrigger>
@@ -90,11 +90,11 @@ export default function EffectSliders(props: EffectSliderControls) {
                         <SelectGroup>
                             {impulsePresets.map((preset) => (
                                 <SelectItem
-                                    key={preset}
-                                    value={preset}
+                                    key={preset.id}
+                                    value={preset.id}
                                 >
                                     <span className="text-sm text-foreground">
-                                        {preset}
+                                        {preset.name}
                                     </span>
                                 </SelectItem>
                             ))}

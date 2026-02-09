@@ -129,8 +129,8 @@ export default function Equalizer({ orientation = "vertical", small = true }: { 
 
     return (
         <>
-            <div className={clsx("flex flex-col justify-center items-center max-w-[50vw]", orientation == "horizontal" ? "h-full frequency-graph" : "")}>
-                <span className={clsx("mr-auto mt-2 text-foreground w-full font-bold items-center flex", small ? "px-2" : "px-32")}>
+            <div className={clsx("flex flex-col justify-center items-center max-w-[50vw] ", !small && "mx-auto", orientation == "horizontal" ? "h-full frequency-graph" : "")}>
+                <span className={clsx("mt-2 text-foreground w-full font-bold items-center flex", small ? "px-2" : "px-32")}>
                     <div className="flex ml-1">
                         <p className={clsx("text-foreground font-bold")}>{t("player.effects.title")}</p>
                     </div>
