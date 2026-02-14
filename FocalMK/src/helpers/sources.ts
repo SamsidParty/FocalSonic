@@ -1,6 +1,7 @@
 import { getFetchHeaders } from "../auth/headers";
 import { isAtmosEnabled } from "./atmos";
 import { webPlaybackURL } from "./constants";
+import handleError, { ERROR_CODES, errorNames } from "./error-handler";
 import { tryWrapAppleMusicURL } from "./igniteview";
 
 export interface PlaybackAsset {
@@ -42,6 +43,27 @@ export async function getContentSources(contentID: string) {
 
     if (!webPlaybackResponse?.songlist && webPlaybackResponse?.failureType) {
         // Something went wrong, throw a real fatal error
+        console.warn("[FocalMK] Apple Music webPlayback request failed", webPlaybackResponse.failureType);
+
+        // However, in case the error is no active subscription, we can try recovering by using the preview source instead
+        if (ERROR_CODES[webPlaybackResponse?.failureType as string] === errorNames.SUBSCRIPTION_ERROR) {
+            console.warn("[FocalMK] User does not have an active subscription, attempting to find preview source");
+            // Try to resolve preview sources
+            const previewSources = await tryGetPreview(contentID);
+
+            if (previewSources && previewSources[0]?.URL) {
+                // We found a preview playback URL. Use it
+                console.warn("[FocalMK] Preview source found, only a small part of the song will play");
+
+                // Non-fatal error dialog
+                handleError("An active Apple Music subscription is required to use this app. A shorter, low-quality preview of the song will be played insteaf.", false);
+
+                return [{ assets: previewSources }]; 
+            }
+
+            console.error("[FocalMK] No preview source found, playback will fail");
+        }
+
         const message = webPlaybackResponse?.dialog?.message;
         throw new Error(message);
     }
@@ -62,7 +84,22 @@ export async function tryGetEnhancedHLS(contentID: string): Promise<PlaybackAsse
     }
     catch {}
 
-    return [{ URL: null, flavor: null }];
+    return [];
+}
+
+export async function tryGetPreview(contentID: string): Promise<PlaybackAsset[]> {
+    try {
+        const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}`);
+        const request = await fetch(catalogURL);
+        const response = await request.json();
+        const assets = response?.data?.[0]?.attributes?.previews;
+        return assets.map((asset: any) => {
+            return { URL: asset.url, desirable: true };
+        }) as PlaybackAsset[];
+    }
+    catch {}
+
+    return [];
 }
 
 export function findBestContentSource(sources: any[]): PlaybackSource {

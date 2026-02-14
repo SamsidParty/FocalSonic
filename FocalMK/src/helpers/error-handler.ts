@@ -13,7 +13,7 @@ export default function handleError(error: Error | string, throwError?: boolean)
     }
 }
 
-const errorNames = {
+export const errorNames = {
     INVALID_ERROR_ID: "INVALID_ERROR_ID",
     INVALID_ERROR_REASON: "INVALID_ERROR_REASON",
     ACCESS_DENIED: "ACCESS_DENIED",
@@ -56,19 +56,19 @@ const errorNames = {
     WIDEVINE_CDM_EXPIRED: "WIDEVINE_CDM_EXPIRED"
 }
 
-export const ERROR_CODES = {
+export const ERROR_CODES: Record<string, string> = {
     "-1003": errorNames.MEDIA_LICENSE,
     "-1004": errorNames.DEVICE_LIMIT,
     "-1017": errorNames.GEO_BLOCK,
-    1010: errorNames.NOT_FOUND,
-    2002: errorNames.AUTHORIZATION_ERROR,
-    2034: errorNames.TOKEN_EXPIRED,
-    3059: errorNames.DEVICE_LIMIT,
-    3063: errorNames.SUBSCRIPTION_ERROR,
-    3076: errorNames.CONTENT_UNAVAILABLE,
-    3082: errorNames.CONTENT_RESTRICTED,
-    3084: errorNames.STREAM_UPSELL,
-    5002: errorNames.SERVER_ERROR,
-    180202: errorNames.PLAYREADY_CBC_ENCRYPTION_ERROR,
-    190121: errorNames.WIDEVINE_CDM_EXPIRED
+    "1010": errorNames.NOT_FOUND,
+    "2002": errorNames.AUTHORIZATION_ERROR,
+    "2034": errorNames.TOKEN_EXPIRED,
+    "3059": errorNames.DEVICE_LIMIT,
+    "3063": errorNames.SUBSCRIPTION_ERROR,
+    "3076": errorNames.CONTENT_UNAVAILABLE,
+    "3082": errorNames.CONTENT_RESTRICTED,
+    "3084": errorNames.STREAM_UPSELL,
+    "5002": errorNames.SERVER_ERROR,
+    "180202": errorNames.PLAYREADY_CBC_ENCRYPTION_ERROR,
+    "190121": errorNames.WIDEVINE_CDM_EXPIRED
 }

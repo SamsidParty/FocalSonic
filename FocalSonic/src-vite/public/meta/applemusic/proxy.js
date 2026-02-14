@@ -26,6 +26,37 @@
             throw new Error(errorMessage);
         }
     }
+    const errorNames = {
+        AUTHORIZATION_ERROR: "AUTHORIZATION_ERROR",
+        CONTENT_RESTRICTED: "CONTENT_RESTRICTED",
+        CONTENT_UNAVAILABLE: "CONTENT_UNAVAILABLE",
+        DEVICE_LIMIT: "DEVICE_LIMIT",
+        GEO_BLOCK: "GEO_BLOCK",
+        PLAYREADY_CBC_ENCRYPTION_ERROR: "PLAYREADY_CBC_ENCRYPTION_ERROR",
+        MEDIA_LICENSE: "MEDIA_LICENSE",
+        NOT_FOUND: "NOT_FOUND",
+        SERVER_ERROR: "SERVER_ERROR",
+        STREAM_UPSELL: "STREAM_UPSELL",
+        SUBSCRIPTION_ERROR: "SUBSCRIPTION_ERROR",
+        TOKEN_EXPIRED: "TOKEN_EXPIRED",
+        WIDEVINE_CDM_EXPIRED: "WIDEVINE_CDM_EXPIRED"
+    };
+    const ERROR_CODES = {
+        "-1003": errorNames.MEDIA_LICENSE,
+        "-1004": errorNames.DEVICE_LIMIT,
+        "-1017": errorNames.GEO_BLOCK,
+        "1010": errorNames.NOT_FOUND,
+        "2002": errorNames.AUTHORIZATION_ERROR,
+        "2034": errorNames.TOKEN_EXPIRED,
+        "3059": errorNames.DEVICE_LIMIT,
+        "3063": errorNames.SUBSCRIPTION_ERROR,
+        "3076": errorNames.CONTENT_UNAVAILABLE,
+        "3082": errorNames.CONTENT_RESTRICTED,
+        "3084": errorNames.STREAM_UPSELL,
+        "5002": errorNames.SERVER_ERROR,
+        "180202": errorNames.PLAYREADY_CBC_ENCRYPTION_ERROR,
+        "190121": errorNames.WIDEVINE_CDM_EXPIRED
+    };
 
     function swing(p) {
         return 0.5 - Math.cos(p * Math.PI) / 2;
@@ -38751,6 +38782,21 @@
         }
         if (!webPlaybackResponse?.songlist && webPlaybackResponse?.failureType) {
             // Something went wrong, throw a real fatal error
+            console.warn("[FocalMK] Apple Music webPlayback request failed", webPlaybackResponse.failureType);
+            // However, in case the error is no active subscription, we can try recovering by using the preview source instead
+            if (ERROR_CODES[webPlaybackResponse?.failureType] === errorNames.SUBSCRIPTION_ERROR) {
+                console.warn("[FocalMK] User does not have an active subscription, attempting to find preview source");
+                // Try to resolve preview sources
+                const previewSources = await tryGetPreview(contentID);
+                if (previewSources && previewSources[0]?.URL) {
+                    // We found a preview playback URL. Use it
+                    console.warn("[FocalMK] Preview source found, only a small part of the song will play");
+                    // Non-fatal error dialog
+                    handleError("An active Apple Music subscription is required to use this app. A shorter, low-quality preview of the song will be played insteaf.", false);
+                    return [{ assets: previewSources }];
+                }
+                console.error("[FocalMK] No preview source found, playback will fail");
+            }
             const message = webPlaybackResponse?.dialog?.message;
             throw new Error(message);
         }
@@ -38769,7 +38815,20 @@
             });
         }
         catch { }
-        return [{ URL: null, flavor: null }];
+        return [];
+    }
+    async function tryGetPreview(contentID) {
+        try {
+            const catalogURL = tryWrapAppleMusicURL(`https://amp-api.music.apple.com/v1/catalog/{storefront}/songs/${contentID}`);
+            const request = await fetch(catalogURL);
+            const response = await request.json();
+            const assets = response?.data?.[0]?.attributes?.previews;
+            return assets.map((asset) => {
+                return { URL: asset.url, desirable: true };
+            });
+        }
+        catch { }
+        return [];
     }
     function findBestContentSource(sources) {
         if (sources != null && sources.length > 0) {
