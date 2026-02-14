@@ -12,7 +12,7 @@ export class MusicKitInstance {
     
     get musicUserToken() {
         if (!this._musicUserToken) {
-            this._musicUserToken = localStorage.getItem("applemusic_media_user_token");
+            this._musicUserToken = window.injectedUserToken || localStorage.getItem("applemusic_media_user_token");
         }
 
         return this._musicUserToken;
@@ -20,7 +20,7 @@ export class MusicKitInstance {
 
     get developerToken() {
         if (!this._developerToken) {
-            this._developerToken = localStorage.getItem("applemusic_developer_token");
+            this._developerToken = window.injectedDeveloperToken || localStorage.getItem("applemusic_developer_token");
         }
 
         return this._developerToken;

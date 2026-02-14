@@ -6,6 +6,8 @@ declare global {
     interface Window {
         virtualMusicKit?: MusicKit;
         injectedQueue?: any[];
+        injectedDeveloperToken?: string;
+        injectedUserToken?: string;
     }
 }
 
@@ -16,6 +18,7 @@ if (window.location.href.includes("music.apple.com")) {
 else if (window.location.href.includes("proxy.html") || (window.igniteView?.platformHints?.includes("linux"))) {
     window.virtualMusicKit = new MusicKit();
     if (!window.injectedQueue) { window.injectedQueue = []; }
+
     startAppleMusicProxy();
 }
 

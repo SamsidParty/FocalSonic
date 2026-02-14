@@ -46,6 +46,10 @@ async function onMusicKitLoad() {
 
 async function checkAuthState() {
     const music = getMusicKit()?.getInstance();
+    
+    if (!!window.igniteView?.commandBridge?.loadAppleMusicKeys) {
+        await window.igniteView?.commandBridge?.loadAppleMusicKeys();
+    }
 
     console.log("[FocalSonic][Apple Music Proxy] Checking auth:", music);
     if (music && music.musicUserToken && music.developerToken && music.isAuthorized) {

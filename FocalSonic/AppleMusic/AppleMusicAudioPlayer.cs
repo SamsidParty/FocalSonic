@@ -1,4 +1,5 @@
 ﻿using FocalSonic.Helpers;
+using FocalSonic.Persistence;
 using FocalSonic.Presence;
 using IgniteView.Core;
 using Newtonsoft.Json;
@@ -53,7 +54,6 @@ namespace FocalSonic.AppleMusic
 
         public static void InitializeProxy(WebWindow ctx)
         {
-            ctx.ExecuteJavaScript(new JSAssignment("window.injectedUserToken", AppleMusicKeys.MediaUserToken!));
             ctx.ExecuteJavaScript(
                 InjectionPrefix + "\n" +
                 Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/proxy.js") + "\n" +
@@ -313,8 +313,15 @@ namespace FocalSonic.AppleMusic
         [Command("appleMusicSignInRecieveToken")]
         public static async Task AppleMusicSignInRecieveToken(string mediaUserToken, string developerToken)
         {
-            LocalStorage.SetItem("applemusic_media_user_token", mediaUserToken, "default");
-            LocalStorage.SetItem("applemusic_developer_token", developerToken, "default");
+            var creds = ServerCredential.GetCurrent();
+            creds.ServerType = "applemusic";
+            creds.AuthType = "token";
+            creds.URL = "applemusic";
+            creds.Username = "Apple Music";
+            creds.DeveloperToken = developerToken;
+            creds.Password = mediaUserToken;
+
+            creds.Save();
             LoadKeys();
 
             try
@@ -322,7 +329,10 @@ namespace FocalSonic.AppleMusic
                 // We have to find the user's account region because apple is very picky
                 // If the region is wrong then we can only stream the previews of the music
                 dynamic data = await AppleMusicHttpClient.SendRequest<ExpandoObject>($"me/storefront");
-                LocalStorage.SetItem("applemusic_region", data!.data[0]!.id!, "default");
+                creds.Region = data!.data[0]!.id!;
+
+                creds.Save();
+                LoadKeys();
 
                 Program.MainWindow?.CallFunction("window._localStorage.hydrate", LocalStorage.GetAllItems("default")); // Reload localStorage
                 Program.MainWindow?.CallFunction("window.completeAppleMusicLogin");
@@ -344,13 +354,20 @@ namespace FocalSonic.AppleMusic
         #region Proxy
 
         [Command("loadAppleMusicKeys")]
-        public static void LoadKeys()
+        public static void LoadKeys(WebWindow ctx = null)
         {
             try
             {
-                AppleMusicKeys.AppleDeveloperToken = LocalStorage.GetItem("applemusic_developer_token", "default");
-                AppleMusicKeys.MediaUserToken = LocalStorage.GetItem("applemusic_media_user_token", "default");
-                AppleMusicKeys.Region = LocalStorage.GetItem("applemusic_region", "default") ?? "us";
+                var creds = ServerCredential.GetCurrent();
+                AppleMusicKeys.AppleDeveloperToken = creds.DeveloperToken;
+                AppleMusicKeys.MediaUserToken = creds.Password;
+                AppleMusicKeys.Region = creds.Region ?? "us";
+
+                if (ctx != null)
+                {
+                    ctx.ExecuteJavaScript(new JSAssignment("window.injectedUserToken", AppleMusicKeys.MediaUserToken!));
+                    ctx.ExecuteJavaScript(new JSAssignment("window.injectedDeveloperToken", AppleMusicKeys.AppleDeveloperToken!));
+                }
             }
             catch { }
         }
@@ -358,7 +375,10 @@ namespace FocalSonic.AppleMusic
         [Command("saveAppleMusicDeveloperKey")]
         public static void SaveDeveloperKey(string developerKey)
         {
-            LocalStorage.SetItem("applemusic_developer_token", developerKey, "default");
+            var creds = ServerCredential.GetCurrent();
+            creds.DeveloperToken = developerKey;
+            creds.Save();
+
             LoadKeys();
         }
 
@@ -378,9 +398,7 @@ namespace FocalSonic.AppleMusic
         public static async Task LogOutOfAppleMusic()
         {
             await DisposeAudioPlayers();
-            LocalStorage.RemoveItem("applemusic_media_user_token", "default");
-            LocalStorage.RemoveItem("applemusic_developer_token", "default");
-            LocalStorage.RemoveItem("applemusic_region", "default");
+            ServerCredential.GetCurrent().Delete();
             LoadKeys();
         }
 

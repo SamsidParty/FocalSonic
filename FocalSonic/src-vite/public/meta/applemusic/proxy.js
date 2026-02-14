@@ -471,6 +471,10 @@
     }
     async function checkAuthState$1() {
         const music = getMusicKit()?.getInstance();
+        
+        if (!!window.igniteView?.commandBridge?.loadAppleMusicKeys) {
+            await window.igniteView?.commandBridge?.loadAppleMusicKeys();
+        }
 
         console.log("[FocalSonic][Apple Music Proxy] Checking auth:", music);
         if (music && music.musicUserToken && music.developerToken && music.isAuthorized) {
@@ -38987,13 +38991,13 @@
         _developerToken = null;
         get musicUserToken() {
             if (!this._musicUserToken) {
-                this._musicUserToken = localStorage.getItem("applemusic_media_user_token");
+                this._musicUserToken = window.injectedUserToken || localStorage.getItem("applemusic_media_user_token");
             }
             return this._musicUserToken;
         }
         get developerToken() {
             if (!this._developerToken) {
-                this._developerToken = localStorage.getItem("applemusic_developer_token");
+                this._developerToken = window.injectedDeveloperToken || localStorage.getItem("applemusic_developer_token");
             }
             return this._developerToken;
         }
