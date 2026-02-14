@@ -1,11 +1,12 @@
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
-import { useAppStore } from "@/store/app.store";
+import { useAppStore, waitForAppHydration } from "@/store/app.store";
 import { redirect } from "react-router-dom";
 
 export async function loginLoader() {
-    const { url, username, password, isServerConfigured } =
-    useAppStore.getState().data;
+    await waitForAppHydration();
+
+    const { url, username, password, isServerConfigured } = useAppStore.getState().data;
 
     const hasUrl = url || url !== "";
     const hasPassword = password || password !== "";

@@ -3,19 +3,17 @@ import { queryServerInfo } from "@/api/queryServerInfo";
 import { ROUTES } from "@/routes/routesList";
 import { ListDisplayMode } from "@/types/listDisplayMode";
 import { AuthType, IAppContext, IServerConfig } from "@/types/serverConfig";
-import { logger } from "@/utils/logger";
 import {
     genEncodedPassword,
     genPassword,
     genPasswordToken,
     genUser,
-    getAuthType,
-    hasValidConfig,
+    getAuthType
 } from "@/utils/salt";
-import merge from "lodash/merge";
+import { merge } from "lodash";
 import omit from "lodash/omit";
 import { useNavigate } from "react-router-dom";
-import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
+import { createJSONStorage, devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
@@ -23,13 +21,39 @@ import { usePlayerActions, usePlayerStore } from "./player.store";
 
 const { SERVER_URL, HIDE_SERVER, SHOW_RADIOS_SECTION, SERVER_TYPE } = window;
 
+const igniteViewAppStore = {
+    getItem: async (key: string) => {
+        let item = localStorage.getItem(key);
+
+        if (item && JSON.parse(item)?.state?.data && window.igniteView) {
+            // Overwrite the credential state with the one stored by C#
+            const overwrittenItem = JSON.parse(item);
+            const creds = await window.igniteView?.commandBridge?.getCurrentCredentials();
+            
+            overwrittenItem.state.data = creds;
+            overwrittenItem.state.data.isServerConfigured = !!creds.url;
+            console.log("Loading stored credentials:", overwrittenItem.state.data);
+
+            item = JSON.stringify(overwrittenItem);
+        }
+
+        return item;
+    },
+    setItem: async (key: string, value: any) => {
+        localStorage.setItem(key, value);
+    },
+    removeItem: async (key: string) => {
+        localStorage.removeItem(key);
+    }
+};
+
 export const useAppStore = createWithEqualityFn<IAppContext>()(
     subscribeWithSelector(
         persist(
             devtools(
                 immer((set, get) => ({
                     data: {
-                        isServerConfigured: hasValidConfig,
+                        isServerConfigured: false,
                         osType: "",
                         url: SERVER_URL ?? "",
                         username: genUser(),
@@ -38,8 +62,9 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                         protocolVersion: "1.16.0",
                         serverType: SERVER_TYPE ?? "subsonic",
                         hideServer: HIDE_SERVER ?? false,
-                        lockUser: hasValidConfig,
+                        lockUser: false,
                         songCount: null,
+                        isHydrated: false,
                     },
                     podcasts: {
                         active: false,
@@ -209,16 +234,7 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                         saveConfig: async ({ url, username, password }: IServerConfig) => {
 
                             if (url === "applemusic") {
-                                set((state) => {
-                                    state.data.url = url;
-                                    state.data.username = username;
-                                    state.data.password = "";
-                                    state.data.authType = AuthType.TOKEN;
-                                    state.data.protocolVersion = "1.16.0";
-                                    state.data.serverType = "applemusic";
-                                    state.data.isServerConfigured = true;
-                                });
-                                return true;
+                                return true; // Handled by C#
                             }
 
                             // try both token and password methods
@@ -244,6 +260,8 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                         state.data.protocolVersion = serverInfo.protocolVersion;
                                         state.data.serverType = serverInfo.serverType;
                                         state.data.isServerConfigured = true;
+
+                                        window.igniteView?.commandBridge?.overwriteCurrentCredentials?.(JSON.stringify(state.data));
                                     });
                                     return true;
                                 }
@@ -254,8 +272,12 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                             return false;
                         },
                         removeConfig: () => {
+
+                            window.igniteView?.commandBridge?.deleteCurrentCredentials?.();
+
                             set((state) => {
                                 state.data.isServerConfigured = false;
+                                state.data.isHydrated = true;
                                 state.data.osType = "";
                                 state.data.url = "";
                                 state.data.username = "";
@@ -278,7 +300,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                             set((state) => {
                                 state.settings.sidebarOpen = !state.settings.sidebarOpen;
                             });
-
                         }
                     },
                 })),
@@ -289,70 +310,22 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
             {
                 name: "app_store",
                 version: 1,
+                storage: createJSONStorage(() => !window.igniteView ? localStorage : igniteViewAppStore),
                 merge: (persistedState, currentState) => {
-                    try {
-                        const persisted = persistedState as Partial<IAppContext> | undefined;
-
-                        let showRadiosSection = false;
-
-                        if (persisted) {
-                            showRadiosSection = persisted.pages?.showRadiosSection ?? false;
-                        }
-                        if (SHOW_RADIOS_SECTION !== undefined) {
-                            showRadiosSection = SHOW_RADIOS_SECTION;
-                        }
-
-                        if (hasValidConfig) {
-                            const newState = {
-                                data: {
-                                    isServerConfigured: true,
-                                    url: SERVER_URL as string,
-                                    username: genUser(),
-                                    password: genPassword(),
-                                    authType: getAuthType(),
-                                    hideServer: HIDE_SERVER ?? false,
-                                    serverType: SERVER_TYPE ?? "subsonic",
-                                    lockUser: true,
-                                },
-                                pages: {
-                                    showRadiosSection,
-                                },
-                            };
-
-                            if (persistedState) {
-                                return merge(currentState, persistedState, newState);
-                            }
-
-                            return merge(currentState, newState);
-                        }
-
-                        const withoutLockUser = {
-                            data: {
-                                lockUser: false,
-                            },
-                            pages: {
-                                showRadiosSection,
-                            },
-                        };
-
-                        if (persistedState) {
-                            return merge(currentState, persistedState, withoutLockUser);
-                        }
-
-                        return merge(currentState, withoutLockUser);
-                    } catch (error) {
-                        logger.error("[AppStore] [merge] - Unable to merge states", error);
-
-                        return currentState;
-                    }
+                    currentState.data.isHydrated = true;
+                    return merge(currentState, persistedState);
                 },
                 partialize: (state) => {
                     const appStore = omit(
                         state,
+                        "actions",
                         "data.hideServer",
+                        "data.isHydrated",
                         "update",
                         "runtimeState",
                     );
+
+                    appStore.data.isHydrated = false;
 
                     return appStore;
                 },
@@ -384,6 +357,16 @@ export const useAppArtistsViewType = () =>
         };
     });
 
+export const waitForAppHydration = async () => {
+    // Wait until the app store has rehydrated before accessing its state
+    if (!useAppStore.getState().data.isHydrated) {
+        await new Promise<void>((resolve) => {
+            useAppStore.persist.onFinishHydration(() => {
+                resolve();
+            });
+        });
+    }
+};
 
 export function useSignOut() {
     const { clearPlayerState, resetConfig, disposePlayer } = usePlayerActions();

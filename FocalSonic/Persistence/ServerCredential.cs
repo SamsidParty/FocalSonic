@@ -28,7 +28,6 @@ namespace FocalSonic.Persistence
         public void Save()
         {
             if (string.IsNullOrEmpty(ID)) return;
-
             LocalStorage.SetItem("credentials", JsonConvert.SerializeObject(this), $"profile_{ID}");
         }
 
@@ -54,6 +53,7 @@ namespace FocalSonic.Persistence
             return null;
         }
 
+        [Command("getCurrentCredentials")]
         public static ServerCredential GetCurrent()
         {
             var currentID = "0";
@@ -86,6 +86,17 @@ namespace FocalSonic.Persistence
 
             return currentCredentials ?? new ServerCredential(currentID);
         }
+
+        [Command("overwriteCurrentCredentials")]
+        public static void OverwriteCurrentCredentials(string credentialData)
+        {
+            var creds = JsonConvert.DeserializeObject<ServerCredential>(credentialData);
+            creds.ID = GetCurrent().ID;
+            creds.Save();
+        }
+
+        [Command("deleteCurrentCredentials")]
+        public static void DeleteCurrentCredentials() { GetCurrent().Delete(); }
 
         public static bool DoesCredentialExist(string id)
         {

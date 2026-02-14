@@ -34,6 +34,7 @@ export interface IAppData extends IServerConfig {
     hideServer: boolean
     lockUser: boolean
     songCount: number | null
+    isHydrated: boolean
 }
 
 export interface IAppActions {

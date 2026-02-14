@@ -398,7 +398,6 @@ namespace FocalSonic.AppleMusic
         public static async Task LogOutOfAppleMusic()
         {
             await DisposeAudioPlayers();
-            ServerCredential.GetCurrent().Delete();
             LoadKeys();
         }
 
