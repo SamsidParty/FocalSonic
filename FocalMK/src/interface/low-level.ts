@@ -8,7 +8,7 @@ export async function loadContent(hls: FocalHls, contentID: string) {
     try {
         const sources = await getContentSources(contentID);
         const mainSource = findBestContentSource(sources);
-        if (!mainSource) handleError("[FocalMK] No valid content source found", true);
+        if (!mainSource.bestAsset) handleError("[FocalMK] No valid content source found", true);
 
         let sourceURL = mainSource.bestAsset?.URL;
         
@@ -35,7 +35,6 @@ export async function loadContent(hls: FocalHls, contentID: string) {
         });
     }
     catch (err) {
-        // TODO: Handle error
         handleError(err as Error);
     }
 }
