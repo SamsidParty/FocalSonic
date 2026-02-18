@@ -19,7 +19,6 @@ namespace FocalSonic.LastFM
             // Close any existing sign in windows
             Program.App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("LastFMSignIn")).FirstOrDefault()?.Close();
 
-
             await Program.App.InvokeOnMainThread(async () => {
                 IsWaitingForToken = true;
 
