@@ -15,7 +15,7 @@ export function AlbumsFilter() {
 
     const currentFilter = getSearchParam<AlbumListType>(
         AlbumsSearchParams.MainFilter,
-        AlbumsFilters.RecentlyAdded,
+        AlbumsFilters.ByName,
     );
 
     return (

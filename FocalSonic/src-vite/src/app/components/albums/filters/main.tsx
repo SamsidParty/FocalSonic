@@ -38,7 +38,7 @@ export function AlbumsMainFilter() {
 
     const currentFilter = getSearchParam<AlbumListType>(
         AlbumsSearchParams.MainFilter,
-        AlbumsFilters.RecentlyAdded,
+        AlbumsFilters.ByName,
     );
 
     const currentFilterLabel = albumsFilterValues.filter(
