@@ -13,6 +13,7 @@ using Windows.Storage.Streams;
 using FocalSonic.AudioPlayer;
 using FocalSonic.Presence;
 using System.IO;
+using FocalSonic.AppleMusic;
 
 namespace FocalSonic.Windows
 {
@@ -45,6 +46,16 @@ namespace FocalSonic.Windows
             smtc.DisplayUpdater.MusicProperties.Artist = string.Join(", ", song?.Artists?.Select((a) => a.Name) ?? new string[] { song?.Artist ?? "" });
             smtc.DisplayUpdater.MusicProperties.AlbumTitle = song?.Album ?? "Unknown Album";
             smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song?.AlbumArtists?.Select((a) => a.Name) ?? new string[] { song?.DisplayAlbumArtist ?? "" });
+
+            smtc.DisplayUpdater.MusicProperties.Genres.Clear();
+            smtc.DisplayUpdater.MusicProperties.Genres.Add("FocalSonic-" + (song?.Id ?? "unknown"));
+
+            // Request from a fellow developer, they want to be able to read the Apple Music Catalog ID from SMTC
+            if (AudioPlayer.AudioPlayer.Instance is AppleMusicAudioPlayer && !string.IsNullOrEmpty(song?.Id))
+                smtc.DisplayUpdater.MusicProperties.Genres.Add("AM-" + song?.Id);
+
+            if (AudioPlayer.AudioPlayer.Instance != null)
+                smtc.DisplayUpdater.MusicProperties.Genres.Add("PlaybackSpeed-" + AudioPlayer.AudioPlayer.Instance.Speed);
 
             var coverArt = playbackInfo.Store?.ExtraProperties.GetCoverArtForSong(song?.CoverArt!);
 

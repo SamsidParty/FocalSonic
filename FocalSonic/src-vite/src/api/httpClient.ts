@@ -25,13 +25,12 @@ export function authQueryParams(
             t: password ?? "",
             s: saltWord,
         };
-    } else if (authType === AuthType.PASSWORD) {
+    } else {
         return {
             u: username ?? "",
             p: password ?? "",
         };
     }
-    throw new Error("Invalid/unspecified auth type");
 }
 
 function queryParams() {
