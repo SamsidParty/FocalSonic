@@ -53,6 +53,7 @@ namespace FocalSonic.Windows
             // Request from a fellow developer, they want to be able to read the Apple Music Catalog ID from SMTC
             if (AudioPlayer.AudioPlayer.Instance is AppleMusicAudioPlayer && !string.IsNullOrEmpty(song?.Id))
                 smtc.DisplayUpdater.MusicProperties.Genres.Add("AM-" + song?.Id);
+                smtc.DisplayUpdater.MusicProperties.Genres.Add("AppleMusic-" + song?.Id);
 
             if (AudioPlayer.AudioPlayer.Instance != null)
                 smtc.DisplayUpdater.MusicProperties.Genres.Add("PlaybackSpeed-" + AudioPlayer.AudioPlayer.Instance.Speed);
