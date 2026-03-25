@@ -84,7 +84,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                             onClick={() => window.igniteView?.commandBridge?.purchaseLicense()}
                         >
                             <DollarSign className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                            <span>Restore Purchase</span>
+                            <span>Donate</span>
                             <ExternalLink className="w-3 h-3 text-muted-foreground ml-1" />
                         </button>
                     )}

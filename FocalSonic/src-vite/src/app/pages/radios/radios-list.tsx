@@ -14,20 +14,28 @@ import { usePlayerActions } from "@/store/player.store";
 import { useRadios } from "@/store/radios.store";
 import { Radio } from "@/types/responses/radios";
 import { queryKeys } from "@/utils/queryKeys";
+import { canUseRadiosLibrary } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { PlusIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import ErrorPage from "../error-page";
 
 export default function Radios() {
     const { setDialogState, setData } = useRadios();
     const { t } = useTranslation();
     const { setPlayRadio } = usePlayerActions();
+    const canUseRadios = canUseRadiosLibrary();
 
     const { data: radios, isLoading } = useQuery({
         queryKey: [queryKeys.radio.all],
-        queryFn: service.radios.getAll,
+        queryFn: () => service.radios.getAll(),
+        enabled: canUseRadios,
     });
+
+    if (!canUseRadios) {
+        return <ErrorPage status={404} statusText="Not Found" />;
+    }
 
     const columns = radiosColumns();
 

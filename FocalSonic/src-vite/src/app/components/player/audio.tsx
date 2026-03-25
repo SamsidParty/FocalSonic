@@ -34,7 +34,7 @@ export function AudioPlayer({
     const { t } = useTranslation();
     const [previousGain, setPreviousGain] = useState(1);
     const { replayGainEnabled, replayGainError } = useReplayGainState();
-    const { isSong, isRadio, isPodcast } = usePlayerMediaType();
+    const { isSong, isRadio } = usePlayerMediaType();
     const { setPlayingState } = usePlayerActions();
     const { setReplayGainEnabled, setReplayGainError } = useReplayGainActions();
     const useNativeAudio = window.igniteView;
@@ -96,8 +96,8 @@ export function AudioPlayer({
                 handleSongError();
             }
         }
-        if (isSong || isPodcast) handleSong();
-    }, [audioRef, handleSongError, isPlaying, isSong, isPodcast, resumeContext]);
+        if (isSong) handleSong();
+    }, [audioRef, handleSongError, isPlaying, isSong, resumeContext]);
 
     useEffect(() => {
         async function handleRadio() {

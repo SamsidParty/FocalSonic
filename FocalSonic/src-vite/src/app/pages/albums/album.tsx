@@ -38,11 +38,12 @@ export default function Album() {
         isFetched,
     } = useGetAlbum(albumId);
 
-
-    const { data: artist, isLoading: moreAlbumsIsLoading } = isAppleMusic ? {} : useGetArtistAlbums(
-        album?.artistId || "",
+    const { data: artist, isLoading: moreAlbumsIsLoading } = useGetArtistAlbums(
+        isAppleMusic ? "" : (album?.artistId || ""),
     );
-    const { data: randomAlbums, isLoading: randomAlbumsIsLoading } = isAppleMusic ? {} : useGetGenreAlbums(album?.genre || "");
+    const { data: randomAlbums, isLoading: randomAlbumsIsLoading } = useGetGenreAlbums(
+        isAppleMusic ? "" : (album?.genre || ""),
+    );
 
     const moreAlbums = artist?.album;
 

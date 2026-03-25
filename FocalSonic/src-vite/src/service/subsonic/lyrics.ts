@@ -37,7 +37,10 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         },
     });
 
-    (response && response?.data.lyrics || response!.data.lyrics.value) && (lyrics = response!.data.lyrics.value);
+    const basicLyrics = response?.data?.lyrics?.value;
+    if (basicLyrics) {
+        lyrics = basicLyrics;
+    }
 
     if (lyrics && response?.data.openSubsonic) {
         // Try to get synced lyrics using getLyricsBySongId
@@ -48,7 +51,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
             },
         });
 
-        if (openResponse?.data?.lyricsList?.structuredLyrics?.length! > 0) {
+        if ((openResponse?.data?.lyricsList?.structuredLyrics?.length || 0) > 0) {
             lyrics = convertToLRC(openResponse?.data?.lyricsList)?.value;
         }
     
@@ -166,11 +169,13 @@ function formatLyrics(lyrics: string) {
 
 function convertToLRC(lyricsList?: ILyricsList) {
 
-
-    if (!lyricsList || lyricsList.structuredLyrics!.length === 0) { return null; }
+    const structuredLyrics = lyricsList?.structuredLyrics;
+    if (!structuredLyrics?.length) {
+        return null;
+    }
 
     // Prioritize synced english lyrics if available
-    const optimalLyrics = lyricsList.structuredLyrics!.find((lyric) => lyric.synced) || lyricsList.structuredLyrics![0];
+    const optimalLyrics = structuredLyrics.find((lyric) => lyric.synced) || structuredLyrics[0];
     let formattedLyrics = "";
   
     // Convert each line to LRC format

@@ -1,9 +1,7 @@
 import { getSongStreamUrl } from "@/api/httpClient";
-import { getProxyURL } from "@/api/podcastClient";
 import { MiniPlayerButton } from "@/app/components/mini-player/button";
 import { RadioInfo } from "@/app/components/player/radio-info";
 import { TrackInfo } from "@/app/components/player/track-info";
-import { podcasts } from "@/service/subsonic/podcasts";
 import {
     getVolume,
     usePlayerActions,
@@ -14,13 +12,11 @@ import {
     usePlayerRef,
     usePlayerSonglist,
     usePlayerSpeed,
-    usePlayerStore,
     useReplayGainState,
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
 import { LoopState } from "@/types/playerContext";
 import { hasPiPSupport, isFullscreen } from "@/utils/browser";
-import { logger } from "@/utils/logger";
 import { ReplayGainParams } from "@/utils/replayGain";
 import { checkServerType } from "@/utils/servers";
 import clsx from "clsx";
@@ -32,15 +28,12 @@ import { PlayerControls } from "./controls";
 import { PlayerEffects } from "./effects";
 import { PlayerLikeButton } from "./like-button";
 import { PlayerLyricsButton } from "./lyrics-button";
-import { PodcastInfo } from "./podcast-info";
-import { PodcastPlaybackRate } from "./podcast-playback-rate";
 import { PlayerProgress } from "./progress";
 import { PlayerQueueButton } from "./queue-button";
 import { PlayerVolume } from "./volume";
 
 const MemoTrackInfo = memo(TrackInfo);
 const MemoRadioInfo = memo(RadioInfo);
-const MemoPodcastInfo = memo(PodcastInfo);
 const MemoPlayerControls = memo(PlayerControls);
 const MemoPlayerProgress = memo(PlayerProgress);
 const MemoPlayerLikeButton = memo(PlayerLikeButton);
@@ -48,7 +41,6 @@ const MemoPlayerQueueButton = memo(PlayerQueueButton);
 const MemoPlayerClearQueueButton = memo(PlayerClearQueueButton);
 const MemoPlayerVolume = memo(PlayerVolume);
 const MemoPlayerEffects = memo(PlayerEffects);
-const MemoPodcastPlaybackRate = memo(PodcastPlaybackRate);
 const MemoLyricsButton = memo(PlayerLyricsButton);
 const MemoMiniPlayerButton = memo(MiniPlayerButton);
 const MemoAudioPlayer = memo(AudioPlayer);
@@ -56,7 +48,6 @@ const MemoAudioPlayer = memo(AudioPlayer);
 export function Player() {
     const audioRef = useRef<HTMLAudioElement>(null);
     const radioRef = useRef<HTMLAudioElement>(null);
-    const podcastRef = useRef<HTMLAudioElement>(null);
     const {
         setAudioPlayerRef,
         setCurrentDuration,
@@ -64,129 +55,79 @@ export function Player() {
         setPlayingState,
         handleSongEnded,
         getCurrentProgress,
-        getCurrentPodcastProgress,
     } = usePlayerActions();
-    const { currentList, currentSongIndex, radioList, podcastList } =
-    usePlayerSonglist();
+    const { currentList, currentSongIndex, radioList } = usePlayerSonglist();
     const isPlaying = usePlayerIsPlaying();
-    const { isSong, isRadio, isPodcast } = usePlayerMediaType();
+    const { isSong, isRadio } = usePlayerMediaType();
     const { isAppleMusic } = checkServerType();
     const loopState = usePlayerLoop();
     const audioPlayerRef = usePlayerRef();
-    const currentPlaybackRate = usePlayerStore().playerState.currentPlaybackRate;
     const { replayGainType, replayGainPreAmp, replayGainDefaultGain } =
-    useReplayGainState();
-
+        useReplayGainState();
     const { speed } = usePlayerSpeed();
-    const { filterData, setFilterData } = usePlayerFilterData();
-
+    const { filterData } = usePlayerFilterData();
     const { castStatus } = useCastStatus();
 
     const song = currentList[currentSongIndex];
     const radio = radioList[currentSongIndex];
-    const podcast = podcastList[currentSongIndex];
-
     const { playerStyle, isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
 
     const getAudioRef = useCallback(() => {
         if (isRadio) return radioRef;
-        if (isPodcast) return podcastRef;
 
         return audioRef;
-    }, [isPodcast, isRadio]);
+    }, [isRadio]);
 
     useEffect(() => {
         if (!isSong && !song) return;
 
-        if (audioPlayerRef === null && audioRef.current)
+        if (audioPlayerRef === null && audioRef.current) {
             setAudioPlayerRef(audioRef.current);
-    }, [audioPlayerRef, audioRef, isSong, setAudioPlayerRef, song]);
-
-    useEffect(() => {
-        const audio = podcastRef.current;
-        if (!audio) return;
-
-        audio.playbackRate = currentPlaybackRate;
-    }, [currentPlaybackRate, isPodcast]);
-
+        }
+    }, [audioPlayerRef, isSong, setAudioPlayerRef, song]);
 
     useEffect(() => {
         if (!audioRef.current) return;
         audioRef.current.playbackRate = speed;
         audioRef.current.preservesPitch = false;
-    }, [audioRef, speed]);
+    }, [speed]);
 
-    
     useEffect(() => {
         if (!audioRef.current) return;
-        audioRef.current.filterData != undefined && (audioRef.current.filterData = filterData);
-    }, [audioRef, filterData]);   
+        if (audioRef.current.filterData !== undefined) {
+            audioRef.current.filterData = filterData;
+        }
+    }, [filterData]);
 
     const setupDuration = useCallback(() => {
         const audio = getAudioRef().current;
         if (!audio) return;
 
         const audioDuration = Math.floor(audio.duration);
-        const infinityDuration = audioDuration === Infinity;
-
-        if (!infinityDuration) {
+        if (audioDuration !== Infinity) {
             setCurrentDuration(audioDuration);
         }
 
-        if (isPodcast && infinityDuration && podcast) {
-            setCurrentDuration(podcast.duration);
+        const progress = getCurrentProgress();
+        if (progress > 0) {
+            setProgress(progress);
+            audio.currentTime = progress;
         }
-
-        if (isPodcast) {
-            const podcastProgress = getCurrentPodcastProgress();
-
-            logger.info("[Player] - Resuming episode from:", {
-                seconds: podcastProgress,
-            });
-
-            setProgress(podcastProgress);
-            audio.currentTime = podcastProgress;
-        } else {
-            const progress = getCurrentProgress();
-        }
-    }, [
-        getAudioRef,
-        isPodcast,
-        podcast,
-        setCurrentDuration,
-        getCurrentPodcastProgress,
-        setProgress,
-        getCurrentProgress,
-    ]);
+    }, [getAudioRef, getCurrentProgress, setCurrentDuration, setProgress]);
 
     const setupProgress = useCallback(() => {
         const audio = getAudioRef().current;
         if (!audio) return;
 
-        const currentProgress = Math.floor(audio.currentTime);
-        setProgress(currentProgress);
+        setProgress(Math.floor(audio.currentTime));
     }, [getAudioRef, setProgress]);
 
     const setupInitialVolume = useCallback(() => {
-
         const audio = getAudioRef().current;
         if (!audio) return;
 
         audio.volume = getVolume() / 100;
     }, [getAudioRef]);
-
-    const sendFinishProgress = useCallback(() => {
-        if (!isPodcast || !podcast) return;
-
-        podcasts
-            .saveEpisodeProgress(podcast.id, podcast.duration)
-            .then(() => {
-                logger.info("Complete progress sent:", podcast.duration);
-            })
-            .catch((error) => {
-                logger.error("Error sending complete progress", error);
-            });
-    }, [isPodcast, podcast]);
 
     function getTrackReplayGain(): ReplayGainParams {
         const preAmp = replayGainPreAmp;
@@ -207,58 +148,56 @@ export function Player() {
 
     return (
         <>
-            {
-                playerStyle === "floating" && (
-                    <div className={clsx(
-                        "h-[--player-height] fixed left-0 right-0 -z-10 bg-bar",
+            {playerStyle === "floating" && (
+                <div
+                    className={clsx(
+                        "fixed left-0 right-0 -z-10 h-[--player-height] bg-bar",
                         isPlayerAtTop ? "top-header" : "bottom-0",
-                    )} />
-                )
-            }
-            
-            <footer className={clsx(
-                "flex items-center fixed z-40",
-                playerStyle === "floating" && "h-[64px] left-[--sidebar-width] [--player-height:64px] right-[--sidebar-width] ml-5 mr-7 mb-8 mt-8 rounded-full bg-secondary shadow-lg",
-                playerStyle !== "floating" && "h-[--player-height] w-full left-0 right-0 bg-bar",
-                isPlayerAtTop ? "top-header" : "bottom-0",
-                isFullscreen() || isMiniPlayer ? "player-idle-hide" : "",
-            )}>
-                <div className={clsx(
-                    "w-full h-full grid grid-cols-player xxs:flex xxs:flex-col xxs:justify-center gap-2 px-3",
-                    playerStyle !== "floating" && "[grid-template-areas:'trackinfo_controls_extrabuttons']",
-                    playerStyle === "floating" && "[grid-template-areas:'controls_trackinfo_extrabuttons']",
-                )}>
-                    {/* Track Info */}
-                    <div className={clsx(
-                        "flex items-center gap-2 xxs:hidden [grid-area:trackinfo]",
-                        playerStyle === "floating" && "overflow-hidden",
-                        playerStyle !== "floating" && "w-full",
-                    )}>
+                    )}
+                />
+            )}
+
+            <footer
+                className={clsx(
+                    "fixed z-40 flex items-center",
+                    playerStyle === "floating" && "[--player-height:64px] bottom-0 left-[--sidebar-width] right-[--sidebar-width] mb-8 ml-5 mr-7 mt-8 h-[64px] rounded-full bg-secondary shadow-lg",
+                    playerStyle !== "floating" && "left-0 right-0 h-[--player-height] w-full bg-bar",
+                    isPlayerAtTop ? "top-header" : "bottom-0",
+                    (isFullscreen() || isMiniPlayer) && "player-idle-hide",
+                )}
+            >
+                <div
+                    className={clsx(
+                        "grid h-full w-full grid-cols-player gap-2 px-3 xxs:flex xxs:flex-col xxs:justify-center",
+                        playerStyle !== "floating" && "[grid-template-areas:'trackinfo_controls_extrabuttons']",
+                        playerStyle === "floating" && "[grid-template-areas:'controls_trackinfo_extrabuttons']",
+                    )}
+                >
+                    <div
+                        className={clsx(
+                            "flex items-center gap-2 [grid-area:trackinfo] xxs:hidden",
+                            playerStyle === "floating" && "overflow-hidden",
+                            playerStyle !== "floating" && "w-full",
+                        )}
+                    >
                         {isSong && <MemoTrackInfo song={song} />}
                         {isRadio && <MemoRadioInfo radio={radio} />}
-                        {isPodcast && <MemoPodcastInfo podcast={podcast} />}
                     </div>
-                    {/* Main Controls */}
-                    <div 
-                        className={clsx(
-                            playerStyle === "default" && "col-span-2 xxs:w-full flex flex-col justify-center items-center px-4 gap-1",
-                            playerStyle === "floating" && "col-span-2 xxs:w-full flex flex-row justify-center items-center xxs:px-0 gap-1",
-                            playerStyle === "slim" && "col-span-2 xxs:w-full flex flex-row justify-center items-center px-4 xxs:px-0 gap-1",
-                            "[grid-area:controls]"
-                        )}>
-                        <MemoPlayerControls
-                            song={song}
-                            radio={radio}
-                            podcast={podcast}
-                            audioRef={getAudioRef()}
-                        />
 
-                        {(isSong || isPodcast) && (
-                            <MemoPlayerProgress audioRef={getAudioRef()} />
+                    <div
+                        className={clsx(
+                            playerStyle === "default" && "col-span-2 flex w-full flex-col items-center justify-center gap-1 px-4 xxs:w-full",
+                            playerStyle === "floating" && "col-span-2 flex w-full flex-row items-center justify-center gap-1 xxs:w-full xxs:px-0",
+                            playerStyle === "slim" && "col-span-2 flex w-full flex-row items-center justify-center gap-1 px-4 xxs:w-full xxs:px-0",
+                            "[grid-area:controls]",
                         )}
+                    >
+                        <MemoPlayerControls song={song} radio={radio} />
+
+                        {isSong && <MemoPlayerProgress audioRef={getAudioRef()} />}
                     </div>
-                    {/* Remaining Controls and Volume */}
-                    <div className="flex items-center w-full justify-end xxs:hidden [grid-area:extrabuttons]">
+
+                    <div className="flex w-full items-center justify-end [grid-area:extrabuttons] xxs:hidden">
                         <div className="flex items-center gap-1">
                             {isSong && (
                                 <>
@@ -267,30 +206,25 @@ export function Player() {
                                     <MemoPlayerQueueButton disabled={!song} />
                                 </>
                             )}
-                            {isPodcast && <MemoPodcastPlaybackRate />}
-                            {(isRadio || isPodcast) && (
-                                <MemoPlayerClearQueueButton disabled={!radio && !podcast} />
+
+                            {isRadio && <MemoPlayerClearQueueButton disabled={!radio} />}
+
+                            {isAppleMusic && !castStatus && (
+                                <MemoPlayerEffects
+                                    audioRef={getAudioRef()}
+                                    disabled={!song && !radio}
+                                />
                             )}
 
-                            {
-                                (isAppleMusic && !castStatus) && (
-                                    <MemoPlayerEffects
-                                        audioRef={getAudioRef()}
-                                        disabled={!song && !radio && !podcast}
-                                    />
-                                )
-                            }
-                            {
-                                (!castStatus) && (
-                                    <MemoPlayerVolume
-                                        audioRef={getAudioRef()}
-                                        disabled={!song && !radio && !podcast}
-                                    />
-                                )
-                            }
+                            {!castStatus && (
+                                <MemoPlayerVolume
+                                    audioRef={getAudioRef()}
+                                    disabled={!song && !radio}
+                                />
+                            )}
 
                             {isSong && hasPiPSupport && <MemoMiniPlayerButton />}
-                        </div> 
+                        </div>
                     </div>
                 </div>
 
@@ -320,25 +254,6 @@ export function Player() {
                         onPause={() => setPlayingState(false)}
                         onLoadStart={setupInitialVolume}
                         data-testid="player-radio-audio"
-                    />
-                )}
-
-                {isPodcast && podcast && (
-                    <MemoAudioPlayer
-                        src={getProxyURL(podcast.audio_url)}
-                        autoPlay={isPlaying}
-                        audioRef={podcastRef}
-                        preload="auto"
-                        onPlay={() => setPlayingState(true)}
-                        onPause={() => setPlayingState(false)}
-                        onLoadedMetadata={setupDuration}
-                        onTimeUpdate={setupProgress}
-                        onEnded={() => {
-                            sendFinishProgress();
-                            handleSongEnded();
-                        }}
-                        onLoadStart={setupInitialVolume}
-                        data-testid="player-podcast-audio"
                     />
                 )}
             </footer>

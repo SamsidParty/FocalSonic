@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/immutability */
 /* eslint-disable react-hooks/globals */
- 
-import { useEffect, useState } from 'react';
+
+import { useEffect, useEffectEvent, useState } from 'react';
 import './App.css';
 import SplashScreen from './components/splashscreen';
 import appleMusicPlaybackInterface from './lib/apple-music';
@@ -48,7 +48,7 @@ function App() {
     window.setCurrentStatus = setCurrentStatus;
     window.currentStatus = currentStatus;
 
-    const handleEvent = async (event: ControlInterfacePacket) => {
+    const handleEvent = useEffectEvent(async (event: ControlInterfacePacket) => {
 
         console.log(`[${event.type}] Event received: ${JSON.stringify(event.data).length < 40 ? JSON.stringify(event.data) : "[DATA TOO LARGE TO DISPLAY]"}`);
 
@@ -65,11 +65,12 @@ function App() {
         try {
             await playbackInterface?.handleEvent(event);
         }
-        catch (err: any) {
+        catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.toString() : String(err);
             console.error(err);
-            setCurrentStatus({ isError: true, statusCode: "playback-error", statusMessage: `Playback interface error: ${err.toString()}` });
+            setCurrentStatus({ isError: true, statusCode: "playback-error", statusMessage: `Playback interface error: ${errorMessage}` });
         }
-    };
+    });
 
     useEffect(() => {
 
@@ -88,9 +89,10 @@ function App() {
             try {
                 await controlInterface?.initialize(handleEvent);
             }
-            catch (err: any) { 
+            catch (err: unknown) {
+                const errorMessage = err instanceof Error ? err.toString() : String(err);
                 console.error(err);
-                setCurrentStatus({ isError: true, statusCode: "init-failed", statusMessage: `Control interface initialization failed: ${err.toString()}` });
+                setCurrentStatus({ isError: true, statusCode: "init-failed", statusMessage: `Control interface initialization failed: ${errorMessage}` });
                 return;
             }
         };

@@ -1,8 +1,8 @@
-import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion"
-import { isLinux } from "@/utils/osType"
-import { isWindows } from "react-device-detect"
-import { Windows } from "../controls/windows"
-import { AppTitle } from "./app-title"
+import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
+import { isLinux } from "@/utils/osType";
+import { isWindows } from "react-device-detect";
+import { Windows } from "../controls/windows";
+import { AppTitle } from "./app-title";
 
 export default function DefaultTitlebar() {
     return (
@@ -19,5 +19,5 @@ export default function DefaultTitlebar() {
                 </header>
             )}
         </>
-    )
+    );
 }

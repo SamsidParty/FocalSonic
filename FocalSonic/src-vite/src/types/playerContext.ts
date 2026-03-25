@@ -1,4 +1,3 @@
-import { EpisodeWithPodcast } from "./responses/podcasts";
 import { Radio } from "./responses/radios";
 import { ISong } from "./responses/song";
 
@@ -18,8 +17,6 @@ export interface ISongList {
     originalSongIndex: number
     radioList: Radio[]
     currentRadioID: string | null // For apple music stations
-    podcastList: EpisodeWithPodcast[]
-    podcastListProgresses: number[]
 }
 
 export interface IPlayerState {
@@ -31,8 +28,7 @@ export interface IPlayerState {
     speed: number
     filterData: string
     currentDuration: number
-    mediaType: "song" | "radio" | "podcast"
-    currentPlaybackRate: number
+    mediaType: "song" | "radio"
     audioPlayerRef: HTMLAudioElement | null
     mainDrawerState: boolean
     hasPrev: boolean
@@ -151,16 +147,6 @@ export interface IPlayerActions {
     handleSongEnded: () => void
     getCurrentProgress: () => number
     resetConfig: () => void
-    setPlayPodcast: (
-        list: EpisodeWithPodcast[],
-        index: number,
-        progress: number,
-    ) => void
-    setUpdatePodcastProgress: (value: number) => void
-    getCurrentPodcastProgress: () => number
-    setPlaybackRate: (value: number) => void
-    setNextPodcast: (episode: EpisodeWithPodcast, progress: number) => void
-    setLastPodcast: (episode: EpisodeWithPodcast, progress: number) => void
     updateQueueChecks: () => void
     setCurrentSongColor: (value: string | null) => void
     setBigPlayerBlurValue: (value: number) => void

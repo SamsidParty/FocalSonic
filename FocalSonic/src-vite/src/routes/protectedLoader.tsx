@@ -27,13 +27,3 @@ export async function protectedLoader() {
 
     return null;
 }
-
-export async function podcastsLoader() {
-    const { active } = useAppStore.getState().podcasts;
-
-    if (!active) {
-        return redirect(ROUTES.LIBRARY.HOME);
-    }
-
-    return null;
-}

@@ -5,7 +5,7 @@ const requestWakeLock = async () => {
     wakeLock.addEventListener('release', () => {
       console.log('Screen Wake Lock released');
     });
-  } catch (err) {
+  } catch {
     //console.error(err.toString());
   }
 };

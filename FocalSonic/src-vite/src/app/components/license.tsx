@@ -19,11 +19,7 @@ export function LicenseDialog() {
         console.log("[LICENSE CHECK] Remaining days:", remainingDays);
         setRemainingDays(remainingDays);
 
-        if (remainingDays == 0) {
-            setIsDialogOpen(true); // Force open dialog if license expired
-            localStorage.hasRemindedLicense = "true";
-        }
-        else if (remainingDays > 0 && !localStorage.hasRemindedLicense) {
+        if (remainingDays > 0 && !localStorage.hasRemindedLicense) {
             setIsDialogOpen(true); // Open the dialog just once to remind the user
             localStorage.hasRemindedLicense = "true";
         }

@@ -116,8 +116,8 @@ function parseLrcLine(line: string, lineNumber: number): ParsedLyricLine | null 
     let altContent: string | null = null;
 
     // Check for alternate lyrics (separated by ⏩)
-    if (content.includes('⏩')) {
-        const parts = content.split('⏩');
+    if (content.includes("⏩")) {
+        const parts = content.split("⏩");
         content = parts[0];
         altContent = parts[1] || null;
     }
@@ -141,7 +141,7 @@ function parseLrcLine(line: string, lineNumber: number): ParsedLyricLine | null 
  * Parse complete LRC/ELRC lyrics string
  */
 export function parseLrc(lrcString: string): ParsedLyrics {
-    const lines = lrcString.split('\n');
+    const lines = lrcString.split("\n");
     const parsedLines: ParsedLyricLine[] = [];
     let lineNumber = 0;
 

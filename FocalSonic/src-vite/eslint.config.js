@@ -7,7 +7,14 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-    globalIgnores(["dist", "eslint.config.js"]),
+    globalIgnores([
+        "dist",
+        "eslint.config.js",
+        "postcss.config.js",
+        "tailwind.config.js",
+        "public/meta/**",
+        "src/lib/lyricsScene.js",
+    ]),
     {
         files: ["**/*.{js,jsx,ts,tsx}"],
         extends: [
@@ -51,6 +58,9 @@ export default defineConfig([
             "function-paren-newline": ["error", "multiline-arguments"],
             "@typescript-eslint/no-unused-expressions": ["off"],
             "@typescript-eslint/no-unused-vars": ["off"],
+            "@typescript-eslint/no-empty-object-type": ["error", {
+                allowInterfaces: "with-single-extends",
+            }],
             "@typescript-eslint/no-explicit-any": ["warn"],
         }
     },

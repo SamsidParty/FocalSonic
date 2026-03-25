@@ -3,13 +3,13 @@ export default async function isWidevineSupported(): boolean {
         return false;
     }
 
-    const keySystem = 'com.widevine.alpha';
+    const keySystem = "com.widevine.alpha";
     const config = [{
-        initDataTypes: ['cenc'],
+        initDataTypes: ["cenc"],
         videoCapabilities: [{
             contentType: 'video/mp4; codecs="avc1.42E01E"', // H.264 baseline profile
         }],
-        robustness: 'HW_SECURE_ALL', // level 1 equivalent
+        robustness: "HW_SECURE_ALL", // level 1 equivalent
     }];
 
     try {

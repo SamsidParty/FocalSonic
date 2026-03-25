@@ -1,0 +1,90 @@
+﻿
+> focalsonic@1.2.0 lint
+> eslint --fix
+
+node.exe : (node:45408) ESLintCircularFixesWarning: Circular fixes detected 
+while fixing C:\Data\Documents\Programming 
+Stuff\FocalSonic\FocalSonic\src-vite\src\service\applemusic\albums.ts. It is 
+likely that you have conflicting rules in your configuration.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:45408) ES... configuration. 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\app\components\coverflow\coverflow-item.tsx
+  81:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\app\components\fullscreen\youtube-background.tsx
+   15:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  119:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  254:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  318:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  334:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\app\components\home\preview-list.tsx
+  26:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\app\components\player\native-audio.tsx
+  27:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\lib\queryClient.ts
+  48:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:86  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  55:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  55:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\service\applemusic\albums.ts
+  58:11  error  'response' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\service\applemusic\playlists.ts
+  39:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\service\applemusic\recommendations.ts
+  41:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\service\applemusic\search.ts
+  40:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\service\applemusic\songs.ts
+  76:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\service\applemusic\star.ts
+   4:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\service\subsonic\lyrics.ts
+  54:13  error  Optional chain expressions can return undefined by design - using a non-null assertion is unsafe and wrong  @typescript-eslint/no-non-null-asserted-optional-chain
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\store\app.store.ts
+  39:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\store\player.store.ts
+  35:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\types\applemusic\artist.ts
+  22:93  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\types\applemusic\common.ts
+  43:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\types\applemusic\radios.ts
+  5:81  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\types\applemusic\recommendations.ts
+  33:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\types\applemusic\song.ts
+  57:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Data\Documents\Programming Stuff\FocalSonic\FocalSonic\src-vite\src\types\playerContext.ts
+  143:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 30 problems (2 errors, 28 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+

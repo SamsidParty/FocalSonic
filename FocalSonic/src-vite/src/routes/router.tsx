@@ -9,17 +9,12 @@ import { ArtistsFallback } from "@/app/components/fallbacks/artists.tsx";
 import { HomeFallback } from "@/app/components/fallbacks/home-fallbacks";
 import { PlaylistFallback } from "@/app/components/fallbacks/playlist-fallbacks";
 import {
-    EpisodeFallback,
-    LatestEpisodesFallback,
-    PodcastFallback,
-} from "@/app/components/fallbacks/podcast-fallbacks";
-import {
     InfinitySongListFallback,
     SongListFallback,
 } from "@/app/components/fallbacks/song-fallbacks";
 import PinsPage from "@/app/pages/pins";
 import { loginLoader } from "@/routes/loginLoader";
-import { podcastsLoader, protectedLoader } from "@/routes/protectedLoader";
+import { protectedLoader } from "@/routes/protectedLoader";
 import { ROUTES } from "@/routes/routesList";
 
 const BaseLayout = lazy(() => import("@/app/layout/base"));
@@ -35,12 +30,6 @@ const Radios = lazy(() => import("@/app/pages/radios/radios-list"));
 const SongList = lazy(() => import("@/app/pages/songs/songlist"));
 const Home = lazy(() => import("@/app/pages/home"));
 const Search = lazy(() => import("@/app/pages/search"));
-const PodcastsList = lazy(() => import("@/app/pages/podcasts/list"));
-const Podcast = lazy(() => import("@/app/pages/podcasts/podcast"));
-const Episode = lazy(() => import("@/app/pages/podcasts/episode"));
-const LatestEpisodes = lazy(
-    () => import("@/app/pages/podcasts/latest-episodes"),
-);
 
 export const router = createHashRouter([
     {
@@ -155,50 +144,6 @@ export const router = createHashRouter([
                 element: (
                     <Suspense fallback={<PlaylistFallback />}>
                         <Playlist />
-                    </Suspense>
-                ),
-            },
-            {
-                id: "podcasts",
-                path: ROUTES.LIBRARY.PODCASTS,
-                errorElement: <ErrorPage />,
-                loader: podcastsLoader,
-                element: (
-                    <Suspense fallback={<AlbumsFallback />}>
-                        <PodcastsList />
-                    </Suspense>
-                ),
-            },
-            {
-                id: "podcast",
-                path: ROUTES.PODCASTS.PATH,
-                errorElement: <ErrorPage />,
-                loader: podcastsLoader,
-                element: (
-                    <Suspense fallback={<PodcastFallback />}>
-                        <Podcast />
-                    </Suspense>
-                ),
-            },
-            {
-                id: "episode",
-                path: ROUTES.EPISODES.PATH,
-                errorElement: <ErrorPage />,
-                loader: podcastsLoader,
-                element: (
-                    <Suspense fallback={<EpisodeFallback />}>
-                        <Episode />
-                    </Suspense>
-                ),
-            },
-            {
-                id: "latest-episodes",
-                path: ROUTES.EPISODES.LATEST,
-                errorElement: <ErrorPage />,
-                loader: podcastsLoader,
-                element: (
-                    <Suspense fallback={<LatestEpisodesFallback />}>
-                        <LatestEpisodes />
                     </Suspense>
                 ),
             },

@@ -5,15 +5,13 @@
     "recentlyAdded": "Recently added",
     "explore": "Explore"
   },
-  "license": {
-    "remainingDays": "{{count}} days left",
-    "purchase": "Purchase FocalSonic",
-    "persuade": "By purchasing a license, you support ongoing development and help us improve the app with new features and updates. You'll get a 7-day free trial to experience the app before you decide to purchase.",
-    "feature1": "One-time purchase, no subscriptions",
-    "feature2": "Affordable pricing for everyone",
-    "feature3": "Supports future updates and features",
-    "feature4": "Secure payment through the Microsoft Store",
-    "buyNow": "Buy Now {{price}}"
+  "supportPrompt": {
+    "title": "Support FocalSonic",
+    "description": "FocalSonic is now moving toward an open-source model.",
+    "body": "If the app is useful to you, consider sending a donation or reaching out to help support ongoing maintenance, fixes, and polish.",
+    "dismiss": "Maybe later",
+    "contact": "Contact support",
+    "donate": "Open support page"
   },
   "sidebar": {
     "home": "Home",
@@ -26,7 +24,6 @@
     "albums": "Albums",
     "playlists": "Playlists",
     "radios": "Radios",
-    "podcasts": "Podcasts",
     "emptyPlaylist": "No playlists created yet"
   },
   "menu": {
@@ -226,87 +223,6 @@
     "recentAlbums": "Recent albums",
     "relatedArtists": "Related artists"
   },
-  "podcasts": {
-    "form": {
-      "latestEpisodes": "Latest Episodes",
-      "addButton": "Add Podcast",
-      "search": "Search podcasts…",
-      "dialog": {
-        "title": "Create Podcast",
-        "feedUrl": "Feed URL",
-        "message": "You can add multiple URLs, one per line.",
-        "saveButton": "Save",
-        "validations": {
-          "url": "Please provide valid URLs.",
-          "urlLength": "URLs must be at least 10 characters",
-          "protocol": "URLs must start with http:// or https://",
-          "atLeastOneUrl": "Please provide at least one URL."
-        }
-      },
-      "toasts": {
-        "success": "Podcast created successfully! It will be available to listen to in just a few minutes!",
-        "error": "Failed to create podcast!"
-      }
-    },
-    "emptyPage": {
-      "message": "No podcasts added",
-      "description": "It looks like you have not added any podcasts yet. Add one above!"
-    },
-    "latestEpisodes": {
-      "emptyPage": {
-        "message": "No episodes available",
-        "description": "Try adding more podcasts.",
-        "goToPodcasts": "Go to Podcasts"
-      }
-    },
-    "emptyResults": {
-      "title": "No results found.",
-      "info": "We couldn't find any podcasts matching your search term.",
-      "action": "Please check your spelling or try different keywords."
-    },
-    "filters": {
-      "episodes": {
-        "search": "Search episodes…",
-        "orderBy": {
-          "publishDate": "Publish Date",
-          "title": "Title",
-          "duration": "Duration"
-        }
-      },
-      "podcasts": {
-        "orderBy": {
-          "title": "Title",
-          "episodeCount": "Episode Count"
-        }
-      }
-    },
-    "header": {
-      "episodeCount_one": "{{count}} episode",
-      "episodeCount_many": "{{count}} episodes",
-      "episodeCount_other": "{{count}} episodes",
-      "feed": "Feed",
-      "website": "Official Website",
-      "unfollow": {
-        "tooltip": "Unfollow {{title}}",
-        "dialog": {
-          "title": "Are you sure you want to unfollow this podcast?",
-          "description": "To listen to this podcast again in the future, you'll need to recreate it."
-        },
-        "toasts": {
-          "success": "You have successfully unfollowed the podcast!",
-          "error": "An error occurred while trying to unfollow the podcast. Please try again."
-        }
-      }
-    },
-    "list": {
-      "episodes": "Episodes",
-      "notFoundMessage": "This podcast doesn't have any episodes yet!",
-      "progress": {
-        "remainingTime": "{{time}} remaining",
-        "completed": "Completed"
-      }
-    }
-  },
   "table": {
     "columns": {
       "title": "Title",
@@ -485,11 +401,7 @@
       "removeSong": "Remove from playlist"
     },
     "info": "Get info",
-    "markAsPlayed": "Mark as played",
-    "goto": {
-      "episode": "Go to episode",
-      "podcast": "Go to podcast"
-    }
+    "markAsPlayed": "Mark as played"
   },
   "radios": {
     "label": "Radio",
@@ -762,22 +674,6 @@
         "description": "Manage the visibility and organization of sections displayed in the sidebar.",
         "radios": {
           "section": "Hide radios section"
-        }
-      },
-      "podcast": {
-        "group": "Podcasts",
-        "description": "Enable integration with the FocalSonic Podcasts service.",
-        "enabled": {
-          "label": "Enable Integration"
-        },
-        "service": {
-          "url": "Podcast Service URL"
-        },
-        "credentials": {
-          "label": "Use Logged-In User and Server URL",
-          "error": "Username and Server URL are required.",
-          "user": "Username",
-          "url": "Server URL"
         }
       }
     }

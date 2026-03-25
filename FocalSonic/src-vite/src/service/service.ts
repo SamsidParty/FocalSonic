@@ -2,8 +2,10 @@ import { checkServerType } from "@/utils/servers";
 import { appleMusic } from "./applemusic";
 import { subsonic } from "./subsonic";
 
-export const service = new Proxy({}, {
-    get(target, prop, receiver) {
+type ServiceMap = typeof subsonic & typeof appleMusic;
+
+export const service = new Proxy({} as ServiceMap, {
+    get(_target, prop: keyof ServiceMap) {
         const { isAppleMusic } = checkServerType();
 
         if (isAppleMusic) {
@@ -11,5 +13,5 @@ export const service = new Proxy({}, {
         }
 
         return subsonic[prop as keyof typeof subsonic];
-    }
+    },
 });

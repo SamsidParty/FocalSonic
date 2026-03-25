@@ -31,8 +31,6 @@ export interface IAppData extends IServerConfig {
     authType: AuthType | null
     isServerConfigured: boolean
     osType: string
-    hideServer: boolean
-    lockUser: boolean
     songCount: number | null
     isHydrated: boolean
 }
@@ -64,19 +62,6 @@ export interface IAppRuntimeState {
     setLogoutDialogState: (value: boolean) => void
 }
 
-export interface IPodcasts {
-    active: boolean
-    setActive: (value: boolean) => void
-    serviceUrl: string
-    setServiceUrl: (value: string) => void
-    useDefaultUser: boolean
-    setUseDefaultUser: (value: boolean) => void
-    customUser: string
-    setCustomUser: (value: string) => void
-    customUrl: string
-    setCustomUrl: (value: string) => void
-}
-
 export interface IAppSettings {
     enableLRCLib: boolean
     setEnableLRCLib: (value: boolean) => void
@@ -98,7 +83,6 @@ export interface IAppSettings {
 
 export interface IAppContext {
     data: IAppData
-    podcasts: IPodcasts
     settings: IAppSettings
     pages: IAppPages
     actions: IAppActions

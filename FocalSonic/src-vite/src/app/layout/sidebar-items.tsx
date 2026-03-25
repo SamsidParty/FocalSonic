@@ -1,6 +1,6 @@
 import { ROUTES } from "@/routes/routesList";
-import { checkServerType } from "@/utils/servers";
-import { HomeIcon, LibraryIcon, ListMusicIcon, Mic2Icon, Music2Icon, Pin, PodcastIcon, RadioIcon, Search } from "lucide-react";
+import { canUseRadiosLibrary, checkServerType } from "@/utils/servers";
+import { HomeIcon, LibraryIcon, ListMusicIcon, Mic2Icon, Music2Icon, Pin, RadioIcon, Search } from "lucide-react";
 import { memo } from "react";
 
 const ListMusic = memo(ListMusicIcon);
@@ -9,7 +9,6 @@ const Music2 = memo(Music2Icon);
 const Radio = memo(RadioIcon);
 const Home = memo(HomeIcon);
 const Library = memo(LibraryIcon);
-const Podcast = memo(PodcastIcon);
 
 export enum SidebarItems {
     Search = "search",
@@ -19,7 +18,6 @@ export enum SidebarItems {
     Songs = "songs",
     Albums = "albums",
     Playlists = "playlists",
-    Podcasts = "podcasts",
     Radios = "radios",
 }
 
@@ -64,12 +62,6 @@ export const libraryItems = [
         icon: Mic2,
     },
     {
-        id: SidebarItems.Podcasts,
-        title: "sidebar.podcasts",
-        route: ROUTES.LIBRARY.PODCASTS,
-        icon: Podcast,
-    },
-    {
         id: SidebarItems.Radios,
         title: "sidebar.radios",
         route: ROUTES.LIBRARY.RADIOS,
@@ -90,5 +82,11 @@ export function useLibraryItems() {
         });
     }
 
-    return items;
+    return items.filter((item) => {
+        if (item.id === SidebarItems.Radios) {
+            return canUseRadiosLibrary();
+        }
+
+        return true;
+    });
 }

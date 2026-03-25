@@ -14,6 +14,7 @@ type PlaylistCardProps = {
 }
 
 function PlaylistCard({ playlist }: PlaylistCardProps) {
+    const { setSongList } = usePlayerActions();
 
     if (playlist?.appleMusic?.type?.includes("playlist-folders")) {
         return (
@@ -31,8 +32,6 @@ function PlaylistCard({ playlist }: PlaylistCardProps) {
             </PreviewCard.Root>
         );
     }
-
-    const { setSongList } = usePlayerActions();
 
     async function handlePlayPlaylist(shuffle = false) {
         const response = await service.playlists.getOne(playlist.id);

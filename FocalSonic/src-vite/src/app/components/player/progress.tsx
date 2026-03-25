@@ -1,16 +1,13 @@
 import { ProgressSlider } from "@/app/components/ui/slider";
-import { podcasts } from "@/service/subsonic/podcasts";
 import {
     usePlayerActions,
     usePlayerDuration,
     usePlayerIsPlaying,
-    usePlayerMediaType,
     usePlayerProgress,
     usePlayerSonglist,
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
-import { logger } from "@/utils/logger";
 import clsx from "clsx";
 import {
     RefObject,
@@ -32,14 +29,11 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
     const [localProgress, setLocalProgress] = useState(progress);
     const currentDuration = usePlayerDuration();
     const isPlaying = usePlayerIsPlaying();
-    const { currentSong, currentList, podcastList, currentSongIndex } =
-    usePlayerSonglist();
-    const { isSong, isPodcast } = usePlayerMediaType();
-    const { setProgress, setUpdatePodcastProgress, getCurrentPodcastProgress } =
-    usePlayerActions();
+    const { currentSong, currentList } = usePlayerSonglist();
+    const { setProgress } = usePlayerActions();
     const isScrobbleSentRef = useRef(false);
 
-    const isEmpty = isSong && currentList.length === 0;
+    const isEmpty = currentList.length === 0;
 
     const updateAudioCurrentTime = useCallback(
         (value: number) => {
@@ -83,63 +77,28 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
         if (isSeeking || !isPlaying) {
             return;
         }
-        if (isSong) {
-            const progressPercentage = (progress / currentDuration) * 100;
 
-            if (progressPercentage === 0) {
-                isScrobbleSentRef.current = false;
-                progressTicks.current = 0;
-            } else {
-                progressTicks.current += 1;
+        const progressPercentage = (progress / currentDuration) * 100;
 
-                if (
-                    (progressTicks.current >= currentDuration / 2 ||
-            progressTicks.current >= 60 * 4) &&
-          !isScrobbleSentRef.current
-                ) {
-                    isScrobbleSentRef.current = true;
-                }
+        if (progressPercentage === 0) {
+            isScrobbleSentRef.current = false;
+            progressTicks.current = 0;
+        } else {
+            progressTicks.current += 1;
+
+            if (
+                (progressTicks.current >= currentDuration / 2 ||
+                    progressTicks.current >= 60 * 4) &&
+                !isScrobbleSentRef.current
+            ) {
+                isScrobbleSentRef.current = true;
             }
         }
     }, [
         progress,
         currentDuration,
-        isSong,
         currentSong.id,
         isPlaying,
-    ]);
-
-    // Used to save listening progress to backend every 30 seconds
-    useEffect(() => {
-        if (!isPodcast || !podcastList) return;
-        if (progress === 0) return;
-
-        const send = (progress / 30) % 1 === 0;
-        if (!send) return;
-
-        const podcast = podcastList[currentSongIndex] ?? null;
-        if (!podcast) return;
-
-        const podcastProgress = getCurrentPodcastProgress();
-        if (progress === podcastProgress) return;
-
-        setUpdatePodcastProgress(progress);
-
-        podcasts
-            .saveEpisodeProgress(podcast.id, progress)
-            .then(() => {
-                logger.info("Progress sent:", progress);
-            })
-            .catch((error) => {
-                logger.error("Error sending progress", error);
-            });
-    }, [
-        currentSongIndex,
-        getCurrentPodcastProgress,
-        isPodcast,
-        podcastList,
-        progress,
-        setUpdatePodcastProgress,
     ]);
 
     const currentTime = convertSecondsToTime(isSeeking ? localProgress : progress);
@@ -173,7 +132,7 @@ export function PlayerProgress({ audioRef }: PlayerProgressProps) {
             >
                 {currentTime}
             </small>
-            {!isEmpty || isPodcast ? (
+            {!isEmpty ? (
                 <ProgressSlider
                     defaultValue={[0]}
                     value={isSeeking ? [localProgress] : [progress]}

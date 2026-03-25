@@ -89,7 +89,8 @@ function SyncedLyrics(props: LyricProps) {
     const rendererRef = useRef<LyricsRenderer | null>(null);
     const rafRef = useRef<number | null>(null);
 
-    let { lyrics, leftAlign, small, oneLine } = props;
+    let { lyrics } = props;
+    const { leftAlign, small, oneLine } = props;
 
     // Convert and translate lyrics
     const { data: convertedLyrics, isLoading } = useQuery({

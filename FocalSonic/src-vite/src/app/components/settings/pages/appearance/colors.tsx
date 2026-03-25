@@ -1,13 +1,13 @@
 import {
-  Content,
-  ContentItem,
-  ContentItemForm,
-  ContentItemTitle,
-  ContentSeparator,
-  Header,
-  HeaderDescription,
-  HeaderTitle,
-  Root,
+    Content,
+    ContentItem,
+    ContentItemForm,
+    ContentItemTitle,
+    ContentSeparator,
+    Header,
+    HeaderDescription,
+    HeaderTitle,
+    Root,
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
 import { useDynamicColors } from "@/store/player.store";

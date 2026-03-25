@@ -43,8 +43,6 @@ async function getAlbumList(params: Partial<AlbumListParams> = {}) {
 }
 
 async function getOne(id: string) {
-
-    let response;
     if (!parseInt(id)) { // If it's not a catalog id, then it's a library id
         id = (await httpClient<AppleMusicAlbum[]>(`/applemusic/me/library/albums/${id}/catalog`, { method: "GET", }))?.data[0]?.id || id;
     }
@@ -55,7 +53,7 @@ async function getOne(id: string) {
         baseURL = "/applemusic/me/library";
     }
 
-    response = await httpClient<AppleMusicAlbum[]>(
+    const response = await httpClient<AppleMusicAlbum[]>(
         `${baseURL}/albums/${id}`, 
         {
             method: "GET",

@@ -15,3 +15,10 @@ export function checkServerType() {
         isAppleMusic
     };
 }
+
+export function canUseRadiosLibrary() {
+    const { showRadiosSection } = useAppStore.getState().pages;
+    const { isAppleMusic } = checkServerType();
+
+    return showRadiosSection && !isAppleMusic;
+}

@@ -52,19 +52,17 @@ function setWindowTitle(newTitle: string) {
 export function MediaSessionObserver() {
     const { t } = useTranslation();
     const isPlaying = usePlayerIsPlaying();
-    const { isRadio, isSong, isPodcast } = usePlayerMediaType();
-    const { currentList, radioList, currentSongIndex, podcastList } =
+    const { isRadio, isSong } = usePlayerMediaType();
+    const { currentList, radioList, currentSongIndex } =
     usePlayerSonglist();
     const radioLabel = t("radios.label");
 
     const song = currentList[currentSongIndex] ?? null;
     const radio = radioList[currentSongIndex] ?? null;
-    const episode = podcastList[currentSongIndex] ?? null;
 
     const hasNothingPlaying =
     currentList.length === 0 &&
-    radioList.length === 0 &&
-    podcastList.length === 0;
+    radioList.length === 0;
 
     function resetAppTitle() {
         document.title = appName;
@@ -93,18 +91,12 @@ export function MediaSessionObserver() {
             title = `${song.artist} - ${song.title}`;
             manageMediaSession.setMediaSession(song);
         }
-        if (isPodcast && episode) {
-            title = `${episode.title} - ${episode.podcast.title}`;
-            manageMediaSession.setPodcastMediaSession(episode);
-        }
 
         document.title = title;
         setWindowTitle(title);
     }, [
-        episode,
         hasNothingPlaying,
         isPlaying,
-        isPodcast,
         isRadio,
         isSong,
         radio,

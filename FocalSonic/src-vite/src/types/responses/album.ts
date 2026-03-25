@@ -14,7 +14,7 @@ export interface DiscTitle {
     disc: number
 }
 
-export interface ReleaseDate {}
+export type ReleaseDate = Record<string, unknown>;
 
 export interface SingleAlbum {
     id: string

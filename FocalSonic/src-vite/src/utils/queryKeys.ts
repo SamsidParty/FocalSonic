@@ -49,17 +49,6 @@ const update = {
     check: "check-for-updates",
 };
 
-const podcast = {
-    all: "get-all-podcasts",
-    one: "get-podcast",
-};
-
-const episode = {
-    all: "get-podcast-episodes",
-    one: "get-episode",
-    latest: "get-latest-episodes",
-};
-
 export const queryKeys = {
     album,
     artist,
@@ -69,7 +58,5 @@ export const queryKeys = {
     search,
     genre,
     update,
-    podcast,
-    episode,
     appleMusic
 };

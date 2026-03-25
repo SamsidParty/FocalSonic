@@ -1,11 +1,9 @@
-import clsx from "clsx";
-import { useTranslation } from "react-i18next";
-import { Link, useLocation } from "react-router-dom";
-import { PodcastMiniSidebarItem } from "@/app/components/podcasts/sidebar-item";
 import { ISidebarItem } from "@/app/components/sidebar/sidebar-generator";
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
-import { ROUTES } from "@/routes/routesList";
+import clsx from "clsx";
+import { useTranslation } from "react-i18next";
+import { Link, useLocation } from "react-router-dom";
 
 export function MiniSidebarItem({ item }: { item: ISidebarItem }) {
     const location = useLocation();
@@ -33,9 +31,6 @@ export function MiniSidebarItem({ item }: { item: ISidebarItem }) {
                     </Button>
                 </SimpleTooltip>
             </Link>
-            {item.id === "podcasts" && (
-                <PodcastMiniSidebarItem isActive={isActive(ROUTES.EPISODES.LATEST)} />
-            )}
         </>
     );
 }

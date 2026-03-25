@@ -9,6 +9,18 @@ const webPlaybackURL = "https://play.music.apple.com/WebObjects/MZPlay.woa/wa/we
 
 const enableAtmos = true;
 
+type EnhancedSessionKeyEntry = Record<string, { URI?: string }>;
+type AppleMusicAsset = {
+    URL?: string
+    flavor?: string
+    metadata?: {
+        bitRate?: number
+    }
+};
+type AppleMusicSongSource = {
+    assets?: AppleMusicAsset[]
+};
+
 export function getAudioElement(): HTMLAudioElement {
     let audioElement = document.getElementById('apple-music-player');
     if (!audioElement) {
@@ -61,10 +73,10 @@ focalHls.on(Hls.Events.MANIFEST_LOADED, (event, data) => {
         // Try mode 1
         if (data?.sessionData?.["com.apple.hls.AudioSessionKeyInfo"]) {
             const sessionKeyInfo = data.sessionData["com.apple.hls.AudioSessionKeyInfo"];
-            const sessionKeyData = JSON.parse(atob(sessionKeyInfo?.VALUE || ""));
-            Object.entries(sessionKeyData).forEach((keyInfo: any) => {
-                if (keyInfo[0] != "1" && keyInfo && keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]) {
-                    //focalHls.magicDataURI = "enhanced/" + keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
+            const sessionKeyData = JSON.parse(atob(sessionKeyInfo?.VALUE || "")) as Record<string, EnhancedSessionKeyEntry>;
+            Object.entries(sessionKeyData).forEach(([key, value]) => {
+                if (key != "1" && value["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]) {
+                    //focalHls.magicDataURI = "enhanced/" + value["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
                     console.log("Found magic data URI (enhancedHls):", focalHls.magicDataURI);
                 }
             });
@@ -135,7 +147,7 @@ function tryAcquireLicense() {
     if (focalHls?.contentID && focalHls.magicDataURI && !focalHls.licenseAcquired) {
         focalHls.licenseAcquired = true;
         console.log("Acquiring license for content ID:", focalHls.contentID);
-        licenseWithDefaultKey(getAudioElement(), focalHls.contentID).then(() => {
+        licenseWithDefaultKey(getAudioElement()).then(() => {
             console.log("License acquired, attaching media");
             focalHls.attachMedia(getAudioElement());
         });
@@ -193,16 +205,16 @@ export async function getWebContentSources(contentID: string) {
     return null;
 }
 
-export function findBestWebContentSource(sources: any[]) {
+export function findBestWebContentSource(sources: AppleMusicSongSource[] | null) {
     if (sources != null && sources.length > 0) {
         const song = sources[0];
-        const validAssets = song?.assets?.filter((asset: any) => asset.URL && asset.URL.includes(".m3u8") && asset.flavor.includes(":ctrp")); // ctrp = compatible with widevine
+        const validAssets = song?.assets?.filter((asset) => asset.URL && asset.URL.includes(".m3u8") && asset.flavor?.includes(":ctrp")); // ctrp = compatible with widevine
 
         // Find the asset with the highest bitrate
-        let bestAsset = null;
+        let bestAsset: AppleMusicAsset | null = null;
         let highestBitrate = -1;
 
-        for (const asset of validAssets) {
+        for (const asset of validAssets || []) {
             if (asset.metadata?.bitRate > highestBitrate) {
                 highestBitrate = asset.metadata?.bitRate;
                 bestAsset = asset;
@@ -287,7 +299,7 @@ export function licenseForWebPlayback(audio: HTMLAudioElement | null = null, con
         audio = getAudioElement();
     }
 
-    return new Promise<void>(async (resolve, reject) => {
+    return new Promise<void>(async (resolve) => {
         const widevine = await acquireWidevineAccess();
         const certificate = await acquireWidevineCert();
 
@@ -338,12 +350,12 @@ function makeClearKeyLicense(): Uint8Array {
 }
 
 
-export async function licenseWithDefaultKey(audio: HTMLAudioElement | null = null, contentID: string) {
+export async function licenseWithDefaultKey(audio: HTMLAudioElement | null = null) {
     if (!audio) {
         audio = getAudioElement();
     }
 
-    return new Promise<void>(async (resolve, reject) => {
+    return new Promise<void>(async (resolve) => {
         const clearkey = await acquireClearKeyAccess();
 
         const mediaKeys = await clearkey.createMediaKeys();

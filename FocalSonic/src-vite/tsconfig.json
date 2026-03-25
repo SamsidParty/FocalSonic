@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "jsx": "react",
+    "jsx": "react-jsx",
     "composite": true,
     "skipLibCheck": false,
     "module": "ESNext",
@@ -13,6 +13,16 @@
   },
   "include": [
     "vite.config.ts",
-    "src"
+    "src/**/*"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "src/api/podcastClient.ts",
+    "src/app/components/player/podcast-info.tsx",
+    "src/app/components/player/podcast-playback-rate.tsx",
+    "src/queries/podcasts.ts",
+    "src/service/subsonic/podcasts.ts",
+    "src/types/responses/podcasts.ts"
   ]
 }

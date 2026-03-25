@@ -680,6 +680,7 @@
         if (licenseURL.startsWith("enhanced/")) {
             return getEnhancedPssh(licenseURL.replace("enhanced/", ""));
         }
+        console.log("[FocalMK]: Using default Web Playback PSSH " + btoa(String.fromCharCode(...getWebPlaybackPssh())));
         return getWebPlaybackPssh();
     }
 

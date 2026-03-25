@@ -5,10 +5,7 @@ import { ListDisplayMode } from "@/types/listDisplayMode";
 import { AuthType, IAppContext, IServerConfig } from "@/types/serverConfig";
 import {
     genEncodedPassword,
-    genPassword,
     genPasswordToken,
-    genUser,
-    getAuthType
 } from "@/utils/salt";
 import { merge } from "lodash";
 import omit from "lodash/omit";
@@ -19,7 +16,7 @@ import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
 import { usePlayerActions, usePlayerStore } from "./player.store";
 
-const { SERVER_URL, HIDE_SERVER, SHOW_RADIOS_SECTION, SERVER_TYPE } = window;
+const { SHOW_RADIOS_SECTION, SERVER_TYPE } = window;
 
 const igniteViewAppStore = {
     getItem: async (key: string) => {
@@ -55,48 +52,14 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                     data: {
                         isServerConfigured: false,
                         osType: "",
-                        url: SERVER_URL ?? "",
-                        username: genUser(),
-                        password: genPassword(),
-                        authType: getAuthType(),
+                        url: "",
+                        username: "",
+                        password: "",
+                        authType: AuthType.TOKEN,
                         protocolVersion: "1.16.0",
                         serverType: SERVER_TYPE ?? "subsonic",
-                        hideServer: HIDE_SERVER ?? false,
-                        lockUser: false,
                         songCount: null,
                         isHydrated: false,
-                    },
-                    podcasts: {
-                        active: false,
-                        setActive: (value) => {
-                            set((state) => {
-                                state.podcasts.active = value;
-                            });
-                        },
-                        serviceUrl: "",
-                        setServiceUrl: (value) => {
-                            set((state) => {
-                                state.podcasts.serviceUrl = value;
-                            });
-                        },
-                        useDefaultUser: true,
-                        setUseDefaultUser: (value) => {
-                            set((state) => {
-                                state.podcasts.useDefaultUser = value;
-                            });
-                        },
-                        customUser: "",
-                        setCustomUser: (value) => {
-                            set((state) => {
-                                state.podcasts.customUser = value;
-                            });
-                        },
-                        customUrl: "",
-                        setCustomUrl: (value) => {
-                            set((state) => {
-                                state.podcasts.customUrl = value;
-                            });
-                        },
                     },
                     pages: {
                         showInfoPanel: true,
@@ -289,11 +252,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.pages.showInfoPanel = true;
                                 state.pages.showRadiosSection = SHOW_RADIOS_SECTION ?? false;
                                 state.pages.artistsPageViewType = "grid";
-                                state.podcasts.active = false;
-                                state.podcasts.serviceUrl = "";
-                                state.podcasts.useDefaultUser = true;
-                                state.podcasts.customUser = "";
-                                state.podcasts.customUrl = "";
                             });
                         },
                         toggleSidebar: () => {
@@ -319,7 +277,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                     const appStore = omit(
                         state,
                         "actions",
-                        "data.hideServer",
                         "data.isHydrated",
                         "update",
                         "runtimeState",
@@ -336,7 +293,6 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
 );
 
 export const useAppData = () => useAppStore((state) => state.data);
-export const useAppPodcasts = () => useAppStore((state) => state.podcasts);
 export const useAppPages = () => useAppStore((state) => state.pages);
 export const useAppActions = () => useAppStore((state) => state.actions);
 export const useAppUpdate = () => useAppStore((state) => state.update);

@@ -1,11 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import clsx from "clsx";
 import { Loader2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 
 import { queryServerInfo } from "@/api/queryServerInfo";
 import { Button } from "@/app/components/ui/button";
@@ -32,7 +30,7 @@ import {
 } from "@/app/components/ui/form";
 import { Input } from "@/app/components/ui/input";
 import { Password } from "@/app/components/ui/password";
-import { useAppActions, useAppData } from "@/store/app.store";
+import { useAppActions } from "@/store/app.store";
 import { removeSlashFromUrl } from "@/utils/removeSlashFromUrl";
 import { isTauri } from "@/utils/tauriTools";
 import isWidevineSupported from "@/utils/widevine";
@@ -58,26 +56,19 @@ const loginSchema = z.object({
 type FormData = z.infer<typeof loginSchema>
 
 const defaultUrl = isTauri() ? "http://" : "https://";
-const url = window.SERVER_URL || defaultUrl;
-const urlIsValid = url !== defaultUrl;
 
 export function LoginForm() {
     const [loading, setLoading] = useState(false);
     const [serverIsIncompatible, setServerIsIncompatible] = useState(false);
     const [widevineDialogOpen, setWidevineDialogOpen] = useState(false);
     const { saveConfig } = useAppActions();
-    const { hideServer } = useAppData();
-    const navigate = useNavigate();
     const { t } = useTranslation();
     const queryClient = useQueryClient();
-    const enableSubsonic = false; // Future use
-
-    const shouldHideUrlInput = urlIsValid && hideServer;
 
     const form = useForm<FormData>({
         resolver: zodResolver(loginSchema),
         values: {
-            url,
+            url: defaultUrl,
             username: "",
             password: "",
         },
@@ -98,9 +89,9 @@ export function LoginForm() {
             setServerIsIncompatible(true);
             setLoading(false);
             return;
-        } else {
-            setServerIsIncompatible(false);
         }
+
+        setServerIsIncompatible(false);
 
         const status = await saveConfig({
             ...data,
@@ -111,14 +102,14 @@ export function LoginForm() {
             await queryClient.invalidateQueries();
             toast.success(t("toast.server.success"));
             location.reload();
-        } else {
-            setLoading(false);
-            toast.error(t("toast.server.error"));
+            return;
         }
+
+        setLoading(false);
+        toast.error(t("toast.server.error"));
     }
 
     async function signInToAppleMusic() {
-        // Check DRM support first
         if (!(await isWidevineSupported())) {
             setWidevineDialogOpen(true);
             return;
@@ -127,14 +118,13 @@ export function LoginForm() {
         window.igniteView?.commandBridge.signInToAppleMusic();
     }
 
-    // Called by C#
     window.completeAppleMusicLogin = async () => {
         await saveConfig({
             username: "Apple Music",
             password: "",
             url: "applemusic",
             serverType: "applemusic",
-            protocolVersion: "1.16.0"
+            protocolVersion: "1.16.0",
         });
 
         await queryClient.invalidateQueries();
@@ -144,108 +134,113 @@ export function LoginForm() {
 
     return (
         <>
-            <Card className="z-20 bg-transparent border-none shadow-none">
+            <Card className="z-20 border-none bg-transparent shadow-none">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit((data) => onSubmit(data))}>
-
-
-                        <CardFooter className="flex flex-col gap-5">
-                            <div className="flex flex-col gap-2 items-center justify-center">
-                                <img src="/favicon.png" alt="FocalSonic Logo" className="w-[12rem] rounded-lg overflow-hidden" />
-                                <h1 className="text-[3rem] font-bold font-[EpicPro] text-white">FocalSonic</h1>
+                        <CardFooter className="flex flex-col items-center justify-center gap-5">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                                <img
+                                    src="/favicon.png"
+                                    alt="FocalSonic Logo"
+                                    className="w-[12rem] overflow-hidden rounded-lg"
+                                />
+                                <h1 className="font-[EpicPro] text-[3rem] font-bold text-white">
+                                    FocalSonic
+                                </h1>
                             </div>
-                            <Button type="button" onClick={signInToAppleMusic} className="w-full bg-[#ff0436]" style={{ "--foreground": "white" }} disabled={loading}>
+                            <Button
+                                type="button"
+                                onClick={signInToAppleMusic}
+                                className="w-full bg-[#ff0436]"
+                                style={{ "--foreground": "white" } as React.CSSProperties}
+                                disabled={loading}
+                            >
                                 {t("login.appleMusic.connect")}
-                                <span className="ml-1"/>
+                                <span className="ml-1" />
                                 <AppleMusicIconLarge />
                             </Button>
                         </CardFooter>
 
-                        {
-                            enableSubsonic && (
-                                <CardContent className="space-y-2">
-                                    <FormField
-                                        control={form.control}
-                                        name="url"
-                                        render={({ field }) => (
-                                            <FormItem className={clsx(shouldHideUrlInput && "hidden")}>
-                                                <FormLabel className="required">
-                                                    {t("login.form.url")}
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        {...field}
-                                                        id="url"
-                                                        type="text"
-                                                        placeholder={t("login.form.urlDescription")}
-                                                        autoCorrect="false"
-                                                        autoCapitalize="false"
-                                                        spellCheck="false"
-                                                    />
-                                                </FormControl>
-                                                <FormDescription>
-                                                    {t("login.form.urlDescription")}
-                                                </FormDescription>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                        <CardContent className="space-y-2">
+                            <FormField
+                                control={form.control}
+                                name="url"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="required">
+                                            {t("login.form.url")}
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                id="url"
+                                                type="text"
+                                                placeholder={t("login.form.urlDescription")}
+                                                autoCorrect="false"
+                                                autoCapitalize="false"
+                                                spellCheck="false"
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            {t("login.form.urlDescription")}
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                                    <FormField
-                                        control={form.control}
-                                        name="username"
-                                        render={({ field }) => (
-                                            <FormItem className={clsx(shouldHideUrlInput && "!mt-0")}>
-                                                <FormLabel className="required">
-                                                    {t("login.form.username")}
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        {...field}
-                                                        value={field.value ?? ""}
-                                                        id="username"
-                                                        type="text"
-                                                        placeholder={t("login.form.usernamePlaceholder")}
-                                                        autoCorrect="false"
-                                                        autoCapitalize="false"
-                                                        spellCheck="false"
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                            <FormField
+                                control={form.control}
+                                name="username"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="required">
+                                            {t("login.form.username")}
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                id="username"
+                                                type="text"
+                                                placeholder={t("login.form.usernamePlaceholder")}
+                                                autoCorrect="false"
+                                                autoCapitalize="false"
+                                                spellCheck="false"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                                    <FormField
-                                        control={form.control}
-                                        name="password"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="required">
-                                                    {t("login.form.password")}
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Password {...field} value={field.value ?? ""} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                            <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="required">
+                                            {t("login.form.password")}
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Password {...field} value={field.value ?? ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                                    <Button type="submit" className="w-full" disabled={loading}>
-                                        {loading ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                {t("login.form.connecting")}
-                                            </>
-                                        ) : (
-                                            <>{t("login.form.connect")}</>
-                                        )}
-                                    </Button>
-                                </CardContent>
-                            )
-                        }
-
+                            <Button type="submit" className="w-full" disabled={loading}>
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        {t("login.form.connecting")}
+                                    </>
+                                ) : (
+                                    <>{t("login.form.connect")}</>
+                                )}
+                            </Button>
+                        </CardContent>
                     </form>
                 </Form>
             </Card>

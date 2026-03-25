@@ -1,11 +1,8 @@
 import { getCoverArtUrl } from "@/api/httpClient";
 import { PlaylistOptions } from "@/app/components/playlist/options";
-import { PodcastSidebarItem } from "@/app/components/podcasts/sidebar-item";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
-import { SidebarItems } from "@/app/layout/sidebar-items";
 import { ROUTES } from "@/routes/routesList";
-import { useAppStore } from "@/store/app.store";
 import { Playlist } from "@/types/responses/playlist";
 import { GridViewWrapperType, resetGridClickedItem } from "@/utils/gridTools";
 import clsx from "clsx";
@@ -15,7 +12,6 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 
 const ListMusic = memo(ListMusicIcon);
-const MemoPodcastSidebarItem = memo(PodcastSidebarItem);
 const MemoContextMenuProvider = memo(ContextMenuProvider);
 const MemoPlaylistOptions = memo(PlaylistOptions);
 
@@ -29,8 +25,6 @@ export interface ISidebarItem {
 export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
     const location = useLocation();
     const { t } = useTranslation();
-    const showRadiosSection = useAppStore().pages.showRadiosSection;
-    const isPodcastsActive = useAppStore().podcasts.active;
 
     const isActive = useCallback(
         (route: string) => {
@@ -42,14 +36,6 @@ export function SidebarGenerator({ list }: { list: ISidebarItem[] }) {
     return (
         <>
             {list.map((item) => {
-                // Setting to show/hide Radios/Podcasts section
-                if (!showRadiosSection && item.id === SidebarItems.Radios) return null;
-                if (!isPodcastsActive && item.id === SidebarItems.Podcasts) return null;
-
-                if (isPodcastsActive && item.id === SidebarItems.Podcasts) {
-                    return <MemoPodcastSidebarItem key={item.id} item={item} />;
-                }
-
                 return (
                     <Link
                         to={item.route}

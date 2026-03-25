@@ -13,7 +13,6 @@ import {
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
 import { LoopState } from "@/types/playerContext";
-import { EpisodeWithPodcast } from "@/types/responses/podcasts";
 import { Radio } from "@/types/responses/radios";
 import { ISong } from "@/types/responses/song";
 import { manageMediaSession } from "@/utils/setMediaSession";
@@ -23,35 +22,21 @@ import {
     Pause,
     Play,
     Repeat,
-    RotateCcwIcon,
-    RotateCwIcon,
     Shuffle,
     SkipBack,
-    SkipForward
+    SkipForward,
 } from "lucide-react";
-import {
-    ComponentPropsWithoutRef,
-    RefObject,
-    useCallback,
-    useEffect,
-} from "react";
+import { ComponentPropsWithoutRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 interface PlayerControlsProps {
     song: ISong
     radio: Radio
-    podcast: EpisodeWithPodcast
-    audioRef: RefObject<HTMLAudioElement>
 }
 
-export function PlayerControls({
-    song,
-    radio,
-    podcast,
-    audioRef,
-}: PlayerControlsProps) {
+export function PlayerControls({ song, radio }: PlayerControlsProps) {
     const { t } = useTranslation();
-    const { isSong, isPodcast } = usePlayerMediaType();
+    const { isSong } = usePlayerMediaType();
     const isShuffleActive = usePlayerShuffle();
     const { hasPrev, hasNext } = usePlayerPrevAndNext();
     const loopState = usePlayerLoop();
@@ -65,8 +50,7 @@ export function PlayerControls({
         playNextSong,
     } = usePlayerActions();
     const { useAudioHotkeys } = usePlayerHotkeys();
-
-    const { isMiniPlayer, playerStyle, useSlimButtons } = usePlayerStyle();
+    const { playerStyle, useSlimButtons } = usePlayerStyle();
 
     useAudioHotkeys("space", togglePlayPause);
     useAudioHotkeys("mod+left", playPrevSong);
@@ -74,38 +58,18 @@ export function PlayerControls({
     useAudioHotkeys("mod+s", toggleShuffle);
     useAudioHotkeys("mod+t", toggleLoop);
 
-    const handleSeekAction = useCallback(
-        (value: number) => {
-            const audio = audioRef.current;
-            if (!audio) return;
-
-            audio.currentTime += value;
-        },
-        [audioRef],
-    );
-
     useEffect(() => {
-        if (isPodcast) {
-            manageMediaSession.setPodcastHandlers({ handleSeekAction });
-        } else {
-            manageMediaSession.setHandlers();
-        }
-    }, [handleSeekAction, isPodcast, isPlaying]);
+        manageMediaSession.setHandlers();
+    }, [isPlaying]);
 
     const shuffleTooltip = isShuffleActive
         ? t("player.tooltips.shuffle.disable")
         : t("player.tooltips.shuffle.enable");
-
     const previousTooltip = t("player.tooltips.previous");
     const nextTooltip = t("player.tooltips.next");
-
-    const skipRewindTooltip = t("player.tooltips.rewind", { amount: 15 });
-    const skipForwardTooltip = t("player.tooltips.forward", { amount: 30 });
-
     const playTooltip = isPlaying
         ? t("player.tooltips.pause")
         : t("player.tooltips.play");
-
     const repeatTooltips = {
         0: t("player.tooltips.repeat.enable"),
         1: t("player.tooltips.repeat.enableOne"),
@@ -113,12 +77,14 @@ export function PlayerControls({
         3: t("player.tooltips.repeat.infinite"),
     };
     const repeatTooltip = repeatTooltips[loopState];
-
-    const cannotGotoNextSong = !hasNext && loopState !== LoopState.All && loopState !== LoopState.InfiniteRadio;
-    const disableButtons = !song && !radio && !podcast;
+    const cannotGotoNextSong =
+        !hasNext &&
+        loopState !== LoopState.All &&
+        loopState !== LoopState.InfiniteRadio;
+    const disableButtons = !song && !radio;
 
     return (
-        <div className={cn("flex xxs:w-fit xxs:gap-0 justify-center items-center mb-1", useSlimButtons ? "gap-0" : "gap-1", playerStyle === "slim" ? "w-fit" : "w-full")}>
+        <div className={cn("mb-1 flex items-center justify-center gap-1 xxs:w-fit xxs:gap-0", useSlimButtons ? "gap-0" : "gap-1", playerStyle === "slim" ? "w-fit" : "w-full")}>
             {isSong && (
                 <PlayerButton
                     className={clsx(isShuffleActive && "player-button-active")}
@@ -141,49 +107,23 @@ export function PlayerControls({
                 data-testid="player-button-prev"
                 tooltip={previousTooltip}
             >
-                <SkipBack className="text-secondary-foreground fill-secondary-foreground" />
+                <SkipBack className="fill-secondary-foreground text-secondary-foreground" />
             </PlayerButton>
-
-            {isPodcast && (
-                <PlayerButton
-                    onClick={() => handleSeekAction(-15)}
-                    data-testid="player-button-skip-backward"
-                    tooltip={skipRewindTooltip}
-                >
-                    <span className="text-secondary-foreground font-light text-[8px] absolute">
-                        15
-                    </span>
-                    <RotateCcwIcon className="text-secondary-foreground" />
-                </PlayerButton>
-            )}
 
             <PlayerButton
                 variant={useSlimButtons ? "ghost" : "default"}
-                disabled={!song && !radio && !isPodcast}
+                disabled={disableButtons}
                 onClick={togglePlayPause}
                 data-testid={`player-button-${isPlaying ? "pause" : "play"}`}
-                className={useSlimButtons ? "p-2 size-10" : undefined}
+                className={useSlimButtons ? "size-10 p-2" : undefined}
                 tooltip={playTooltip}
             >
                 {isPlaying ? (
-                    <Pause className={useSlimButtons ? "fill-secondary-foreground stroke-secondary-foreground !w-full !h-full" : "fill-primary-foreground"} />
+                    <Pause className={useSlimButtons ? "!h-full !w-full fill-secondary-foreground stroke-secondary-foreground" : "fill-primary-foreground"} />
                 ) : (
-                    <Play className={useSlimButtons ? "fill-secondary-foreground stroke-secondary-foreground !w-full !h-full" : "fill-primary-foreground"} />
+                    <Play className={useSlimButtons ? "!h-full !w-full fill-secondary-foreground stroke-secondary-foreground" : "fill-primary-foreground"} />
                 )}
             </PlayerButton>
-
-            {isPodcast && (
-                <PlayerButton
-                    onClick={() => handleSeekAction(30)}
-                    data-testid="player-button-skip-forward"
-                    tooltip={skipForwardTooltip}
-                >
-                    <span className="text-secondary-foreground font-light text-[8px] absolute">
-                        30
-                    </span>
-                    <RotateCwIcon className="text-secondary-foreground" />
-                </PlayerButton>
-            )}
 
             <PlayerButton
                 disabled={disableButtons || cannotGotoNextSong}
@@ -191,14 +131,12 @@ export function PlayerControls({
                 data-testid="player-button-next"
                 tooltip={nextTooltip}
             >
-                <SkipForward className="text-secondary-foreground fill-secondary-foreground" />
+                <SkipForward className="fill-secondary-foreground text-secondary-foreground" />
             </PlayerButton>
 
             {isSong && (
                 <PlayerButton
-                    className={clsx(
-                        loopState !== LoopState.Off && "player-button-active"
-                    )}
+                    className={clsx(loopState !== LoopState.Off && "player-button-active")}
                     disabled={!song}
                     onClick={toggleLoop}
                     data-testid="player-button-loop"
@@ -225,15 +163,14 @@ type PlayerButtonProps = ComponentPropsWithoutRef<typeof Button> & {
 }
 
 function PlayerButton({ className, tooltip, ...props }: PlayerButtonProps) {
-
-    const { isMiniPlayer, playerStyle, useSlimButtons } = usePlayerStyle();
+    const { useSlimButtons } = usePlayerStyle();
 
     return (
         <SimpleTooltip text={tooltip}>
             <Button
                 variant="ghost"
                 className={cn(
-                    "relative rounded-full size-10 p-0 [&_svg]:pointer-events-none [&_svg]:size-[18px] [&_svg]:shrink-0",
+                    "relative size-10 rounded-full p-0 [&_svg]:pointer-events-none [&_svg]:size-[18px] [&_svg]:shrink-0",
                     useSlimButtons && "size-8 [&_svg]:size-[16px]",
                     className,
                 )}

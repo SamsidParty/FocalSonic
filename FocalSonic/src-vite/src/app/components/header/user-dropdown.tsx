@@ -22,7 +22,7 @@ import { useAppData, useAppRuntimeState } from "@/store/app.store";
 import { isMac } from "@/utils/osType";
 
 export function UserDropdown() {
-    const { username, url, lockUser } = useAppData();
+    const { username, url } = useAppData();
     const { setLogoutDialogState } = useAppRuntimeState();
     const { t } = useTranslation();
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -79,18 +79,14 @@ export function UserDropdown() {
                         <Info className="mr-2 h-4 w-4" />
                         <span>{t("menu.about")}</span>
                     </DropdownMenuItem>
-                    {!lockUser && (
-                        <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setLogoutDialogState(true)}>
-                                <LogOut className="mr-2 h-4 w-4" />
-                                <span>{t("menu.serverLogout")}</span>
-                                <DropdownMenuShortcut>
-                                    {stringifyShortcut(logoutKeys)}
-                                </DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                        </>
-                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setLogoutDialogState(true)}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>{t("menu.serverLogout")}</span>
+                        <DropdownMenuShortcut>
+                            {stringifyShortcut(logoutKeys)}
+                        </DropdownMenuShortcut>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </Fragment>

@@ -85,8 +85,3 @@ export enum EpisodesOrderByOptions {
     Title = "title",
     Duration = "duration",
 }
-
-export enum PodcastsOrderByOptions {
-    Title = "title",
-    EpisodeCount = "episode_count",
-}
