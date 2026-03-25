@@ -19,7 +19,7 @@ export function QueueSongList({ small } : { small?: boolean } ) {
     const { t } = useTranslation();
     const currentList = usePlayerCurrentList();
     const currentSongIndex = usePlayerCurrentSongIndex();
-    const { clearPlayerState, setSongList } = usePlayerActions();
+    const { clearPlayerState, setSongList, moveSongInQueue } = usePlayerActions();
 
     const columns = useMemo(() => queueColumns(), []);
     const trackListCount = useMemo(() => currentList.length, [currentList]);
@@ -95,8 +95,10 @@ export function QueueSongList({ small } : { small?: boolean } ) {
                     scrollToIndex={true}
                     currentSongIndex={currentSongIndex}
                     allowRowSelection={false}
-                    showContextMenu={false}
+                    showContextMenu={true}
                     pageType={small ? "queue-small" : "queue"}
+                    allowRowReorder={true}
+                    onMoveRow={moveSongInQueue}
                 />
             </div>
         </div>

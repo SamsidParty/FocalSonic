@@ -7,23 +7,29 @@ export const useUiStore = createWithEqualityFn<IUiContext>()(
     subscribeWithSelector(
         devtools(
             immer((set) => ({
-                songInfo: {
-                    songId: "",
-                    setSongId: (id) => {
+                itemInfo: {
+                    target: null,
+                    setTarget: (target) => {
                         set((state) => {
-                            state.songInfo.songId = id;
+                            state.itemInfo.target = target;
                         });
                     },
                     modalOpen: false,
                     setModalOpen: (open) => {
                         set((state) => {
-                            state.songInfo.modalOpen = open;
+                            state.itemInfo.modalOpen = open;
+                        });
+                    },
+                    openInfo: (target) => {
+                        set((state) => {
+                            state.itemInfo.target = target;
+                            state.itemInfo.modalOpen = true;
                         });
                     },
                     reset: () => {
                         set((state) => {
-                            state.songInfo.songId = "";
-                            state.songInfo.modalOpen = false;
+                            state.itemInfo.target = null;
+                            state.itemInfo.modalOpen = false;
                         });
                     },
                 },
@@ -35,4 +41,5 @@ export const useUiStore = createWithEqualityFn<IUiContext>()(
     ),
 );
 
-export const useSongInfo = () => useUiStore((state) => state.songInfo);
+export const useItemInfo = () => useUiStore((state) => state.itemInfo);
+export const useSongInfo = useItemInfo;

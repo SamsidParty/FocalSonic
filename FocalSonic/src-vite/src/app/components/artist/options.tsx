@@ -1,59 +1,11 @@
-import { OptionsButtons } from "@/app/components/options/buttons";
-import {
-    DropdownMenuGroup,
-    DropdownMenuSeparator,
-} from "@/app/components/ui/dropdown-menu";
-import { useOptions } from "@/app/hooks/use-options";
-import { useSongList } from "@/app/hooks/use-song-list";
 import { IArtist } from "@/types/responses/artist";
-import { ISong } from "@/types/responses/song";
-import { checkServerType } from "@/utils/servers";
-import React from "react";
+import { ItemMenuOptions } from "@/app/components/options/item-menu";
 
 interface ArtistOptionsProps {
     artist: IArtist
+    variant?: "context" | "dropdown"
 }
 
-export function ArtistOptions({ artist }: ArtistOptionsProps) {
-    const { getArtistAllSongs } = useSongList();
-    const { playLast, playNext, startDownload } = useOptions();
-
-    const { isAppleMusic } = checkServerType();
-    const canDownload = !isAppleMusic;
-
-    async function getSongsToQueue(callback: (songs: ISong[]) => void) {
-        const songs = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
-        if (!songs) return;
-
-        callback(songs);
-    }
-
-    async function handlePlayNext() {
-        await getSongsToQueue(playNext);
-    }
-
-    async function handlePlayLast() {
-        await getSongsToQueue(playLast);
-    }
-
-    function handleDownload() {
-        startDownload(artist.id);
-    }
-
-    return (
-        <>
-            <DropdownMenuGroup>
-                <OptionsButtons.PlayNext onClick={handlePlayNext} />
-                <OptionsButtons.PlayLast onClick={handlePlayLast} />
-                {
-                    canDownload && (
-                        <>
-                            <DropdownMenuSeparator />
-                            <OptionsButtons.Download onClick={handleDownload} />
-                        </>
-                    )
-                }
-            </DropdownMenuGroup>
-        </>
-    );
+export function ArtistOptions({ artist, variant = "dropdown" }: ArtistOptionsProps) {
+    return <ItemMenuOptions variant={variant} target={{ type: "artist", item: artist }} />;
 }

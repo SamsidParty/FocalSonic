@@ -1,3 +1,4 @@
+import { GripVertical } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
 import PlaySongButton from "@/app/components/table/play-button";
@@ -40,7 +41,12 @@ export function queueColumns(): ColumnDefType<ISong>[] {
                 minWidth: 150,
             },
             header: "",
-            cell: ({ row }) => <TableSongTitle song={row.original} />,
+            cell: ({ row }) => (
+                <div className="flex items-center gap-2 min-w-0">
+                    <GripVertical className="w-4 h-4 shrink-0 text-foreground/35" />
+                    <TableSongTitle song={row.original} />
+                </div>
+            ),
         },
         {
             id: "artist",

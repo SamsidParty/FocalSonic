@@ -9,7 +9,12 @@ import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { Separator } from "@/app/components/ui/separator";
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
-import { useSongInfo } from "@/store/ui.store";
+import { useItemInfo } from "@/store/ui.store";
+import { SingleAlbum } from "@/types/responses/album";
+import { IArtist } from "@/types/responses/artist";
+import { PlaylistWithEntries } from "@/types/responses/playlist";
+import { ISong } from "@/types/responses/song";
+import { InfoItemType } from "@/types/uiContext";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
@@ -21,8 +26,10 @@ import clsx from "clsx";
 import {
     Calendar,
     Clock,
+    Disc3,
     FileAudio,
     Gauge,
+    Globe,
     HardDrive,
     Hash,
     Heart,
@@ -31,31 +38,66 @@ import {
     PlayCircle,
     Radio,
     Tag,
+    Text,
     User,
     Users,
-    Volume2
+    Volume2,
 } from "lucide-react";
-import React, { Fragment } from "react";
+import { Fragment, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
+type AlbumInfoData = Awaited<ReturnType<typeof service.albums.getInfo>>;
+type ArtistInfoData = Awaited<ReturnType<typeof service.artists.getInfo>>;
+
 export function SongInfoDialog() {
     const { t } = useTranslation();
-    const { songId, modalOpen, reset } = useSongInfo();
+    const { target, modalOpen, reset } = useItemInfo();
     const { isAppleMusic } = checkServerType();
 
-    const { data: song, isLoading } = useQuery({
-        queryKey: [queryKeys.song.info, songId],
-        queryFn: () => service.songs.getSong(songId),
-        enabled: modalOpen,
+    const targetId = target?.id ?? "";
+    const targetType = target?.type;
+
+    const songQuery = useQuery({
+        queryKey: [queryKeys.song.info, targetId],
+        queryFn: () => service.songs.getSong(targetId),
+        enabled: modalOpen && targetType === "song" && targetId.length > 0,
     });
 
-    const loadedAlbumId = song ? typeof song.albumId === "string" : false;
+    const songAlbumQuery = useQuery({
+        queryKey: [queryKeys.album.single, songQuery.data?.albumId],
+        queryFn: () => service.albums.getOne(songQuery.data?.albumId ?? ""),
+        enabled: modalOpen && targetType === "song" && typeof songQuery.data?.albumId === "string",
+    });
 
-    const { data: album, isLoading: albumLoading } = useQuery({
-        queryKey: [queryKeys.album.single, song?.albumId],
-        queryFn: () => service.albums.getOne(song?.albumId ?? ""),
-        enabled: loadedAlbumId,
+    const albumQuery = useQuery({
+        queryKey: [queryKeys.album.single, targetId],
+        queryFn: () => service.albums.getOne(targetId),
+        enabled: modalOpen && targetType === "album" && targetId.length > 0,
+    });
+
+    const albumInfoQuery = useQuery({
+        queryKey: [queryKeys.album.info, targetId],
+        queryFn: () => service.albums.getInfo(targetId),
+        enabled: modalOpen && targetType === "album" && targetId.length > 0,
+    });
+
+    const artistQuery = useQuery({
+        queryKey: [queryKeys.artist.single, targetId],
+        queryFn: () => service.artists.getOne(targetId),
+        enabled: modalOpen && targetType === "artist" && targetId.length > 0,
+    });
+
+    const artistInfoQuery = useQuery({
+        queryKey: [queryKeys.artist.info, targetId],
+        queryFn: () => service.artists.getInfo(targetId),
+        enabled: modalOpen && targetType === "artist" && targetId.length > 0,
+    });
+
+    const playlistQuery = useQuery({
+        queryKey: [queryKeys.playlist.single, targetId],
+        queryFn: () => service.playlists.getOne(targetId),
+        enabled: modalOpen && targetType === "playlist" && targetId.length > 0,
     });
 
     function handleModalChange(value: boolean) {
@@ -66,34 +108,16 @@ export function SongInfoDialog() {
         reset();
     }
 
-    function formatGenres() {
-        if (!song) return [];
-        const genres: string[] = [];
-
-        if (song.genre) {
-            genres.push(song.genre);
-        }
-
-        if (song.genres) {
-            song.genres.forEach(({ name }) => {
-                if (genres.includes(name)) return;
-
-                genres.push(name);
-            });
-        }
-
-        return genres;
-    }
-
-    function formatLastPlayed() {
-        if (!song) return "";
-
-        const lastPlayed = dateTime().from(dateTime(song.played), true);
-
-        return t("table.lastPlayed", { date: lastPlayed });
-    }
-
-    const coverArtUrl = song ? getCoverArtUrl(song.coverArt, "song", "500") : "";
+    const dialogState = getDialogState({
+        targetType,
+        songQuery,
+        songAlbumQuery,
+        albumQuery,
+        albumInfoQuery,
+        artistQuery,
+        artistInfoQuery,
+        playlistQuery,
+    });
 
     return (
         <Dialog open={modalOpen} onOpenChange={handleModalChange}>
@@ -101,306 +125,693 @@ export function SongInfoDialog() {
                 className="max-w-[700px] p-0 gap-0 overflow-hidden"
                 aria-describedby={undefined}
             >
-                {(isLoading) && (
+                {dialogState.isLoading && (
                     <div className="flex w-full h-64 items-center justify-center">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 )}
-                {!song && !isLoading && (
+
+                {!dialogState.isLoading && !dialogState.hasData && (
                     <div className="flex w-full h-64 items-center justify-center">
                         <p className="text-muted-foreground">{t("songInfo.error")}</p>
                     </div>
                 )}
 
-                {song && !isLoading && (
-                    <div className="flex flex-col">
-                        {/* Hero Section with Artwork */}
-                        <div className="relative">
-                            {/* Blurred Background */}
-                            <div
-                                className="absolute inset-0 bg-cover bg-center blur-3xl opacity-30 scale-110"
-                                style={{ backgroundImage: `url(${coverArtUrl})` }}
-                            />
+                {!dialogState.isLoading && dialogState.type === "song" && dialogState.song && (
+                    <SongInfoContent
+                        song={dialogState.song}
+                        album={songAlbumQuery.data}
+                        isAppleMusic={isAppleMusic}
+                        onLinkClick={handleLinkClick}
+                    />
+                )}
 
-                            {/* Content */}
-                            <div className="relative flex gap-6 p-6 pb-4">
-                                {/* Album Artwork */}
-                                <div className="shrink-0">
-                                    <div className="relative group">
-                                        <img
-                                            src={coverArtUrl}
-                                            alt={song.album}
-                                            className="w-40 h-40 rounded-lg shadow-2xl object-cover ring-1 ring-white/10"
-                                        />
-                                        {song.starred && (
-                                            <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1.5 shadow-lg">
-                                                <Heart className="w-3.5 h-3.5 text-primary-foreground fill-current" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                {!dialogState.isLoading && dialogState.type === "album" && dialogState.album && (
+                    <AlbumInfoContent
+                        album={dialogState.album}
+                        albumInfo={dialogState.albumInfo}
+                        onLinkClick={handleLinkClick}
+                    />
+                )}
 
-                                {/* Title & Quick Info */}
-                                <div className="flex flex-col justify-center min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-primary uppercase tracking-wider mb-1">
-                                        {t("songInfo.title")}
-                                    </p>
-                                    <h1 className="text-2xl font-bold text-foreground truncate mb-1">
-                                        {song.title}
-                                    </h1>
-                                    <Link
-                                        to={ROUTES.ALBUM.PAGE(song.albumId)}
-                                        className="text-base text-muted-foreground hover:text-foreground hover:underline truncate transition-colors"
-                                        onClick={handleLinkClick}
-                                    >
-                                        {song.album}
-                                    </Link>
+                {!dialogState.isLoading && dialogState.type === "artist" && dialogState.artist && (
+                    <ArtistInfoContent
+                        artist={dialogState.artist}
+                        artistInfo={dialogState.artistInfo}
+                        onLinkClick={handleLinkClick}
+                    />
+                )}
 
-                                    {/* Artist(s) */}
-                                    <div className="flex items-center gap-1.5 mt-2 text-sm text-muted-foreground">
-                                        <User className="w-3.5 h-3.5" />
-                                        <div className="flex items-center flex-wrap gap-1">
-                                            {song.artists ? (
-                                                song.artists.map(({ id, name }, index) => (
-                                                    <Fragment key={id}>
-                                                        <Link
-                                                            to={ROUTES.ARTIST.PAGE(id)}
-                                                            className="hover:text-foreground hover:underline transition-colors"
-                                                            onClick={handleLinkClick}
-                                                        >
-                                                            {name}
-                                                        </Link>
-                                                        {index < song.artists!.length - 1 && (
-                                                            <Dot className="mx-0" />
-                                                        )}
-                                                    </Fragment>
-                                                ))
-                                            ) : (
-                                                <Link
-                                                    to={ROUTES.ARTIST.PAGE(song.artistId ?? "")}
-                                                    className={clsx(
-                                                        "hover:text-foreground transition-colors",
-                                                        song.artistId ? "hover:underline" : "pointer-events-none",
-                                                    )}
-                                                    onClick={() => {
-                                                        if (song.artistId) handleLinkClick();
-                                                    }}
-                                                >
-                                                    {song.artist}
-                                                </Link>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Quick Stats */}
-                                    <div className="flex items-center gap-4 mt-3">
-                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                            <Clock className="w-3.5 h-3.5" />
-                                            <span>{convertSecondsToTime(song.duration ?? 0)}</span>
-                                        </div>
-                                        {song.year > 0 && (
-                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                <Calendar className="w-3.5 h-3.5" />
-                                                <span>{song.year}</span>
-                                            </div>
-                                        )}
-                                        {!isAppleMusic && song.suffix && (
-                                            <Badge variant="secondary" className="text-xs px-2 py-0">
-                                                {song.suffix.toUpperCase()}
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <Separator />
-
-                        {/* Details Section */}
-                        <ScrollArea className="max-h-[400px]">
-                            <div className="p-4 space-y-4">
-                                {/* Track Information */}
-                                <InfoSection title={t("songInfo.trackInfo")}>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <InfoCard
-                                            icon={Hash}
-                                            label={t("table.columns.id")}
-                                            value={`${song.id ?? "-"}`}
-                                        />
-                                        {song.playCount !== undefined && song.playCount > 0 && (
-                                            <InfoCard
-                                                icon={PlayCircle}
-                                                label={t("table.columns.plays")}
-                                                value={`${song.playCount}`}
-                                            />
-                                        )}
-                                        {!isAppleMusic && song.played && (
-                                            <InfoCard
-                                                icon={Clock}
-                                                label={t("table.columns.lastPlayed")}
-                                                value={formatLastPlayed()}
-                                            />
-                                        )}
-                                    </div>
-                                </InfoSection>
-
-                                {/* Album Artists */}
-                                {song.albumArtists && song.albumArtists.length > 0 && (
-                                    <InfoSection title={t("table.columns.albumArtist")}>
-                                        <div className="flex flex-wrap gap-2">
-                                            {song.albumArtists.map(({ id, name }) => (
-                                                <Link
-                                                    key={id}
-                                                    to={ROUTES.ARTIST.PAGE(id)}
-                                                    onClick={handleLinkClick}
-                                                >
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="hover:bg-accent transition-colors cursor-pointer"
-                                                    >
-                                                        <Users className="w-3 h-3 mr-1" />
-                                                        {name}
-                                                    </Badge>
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    </InfoSection>
-                                )}
-
-                                {/* Contributors */}
-                                {song.contributors && song.contributors.length > 1 && (
-                                    <InfoSection title={t("table.columns.contributors")}>
-                                        <div className="grid gap-2">
-                                            {song.contributors.map((contributor, index) => (
-                                                <div
-                                                    key={contributor.artist.name + index}
-                                                    className="flex items-center gap-2 text-sm"
-                                                >
-                                                    <Badge variant="secondary" className="capitalize text-xs">
-                                                        {contributor.role}
-                                                    </Badge>
-                                                    <span className="text-foreground">
-                                                        {contributor.artist.name}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </InfoSection>
-                                )}
-
-                                {/* Genres */}
-                                {formatGenres().length > 0 && (
-                                    <InfoSection title={t("table.columns.genres")}>
-                                        <div className="flex flex-wrap gap-2">
-                                            {formatGenres().map((genre) => (
-                                                <Link
-                                                    to={ROUTES.ALBUMS.GENRE(genre)}
-                                                    key={genre}
-                                                    onClick={handleLinkClick}
-                                                >
-                                                    <Badge
-                                                        variant="neutral"
-                                                        className="hover:opacity-80 transition-opacity cursor-pointer"
-                                                    >
-                                                        <Tag className="w-3 h-3 mr-1" />
-                                                        {genre}
-                                                    </Badge>
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    </InfoSection>
-                                )}
-
-                                {/* Record Labels */}
-                                {album && !albumLoading && album.recordLabels && album.recordLabels.length > 0 && (
-                                    <InfoSection title={t("table.columns.recordLabel")}>
-                                        <div className="flex flex-wrap gap-2">
-                                            {album.recordLabels
-                                                .slice(0, RECORD_LABELS_MAX_NUMBER)
-                                                .map((label) => (
-                                                    <Badge key={label.name} variant="outline">
-                                                        {label.name}
-                                                    </Badge>
-                                                ))}
-                                        </div>
-                                    </InfoSection>
-                                )}
-
-                                {/* Audio Quality */}
-                                {!isAppleMusic && (
-                                    <InfoSection title={t("songInfo.audioQuality")}>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                            <InfoCard
-                                                icon={FileAudio}
-                                                label={t("table.columns.codec")}
-                                                value={song.suffix?.toUpperCase() ?? "-"}
-                                            />
-                                            <InfoCard
-                                                icon={Radio}
-                                                label={t("table.columns.bitrate")}
-                                                value={`${song.bitRate ?? 0} kbps`}
-                                            />
-                                            <InfoCard
-                                                icon={HardDrive}
-                                                label={t("table.columns.size")}
-                                                value={formatBytes(song.size ?? 0)}
-                                            />
-                                            {song.samplingRate !== undefined && song.samplingRate > 0 && (
-                                                <InfoCard
-                                                    icon={Gauge}
-                                                    label={t("table.columns.samplingRate")}
-                                                    value={`${(song.samplingRate / 1000).toFixed(1)} kHz`}
-                                                />
-                                            )}
-                                            {song.channelCount !== undefined && song.channelCount > 0 && (
-                                                <InfoCard
-                                                    icon={Volume2}
-                                                    label={t("table.columns.channelCount")}
-                                                    value={song.channelCount === 2 ? "Stereo" : song.channelCount === 1 ? "Mono" : `${song.channelCount} ch`}
-                                                />
-                                            )}
-                                            {song.bpm !== undefined && song.bpm > 0 && (
-                                                <InfoCard
-                                                    icon={Music2}
-                                                    label={t("table.columns.bpm")}
-                                                    value={`${song.bpm}`}
-                                                />
-                                            )}
-                                        </div>
-                                    </InfoSection>
-                                )}
-
-                                {/* Replay Gain */}
-                                {song.replayGain && (
-                                    <InfoSection title={t("songInfo.replayGain")}>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <InfoCard
-                                                label={t("table.columns.trackGain")}
-                                                value={`${song.replayGain.trackGain?.toFixed(2) ?? 0} dB`}
-                                            />
-                                            <InfoCard
-                                                label={t("table.columns.trackPeak")}
-                                                value={`${song.replayGain.trackPeak?.toFixed(4) ?? 1}`}
-                                            />
-                                            <InfoCard
-                                                label={t("table.columns.albumGain")}
-                                                value={`${song.replayGain.albumGain?.toFixed(2) ?? 0} dB`}
-                                            />
-                                            <InfoCard
-                                                label={t("table.columns.albumPeak")}
-                                                value={`${song.replayGain.albumPeak?.toFixed(4) ?? 1}`}
-                                            />
-                                        </div>
-                                    </InfoSection>
-                                )}
-
-                            </div>
-                        </ScrollArea>
-                    </div>
+                {!dialogState.isLoading && dialogState.type === "playlist" && dialogState.playlist && (
+                    <PlaylistInfoContent
+                        playlist={dialogState.playlist}
+                        onLinkClick={handleLinkClick}
+                    />
                 )}
             </DialogContent>
         </Dialog>
     );
+}
+
+function SongInfoContent({
+    song,
+    album,
+    isAppleMusic,
+    onLinkClick,
+}: {
+    song: ISong
+    album?: SingleAlbum
+    isAppleMusic: boolean
+    onLinkClick: () => void
+}) {
+    const { t } = useTranslation();
+    const coverArtUrl = getCoverArtUrl(song.coverArt, "song", "500");
+    const genres = collectGenres(song.genre, song.genres?.map(({ name }) => name));
+
+    function formatLastPlayed() {
+        if (!song.played) return "-";
+        const lastPlayed = dateTime().from(dateTime(song.played), true);
+        return t("table.lastPlayed", { date: lastPlayed });
+    }
+
+    return (
+        <DialogLayout coverArtUrl={coverArtUrl}
+            artworkAlt={song.album}
+            highlighted={!!song.starred}
+            hero={(
+                <>
+                    <Eyebrow>{t("songInfo.title")}</Eyebrow>
+                    <HeroTitle>{song.title}</HeroTitle>
+                    <HeroLink to={ROUTES.ALBUM.PAGE(song.albumId)} onClick={onLinkClick}>
+                        {song.album}
+                    </HeroLink>
+                    <ArtistsLine artists={song.artists} artist={song.artist} artistId={song.artistId} onLinkClick={onLinkClick} />
+                    <HeroStats>
+                        <Stat icon={Clock} text={convertSecondsToTime(song.duration ?? 0)} />
+                        {song.year > 0 && <Stat icon={Calendar} text={`${song.year}`} />}
+                        {!isAppleMusic && song.suffix && (
+                            <Badge variant="secondary" className="text-xs px-2 py-0">
+                                {song.suffix.toUpperCase()}
+                            </Badge>
+                        )}
+                    </HeroStats>
+                </>
+            )}>
+            <InfoSection title={t("songInfo.trackInfo")}>
+                <div className="grid grid-cols-2 gap-3">
+                    <InfoCard icon={Hash} label={t("table.columns.id")} value={song.id ?? "-"} />
+                    {song.playCount !== undefined && song.playCount > 0 && (
+                        <InfoCard icon={PlayCircle} label={t("table.columns.plays")} value={`${song.playCount}`} />
+                    )}
+                    {!isAppleMusic && song.played && (
+                        <InfoCard icon={Clock} label={t("table.columns.lastPlayed")} value={formatLastPlayed()} />
+                    )}
+                </div>
+            </InfoSection>
+
+            {song.albumArtists && song.albumArtists.length > 0 && (
+                <InfoSection title={t("table.columns.albumArtist")}>
+                    <BadgeLinks
+                        items={song.albumArtists.map(({ id, name }) => ({ id, label: name, to: ROUTES.ARTIST.PAGE(id) }))}
+                        icon={Users}
+                        onLinkClick={onLinkClick}
+                    />
+                </InfoSection>
+            )}
+
+            {song.contributors && song.contributors.length > 1 && (
+                <InfoSection title={t("table.columns.contributors")}>
+                    <div className="grid gap-2">
+                        {song.contributors.map((contributor, index) => (
+                            <div key={contributor.artist.name + index} className="flex items-center gap-2 text-sm">
+                                <Badge variant="secondary" className="capitalize text-xs">
+                                    {contributor.role}
+                                </Badge>
+                                <span className="text-foreground">{contributor.artist.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </InfoSection>
+            )}
+
+            {genres.length > 0 && (
+                <InfoSection title={t("table.columns.genres")}>
+                    <BadgeLinks
+                        items={genres.map((genre) => ({ id: genre, label: genre, to: ROUTES.ALBUMS.GENRE(genre) }))}
+                        icon={Tag}
+                        variant="neutral"
+                        onLinkClick={onLinkClick}
+                    />
+                </InfoSection>
+            )}
+
+            {album?.recordLabels && album.recordLabels.length > 0 && (
+                <InfoSection title={t("table.columns.recordLabel")}>
+                    <div className="flex flex-wrap gap-2">
+                        {album.recordLabels.slice(0, RECORD_LABELS_MAX_NUMBER).map((label) => (
+                            <Badge key={label.name} variant="outline">
+                                {label.name}
+                            </Badge>
+                        ))}
+                    </div>
+                </InfoSection>
+            )}
+
+            {!isAppleMusic && (
+                <InfoSection title={t("songInfo.audioQuality")}>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <InfoCard icon={FileAudio} label={t("table.columns.codec")} value={song.suffix?.toUpperCase() ?? "-"} />
+                        <InfoCard icon={Radio} label={t("table.columns.bitrate")} value={`${song.bitRate ?? 0} kbps`} />
+                        <InfoCard icon={HardDrive} label={t("table.columns.size")} value={formatBytes(song.size ?? 0)} />
+                        {song.samplingRate !== undefined && song.samplingRate > 0 && (
+                            <InfoCard icon={Gauge} label={t("table.columns.samplingRate")} value={`${(song.samplingRate / 1000).toFixed(1)} kHz`} />
+                        )}
+                        {song.channelCount !== undefined && song.channelCount > 0 && (
+                            <InfoCard
+                                icon={Volume2}
+                                label={t("table.columns.channelCount")}
+                                value={song.channelCount === 2 ? "Stereo" : song.channelCount === 1 ? "Mono" : `${song.channelCount} ch`}
+                            />
+                        )}
+                        {song.bpm !== undefined && song.bpm > 0 && (
+                            <InfoCard icon={Music2} label={t("table.columns.bpm")} value={`${song.bpm}`} />
+                        )}
+                    </div>
+                </InfoSection>
+            )}
+
+            {song.replayGain && (
+                <InfoSection title={t("songInfo.replayGain")}>
+                    <div className="grid grid-cols-2 gap-3">
+                        <InfoCard label={t("table.columns.trackGain")} value={`${song.replayGain.trackGain?.toFixed(2) ?? 0} dB`} />
+                        <InfoCard label={t("table.columns.trackPeak")} value={`${song.replayGain.trackPeak?.toFixed(4) ?? 1}`} />
+                        <InfoCard label={t("table.columns.albumGain")} value={`${song.replayGain.albumGain?.toFixed(2) ?? 0} dB`} />
+                        <InfoCard label={t("table.columns.albumPeak")} value={`${song.replayGain.albumPeak?.toFixed(4) ?? 1}`} />
+                    </div>
+                </InfoSection>
+            )}
+        </DialogLayout>
+    );
+}
+
+function AlbumInfoContent({
+    album,
+    albumInfo,
+    onLinkClick,
+}: {
+    album: SingleAlbum
+    albumInfo?: AlbumInfoData
+    onLinkClick: () => void
+}) {
+    const { t } = useTranslation();
+    const coverArtUrl = getCoverArtUrl(album.coverArt, "album", "500");
+    const genres = collectGenres(album.genre, album.genres?.map(({ name }) => name));
+
+    return (
+        <DialogLayout coverArtUrl={coverArtUrl}
+            artworkAlt={album.name}
+            highlighted={!!album.starred}
+            hero={(
+                <>
+                    <Eyebrow>{t("table.columns.album", { defaultValue: "Album" })}</Eyebrow>
+                    <HeroTitle>{album.name}</HeroTitle>
+                    {album.artistId ? (
+                        <HeroLink to={ROUTES.ARTIST.PAGE(album.artistId)} onClick={onLinkClick}>
+                            {album.displayArtist ?? album.artist}
+                        </HeroLink>
+                    ) : (
+                        <p className="text-base text-muted-foreground truncate">{album.displayArtist ?? album.artist}</p>
+                    )}
+                    <HeroStats>
+                        <Stat icon={Disc3} text={t("playlist.songCount", { count: album.songCount })} />
+                        <Stat icon={Clock} text={convertSecondsToTime(album.duration ?? 0)} />
+                        {album.year ? <Stat icon={Calendar} text={`${album.year}`} /> : null}
+                    </HeroStats>
+                </>
+            )}>
+            <InfoSection title={t("songInfo.trackInfo", { defaultValue: "Details" })}>
+                <div className="grid grid-cols-2 gap-3">
+                    <InfoCard icon={Hash} label={t("table.columns.id")} value={album.id} />
+                    <InfoCard icon={Disc3} label={t("table.columns.songCount")} value={`${album.songCount}`} />
+                    {album.playCount !== undefined && album.playCount > 0 && (
+                        <InfoCard icon={PlayCircle} label={t("table.columns.plays")} value={`${album.playCount}`} />
+                    )}
+                    {album.created && (
+                        <InfoCard icon={Calendar} label={t("table.columns.created", { defaultValue: "Created" })} value={formatDate(album.created)} />
+                    )}
+                </div>
+            </InfoSection>
+
+            {album.artists && album.artists.length > 0 && (
+                <InfoSection title={t("table.columns.artist")}>
+                    <BadgeLinks
+                        items={album.artists.map(({ id, name }) => ({ id, label: name, to: ROUTES.ARTIST.PAGE(id) }))}
+                        icon={Users}
+                        onLinkClick={onLinkClick}
+                    />
+                </InfoSection>
+            )}
+
+            {genres.length > 0 && (
+                <InfoSection title={t("table.columns.genres")}>
+                    <BadgeLinks
+                        items={genres.map((genre) => ({ id: genre, label: genre, to: ROUTES.ALBUMS.GENRE(genre) }))}
+                        icon={Tag}
+                        variant="neutral"
+                        onLinkClick={onLinkClick}
+                    />
+                </InfoSection>
+            )}
+
+            {album.recordLabels && album.recordLabels.length > 0 && (
+                <InfoSection title={t("table.columns.recordLabel")}>
+                    <div className="flex flex-wrap gap-2">
+                        {album.recordLabels.slice(0, RECORD_LABELS_MAX_NUMBER).map((label) => (
+                            <Badge key={label.name} variant="outline">
+                                {label.name}
+                            </Badge>
+                        ))}
+                    </div>
+                </InfoSection>
+            )}
+
+            {album.releaseTypes && album.releaseTypes.length > 0 && (
+                <InfoSection title={t("table.columns.type", { defaultValue: "Type" })}>
+                    <div className="flex flex-wrap gap-2">
+                        {album.releaseTypes.map((releaseType) => (
+                            <Badge key={releaseType} variant="secondary">
+                                {releaseType}
+                            </Badge>
+                        ))}
+                    </div>
+                </InfoSection>
+            )}
+
+            {albumInfo?.notes && (
+                <InfoSection title={t("table.columns.comment", { defaultValue: "Notes" })}>
+                    <TextBlock>{albumInfo.notes}</TextBlock>
+                </InfoSection>
+            )}
+        </DialogLayout>
+    );
+}
+
+function ArtistInfoContent({
+    artist,
+    artistInfo,
+    onLinkClick,
+}: {
+    artist: IArtist
+    artistInfo?: ArtistInfoData
+    onLinkClick: () => void
+}) {
+    const { t } = useTranslation();
+    const coverArtUrl = artist.artistImageUrl || getCoverArtUrl(artist.coverArt, "artist", "500");
+    const biography = artistInfo && typeof artistInfo === "object" && "biography" in artistInfo ? artistInfo.biography : undefined;
+    const similarArtists = artistInfo && typeof artistInfo === "object" && "similarArtist" in artistInfo ? artistInfo.similarArtist : undefined;
+
+    return (
+        <DialogLayout coverArtUrl={coverArtUrl}
+            artworkAlt={artist.name}
+            highlighted={!!artist.starred}
+            hero={(
+                <>
+                    <Eyebrow>{t("table.columns.artist", { defaultValue: "Artist" })}</Eyebrow>
+                    <HeroTitle>{artist.name}</HeroTitle>
+                    <HeroStats>
+                        <Stat icon={Disc3} text={t("artist.albumCount", { count: artist.albumCount, defaultValue: `${artist.albumCount} albums` })} />
+                        {artist.roles && artist.roles.length > 0 ? <Stat icon={Users} text={artist.roles.join(", ")} /> : null}
+                    </HeroStats>
+                </>
+            )}>
+            <InfoSection title={t("songInfo.trackInfo", { defaultValue: "Details" })}>
+                <div className="grid grid-cols-2 gap-3">
+                    <InfoCard icon={Hash} label={t("table.columns.id")} value={artist.id} />
+                    <InfoCard icon={Disc3} label={t("artist.albumCount", { defaultValue: "Albums" })} value={`${artist.albumCount}`} />
+                    {artist.sortName && <InfoCard icon={Text} label={t("table.columns.sortName", { defaultValue: "Sort name" })} value={artist.sortName} />}
+                    {artist.musicBrainzId && <InfoCard icon={Globe} label="MusicBrainz" value={artist.musicBrainzId} />}
+                </div>
+            </InfoSection>
+
+            {artist.album && artist.album.length > 0 && (
+                <InfoSection title={t("table.columns.album")}>
+                    <BadgeLinks
+                        items={artist.album.slice(0, 12).map((album) => ({ id: album.id, label: album.name, to: ROUTES.ALBUM.PAGE(album.id) }))}
+                        icon={Disc3}
+                        onLinkClick={onLinkClick}
+                    />
+                </InfoSection>
+            )}
+
+            {similarArtists && similarArtists.length > 0 && (
+                <InfoSection title={t("artist.relatedArtists.title", { defaultValue: "Similar artists" })}>
+                    <BadgeLinks
+                        items={similarArtists.slice(0, 12).map((similarArtist) => ({
+                            id: similarArtist.id,
+                            label: similarArtist.name,
+                            to: ROUTES.ARTIST.PAGE(similarArtist.id),
+                        }))}
+                        icon={Users}
+                        onLinkClick={onLinkClick}
+                    />
+                </InfoSection>
+            )}
+
+            {biography && (
+                <InfoSection title={t("artist.info.title", { defaultValue: "Biography" })}>
+                    <TextBlock>{biography}</TextBlock>
+                </InfoSection>
+            )}
+        </DialogLayout>
+    );
+}
+
+function PlaylistInfoContent({
+    playlist,
+    onLinkClick,
+}: {
+    playlist: PlaylistWithEntries
+    onLinkClick: () => void
+}) {
+    const { t } = useTranslation();
+    const coverArtUrl = getCoverArtUrl(playlist.coverArt, "playlist", "500");
+
+    return (
+        <DialogLayout coverArtUrl={coverArtUrl}
+            artworkAlt={playlist.name}
+            hero={(
+                <>
+                    <Eyebrow>{t("table.columns.playlist", { defaultValue: "Playlist" })}</Eyebrow>
+                    <HeroTitle>{playlist.name}</HeroTitle>
+                    <HeroLink to={ROUTES.PLAYLIST.PAGE(playlist.id)} onClick={onLinkClick}>
+                        {playlist.owner || t("playlist.owner", { defaultValue: "Playlist" })}
+                    </HeroLink>
+                    <HeroStats>
+                        <Stat icon={Disc3} text={t("playlist.songCount", { count: playlist.songCount })} />
+                        <Stat icon={Clock} text={convertSecondsToTime(playlist.duration ?? 0)} />
+                        <Badge variant={playlist.public ? "secondary" : "outline"}>
+                            {playlist.public ? t("table.columns.public") : t("playlist.private", { defaultValue: "Private" })}
+                        </Badge>
+                    </HeroStats>
+                </>
+            )}>
+            <InfoSection title={t("songInfo.trackInfo", { defaultValue: "Details" })}>
+                <div className="grid grid-cols-2 gap-3">
+                    <InfoCard icon={Hash} label={t("table.columns.id")} value={playlist.id} />
+                    <InfoCard icon={Disc3} label={t("table.columns.songCount")} value={`${playlist.songCount}`} />
+                    {playlist.created && <InfoCard icon={Calendar} label={t("table.columns.created", { defaultValue: "Created" })} value={formatDate(playlist.created)} />}
+                    {playlist.changed && <InfoCard icon={Clock} label={t("table.columns.changed", { defaultValue: "Updated" })} value={formatDate(playlist.changed)} />}
+                </div>
+            </InfoSection>
+
+            {playlist.comment && (
+                <InfoSection title={t("table.columns.comment")}>
+                    <TextBlock>{playlist.comment}</TextBlock>
+                </InfoSection>
+            )}
+
+            {playlist.entry && playlist.entry.length > 0 && (
+                <InfoSection title={t("playlist.songs", { defaultValue: "Tracks" })}>
+                    <div className="grid gap-2">
+                        {playlist.entry.slice(0, 10).map((song, index) => (
+                            <div key={song.id + index} className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2">
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium">{song.title}</p>
+                                    <p className="truncate text-xs text-muted-foreground">{song.artist}</p>
+                                </div>
+                                <span className="shrink-0 text-xs text-muted-foreground">{convertSecondsToTime(song.duration ?? 0)}</span>
+                            </div>
+                        ))}
+                    </div>
+                </InfoSection>
+            )}
+        </DialogLayout>
+    );
+}
+
+function DialogLayout({
+    coverArtUrl,
+    artworkAlt,
+    hero,
+    highlighted,
+    children,
+}: {
+    coverArtUrl: string
+    artworkAlt: string
+    hero: ReactNode
+    highlighted?: boolean
+    children: ReactNode
+}) {
+    return (
+        <div className="flex flex-col">
+            <div className="relative">
+                <div
+                    className="absolute inset-0 bg-cover bg-center blur-3xl opacity-30 scale-110"
+                    style={{ backgroundImage: `url(${coverArtUrl})` }}
+                />
+
+                <div className="relative flex gap-6 p-6 pb-4">
+                    <div className="shrink-0">
+                        <div className="relative group">
+                            <img
+                                src={coverArtUrl}
+                                alt={artworkAlt}
+                                className="w-40 h-40 rounded-lg shadow-2xl object-cover ring-1 ring-white/10"
+                            />
+                            {highlighted && (
+                                <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1.5 shadow-lg">
+                                    <Heart className="w-3.5 h-3.5 text-primary-foreground fill-current" />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col justify-center min-w-0 flex-1">
+                        {hero}
+                    </div>
+                </div>
+            </div>
+
+            <Separator />
+
+            <ScrollArea className="max-h-[400px]">
+                <div className="p-4 space-y-4">{children}</div>
+            </ScrollArea>
+        </div>
+    );
+}
+
+function Eyebrow({ children }: { children: ReactNode }) {
+    return (
+        <p className="text-xs font-medium text-primary uppercase tracking-wider mb-1">
+            {children}
+        </p>
+    );
+}
+
+function HeroTitle({ children }: { children: ReactNode }) {
+    return (
+        <h1 className="text-2xl font-bold text-foreground truncate mb-1">
+            {children}
+        </h1>
+    );
+}
+
+function HeroLink({
+    children,
+    className,
+    ...props
+}: React.ComponentProps<typeof Link>) {
+    return (
+        <Link
+            {...props}
+            className={clsx(
+                "text-base text-muted-foreground hover:text-foreground hover:underline truncate transition-colors",
+                className,
+            )}
+        >
+            {children}
+        </Link>
+    );
+}
+
+function HeroStats({ children }: { children: ReactNode }) {
+    return <div className="flex items-center gap-4 mt-3 flex-wrap">{children}</div>;
+}
+
+function Stat({
+    icon: Icon,
+    text,
+}: {
+    icon: React.ComponentType<{ className?: string }>
+    text: string
+}) {
+    return (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Icon className="w-3.5 h-3.5" />
+            <span>{text}</span>
+        </div>
+    );
+}
+
+function ArtistsLine({
+    artists,
+    artist,
+    artistId,
+    onLinkClick,
+}: {
+    artists?: Array<{ id: string; name: string }>
+    artist: string
+    artistId?: string
+    onLinkClick: () => void
+}) {
+    return (
+        <div className="flex items-center gap-1.5 mt-2 text-sm text-muted-foreground">
+            <User className="w-3.5 h-3.5" />
+            <div className="flex items-center flex-wrap gap-1">
+                {artists && artists.length > 0 ? (
+                    artists.map(({ id, name }, index) => (
+                        <Fragment key={id}>
+                            <Link
+                                to={ROUTES.ARTIST.PAGE(id)}
+                                className="hover:text-foreground hover:underline transition-colors"
+                                onClick={onLinkClick}
+                            >
+                                {name}
+                            </Link>
+                            {index < artists.length - 1 && <Dot className="mx-0" />}
+                        </Fragment>
+                    ))
+                ) : (
+                    <Link
+                        to={ROUTES.ARTIST.PAGE(artistId ?? "")}
+                        className={clsx(
+                            "hover:text-foreground transition-colors",
+                            artistId ? "hover:underline" : "pointer-events-none",
+                        )}
+                        onClick={() => {
+                            if (artistId) onLinkClick();
+                        }}
+                    >
+                        {artist}
+                    </Link>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function BadgeLinks({
+    items,
+    icon: Icon,
+    onLinkClick,
+    variant = "outline",
+}: {
+    items: Array<{ id: string; label: string; to: string }>
+    icon: React.ComponentType<{ className?: string }>
+    onLinkClick: () => void
+    variant?: "outline" | "secondary" | "neutral"
+}) {
+    return (
+        <div className="flex flex-wrap gap-2">
+            {items.map((item) => (
+                <Link key={item.id} to={item.to} onClick={onLinkClick}>
+                    <Badge variant={variant} className="hover:bg-accent transition-colors cursor-pointer">
+                        <Icon className="w-3 h-3 mr-1" />
+                        {item.label}
+                    </Badge>
+                </Link>
+            ))}
+        </div>
+    );
+}
+
+function TextBlock({ children }: { children: ReactNode }) {
+    return (
+        <div className="rounded-lg bg-muted/50 p-3 text-sm leading-6 text-foreground/90">
+            {children}
+        </div>
+    );
+}
+
+function collectGenres(primary?: string, list?: Array<string | undefined>) {
+    const genres = new Set<string>();
+
+    if (primary) {
+        genres.add(primary);
+    }
+
+    list?.forEach((genre) => {
+        if (genre) {
+            genres.add(genre);
+        }
+    });
+
+    return [...genres];
+}
+
+function formatDate(value?: string) {
+    if (!value) return "-";
+    return dateTime(value).format("LLL");
+}
+
+function getDialogState({
+    targetType,
+    songQuery,
+    songAlbumQuery,
+    albumQuery,
+    albumInfoQuery,
+    artistQuery,
+    artistInfoQuery,
+    playlistQuery,
+}: {
+    targetType?: InfoItemType
+    songQuery: ReturnType<typeof useQuery<ISong | undefined>>
+    songAlbumQuery: ReturnType<typeof useQuery<SingleAlbum | undefined>>
+    albumQuery: ReturnType<typeof useQuery<SingleAlbum | undefined>>
+    albumInfoQuery: ReturnType<typeof useQuery<AlbumInfoData | undefined>>
+    artistQuery: ReturnType<typeof useQuery<IArtist | undefined>>
+    artistInfoQuery: ReturnType<typeof useQuery<ArtistInfoData | undefined>>
+    playlistQuery: ReturnType<typeof useQuery<PlaylistWithEntries | undefined>>
+}) {
+    switch (targetType) {
+        case "song":
+            return {
+                isLoading: songQuery.isLoading || songAlbumQuery.isLoading,
+                hasData: !!songQuery.data,
+                type: "song" as const,
+                song: songQuery.data,
+            };
+        case "album":
+            return {
+                isLoading: albumQuery.isLoading || albumInfoQuery.isLoading,
+                hasData: !!albumQuery.data,
+                type: "album" as const,
+                album: albumQuery.data,
+                albumInfo: albumInfoQuery.data,
+            };
+        case "artist":
+            return {
+                isLoading: artistQuery.isLoading || artistInfoQuery.isLoading,
+                hasData: !!artistQuery.data,
+                type: "artist" as const,
+                artist: artistQuery.data,
+                artistInfo: artistInfoQuery.data,
+            };
+        case "playlist":
+            return {
+                isLoading: playlistQuery.isLoading,
+                hasData: !!playlistQuery.data,
+                type: "playlist" as const,
+                playlist: playlistQuery.data,
+            };
+        default:
+            return {
+                isLoading: false,
+                hasData: false,
+                type: null,
+            };
+    }
 }
 
 interface InfoSectionProps {

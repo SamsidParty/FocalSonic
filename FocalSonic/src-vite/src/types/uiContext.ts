@@ -1,11 +1,19 @@
-interface ISongInfo {
-    songId: string
-    setSongId: (id: string) => void
+export type InfoItemType = "song" | "album" | "artist" | "playlist"
+
+export interface IInfoItemTarget {
+    type: InfoItemType
+    id: string
+}
+
+interface IItemInfo {
+    target: IInfoItemTarget | null
+    setTarget: (target: IInfoItemTarget | null) => void
     modalOpen: boolean
     setModalOpen: (open: boolean) => void
+    openInfo: (target: IInfoItemTarget) => void
     reset: () => void
 }
 
 export interface IUiContext {
-    songInfo: ISongInfo
+    itemInfo: IItemInfo
 }

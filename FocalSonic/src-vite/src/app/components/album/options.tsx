@@ -1,79 +1,10 @@
-import { OptionsButtons } from "@/app/components/options/buttons";
-import { AddToPlaylistSubMenu } from "@/app/components/song/add-to-playlist";
-import {
-    DropdownMenuGroup,
-    DropdownMenuSeparator,
-} from "@/app/components/ui/dropdown-menu";
-import { useOptions } from "@/app/hooks/use-options";
+import { ItemMenuOptions } from "@/app/components/options/item-menu";
 import { SingleAlbum } from "@/types/responses/album";
-import { checkServerType } from "@/utils/servers";
-import React from "react";
 
 interface AlbumOptionsProps {
     album: SingleAlbum
 }
 
 export function AlbumOptions({ album }: AlbumOptionsProps) {
-    const {
-        playNext,
-        playLast,
-        startDownload,
-        addToPlaylist,
-        createNewPlaylist,
-    } = useOptions();
-
-    const { isAppleMusic } = checkServerType();
-    const canDownload = !isAppleMusic;
-
-    function handlePlayNext() {
-        playNext(album.song);
-    }
-
-    function handlePlayLast() {
-        playLast(album.song);
-    }
-
-    function handleDownload() {
-        startDownload(album.id);
-    }
-
-    function handleAddToPlaylist(id: string) {
-        const songIdToAdd = album.song.map((song) => song.id);
-
-        addToPlaylist(id, songIdToAdd);
-    }
-
-    function handleCreateNewPlaylist() {
-        const songIdToAdd = album.song.map((song) => song.id);
-
-        createNewPlaylist(album.name, songIdToAdd);
-    }
-
-    return (
-        <>
-            <DropdownMenuGroup>
-                <OptionsButtons.PlayNext onClick={handlePlayNext} />
-                <OptionsButtons.PlayLast onClick={handlePlayLast} />
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <OptionsButtons.AddToPlaylistOption variant="dropdown">
-                <AddToPlaylistSubMenu
-                    type="dropdown"
-                    newPlaylistFn={handleCreateNewPlaylist}
-                    addToPlaylistFn={handleAddToPlaylist}
-                />
-            </OptionsButtons.AddToPlaylistOption>
-
-            {
-                canDownload && (
-                    <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <OptionsButtons.Download onClick={handleDownload} />
-                        </DropdownMenuGroup>
-                    </>
-                )
-            }
-        </>
-    );
+    return <ItemMenuOptions variant="dropdown" target={{ type: "album", item: album }} />;
 }

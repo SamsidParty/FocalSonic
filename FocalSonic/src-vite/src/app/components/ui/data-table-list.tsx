@@ -66,6 +66,8 @@ interface DataTableProps<TData, TValue> {
     hasNextPage?: boolean
     scrollToIndex?: boolean
     currentSongIndex?: number
+    allowRowReorder?: boolean
+    onMoveRow?: (fromIndex: number, toIndex: number) => void
 }
 
 export function DataTableList<TData, TValue>({
@@ -84,6 +86,8 @@ export function DataTableList<TData, TValue>({
     hasNextPage,
     scrollToIndex = false,
     currentSongIndex,
+    allowRowReorder = false,
+    onMoveRow,
 }: DataTableProps<TData, TValue>) {
     const newColumns = columns.filter((column) => {
         return columnFilter?.includes(column.id as ColumnFilter);
@@ -202,6 +206,7 @@ export function DataTableList<TData, TValue>({
                             variant="context"
                             index={row.index}
                             song={row.original as ISong}
+                            context={pageType === "queue" || pageType === "queue-small" ? { source: "queue" } : undefined}
                         />
                     );
                 }
@@ -377,6 +382,8 @@ export function DataTableList<TData, TValue>({
                                         getContextMenuOptions={getContextMenuOptions}
                                         dataType={dataType}
                                         pageType={pageType}
+                                        allowRowReorder={allowRowReorder}
+                                        onMoveRow={onMoveRow}
                                     />
                                 );
                             })

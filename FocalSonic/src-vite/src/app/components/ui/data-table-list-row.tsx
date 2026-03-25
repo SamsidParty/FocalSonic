@@ -17,6 +17,8 @@ interface TableRowProps<TData> {
     getContextMenuOptions: (row: Row<TData>) => JSX.Element | undefined
     dataType?: "song" | "artist" | "playlist" | "radio"
     pageType?: "general" | "queue" | "queue-small"
+    allowRowReorder?: boolean
+    onMoveRow?: (fromIndex: number, toIndex: number) => void
 }
 
 let isTap = false;
@@ -31,6 +33,8 @@ export function TableListRow<TData>({
     getContextMenuOptions,
     dataType = "song",
     pageType = "general",
+    allowRowReorder = false,
+    onMoveRow,
 }: TableRowProps<TData>) {
     const currentSong = usePlayerCurrentSong();
 
@@ -53,6 +57,34 @@ export function TableListRow<TData>({
     function handleTouchCancel() {
         clearTimeout(tapTimeout);
         isTap = false;
+    }
+
+    function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
+        if (!allowRowReorder) return;
+
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", String(row.index));
+    }
+
+    function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+        if (!allowRowReorder) return;
+
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+    }
+
+    function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+        if (!allowRowReorder || !onMoveRow) return;
+
+        e.preventDefault();
+
+        const fromIndex = Number(e.dataTransfer.getData("text/plain"));
+
+        if (Number.isNaN(fromIndex)) {
+            return;
+        }
+
+        onMoveRow(fromIndex, row.index);
     }
 
     const isRowSongActive = useMemo(() => {
@@ -95,10 +127,15 @@ export function TableListRow<TData>({
                 onTouchEnd={handleTouchEnd}
                 onTouchCancel={handleTouchCancel}
                 onContextMenu={(e) => handleClicks(e, row)}
+                draggable={allowRowReorder}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
                 className={clsx(
                     "group/tablerow w-[calc(100%-10px)] flex flex-row transition-colors",
                     "data-[state=selected]:bg-foreground/30 hover:bg-foreground/20",
                     isQueue && "rounded-md",
+                    allowRowReorder && "cursor-grab active:cursor-grabbing",
                     isRowSongActive && "row-active bg-foreground/20",
                 )}
                 style={{

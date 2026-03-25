@@ -10,7 +10,8 @@ import {
     PlayIcon,
     PlusCircle,
     PlusIcon,
-    Trash
+    Trash,
+    XIcon
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MenuItemFactory } from "./menu-item-factory";
@@ -155,6 +156,22 @@ function SongInfo({ variant = "dropdown", ...props }: DropdownMenuItemProps) {
     );
 }
 
+function RemoveFromQueue({
+    variant = "dropdown",
+    ...props
+}: DropdownMenuItemProps) {
+    const { t } = useTranslation();
+
+    return (
+        <MenuItemFactory
+            variant={variant}
+            icon={<XIcon className="mr-2 h-4 w-4" />}
+            label={t("options.removeFromQueue", { defaultValue: "Remove from queue" })}
+            {...props}
+        />
+    );
+}
+
 function MarkAsPlayed({
     variant = "dropdown",
     ...props
@@ -181,5 +198,6 @@ export const OptionsButtons = {
     RemovePlaylist,
     RemoveFromPlaylist,
     SongInfo,
+    RemoveFromQueue,
     MarkAsPlayed,
 };

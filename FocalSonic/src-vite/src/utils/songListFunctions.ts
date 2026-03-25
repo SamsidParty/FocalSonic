@@ -30,3 +30,22 @@ export function addNextSongList<T>(
 
     return updated;
 }
+
+export function moveArrayItem<T>(list: T[], fromIndex: number, toIndex: number) {
+    if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= list.length ||
+        toIndex >= list.length ||
+        fromIndex === toIndex
+    ) {
+        return [...list];
+    }
+
+    const nextList = [...list];
+    const [item] = nextList.splice(fromIndex, 1);
+
+    nextList.splice(toIndex, 0, item);
+
+    return nextList;
+}

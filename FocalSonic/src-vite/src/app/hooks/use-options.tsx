@@ -2,7 +2,8 @@ import { getDownloadUrl } from "@/api/httpClient";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylistRemoveSong } from "@/store/playlists.store";
-import { useSongInfo } from "@/store/ui.store";
+import { useItemInfo } from "@/store/ui.store";
+import { IInfoItemTarget } from "@/types/uiContext";
 import { UpdateParams } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
 import { queryKeys } from "@/utils/queryKeys";
@@ -20,7 +21,7 @@ export function useOptions() {
     const { downloadBrowser, downloadTauri } = useDownload();
     const { setActionData, setConfirmDialogState } = usePlaylistRemoveSong();
     const matches = useMatches();
-    const { setSongId, setModalOpen } = useSongInfo();
+    const { openInfo } = useItemInfo();
 
     const isOnPlaylistPage = matches.find((route) => route.id === "playlist");
     const playlistId = isOnPlaylistPage?.params.playlistId ?? "";
@@ -95,9 +96,12 @@ export function useOptions() {
         setConfirmDialogState(true);
     }
 
+    function openItemInfo(target: IInfoItemTarget) {
+        openInfo(target);
+    }
+
     function openSongInfo(id: string) {
-        setSongId(id);
-        setModalOpen(true);
+        openItemInfo({ type: "song", id });
     }
 
     return {
@@ -108,6 +112,7 @@ export function useOptions() {
         addToPlaylist,
         createNewPlaylist,
         removeSongFromPlaylist,
+        openItemInfo,
         openSongInfo,
         isOnPlaylistPage,
         playlistId,

@@ -6,7 +6,7 @@ import { ISong } from "@/types/responses/song";
 import { exitFullscreen, exitMiniPlayer } from "@/utils/browser";
 import { areSongListsEqual } from "@/utils/compareSongLists";
 import { checkServerType } from "@/utils/servers";
-import { addNextSongList, shuffleSongList } from "@/utils/songListFunctions";
+import { addNextSongList, moveArrayItem, shuffleSongList } from "@/utils/songListFunctions";
 import { produce } from "immer";
 import clamp from "lodash/clamp";
 import merge from "lodash/merge";
@@ -26,6 +26,43 @@ const blurSettings = {
 
 let lastSongList = null;
 
+function moveSongRelativeToNeighbors<T extends { id: string }>(
+    list: T[],
+    movedSongId: string,
+    previousSongId?: string,
+    nextSongId?: string,
+) {
+    const sourceIndex = list.findIndex((item) => item.id === movedSongId);
+
+    if (sourceIndex === -1) {
+        return [...list];
+    }
+
+    const nextList = [...list];
+    const [movedItem] = nextList.splice(sourceIndex, 1);
+
+    if (nextSongId) {
+        const nextIndex = nextList.findIndex((item) => item.id === nextSongId);
+
+        if (nextIndex !== -1) {
+            nextList.splice(nextIndex, 0, movedItem);
+            return nextList;
+        }
+    }
+
+    if (previousSongId) {
+        const previousIndex = nextList.findIndex((item) => item.id === previousSongId);
+
+        if (previousIndex !== -1) {
+            nextList.splice(previousIndex + 1, 0, movedItem);
+            return nextList;
+        }
+    }
+
+    nextList.push(movedItem);
+    return nextList;
+}
+
 const igniteViewPlayerStore = {
     getItem: async (key: string) => {
         console.log("[Player Bridge] Downstream sync triggered");
@@ -33,7 +70,7 @@ const igniteViewPlayerStore = {
         const result = await window.igniteView?.commandBridge.getPlayerStore();
         return result;
     },
-    setItem: async (key: string, value: any) => {
+    setItem: async (key: string, value: string) => {
         if (key !== "player_store") { return; }
         value = JSON.parse(value);
 
@@ -394,13 +431,17 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 });
                             } else {
                                 const { currentList, currentSongIndex } = get().songlist;
+                                const earlierSongs = currentList.slice(0, currentSongIndex);
                                 const songListToShuffle = currentList.slice(currentSongIndex);
-                                const shuffledList = shuffleSongList(songListToShuffle, 0);
+                                const shuffledList = [
+                                    ...earlierSongs,
+                                    ...shuffleSongList(songListToShuffle, 0),
+                                ];
 
                                 set((state) => {
                                     state.songlist.shuffledList = shuffledList;
                                     state.songlist.currentList = shuffledList;
-                                    state.songlist.currentSongIndex = 0;
+                                    state.songlist.currentSongIndex = currentSongIndex;
                                     state.playerState.isShuffleActive = true;
                                 });
                             }
@@ -614,6 +655,63 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                     state.playerState.audioPlayerRef = audioPlayer;
                                 }),
                             );
+                        },
+                        moveSongInQueue: (fromIndex, toIndex) => {
+                            const {
+                                currentList,
+                                originalList,
+                                shuffledList,
+                                currentSongIndex,
+                            } = get().songlist;
+                            const { isShuffleActive } = get().playerState;
+
+                            if (
+                                fromIndex === toIndex ||
+                                fromIndex < 0 ||
+                                toIndex < 0 ||
+                                fromIndex >= currentList.length ||
+                                toIndex >= currentList.length
+                            ) {
+                                return;
+                            }
+
+                            const movedSongId = currentList[fromIndex]?.id;
+                            const currentSongId = currentList[currentSongIndex]?.id;
+
+                            if (!movedSongId) {
+                                return;
+                            }
+
+                            const nextCurrentList = moveArrayItem(currentList, fromIndex, toIndex);
+                            const movedSongIndex = nextCurrentList.findIndex((song) => song.id === movedSongId);
+                            const previousSongId = nextCurrentList[movedSongIndex - 1]?.id;
+                            const nextSongId = nextCurrentList[movedSongIndex + 1]?.id;
+
+                            const nextOriginalList = isShuffleActive
+                                ? moveSongRelativeToNeighbors(originalList, movedSongId, previousSongId, nextSongId)
+                                : nextCurrentList;
+
+                            const nextShuffledList = isShuffleActive
+                                ? nextCurrentList
+                                : shuffledList.length > 0
+                                    ? moveSongRelativeToNeighbors(shuffledList, movedSongId, previousSongId, nextSongId)
+                                    : [];
+
+                            const nextCurrentSongIndex = currentSongId
+                                ? Math.max(nextCurrentList.findIndex((song) => song.id === currentSongId), 0)
+                                : 0;
+
+                            const nextOriginalSongIndex = currentSongId
+                                ? Math.max(nextOriginalList.findIndex((song) => song.id === currentSongId), 0)
+                                : 0;
+
+                            set((state) => {
+                                state.songlist.currentList = nextCurrentList;
+                                state.songlist.originalList = nextOriginalList;
+                                state.songlist.shuffledList = nextShuffledList;
+                                state.songlist.currentSongIndex = nextCurrentSongIndex;
+                                state.songlist.originalSongIndex = nextOriginalSongIndex;
+                            });
                         },
                         removeSongFromQueue: (id) => {
                             const {

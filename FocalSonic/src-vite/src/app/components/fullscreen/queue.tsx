@@ -1,5 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef } from "react";
+import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import {
     usePlayerActions,
@@ -9,7 +10,7 @@ import {
 import { QueueItem } from "./queue-item";
 
 export function FullscreenSongQueue() {
-    const { setSongList } = usePlayerActions();
+    const { setSongList, moveSongInQueue } = usePlayerActions();
     const { currentList, currentSongIndex, currentSong } = usePlayerSonglist();
     const isPlaying = usePlayerIsPlaying();
 
@@ -65,6 +66,34 @@ export function FullscreenSongQueue() {
                             index={virtualRow.index}
                             song={entry}
                             isPlaying={currentSong.id === entry.id && isPlaying}
+                            contextMenuOptions={(
+                                <SongMenuOptions
+                                    variant="context"
+                                    index={virtualRow.index}
+                                    song={entry}
+                                    context={{ source: "queue" }}
+                                />
+                            )}
+                            draggable
+                            onDragStart={(e) => {
+                                e.dataTransfer.effectAllowed = "move";
+                                e.dataTransfer.setData("text/plain", String(virtualRow.index));
+                            }}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = "move";
+                            }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+
+                                const fromIndex = Number(e.dataTransfer.getData("text/plain"));
+
+                                if (Number.isNaN(fromIndex)) {
+                                    return;
+                                }
+
+                                moveSongInQueue(fromIndex, virtualRow.index);
+                            }}
                             onClick={() => {
                                 if (currentSong.id !== entry.id) {
                                     setSongList(currentList, virtualRow.index);

@@ -140,6 +140,7 @@ export interface IPlayerActions {
     setAudioPlayerRef: (ref: HTMLAudioElement) => void
     setNextOnQueue: (songlist: ISong[]) => void
     setLastOnQueue: (songlist: ISong[]) => void
+    moveSongInQueue: (fromIndex: number, toIndex: number) => void
     removeSongFromQueue: (id: string) => void
     setMainDrawerState: (state: boolean) => void
     closeDrawer: () => void
