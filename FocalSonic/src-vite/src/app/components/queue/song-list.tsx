@@ -1,3 +1,4 @@
+import { TableSongTitle } from "@/app/components/table/song-title";
 import { Button } from "@/app/components/ui/button";
 import { DataTableList } from "@/app/components/ui/data-table-list";
 import { Separator } from "@/app/components/ui/separator";
@@ -8,9 +9,10 @@ import {
     usePlayerCurrentSongIndex,
 } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
-import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
+import { ISong } from "@/types/responses/song";
+import { convertSecondsToHumanRead, convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import clsx from "clsx";
-import { ListX } from "lucide-react";
+import { GripVertical, ListX } from "lucide-react";
 import React, { useMemo } from "react";
 
 import { useTranslation } from "react-i18next";
@@ -99,8 +101,54 @@ export function QueueSongList({ small } : { small?: boolean } ) {
                     pageType={small ? "queue-small" : "queue"}
                     allowRowReorder={true}
                     onMoveRow={moveSongInQueue}
+                    renderDragOverlay={(row, meta) => (
+                        <QueueDragOverlayRow
+                            song={row.original}
+                            index={row.index}
+                            compact={small}
+                            width={meta.width}
+                        />
+                    )}
                 />
             </div>
+        </div>
+    );
+}
+
+function QueueDragOverlayRow({
+    song,
+    index,
+    compact,
+    width,
+}: {
+    song: ISong
+    index: number
+    compact?: boolean
+    width?: number
+}) {
+    return (
+        <div
+            className="flex items-center rounded-md border border-border/50 bg-background/95 px-2 py-2 shadow-2xl backdrop-blur-sm"
+            style={{
+                width: width ?? undefined,
+            }}
+        >
+            <div className="mr-2 flex w-8 shrink-0 items-center justify-center text-foreground/35">
+                <GripVertical className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+                <TableSongTitle song={song} />
+            </div>
+            {!compact && (
+                <div className="ml-3 w-16 shrink-0 text-right text-sm text-muted-foreground">
+                    {convertSecondsToTime(song.duration ?? 0)}
+                </div>
+            )}
+            {compact && (
+                <div className="ml-3 shrink-0 text-sm text-muted-foreground">
+                    {index + 1}
+                </div>
+            )}
         </div>
     );
 }

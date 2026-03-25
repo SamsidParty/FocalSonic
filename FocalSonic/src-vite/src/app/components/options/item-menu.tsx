@@ -1,13 +1,13 @@
-import { useSongList } from "@/app/hooks/use-song-list";
 import { OptionsButtons } from "@/app/components/options/buttons";
 import { AddToPlaylistSubMenu } from "@/app/components/song/add-to-playlist";
-import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
 import { useOptions } from "@/app/hooks/use-options";
+import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
+import { useSongList } from "@/app/hooks/use-song-list";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylists, useRemovePlaylist } from "@/store/playlists.store";
-import { IArtist } from "@/types/responses/artist";
-import { SingleAlbum } from "@/types/responses/album";
+import { Albums, SingleAlbum } from "@/types/responses/album";
+import { IArtist, ISimilarArtist } from "@/types/responses/artist";
 import { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
 import { checkServerType } from "@/utils/servers";
@@ -27,7 +27,24 @@ export type ItemMenuContext = {
     disableDelete?: boolean
 }
 
-type ItemMenuTarget =
+export type AlbumMenuItem = SingleAlbum | Albums
+
+export type ArtistMenuItem = IArtist | ISimilarArtist
+
+export type PreviewPlaylistItem = Partial<Playlist> & {
+    id: string
+    name: string
+    appleMusic?: {
+        data?: {
+            canEdit?: boolean
+        }
+        type?: string
+    }
+}
+
+export type PlaylistMenuItem = PlaylistWithEntries | Playlist | PreviewPlaylistItem
+
+export type ItemMenuTarget =
     | {
         type: "song"
         item: ISong
@@ -36,17 +53,17 @@ type ItemMenuTarget =
     }
     | {
         type: "album"
-        item: SingleAlbum
+        item: AlbumMenuItem
         context?: ItemMenuContext
     }
     | {
         type: "artist"
-        item: IArtist
+        item: ArtistMenuItem
         context?: ItemMenuContext
     }
     | {
         type: "playlist"
-        item: PlaylistWithEntries | Playlist
+        item: PlaylistMenuItem
         context?: ItemMenuContext
     }
 
@@ -179,7 +196,7 @@ function SongItemMenu({
                 variant={variant}
                 onClick={(e) => {
                     e.stopPropagation();
-                    openItemInfo({ type: "song", id: song.id });
+                    openItemInfo({ type: "song", id: song.id, item: song });
                 }}
             />
         </>
@@ -191,7 +208,7 @@ function AlbumItemMenu({
     album,
 }: {
     variant: ItemMenuVariant
-    album: SingleAlbum
+    album: AlbumMenuItem
     context?: ItemMenuContext
 }) {
     const {
@@ -205,37 +222,62 @@ function AlbumItemMenu({
     } = useOptions();
     const { isAppleMusic } = checkServerType();
 
-    const songIds = album.song.map((song) => song.id);
+    async function getAlbumSongs() {
+        if ("song" in album && Array.isArray(album.song)) {
+            return album.song;
+        }
+
+        const fullAlbum = await service.albums.getOne(album.id);
+        return fullAlbum?.song ?? [];
+    }
+
+    async function withAlbumSongs(action: (songs: ISong[]) => void | Promise<void>) {
+        const songs = await getAlbumSongs();
+
+        if (songs.length === 0) {
+            return;
+        }
+
+        await action(songs);
+    }
 
     return (
         <>
             <OptionsButtons.Play
                 variant={variant}
-                onClick={(e) => {
+                onClick={async (e) => {
                     e.stopPropagation();
-                    play(album.song);
+                    await withAlbumSongs(play);
                 }}
             />
             <OptionsButtons.PlayNext
                 variant={variant}
-                onClick={(e) => {
+                onClick={async (e) => {
                     e.stopPropagation();
-                    playNext(album.song);
+                    await withAlbumSongs(playNext);
                 }}
             />
             <OptionsButtons.PlayLast
                 variant={variant}
-                onClick={(e) => {
+                onClick={async (e) => {
                     e.stopPropagation();
-                    playLast(album.song);
+                    await withAlbumSongs(playLast);
                 }}
             />
             <MenuSeparatorFactory variant={variant} />
             <OptionsButtons.AddToPlaylistOption variant={variant}>
                 <AddToPlaylistSubMenu
                     type={variant}
-                    newPlaylistFn={() => createNewPlaylist(album.name, songIds)}
-                    addToPlaylistFn={(id) => addToPlaylist(id, songIds)}
+                    newPlaylistFn={async () => {
+                        await withAlbumSongs(async (songs) => {
+                            await createNewPlaylist(album.name, songs.map((song) => song.id));
+                        });
+                    }}
+                    addToPlaylistFn={async (id) => {
+                        await withAlbumSongs(async (songs) => {
+                            await addToPlaylist(id, songs.map((song) => song.id));
+                        });
+                    }}
                 />
             </OptionsButtons.AddToPlaylistOption>
             {!isAppleMusic && (
@@ -255,7 +297,7 @@ function AlbumItemMenu({
                 variant={variant}
                 onClick={(e) => {
                     e.stopPropagation();
-                    openItemInfo({ type: "album", id: album.id });
+                    openItemInfo({ type: "album", id: album.id, item: album });
                 }}
             />
         </>
@@ -267,7 +309,7 @@ function ArtistItemMenu({
     artist,
 }: {
     variant: ItemMenuVariant
-    artist: IArtist
+    artist: ArtistMenuItem
     context?: ItemMenuContext
 }) {
     const { getArtistAllSongs } = useSongList();
@@ -322,7 +364,7 @@ function ArtistItemMenu({
                 variant={variant}
                 onClick={(e) => {
                     e.stopPropagation();
-                    openItemInfo({ type: "artist", id: artist.id });
+                    openItemInfo({ type: "artist", id: artist.id, item: artist });
                 }}
             />
         </>
@@ -335,7 +377,7 @@ function PlaylistItemMenu({
     context,
 }: {
     variant: ItemMenuVariant
-    playlist: PlaylistWithEntries | Playlist
+    playlist: PlaylistMenuItem
     context?: ItemMenuContext
 }) {
     const { t } = useTranslation();
@@ -361,7 +403,7 @@ function PlaylistItemMenu({
         setPlaylistDialogState(true);
     }
 
-    const canEditPlaylist = isAppleMusic ? playlist.appleMusic?.data.canEdit : true;
+    const canEditPlaylist = isAppleMusic ? !!playlist.appleMusic?.data?.canEdit : true;
 
     const content: ReactNode[] = [];
 
@@ -478,7 +520,7 @@ function PlaylistItemMenu({
             variant={variant}
             onClick={(e) => {
                 e.stopPropagation();
-                openItemInfo({ type: "playlist", id: playlist.id });
+                openItemInfo({ type: "playlist", id: playlist.id, item: playlist });
             }}
         />,
     );

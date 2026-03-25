@@ -1,13 +1,13 @@
-import clsx from "clsx";
-import { ContextMenuProvider } from "@/app/components/table/context-menu";
-import { GripVertical } from "lucide-react";
-import { ComponentPropsWithRef, ReactNode } from "react";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
+import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
+import clsx from "clsx";
+import { GripVertical } from "lucide-react";
+import { ComponentPropsWithRef, ReactNode } from "react";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 type QueueItemProps = ComponentPropsWithRef<"div"> & {
     song: ISong
@@ -33,6 +33,7 @@ export function QueueItem({
                     "flex items-center w-[calc(100%-10px)] h-16 text-sm rounded-md cursor-pointer",
                     "bg-black/0 hover:bg-foreground/20",
                     "data-[state=active]:bg-foreground data-[state=active]:text-secondary",
+                    "data-[dragging=true]:opacity-0",
                     "cursor-grab active:cursor-grabbing",
                 ])}
                 style={{

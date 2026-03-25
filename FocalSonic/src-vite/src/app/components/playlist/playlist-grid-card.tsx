@@ -1,4 +1,5 @@
 import { getCoverArtUrl } from "@/api/httpClient";
+import { PreviewItemMenuOptions } from "@/app/components/options/preview-item-menu";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
@@ -18,7 +19,7 @@ function PlaylistCard({ playlist }: PlaylistCardProps) {
 
     if (playlist?.appleMusic?.type?.includes("playlist-folders")) {
         return (
-            <PreviewCard.Root>
+            <PreviewCard.Root contextMenuOptions={<PreviewItemMenuOptions item={playlist} variant="context" />}>
                 <PreviewCard.ImageWrapper link={ROUTES.PLAYLIST.PAGE(playlist.id)}>
                     <div className="flex items-center justify-center w-full h-full">  
                         <FolderIcon color="var(--primary)" className="w-1/2 h-1/2 group-hover:opacity-40 transition-opacity duration-300" />
@@ -41,7 +42,7 @@ function PlaylistCard({ playlist }: PlaylistCardProps) {
     }
 
     return (
-        <PreviewCard.Root>
+        <PreviewCard.Root contextMenuOptions={<PreviewItemMenuOptions item={playlist} variant="context" />}>
             <PreviewCard.ImageWrapper link={ROUTES.PLAYLIST.PAGE(playlist.id)}>
                 <PreviewCard.Image
                     src={getCoverArtUrl(playlist.coverArt, "playlist", "300")}

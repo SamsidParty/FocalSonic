@@ -1,4 +1,5 @@
 import { getCoverArtUrl } from "@/api/httpClient";
+import { PreviewItemMenuOptions } from "@/app/components/options/preview-item-menu";
 import { cn } from "@/lib/utils";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
@@ -18,7 +19,10 @@ export function WidePreview({ entry, className, title }: WidePreviewProps) {
     const { handlePlay, navigateToResource } = usePreviewCard();
 
     return (
-        <PreviewCard.Root className={cn("h-40 w-96 p-2 gap-2 flex items-center bg-card box-content rounded-lg shadow-sm", className)}>
+        <PreviewCard.Root
+            className={cn("h-40 w-96 p-2 gap-2 flex items-center bg-card box-content rounded-lg shadow-sm", className)}
+            contextMenuOptions={<PreviewItemMenuOptions item={entry} variant="context" />}
+        >
 
             <div className="w-40 h-auto flex-shrink-0">
                 <PreviewCard.ImageWrapper 

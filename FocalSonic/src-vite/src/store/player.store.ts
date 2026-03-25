@@ -410,29 +410,25 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         toggleShuffle: () => {
                             const { isShuffleActive } = get().playerState;
-                            const { currentList, currentSongIndex } = get().songlist;
+                            const { currentList, currentSong, originalList, originalSongIndex } = get().songlist;
 
-                            const listLength = currentList.length;
-                            const isPlayingOneOrLess = listLength <= 1;
-                            const isPlayingLastSong = currentSongIndex === listLength - 1;
+                            const baseList = originalList.length > 0 ? originalList : currentList;
+                            const resolvedOriginalSongIndex = currentSong.id
+                                ? baseList.findIndex((song) => song.id === currentSong.id)
+                                : originalSongIndex;
 
-                            if (isPlayingOneOrLess || isPlayingLastSong) return;
+                            if (baseList.length <= 1 || resolvedOriginalSongIndex < 0) return;
 
                             if (isShuffleActive) {
-                                const currentSongId = get().songlist.currentSong.id;
-                                const index = get().songlist.originalList.findIndex(
-                                    (song) => song.id === currentSongId,
-                                );
-
                                 set((state) => {
-                                    state.songlist.currentList = state.songlist.originalList;
-                                    state.songlist.currentSongIndex = index;
+                                    state.songlist.currentList = baseList;
+                                    state.songlist.currentSongIndex = resolvedOriginalSongIndex;
+                                    state.songlist.originalSongIndex = resolvedOriginalSongIndex;
                                     state.playerState.isShuffleActive = false;
                                 });
                             } else {
-                                const { currentList, currentSongIndex } = get().songlist;
-                                const earlierSongs = currentList.slice(0, currentSongIndex);
-                                const songListToShuffle = currentList.slice(currentSongIndex);
+                                const earlierSongs = baseList.slice(0, resolvedOriginalSongIndex);
+                                const songListToShuffle = baseList.slice(resolvedOriginalSongIndex);
                                 const shuffledList = [
                                     ...earlierSongs,
                                     ...shuffleSongList(songListToShuffle, 0),
@@ -441,7 +437,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 set((state) => {
                                     state.songlist.shuffledList = shuffledList;
                                     state.songlist.currentList = shuffledList;
-                                    state.songlist.currentSongIndex = currentSongIndex;
+                                    state.songlist.currentSongIndex = resolvedOriginalSongIndex;
+                                    state.songlist.originalSongIndex = resolvedOriginalSongIndex;
                                     state.playerState.isShuffleActive = true;
                                 });
                             }
@@ -931,7 +928,7 @@ window.rehydratePlayerStore = async (newState) => {
 };
 
 usePlayerStore.subscribe(
-    (state) => [state.songlist.currentList, state.songlist.currentSongIndex],
+    (state) => [state.songlist.currentList, state.songlist.currentSongIndex, state.songlist.originalList],
     () => {
         const playerStore = usePlayerStore.getState();
         const { mediaType } = playerStore.playerState;
@@ -945,6 +942,27 @@ usePlayerStore.subscribe(
 
         if (currentList.length === 0 && progress > 0) {
             playerStore.actions.resetProgress();
+        }
+
+        const { currentSong, originalList, originalSongIndex } = playerStore.songlist;
+
+        if (currentSong.id && originalList.length > 0) {
+            const nextOriginalSongIndex = originalList.findIndex(
+                (song) => song.id === currentSong.id,
+            );
+
+            if (
+                nextOriginalSongIndex >= 0 &&
+                nextOriginalSongIndex !== originalSongIndex
+            ) {
+                usePlayerStore.setState((state) => ({
+                    ...state,
+                    songlist: {
+                        ...state.songlist,
+                        originalSongIndex: nextOriginalSongIndex,
+                    },
+                }));
+            }
         }
     },
     {

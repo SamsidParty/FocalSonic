@@ -1,5 +1,3 @@
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useRef } from "react";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import {
@@ -7,12 +5,50 @@ import {
     usePlayerIsPlaying,
     usePlayerSonglist,
 } from "@/store/player.store";
+import {
+    closestCenter,
+    DndContext,
+    DragEndEvent,
+    DragOverlay,
+    DragStartEvent,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
+    AnimateLayoutChanges,
+    defaultAnimateLayoutChanges,
+    SortableContext,
+    useSortable,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { ComponentProps, CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { QueueItem } from "./queue-item";
+
+const animateLayoutChanges: AnimateLayoutChanges = (args) => {
+    if (args.isSorting) {
+        return defaultAnimateLayoutChanges(args);
+    }
+
+    return false;
+};
 
 export function FullscreenSongQueue() {
     const { setSongList, moveSongInQueue } = usePlayerActions();
     const { currentList, currentSongIndex, currentSong } = usePlayerSonglist();
     const isPlaying = usePlayerIsPlaying();
+    const [activeSongId, setActiveSongId] = useState<string | null>(null);
+    const [dragOverlayWidth, setDragOverlayWidth] = useState<number | null>(null);
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+    );
 
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -28,12 +64,49 @@ export function FullscreenSongQueue() {
         estimateSize: () => 64,
         overscan: 5,
     });
+    const sortableItemIds = useMemo(
+        () => currentList.map((song) => song.id),
+        [currentList],
+    );
 
     useEffect(() => {
         if (currentSongIndex >= 0) {
             virtualizer.scrollToIndex(currentSongIndex, { align: "start" });
         }
     }, [currentSongIndex, virtualizer]);
+
+    const handleDragEnd = useCallback((event: DragEndEvent) => {
+        setActiveSongId(null);
+        setDragOverlayWidth(null);
+
+        if (!event.over) {
+            return;
+        }
+
+        const fromIndex = sortableItemIds.findIndex((id) => id === event.active.id);
+        const toIndex = sortableItemIds.findIndex((id) => id === event.over?.id);
+
+        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+            return;
+        }
+
+        moveSongInQueue(fromIndex, toIndex);
+    }, [moveSongInQueue, sortableItemIds]);
+
+    const handleDragStart = useCallback((event: DragStartEvent) => {
+        setActiveSongId(String(event.active.id));
+        setDragOverlayWidth(event.active.rect.current.initial?.width ?? null);
+    }, []);
+
+    const handleDragCancel = useCallback(() => {
+        setActiveSongId(null);
+        setDragOverlayWidth(null);
+    }, []);
+
+    const activeSong = useMemo(
+        () => currentList.find((song) => song.id === activeSongId),
+        [activeSongId, currentList],
+    );
 
     if (currentList.length === 0)
         return (
@@ -56,58 +129,105 @@ export function FullscreenSongQueue() {
                     position: "relative",
                 }}
             >
-                {virtualizer.getVirtualItems().map((virtualRow) => {
-                    const entry = currentList[virtualRow.index];
-                    return (
-                        <QueueItem
-                            key={entry.id}
-                            data-row-index={virtualRow.index}
-                            data-state={currentSong.id === entry.id ? "active" : "inactive"}
-                            index={virtualRow.index}
-                            song={entry}
-                            isPlaying={currentSong.id === entry.id && isPlaying}
-                            contextMenuOptions={(
-                                <SongMenuOptions
-                                    variant="context"
+                <DndContext
+                    collisionDetection={closestCenter}
+                    sensors={sensors}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragCancel={handleDragCancel}
+                >
+                    <SortableContext
+                        items={sortableItemIds}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        {virtualizer.getVirtualItems().map((virtualRow) => {
+                            const entry = currentList[virtualRow.index];
+                            return (
+                                <SortableQueueItem
+                                    key={entry.id}
                                     index={virtualRow.index}
+                                    songId={entry.id}
                                     song={entry}
-                                    context={{ source: "queue" }}
+                                    isPlaying={currentSong.id === entry.id && isPlaying}
+                                    isActive={currentSong.id === entry.id}
+                                    style={{
+                                        position: "absolute",
+                                        top: virtualRow.start,
+                                        width: "100%",
+                                    }}
+                                    contextMenuOptions={(
+                                        <SongMenuOptions
+                                            variant="context"
+                                            index={virtualRow.index}
+                                            song={entry}
+                                            context={{ source: "queue" }}
+                                        />
+                                    )}
+                                    onClick={() => {
+                                        if (currentSong.id !== entry.id) {
+                                            setSongList(currentList, virtualRow.index);
+                                        }
+                                    }}
                                 />
-                            )}
-                            draggable
-                            onDragStart={(e) => {
-                                e.dataTransfer.effectAllowed = "move";
-                                e.dataTransfer.setData("text/plain", String(virtualRow.index));
-                            }}
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                e.dataTransfer.dropEffect = "move";
-                            }}
-                            onDrop={(e) => {
-                                e.preventDefault();
-
-                                const fromIndex = Number(e.dataTransfer.getData("text/plain"));
-
-                                if (Number.isNaN(fromIndex)) {
-                                    return;
-                                }
-
-                                moveSongInQueue(fromIndex, virtualRow.index);
-                            }}
-                            onClick={() => {
-                                if (currentSong.id !== entry.id) {
-                                    setSongList(currentList, virtualRow.index);
-                                }
-                            }}
-                            style={{
-                                position: "absolute",
-                                top: 0,
-                                transform: `translateY(${virtualRow.start}px)`,
-                            }}
-                        />
-                    );
-                })}
+                            );
+                        })}
+                    </SortableContext>
+                    {typeof document !== "undefined" && activeSong && createPortal(
+                        <DragOverlay dropAnimation={null}>
+                            <QueueItem
+                                index={currentList.findIndex((song) => song.id === activeSong.id)}
+                                song={activeSong}
+                                isPlaying={currentSong.id === activeSong.id && isPlaying}
+                                style={{
+                                    width: dragOverlayWidth ?? undefined,
+                                }}
+                            />
+                        </DragOverlay>,
+                        document.body,
+                    )}
+                </DndContext>
             </div>
         </ScrollArea>
+    );
+}
+
+function SortableQueueItem({
+    songId,
+    isActive,
+    style,
+    ...props
+}: {
+    songId: string
+    isActive: boolean
+    style: CSSProperties
+} & Omit<ComponentProps<typeof QueueItem>, "data-state">) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
+        id: songId,
+        animateLayoutChanges,
+    });
+
+    return (
+        <QueueItem
+            ref={setNodeRef}
+            data-state={isActive ? "active" : "inactive"}
+            data-dragging={isDragging ? "true" : undefined}
+            style={{
+                ...style,
+                transform: CSS.Transform.toString(transform),
+                transition: isDragging ? undefined : transition,
+                willChange: "transform",
+                zIndex: isDragging ? 10 : undefined,
+            }}
+            {...attributes}
+            {...listeners}
+            {...props}
+        />
     );
 }

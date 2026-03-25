@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
 import {
     ContextMenu,
     ContextMenuContent,
     ContextMenuTrigger,
 } from "@/app/components/ui/context-menu";
+import { ReactNode } from "react";
 
 interface ProviderProps {
     children: ReactNode
@@ -16,7 +16,7 @@ export function ContextMenuProvider({
     options,
     onOpenChange,
 }: ProviderProps) {
-    const hasOptions = options !== undefined;
+    const hasOptions = options != null;
 
     return (
         <ContextMenu modal={false} onOpenChange={onOpenChange}>

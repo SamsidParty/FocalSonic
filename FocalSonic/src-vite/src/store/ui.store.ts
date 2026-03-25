@@ -1,7 +1,7 @@
+import { IUiContext } from "@/types/uiContext";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createWithEqualityFn } from "zustand/traditional";
-import { IUiContext } from "@/types/uiContext";
 
 export const useUiStore = createWithEqualityFn<IUiContext>()(
     subscribeWithSelector(

@@ -1,4 +1,5 @@
 import { getCoverArtUrl } from "@/api/httpClient";
+import { ItemMenuOptions } from "@/app/components/options/item-menu";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
@@ -22,7 +23,9 @@ function AlbumCard({ album }: AlbumCardProps) {
     }
 
     return (
-        <PreviewCard.Root>
+        <PreviewCard.Root
+            contextMenuOptions={<ItemMenuOptions variant="context" target={{ type: "album", item: album }} />}
+        >
             <PreviewCard.ImageWrapper link={ROUTES.ALBUM.PAGE(album.id)}>
                 <PreviewCard.Image
                     src={getCoverArtUrl(album.coverArt, "album", "300")}

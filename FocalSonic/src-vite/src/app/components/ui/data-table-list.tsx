@@ -6,6 +6,20 @@ import { ISong } from "@/types/responses/song";
 import { MouseButton } from "@/utils/browser";
 import { computeMultiSelectedRows } from "@/utils/dataTable";
 import {
+    DndContext,
+    DragEndEvent,
+    DragOverlay,
+    DragStartEvent,
+    PointerSensor,
+    closestCenter,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
+    SortableContext,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
     ColumnFiltersState,
     Row,
     RowData,
@@ -21,6 +35,7 @@ import clsx from "clsx";
 import debounce from "lodash/debounce";
 import {
     MouseEvent,
+    ReactNode,
     TouchEvent,
     memo,
     useCallback,
@@ -30,6 +45,7 @@ import {
     useState,
 } from "react";
 import { isMacOs } from "react-device-detect";
+import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 import { DataTableListHeader } from "./data-table-list-header";
 import { TableListRow } from "./data-table-list-row";
@@ -68,6 +84,7 @@ interface DataTableProps<TData, TValue> {
     currentSongIndex?: number
     allowRowReorder?: boolean
     onMoveRow?: (fromIndex: number, toIndex: number) => void
+    renderDragOverlay?: (row: Row<TData>, meta: { width?: number }) => ReactNode
 }
 
 export function DataTableList<TData, TValue>({
@@ -88,6 +105,7 @@ export function DataTableList<TData, TValue>({
     currentSongIndex,
     allowRowReorder = false,
     onMoveRow,
+    renderDragOverlay,
 }: DataTableProps<TData, TValue>) {
     const newColumns = columns.filter((column) => {
         return columnFilter?.includes(column.id as ColumnFilter);
@@ -97,6 +115,8 @@ export function DataTableList<TData, TValue>({
     const [sorting, setSorting] = useState<SortingState>([]);
     const [rowSelection, setRowSelection] = useState({});
     const [lastRowSelected, setLastRowSelected] = useState<number | null>(null);
+    const [activeItemId, setActiveItemId] = useState<string | null>(null);
+    const [dragOverlayWidth, setDragOverlayWidth] = useState<number | null>(null);
 
     const selectedRows = useMemo(
         () => Object.keys(rowSelection).map(Number),
@@ -152,6 +172,17 @@ export function DataTableList<TData, TValue>({
     const table = useReactTable(tableConfig);
 
     const { rows } = table.getRowModel();
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+    );
+    const sortableItemIds = useMemo(
+        () => rows.map((row) => ((row.original as { id?: string }).id ?? row.id)),
+        [rows],
+    );
 
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -334,6 +365,72 @@ export function DataTableList<TData, TValue>({
         });
     }, [currentSongIndex, scrollToIndex, virtualizer]);
 
+    const handleDragEnd = useCallback(
+        (event: DragEndEvent) => {
+            setActiveItemId(null);
+            setDragOverlayWidth(null);
+
+            if (!allowRowReorder || !onMoveRow || !event.over) {
+                return;
+            }
+
+            const fromIndex = sortableItemIds.findIndex((id) => id === event.active.id);
+            const toIndex = sortableItemIds.findIndex((id) => id === event.over?.id);
+
+            if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+                return;
+            }
+
+            onMoveRow(fromIndex, toIndex);
+        },
+        [allowRowReorder, onMoveRow, sortableItemIds],
+    );
+
+    const handleDragStart = useCallback((event: DragStartEvent) => {
+        setActiveItemId(String(event.active.id));
+        setDragOverlayWidth(event.active.rect.current.initial?.width ?? null);
+    }, []);
+
+    const handleDragCancel = useCallback(() => {
+        setActiveItemId(null);
+        setDragOverlayWidth(null);
+    }, []);
+
+    const activeRow = useMemo(
+        () => rows.find((row) => (((row.original as { id?: string }).id ?? row.id) === activeItemId)),
+        [activeItemId, rows],
+    );
+
+    const rowsContent = virtualizer.getVirtualItems().length ? (
+        virtualizer.getVirtualItems().map((virtualRow) => {
+            const row = rows[virtualRow.index];
+
+            return (
+                <MemoTableListRow
+                    key={row.id}
+                    row={row}
+                    virtualRow={virtualRow}
+                    handleClicks={handleClicks}
+                    handleRowDbClick={handleRowDbClick}
+                    handleRowTap={handleRowTap}
+                    getContextMenuOptions={getContextMenuOptions}
+                    dataType={dataType}
+                    pageType={pageType}
+                    allowRowReorder={allowRowReorder}
+                />
+            );
+        })
+    ) : (
+        <div role="row">
+            <div
+                className="flex h-24 items-center justify-center p-2"
+                role="cell"
+            >
+                {noRowsMessage}
+            </div>
+        </div>
+    );
+
     return (
         <div className="h-full">
             <div
@@ -367,36 +464,28 @@ export function DataTableList<TData, TValue>({
                         className={clsx("w-full relative")}
                         style={{ height: `${virtualizer.getTotalSize()}px` }}
                     >
-                        {virtualizer.getVirtualItems().length ? (
-                            virtualizer.getVirtualItems().map((virtualRow) => {
-                                const row = rows[virtualRow.index];
-
-                                return (
-                                    <MemoTableListRow
-                                        key={row.id}
-                                        row={row}
-                                        virtualRow={virtualRow}
-                                        handleClicks={handleClicks}
-                                        handleRowDbClick={handleRowDbClick}
-                                        handleRowTap={handleRowTap}
-                                        getContextMenuOptions={getContextMenuOptions}
-                                        dataType={dataType}
-                                        pageType={pageType}
-                                        allowRowReorder={allowRowReorder}
-                                        onMoveRow={onMoveRow}
-                                    />
-                                );
-                            })
-                        ) : (
-                            <div role="row">
-                                <div
-                                    className="flex h-24 items-center justify-center p-2"
-                                    role="cell"
+                        {allowRowReorder ? (
+                            <DndContext
+                                collisionDetection={closestCenter}
+                                sensors={sensors}
+                                onDragStart={handleDragStart}
+                                onDragEnd={handleDragEnd}
+                                onDragCancel={handleDragCancel}
+                            >
+                                <SortableContext
+                                    items={sortableItemIds}
+                                    strategy={verticalListSortingStrategy}
                                 >
-                                    {noRowsMessage}
-                                </div>
-                            </div>
-                        )}
+                                    {rowsContent}
+                                </SortableContext>
+                                {typeof document !== "undefined" && activeRow && renderDragOverlay && createPortal(
+                                    <DragOverlay dropAnimation={null}>
+                                        {renderDragOverlay(activeRow, { width: dragOverlayWidth ?? undefined })}
+                                    </DragOverlay>,
+                                    document.body,
+                                )}
+                            </DndContext>
+                        ) : rowsContent}
                     </div>
                 </ScrollArea>
             </div>

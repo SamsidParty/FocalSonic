@@ -1,5 +1,3 @@
-import { GripVertical } from "lucide-react";
-import { Link } from "react-router-dom";
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
 import PlaySongButton from "@/app/components/table/play-button";
 import { QueueActions } from "@/app/components/table/queue-actions";
@@ -9,6 +7,8 @@ import { usePlayerStore } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
+import { GripVertical } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function queueColumns(): ColumnDefType<ISong>[] {
     return [

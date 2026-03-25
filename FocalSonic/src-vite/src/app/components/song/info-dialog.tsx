@@ -10,11 +10,11 @@ import { Separator } from "@/app/components/ui/separator";
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
 import { useItemInfo } from "@/store/ui.store";
-import { SingleAlbum } from "@/types/responses/album";
+import { Albums, SingleAlbum } from "@/types/responses/album";
 import { IArtist } from "@/types/responses/artist";
-import { PlaylistWithEntries } from "@/types/responses/playlist";
+import { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 import { ISong } from "@/types/responses/song";
-import { InfoItemType } from "@/types/uiContext";
+import { InfoItemData, InfoItemType, InfoPlaylistItem } from "@/types/uiContext";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import dateTime from "@/utils/dateTime";
 import { formatBytes } from "@/utils/formatBytes";
@@ -57,23 +57,25 @@ export function SongInfoDialog() {
 
     const targetId = target?.id ?? "";
     const targetType = target?.type;
+    const targetItem = target?.item;
+
+    const songSnapshot = targetType === "song" ? (targetItem as ISong | undefined) : undefined;
+    const albumSnapshot = targetType === "album" ? (targetItem as SingleAlbum | Albums | undefined) : undefined;
+    const artistSnapshot = targetType === "artist" ? (targetItem as IArtist | undefined) : undefined;
+    const playlistSnapshot = targetType === "playlist"
+        ? (targetItem as PlaylistWithEntries | Playlist | InfoPlaylistItem | undefined)
+        : undefined;
 
     const songQuery = useQuery({
         queryKey: [queryKeys.song.info, targetId],
         queryFn: () => service.songs.getSong(targetId),
-        enabled: modalOpen && targetType === "song" && targetId.length > 0,
-    });
-
-    const songAlbumQuery = useQuery({
-        queryKey: [queryKeys.album.single, songQuery.data?.albumId],
-        queryFn: () => service.albums.getOne(songQuery.data?.albumId ?? ""),
-        enabled: modalOpen && targetType === "song" && typeof songQuery.data?.albumId === "string",
+        enabled: modalOpen && targetType === "song" && targetId.length > 0 && !songSnapshot,
     });
 
     const albumQuery = useQuery({
         queryKey: [queryKeys.album.single, targetId],
         queryFn: () => service.albums.getOne(targetId),
-        enabled: modalOpen && targetType === "album" && targetId.length > 0,
+        enabled: modalOpen && targetType === "album" && targetId.length > 0 && !albumSnapshot,
     });
 
     const albumInfoQuery = useQuery({
@@ -85,7 +87,7 @@ export function SongInfoDialog() {
     const artistQuery = useQuery({
         queryKey: [queryKeys.artist.single, targetId],
         queryFn: () => service.artists.getOne(targetId),
-        enabled: modalOpen && targetType === "artist" && targetId.length > 0,
+        enabled: modalOpen && targetType === "artist" && targetId.length > 0 && !artistSnapshot,
     });
 
     const artistInfoQuery = useQuery({
@@ -97,7 +99,7 @@ export function SongInfoDialog() {
     const playlistQuery = useQuery({
         queryKey: [queryKeys.playlist.single, targetId],
         queryFn: () => service.playlists.getOne(targetId),
-        enabled: modalOpen && targetType === "playlist" && targetId.length > 0,
+        enabled: modalOpen && targetType === "playlist" && targetId.length > 0 && !playlistSnapshot,
     });
 
     function handleModalChange(value: boolean) {
@@ -110,8 +112,8 @@ export function SongInfoDialog() {
 
     const dialogState = getDialogState({
         targetType,
+        targetItem,
         songQuery,
-        songAlbumQuery,
         albumQuery,
         albumInfoQuery,
         artistQuery,
@@ -140,7 +142,6 @@ export function SongInfoDialog() {
                 {!dialogState.isLoading && dialogState.type === "song" && dialogState.song && (
                     <SongInfoContent
                         song={dialogState.song}
-                        album={songAlbumQuery.data}
                         isAppleMusic={isAppleMusic}
                         onLinkClick={handleLinkClick}
                     />
@@ -175,12 +176,10 @@ export function SongInfoDialog() {
 
 function SongInfoContent({
     song,
-    album,
     isAppleMusic,
     onLinkClick,
 }: {
     song: ISong
-    album?: SingleAlbum
     isAppleMusic: boolean
     onLinkClick: () => void
 }) {
@@ -264,19 +263,6 @@ function SongInfoContent({
                     />
                 </InfoSection>
             )}
-
-            {album?.recordLabels && album.recordLabels.length > 0 && (
-                <InfoSection title={t("table.columns.recordLabel")}>
-                    <div className="flex flex-wrap gap-2">
-                        {album.recordLabels.slice(0, RECORD_LABELS_MAX_NUMBER).map((label) => (
-                            <Badge key={label.name} variant="outline">
-                                {label.name}
-                            </Badge>
-                        ))}
-                    </div>
-                </InfoSection>
-            )}
-
             {!isAppleMusic && (
                 <InfoSection title={t("songInfo.audioQuality")}>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -343,8 +329,6 @@ function AlbumInfoContent({
                         <p className="text-base text-muted-foreground truncate">{album.displayArtist ?? album.artist}</p>
                     )}
                     <HeroStats>
-                        <Stat icon={Disc3} text={t("playlist.songCount", { count: album.songCount })} />
-                        <Stat icon={Clock} text={convertSecondsToTime(album.duration ?? 0)} />
                         {album.year ? <Stat icon={Calendar} text={`${album.year}`} /> : null}
                     </HeroStats>
                 </>
@@ -352,7 +336,6 @@ function AlbumInfoContent({
             <InfoSection title={t("songInfo.trackInfo", { defaultValue: "Details" })}>
                 <div className="grid grid-cols-2 gap-3">
                     <InfoCard icon={Hash} label={t("table.columns.id")} value={album.id} />
-                    <InfoCard icon={Disc3} label={t("table.columns.songCount")} value={`${album.songCount}`} />
                     {album.playCount !== undefined && album.playCount > 0 && (
                         <InfoCard icon={PlayCircle} label={t("table.columns.plays")} value={`${album.playCount}`} />
                     )}
@@ -490,7 +473,7 @@ function PlaylistInfoContent({
     playlist,
     onLinkClick,
 }: {
-    playlist: PlaylistWithEntries
+    playlist: PlaylistWithEntries | Playlist | InfoPlaylistItem
     onLinkClick: () => void
 }) {
     const { t } = useTranslation();
@@ -507,8 +490,6 @@ function PlaylistInfoContent({
                         {playlist.owner || t("playlist.owner", { defaultValue: "Playlist" })}
                     </HeroLink>
                     <HeroStats>
-                        <Stat icon={Disc3} text={t("playlist.songCount", { count: playlist.songCount })} />
-                        <Stat icon={Clock} text={convertSecondsToTime(playlist.duration ?? 0)} />
                         <Badge variant={playlist.public ? "secondary" : "outline"}>
                             {playlist.public ? t("table.columns.public") : t("playlist.private", { defaultValue: "Private" })}
                         </Badge>
@@ -518,7 +499,6 @@ function PlaylistInfoContent({
             <InfoSection title={t("songInfo.trackInfo", { defaultValue: "Details" })}>
                 <div className="grid grid-cols-2 gap-3">
                     <InfoCard icon={Hash} label={t("table.columns.id")} value={playlist.id} />
-                    <InfoCard icon={Disc3} label={t("table.columns.songCount")} value={`${playlist.songCount}`} />
                     {playlist.created && <InfoCard icon={Calendar} label={t("table.columns.created", { defaultValue: "Created" })} value={formatDate(playlist.created)} />}
                     {playlist.changed && <InfoCard icon={Clock} label={t("table.columns.changed", { defaultValue: "Updated" })} value={formatDate(playlist.changed)} />}
                 </div>
@@ -527,22 +507,6 @@ function PlaylistInfoContent({
             {playlist.comment && (
                 <InfoSection title={t("table.columns.comment")}>
                     <TextBlock>{playlist.comment}</TextBlock>
-                </InfoSection>
-            )}
-
-            {playlist.entry && playlist.entry.length > 0 && (
-                <InfoSection title={t("playlist.songs", { defaultValue: "Tracks" })}>
-                    <div className="grid gap-2">
-                        {playlist.entry.slice(0, 10).map((song, index) => (
-                            <div key={song.id + index} className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2">
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium">{song.title}</p>
-                                    <p className="truncate text-xs text-muted-foreground">{song.artist}</p>
-                                </div>
-                                <span className="shrink-0 text-xs text-muted-foreground">{convertSecondsToTime(song.duration ?? 0)}</span>
-                            </div>
-                        ))}
-                    </div>
                 </InfoSection>
             )}
         </DialogLayout>
@@ -757,8 +721,8 @@ function formatDate(value?: string) {
 
 function getDialogState({
     targetType,
+    targetItem,
     songQuery,
-    songAlbumQuery,
     albumQuery,
     albumInfoQuery,
     artistQuery,
@@ -766,8 +730,8 @@ function getDialogState({
     playlistQuery,
 }: {
     targetType?: InfoItemType
+    targetItem?: InfoItemData
     songQuery: ReturnType<typeof useQuery<ISong | undefined>>
-    songAlbumQuery: ReturnType<typeof useQuery<SingleAlbum | undefined>>
     albumQuery: ReturnType<typeof useQuery<SingleAlbum | undefined>>
     albumInfoQuery: ReturnType<typeof useQuery<AlbumInfoData | undefined>>
     artistQuery: ReturnType<typeof useQuery<IArtist | undefined>>
@@ -777,33 +741,33 @@ function getDialogState({
     switch (targetType) {
         case "song":
             return {
-                isLoading: songQuery.isLoading || songAlbumQuery.isLoading,
-                hasData: !!songQuery.data,
+                isLoading: !targetItem && songQuery.isLoading,
+                hasData: !!(songQuery.data ?? targetItem),
                 type: "song" as const,
-                song: songQuery.data,
+                song: (songQuery.data ?? targetItem) as ISong | undefined,
             };
         case "album":
             return {
-                isLoading: albumQuery.isLoading || albumInfoQuery.isLoading,
-                hasData: !!albumQuery.data,
+                isLoading: (!targetItem && albumQuery.isLoading) || albumInfoQuery.isLoading,
+                hasData: !!(albumQuery.data ?? targetItem),
                 type: "album" as const,
-                album: albumQuery.data,
+                album: (albumQuery.data ?? targetItem) as SingleAlbum | Albums | undefined,
                 albumInfo: albumInfoQuery.data,
             };
         case "artist":
             return {
-                isLoading: artistQuery.isLoading || artistInfoQuery.isLoading,
-                hasData: !!artistQuery.data,
+                isLoading: (!targetItem && artistQuery.isLoading) || artistInfoQuery.isLoading,
+                hasData: !!(artistQuery.data ?? targetItem),
                 type: "artist" as const,
-                artist: artistQuery.data,
+                artist: (artistQuery.data ?? targetItem) as IArtist | undefined,
                 artistInfo: artistInfoQuery.data,
             };
         case "playlist":
             return {
-                isLoading: playlistQuery.isLoading,
-                hasData: !!playlistQuery.data,
+                isLoading: !targetItem && playlistQuery.isLoading,
+                hasData: !!(playlistQuery.data ?? targetItem),
                 type: "playlist" as const,
-                playlist: playlistQuery.data,
+                playlist: (playlistQuery.data ?? targetItem) as PlaylistWithEntries | Playlist | InfoPlaylistItem | undefined,
             };
         default:
             return {

@@ -1,3 +1,4 @@
+import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
@@ -12,13 +13,17 @@ interface Children {
     children: React.ReactNode
 }
 
-type RootProps = ComponentPropsWithoutRef<"div">
+type RootProps = ComponentPropsWithoutRef<"div"> & {
+    contextMenuOptions?: React.ReactNode
+}
 
-function Root({ className, children, ...props }: RootProps) {
+function Root({ className, children, contextMenuOptions, ...props }: RootProps) {
     return (
-        <div className={cn("cursor-default transform-gpu", className)} {...props}>
-            {children}
-        </div>
+        <ContextMenuProvider options={contextMenuOptions}>
+            <div className={cn("cursor-default transform-gpu", className)} {...props}>
+                {children}
+            </div>
+        </ContextMenuProvider>
     );
 }
 

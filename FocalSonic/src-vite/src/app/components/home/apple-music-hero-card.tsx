@@ -1,3 +1,4 @@
+import { PreviewItemMenuOptions } from "@/app/components/options/preview-item-menu";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
 import React from "react";
@@ -15,7 +16,7 @@ export default function AppleMusicHeroCard({ entry, isLarge, title }: { entry: A
     }
 
     return (
-        <PreviewCard.Root>
+        <PreviewCard.Root contextMenuOptions={<PreviewItemMenuOptions item={entry} variant="context" />}>
             <PreviewCard.ImageWrapper 
                 onClick={() => navigateToResource(entry)}
                 className="w-full h-auto rounded aspect-auto"

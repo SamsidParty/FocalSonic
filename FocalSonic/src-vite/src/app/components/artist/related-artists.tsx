@@ -1,4 +1,5 @@
 import { getCoverArtUrl } from "@/api/httpClient";
+import { ItemMenuOptions } from "@/app/components/options/item-menu";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import {
     Carousel,
@@ -8,11 +9,8 @@ import {
 } from "@/app/components/ui/carousel";
 import { CarouselButton } from "@/app/components/ui/carousel-button";
 import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
-import { useSongList } from "@/app/hooks/use-song-list";
 import { ROUTES } from "@/routes/routesList";
-import { usePlayerActions } from "@/store/player.store";
 import { ISimilarArtist } from "@/types/responses/artist";
-import { checkServerType } from "@/utils/servers";
 import React, { useEffect, useState } from "react";
 
 interface RelatedArtistsListProps {
@@ -24,13 +22,9 @@ export default function RelatedArtistsList({
     title,
     similarArtists,
 }: RelatedArtistsListProps) {
-    const { getArtistAllSongs } = useSongList();
-
     const [api, setApi] = useState<CarouselApi>();
     const [canScrollPrev, setCanScrollPrev] = useState<boolean>();
     const [canScrollNext, setCanScrollNext] = useState<boolean>();
-    const { setSongList } = usePlayerActions();
-    const { isAppleMusic } = checkServerType();
     const { playArtistRadio } = usePlayArtistRadio();
 
     if (similarArtists.length > 16) {
@@ -83,7 +77,9 @@ export default function RelatedArtistsList({
                     <CarouselContent>
                         {similarArtists.map((artist) => (
                             <CarouselItem key={artist.id} className="basis-1/6 2xl:basis-1/8">
-                                <PreviewCard.Root>
+                                <PreviewCard.Root
+                                    contextMenuOptions={<ItemMenuOptions variant="context" target={{ type: "artist", item: artist }} />}
+                                >
                                     <PreviewCard.ImageWrapper
                                         link={ROUTES.ARTIST.PAGE(artist.id)}
                                     >

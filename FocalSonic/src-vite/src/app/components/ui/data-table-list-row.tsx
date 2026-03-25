@@ -1,6 +1,12 @@
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { usePlayerCurrentSong } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
+import {
+    AnimateLayoutChanges,
+    defaultAnimateLayoutChanges,
+    useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Cell, flexRender, Row } from "@tanstack/react-table";
 import clsx from "clsx";
 import { memo, MouseEvent, TouchEvent, useMemo } from "react";
@@ -18,11 +24,18 @@ interface TableRowProps<TData> {
     dataType?: "song" | "artist" | "playlist" | "radio"
     pageType?: "general" | "queue" | "queue-small"
     allowRowReorder?: boolean
-    onMoveRow?: (fromIndex: number, toIndex: number) => void
 }
 
 let isTap = false;
 let tapTimeout: NodeJS.Timeout;
+
+const animateLayoutChanges: AnimateLayoutChanges = (args) => {
+    if (args.isSorting) {
+        return defaultAnimateLayoutChanges(args);
+    }
+
+    return false;
+};
 
 export function TableListRow<TData>({
     row,
@@ -34,9 +47,23 @@ export function TableListRow<TData>({
     dataType = "song",
     pageType = "general",
     allowRowReorder = false,
-    onMoveRow,
 }: TableRowProps<TData>) {
     const currentSong = usePlayerCurrentSong();
+    const sortableId = allowRowReorder
+        ? ((row.original as { id?: string }).id ?? row.id)
+        : row.id;
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
+        id: sortableId,
+        disabled: !allowRowReorder,
+        animateLayoutChanges,
+    });
 
     function handleTouchStart() {
         isTap = true;
@@ -57,34 +84,6 @@ export function TableListRow<TData>({
     function handleTouchCancel() {
         clearTimeout(tapTimeout);
         isTap = false;
-    }
-
-    function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
-        if (!allowRowReorder) return;
-
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", String(row.index));
-    }
-
-    function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
-        if (!allowRowReorder) return;
-
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-    }
-
-    function handleDrop(e: React.DragEvent<HTMLDivElement>) {
-        if (!allowRowReorder || !onMoveRow) return;
-
-        e.preventDefault();
-
-        const fromIndex = Number(e.dataTransfer.getData("text/plain"));
-
-        if (Number.isNaN(fromIndex)) {
-            return;
-        }
-
-        onMoveRow(fromIndex, row.index);
     }
 
     const isRowSongActive = useMemo(() => {
@@ -116,6 +115,7 @@ export function TableListRow<TData>({
     return (
         <MemoContextMenuProvider options={getContextMenuOptions(row)}>
             <div
+                ref={allowRowReorder ? setNodeRef : undefined}
                 role="row"
                 data-test-id="table-row"
                 data-row-index={virtualRow.index}
@@ -127,21 +127,23 @@ export function TableListRow<TData>({
                 onTouchEnd={handleTouchEnd}
                 onTouchCancel={handleTouchCancel}
                 onContextMenu={(e) => handleClicks(e, row)}
-                draggable={allowRowReorder}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
+                {...(allowRowReorder ? attributes : {})}
+                {...(allowRowReorder ? listeners : {})}
                 className={clsx(
-                    "group/tablerow w-[calc(100%-10px)] flex flex-row transition-colors",
+                    "group/tablerow w-[calc(100%-10px)] flex flex-row transition-[background-color,transform,box-shadow,opacity]",
                     "data-[state=selected]:bg-foreground/30 hover:bg-foreground/20",
                     isQueue && "rounded-md",
                     allowRowReorder && "cursor-grab active:cursor-grabbing",
                     isRowSongActive && "row-active bg-foreground/20",
+                    isDragging && "opacity-0",
                 )}
                 style={{
                     height: `${virtualRow.size}px`,
                     position: "absolute",
                     top: virtualRow.start,
+                    transform: CSS.Transform.toString(transform),
+                    transition: isDragging ? undefined : transition,
+                    willChange: allowRowReorder ? "transform" : undefined,
                 }}
             >
                 {filterCells(row.getVisibleCells()).map((cell) => (
