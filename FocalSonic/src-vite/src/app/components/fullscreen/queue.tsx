@@ -26,6 +26,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ComponentProps, CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AppleMusicRadioCard } from "../queue/apple-music-radio-card";
 import { QueueItem } from "./queue-item";
 
 const animateLayoutChanges: AnimateLayoutChanges = (args) => {
@@ -117,77 +118,80 @@ export function FullscreenSongQueue() {
 
 
     return (
-        <ScrollArea
-            ref={parentRef}
-            type="always"
-            className="min-h-full h-full overflow-auto"
-        >
-            <div
-                style={{
-                    height: `${virtualizer.getTotalSize()}px`,
-                    width: "100%",
-                    position: "relative",
-                }}
+        <div className="flex h-full min-h-0 flex-col gap-3">
+            <AppleMusicRadioCard />
+            <ScrollArea
+                ref={parentRef}
+                type="always"
+                className="min-h-0 h-full overflow-auto"
             >
-                <DndContext
-                    collisionDetection={closestCenter}
-                    sensors={sensors}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onDragCancel={handleDragCancel}
+                <div
+                    style={{
+                        height: `${virtualizer.getTotalSize()}px`,
+                        width: "100%",
+                        position: "relative",
+                    }}
                 >
-                    <SortableContext
-                        items={sortableItemIds}
-                        strategy={verticalListSortingStrategy}
+                    <DndContext
+                        collisionDetection={closestCenter}
+                        sensors={sensors}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        onDragCancel={handleDragCancel}
                     >
-                        {virtualizer.getVirtualItems().map((virtualRow) => {
-                            const entry = currentList[virtualRow.index];
-                            return (
-                                <SortableQueueItem
-                                    key={entry.id}
-                                    index={virtualRow.index}
-                                    songId={entry.id}
-                                    song={entry}
-                                    isPlaying={currentSong.id === entry.id && isPlaying}
-                                    isActive={currentSong.id === entry.id}
+                        <SortableContext
+                            items={sortableItemIds}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            {virtualizer.getVirtualItems().map((virtualRow) => {
+                                const entry = currentList[virtualRow.index];
+                                return (
+                                    <SortableQueueItem
+                                        key={entry.id}
+                                        index={virtualRow.index}
+                                        songId={entry.id}
+                                        song={entry}
+                                        isPlaying={currentSong.id === entry.id && isPlaying}
+                                        isActive={currentSong.id === entry.id}
+                                        style={{
+                                            position: "absolute",
+                                            top: virtualRow.start,
+                                            width: "100%",
+                                        }}
+                                        contextMenuOptions={(
+                                            <SongMenuOptions
+                                                variant="context"
+                                                index={virtualRow.index}
+                                                song={entry}
+                                                context={{ source: "queue" }}
+                                            />
+                                        )}
+                                        onClick={() => {
+                                            if (currentSong.id !== entry.id) {
+                                                setSongList(currentList, virtualRow.index);
+                                            }
+                                        }}
+                                    />
+                                );
+                            })}
+                        </SortableContext>
+                        {typeof document !== "undefined" && activeSong && createPortal(
+                            <DragOverlay dropAnimation={null}>
+                                <QueueItem
+                                    index={currentList.findIndex((song) => song.id === activeSong.id)}
+                                    song={activeSong}
+                                    isPlaying={currentSong.id === activeSong.id && isPlaying}
                                     style={{
-                                        position: "absolute",
-                                        top: virtualRow.start,
-                                        width: "100%",
-                                    }}
-                                    contextMenuOptions={(
-                                        <SongMenuOptions
-                                            variant="context"
-                                            index={virtualRow.index}
-                                            song={entry}
-                                            context={{ source: "queue" }}
-                                        />
-                                    )}
-                                    onClick={() => {
-                                        if (currentSong.id !== entry.id) {
-                                            setSongList(currentList, virtualRow.index);
-                                        }
+                                        width: dragOverlayWidth ?? undefined,
                                     }}
                                 />
-                            );
-                        })}
-                    </SortableContext>
-                    {typeof document !== "undefined" && activeSong && createPortal(
-                        <DragOverlay dropAnimation={null}>
-                            <QueueItem
-                                index={currentList.findIndex((song) => song.id === activeSong.id)}
-                                song={activeSong}
-                                isPlaying={currentSong.id === activeSong.id && isPlaying}
-                                style={{
-                                    width: dragOverlayWidth ?? undefined,
-                                }}
-                            />
-                        </DragOverlay>,
-                        document.body,
-                    )}
-                </DndContext>
-            </div>
-        </ScrollArea>
+                            </DragOverlay>,
+                            document.body,
+                        )}
+                    </DndContext>
+                </div>
+            </ScrollArea>
+        </div>
     );
 }
 

@@ -1,6 +1,7 @@
 import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
 import { getNextSong as getAppleMusicRadioNextSong } from "@/service/applemusic/radios";
 import { service } from "@/service/service";
+import { AppleMusicStation, AppleMusicStationDisplay } from "@/types/applemusic/common";
 import { IPlayerContext, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
 import { exitFullscreen, exitMiniPlayer } from "@/utils/browser";
@@ -25,6 +26,43 @@ const blurSettings = {
 };
 
 let lastSongList = null;
+
+function isAppleMusicStationDisplay(
+    station: AppleMusicStation | AppleMusicStationDisplay | null | undefined,
+): station is AppleMusicStationDisplay {
+    return Boolean(station && "name" in station && !("attributes" in station));
+}
+
+function getNormalizedStation(
+    station: AppleMusicStation | null | undefined,
+    song?: ISong,
+) {
+    const songStationData = song?.appleMusic?.data?.relationships?.station?.data;
+    const normalizedSongStation = Array.isArray(songStationData)
+        ? songStationData[0]
+        : songStationData;
+
+    return station ?? normalizedSongStation;
+}
+
+function getAppleMusicStationDisplay(
+    station?: AppleMusicStation | AppleMusicStationDisplay | null,
+    song?: ISong,
+): AppleMusicStationDisplay | null {
+    const existingDisplay = isAppleMusicStationDisplay(station) ? station : null;
+    const normalizedStation = getNormalizedStation(existingDisplay ? null : station, song);
+    const stationName = existingDisplay?.name ?? normalizedStation?.attributes?.name;
+
+    if (!normalizedStation?.id && !stationName) {
+        return null;
+    }
+
+    return {
+        id: existingDisplay?.id ?? normalizedStation?.id ?? station?.id ?? "",
+        name: stationName ?? "",
+        coverArt: existingDisplay?.coverArt ?? normalizedStation?.attributes?.artwork?.url,
+    };
+}
 
 function moveSongRelativeToNeighbors<T extends { id: string }>(
     list: T[],
@@ -122,6 +160,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         currentSongIndex: 0,
                         radioList: [],
                         currentRadioID: null,
+                        currentRadioStation: null,
                     },
                     playerState: {
                         isPlaying: false,
@@ -228,6 +267,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.playerState.mediaType = "song";
                                 state.songlist.radioList = [];
                                 state.songlist.currentRadioID = null;
+                                state.songlist.currentRadioStation = null;
                             });
 
                             if (shuffle) {
@@ -255,6 +295,17 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             if (currentList.length > 0) {
                                 set((state) => {
                                     state.songlist.currentSong = currentList[currentSongIndex];
+
+                                    if (state.songlist.currentRadioID) {
+                                        const currentRadioStation = getAppleMusicStationDisplay(
+                                            state.songlist.currentRadioStation,
+                                            state.songlist.currentSong,
+                                        );
+
+                                        if (currentRadioStation) {
+                                            state.songlist.currentRadioStation = currentRadioStation;
+                                        }
+                                    }
                                 });
                             }
                         },
@@ -277,6 +328,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                     state.playerState.isPlaying = true;
                                     state.songlist.radioList = [];
                                     state.songlist.currentRadioID = null;
+                                    state.songlist.currentRadioStation = null;
                                 });
                             }
                         },
@@ -359,15 +411,18 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.songlist.radioList = list;
                                 state.songlist.currentSongIndex = index;
                                 state.playerState.isPlaying = true;
+                                state.songlist.currentRadioStation = null;
                             });
                         },
                         setPlayAppleMusicRadio: async (station) => {
                             const firstSong = await getAppleMusicRadioNextSong(station.id);
+                            const currentRadioStation = getAppleMusicStationDisplay(station, firstSong);
 
                             if (firstSong) {
                                 get().actions.setSongList([firstSong], 0);
                                 set((state) => {
                                     state.songlist.currentRadioID = station.id;
+                                    state.songlist.currentRadioStation = currentRadioStation;
                                     state.playerState.loopState = LoopState.InfiniteRadio;
                                 });
                             }
@@ -480,6 +535,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.songlist.currentSong = {} as ISong;
                                 state.songlist.radioList = [];
                                 state.songlist.currentRadioID = null;
+                                state.songlist.currentRadioStation = null;
                                 state.songlist.originalSongIndex = 0;
                                 state.songlist.currentSongIndex = 0;
                                 state.playerState.mediaType = "song";
@@ -902,12 +958,17 @@ window.rehydratePlayerStore = async (newState) => {
         stateToSet.songlist.shuffledList = [];
         stateToSet.songlist.radioList = [];
         stateToSet.songlist.currentRadioID = null;
+        stateToSet.songlist.currentRadioStation = null;
         stateToSet.playerProgress.progress = 0;
     }
 
     usePlayerStore.setState(
         {
             ...stateToSet,
+            songlist: {
+                currentRadioStation: stateToSet.songlist?.currentRadioStation ?? current.songlist?.currentRadioStation ?? null,
+                ...stateToSet.songlist,
+            },
             actions: current.actions,
             playerState: {
                 ...stateToSet.playerState,

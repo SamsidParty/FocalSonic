@@ -1,3 +1,4 @@
+import { AppleMusicMetadata } from "../applemusic/common";
 import { IFeaturedArtist } from "./artist";
 import { SubsonicResponse } from "./subsonicResponse";
 
@@ -85,6 +86,7 @@ export interface ISong {
     contributors?: IContributor[]
     displayComposer?: string
     explicitStatus?: string
+    appleMusic?: AppleMusicMetadata
 }
 
 export interface SongList {

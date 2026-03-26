@@ -11,6 +11,21 @@ namespace FocalSonic.Presence
 {
     public class PlayerSongList
     {
+        public class AppleMusicRadioStationDisplay
+        {
+            [JsonProperty("id")]
+            public string? Id;
+
+            [JsonProperty("name")]
+            public string? Name;
+
+            [JsonProperty("coverArt")]
+            public string? CoverArt;
+
+            [JsonExtensionData]
+            public IDictionary<string, JToken> ExtensionData { get; set; }
+        }
+
         [JsonProperty("currentSong")]
         public Song? CurrentSong;
 
@@ -28,6 +43,9 @@ namespace FocalSonic.Presence
 
         [JsonProperty("currentRadioID")]
         public string? CurrentRadioID; // For apple music radio stations
+
+        [JsonProperty("currentRadioStation")]
+        public AppleMusicRadioStationDisplay? CurrentRadioStation;
 
         [JsonExtensionData]
         public IDictionary<string, JToken> ExtensionData { get; set; }

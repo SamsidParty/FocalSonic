@@ -1,3 +1,4 @@
+import { AppleMusicStationDisplay } from "./applemusic/common";
 import { Radio } from "./responses/radios";
 import { ISong } from "./responses/song";
 
@@ -17,6 +18,7 @@ export interface ISongList {
     originalSongIndex: number
     radioList: Radio[]
     currentRadioID: string | null // For apple music stations
+    currentRadioStation: AppleMusicStationDisplay | null
 }
 
 export interface IPlayerState {

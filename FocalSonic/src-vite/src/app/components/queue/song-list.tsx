@@ -14,6 +14,7 @@ import { convertSecondsToHumanRead, convertSecondsToTime } from "@/utils/convert
 import clsx from "clsx";
 import { GripVertical, ListX } from "lucide-react";
 import { useMemo } from "react";
+import { AppleMusicRadioCard } from "./apple-music-radio-card";
 
 import { useTranslation } from "react-i18next";
 
@@ -86,6 +87,8 @@ export function QueueSongList({ small } : { small?: boolean } ) {
                 </div>
             </div>
             <Separator className="bg-muted-foreground/20" />
+
+            <AppleMusicRadioCard compact={small} className="mt-3" />
 
             <div className="w-full h-full overflow-auto">
                 <DataTableList

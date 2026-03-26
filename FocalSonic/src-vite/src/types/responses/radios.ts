@@ -1,3 +1,4 @@
+import { AppleMusicMetadata } from "../applemusic/common";
 import { SubsonicResponse } from "./subsonicResponse";
 
 export interface CreateRadio {
@@ -8,6 +9,7 @@ export interface CreateRadio {
 
 export interface Radio extends CreateRadio {
     id: string
+    appleMusic?: AppleMusicMetadata
 }
 export interface RadioStation {
     internetRadioStation: Radio[]

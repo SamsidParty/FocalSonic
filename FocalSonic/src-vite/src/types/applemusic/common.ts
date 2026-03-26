@@ -6,6 +6,19 @@ export interface AppleMusicResource {
     type: string;
 }
 
+export interface AppleMusicMetadata {
+    data?: any;
+    libraryID?: string;
+    parent?: any;
+    type?: string;
+}
+
+export interface AppleMusicStationDisplay {
+    id: string;
+    name: string;
+    coverArt?: string;
+}
+
 
 export interface AppleMusicArtwork {
     bgColor: string;
@@ -42,6 +55,19 @@ export interface AppleMusicRelationship<ResourceType> {
     href: string;
     meta?: any;
     next?: string | undefined;
+}
+
+export interface AppleMusicStation extends AppleMusicResource {
+    attributes?: {
+        artwork?: AppleMusicArtwork | undefined;
+        isLive?: boolean;
+        kind?: string;
+        mediaKind?: string;
+        name: string;
+        radioUrl?: string;
+        requiresSubscription?: boolean;
+        url?: string;
+    } | undefined;
 }
 
 export interface AppleMusicGenre extends Resource {

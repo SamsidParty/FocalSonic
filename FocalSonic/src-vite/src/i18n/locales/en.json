@@ -499,7 +499,9 @@
     "title": "Queue",
     "clear": "Clear",
     "close": "Close queue",
-    "open": "Open queue"
+    "open": "Open queue",
+    "appleMusicRadio": "Apple Music radio",
+    "playingFromStation": "Playing from: {{station}}"
   },
   "shortcuts": {
     "modal": {
