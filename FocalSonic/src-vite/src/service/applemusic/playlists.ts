@@ -8,6 +8,29 @@ import { SubsonicResponse } from "@/types/responses/subsonicResponse";
 import { merge } from "lodash";
 import { defaultAppleMusicQuery } from "./common";
 
+function toAppleMusicTrackReference(id: string) {
+    const trimmedId = id?.trim();
+
+    if (!trimmedId) {
+        return null;
+    }
+
+    const isCatalogSong = /^\d+$/.test(trimmedId);
+
+    return {
+        id: trimmedId,
+        type: isCatalogSong ? "songs" : "library-songs",
+    };
+}
+
+function toAppleMusicTrackReferences(songIds?: string | string[]) {
+    const ids = Array.isArray(songIds) ? songIds : (songIds ? [songIds] : []);
+
+    return ids
+        .map(toAppleMusicTrackReference)
+        .filter((track): track is NonNullable<typeof track> => track !== null);
+}
+
 async function getAll() {
     const response = await httpClient<AppleMusicPlaylist[]>("/applemusic/me/library/playlists", { 
         method: "GET",
@@ -105,6 +128,7 @@ async function remove(id: string) {
 }
 
 async function create(name: string, songs?: string[]) {
+    const tracks = toAppleMusicTrackReferences(songs);
 
     const response = await httpClient<AppleMusicPlaylist[]>(
         "/applemusic/me/library/playlists",
@@ -119,10 +143,7 @@ async function create(name: string, songs?: string[]) {
                     },
                     relationships: {
                         tracks: {
-                            data: songs?.map((id) => ({
-                                id,
-                                type: "library-songs"
-                            }))
+                            data: tracks
                         }
                     }
                 }
@@ -168,15 +189,18 @@ async function update({
     }
 
     if (songIdToAdd) {
+        const tracks = toAppleMusicTrackReferences(songIdToAdd);
+
+        if (tracks.length === 0) {
+            throw new Error("No valid track ids to add to playlist");
+        }
+
         response = await httpClient<AppleMusicPlaylist[]>(
             `/applemusic/me/library/playlists/${playlistId}/tracks`,
             {
                 method: "POST",
                 body: JSON.stringify({
-                    data: (Array.isArray(songIdToAdd) ? songIdToAdd : [songIdToAdd]).map((id) => ({
-                        id,
-                        type: "library-songs"
-                    }))
+                    data: tracks
                 })
             }
         );

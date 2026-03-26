@@ -1,7 +1,7 @@
 import { CheckIcon, ClockIcon, XIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { PlaylistOptions } from "@/app/components/playlist/options";
+import { hasPlaylistMenuOptions, PlaylistOptions } from "@/app/components/playlist/options";
 import { TableActionButton } from "@/app/components/table/action-button";
 import { CoverImage } from "@/app/components/table/cover-image";
 import PlaySongButton from "@/app/components/table/play-button";
@@ -149,19 +149,22 @@ export function playlistsColumns(): ColumnDefType<Playlist>[] {
             cell: ({ row }) => {
                 const playlist = row.original;
                 const disableOption = playlist.songCount === 0;
+                const canShowOptions = hasPlaylistMenuOptions(playlist);
 
                 return (
                     <>
-                        <TableActionButton
-                            optionsMenuItems={
-                                <PlaylistOptions
-                                    playlist={playlist}
-                                    disablePlayNext={disableOption}
-                                    disableAddLast={disableOption}
-                                    disableDownload={disableOption}
-                                />
-                            }
-                        />
+                        {canShowOptions && (
+                            <TableActionButton
+                                optionsMenuItems={
+                                    <PlaylistOptions
+                                        playlist={playlist}
+                                        disablePlayNext={disableOption}
+                                        disableAddLast={disableOption}
+                                        disableDownload={disableOption}
+                                    />
+                                }
+                            />
+                        )}
                     </>
                 );
             },

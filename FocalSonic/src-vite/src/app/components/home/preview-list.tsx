@@ -1,5 +1,8 @@
 import { getCoverArtUrl } from "@/api/httpClient";
-import { PreviewItemMenuOptions } from "@/app/components/options/preview-item-menu";
+import {
+    hasPreviewItemMenuOptions,
+    PreviewItemMenuOptions,
+} from "@/app/components/options/preview-item-menu";
 import { PreviewCard } from "@/app/components/preview-card/card";
 import {
     Carousel,
@@ -153,9 +156,12 @@ export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | 
 
     const { handlePlay, navigateToResource } = usePreviewCard();
     const { isAppleMusic } = checkServerType();
+    const contextMenuOptions = hasPreviewItemMenuOptions(entry)
+        ? <PreviewItemMenuOptions item={entry} variant="context" />
+        : undefined;
 
     return (
-        <PreviewCard.Root contextMenuOptions={<PreviewItemMenuOptions item={entry} variant="context" />}>
+        <PreviewCard.Root contextMenuOptions={contextMenuOptions}>
             <PreviewCard.ImageWrapper 
                 onClick={() => navigateToResource(entry)}
                 className={isLarge && "rounded-b-none rounded-t"}

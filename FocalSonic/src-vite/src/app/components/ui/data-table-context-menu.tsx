@@ -1,4 +1,6 @@
-import { PlaylistOptions } from "@/app/components/playlist/options";
+import { ItemMenuOptions } from "@/app/components/options/item-menu";
+import { hasPlaylistMenuOptions, PlaylistOptions } from "@/app/components/playlist/options";
+import { Albums } from "@/types/responses/album";
 import { SongMenuOptions } from "@/app/components/song/menu-options";
 import { SelectedSongsMenuOptions } from "@/app/components/song/selected-options";
 import { Playlist } from "@/types/responses/playlist";
@@ -46,11 +48,26 @@ export function getDataTableContextMenuOptions<TData>({
     }
 
     if (dataType === "playlist") {
+        const playlist = row.original as Playlist;
+
+        if (!hasPlaylistMenuOptions(playlist)) {
+            return undefined;
+        }
+
         return (
             <PlaylistOptions
                 variant="context"
-                playlist={row.original as Playlist}
+                playlist={playlist}
                 showPlay={true}
+            />
+        );
+    }
+
+    if (dataType === "album") {
+        return (
+            <ItemMenuOptions
+                variant="context"
+                target={{ type: "album", item: row.original as Albums }}
             />
         );
     }

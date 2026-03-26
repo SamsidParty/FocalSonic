@@ -1,5 +1,5 @@
 import { getCoverArtUrl } from "@/api/httpClient";
-import { PlaylistOptions } from "@/app/components/playlist/options";
+import { hasPlaylistMenuOptions, PlaylistOptions } from "@/app/components/playlist/options";
 import { ContextMenuProvider } from "@/app/components/table/context-menu";
 import { Button } from "@/app/components/ui/button";
 import { ROUTES } from "@/routes/routesList";
@@ -143,11 +143,13 @@ export function SidebarPlaylistGenerator({
                     >
                         <ContextMenuProvider
                             options={
-                                <PlaylistOptions
-                                    variant="context"
-                                    playlist={playlist}
-                                    showPlay={true}
-                                />
+                                hasPlaylistMenuOptions(playlist)
+                                    ? <PlaylistOptions
+                                        variant="context"
+                                        playlist={playlist}
+                                        showPlay={true}
+                                    />
+                                    : undefined
                             }
                         >
                             <Button

@@ -6,7 +6,7 @@ import { AlbumsFallback } from "@/app/components/fallbacks/album-fallbacks";
 import ListWrapper from "@/app/components/list-wrapper";
 import usePreviewCard from "@/app/components/preview-card/use-preview-card";
 import { DataTableList } from "@/app/components/ui/data-table-list";
-import { songsColumns } from "@/app/tables/songs-columns";
+import { albumsColumns } from "@/app/tables/albums-columns";
 import { ColumnFilter } from "@/types/columnFilter";
 import { useListDisplayMode } from "@/types/listDisplayMode";
 import { t } from "i18next";
@@ -53,7 +53,7 @@ function AlbumsListGrid({ albums }) {
 
 function AlbumsListStandard({ albums }) {
 
-    const columns = songsColumns();
+    const columns = albumsColumns();
     const { navigateToResource, handlePlay } = usePreviewCard();
 
     const columnsToShow: ColumnFilter[] = [
@@ -72,6 +72,7 @@ function AlbumsListStandard({ albums }) {
                 allowRowSelection={false}
                 columnFilter={columnsToShow}
                 noRowsMessage={t("album.list.empty.title")}
+                dataType="album"
             />
         </ListWrapper>
     );

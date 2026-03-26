@@ -13,6 +13,10 @@ type PreviewMenuItem =
     | ISong
     | PreviewPlaylistItem;
 
+function isPlaylistFolder(item: Playlist | PreviewPlaylistItem): boolean {
+    return item.id.startsWith("folder:") || !!item.appleMusic?.type?.includes("playlist-folders");
+}
+
 function isAppleMusicRecommendationContent(item: PreviewMenuItem): item is AppleMusicRecommendationContent {
     return "type" in item && "attributes" in item;
 }
@@ -136,6 +140,10 @@ export function getPreviewItemTarget(item: PreviewMenuItem): ItemMenuTarget | nu
     }
 
     if (isPlaylist(item)) {
+        if (isPlaylistFolder(item)) {
+            return null;
+        }
+
         return {
             type: "playlist",
             item,
@@ -153,6 +161,10 @@ export function getPreviewItemTarget(item: PreviewMenuItem): ItemMenuTarget | nu
     }
 
     return null;
+}
+
+export function hasPreviewItemMenuOptions(item: PreviewMenuItem): boolean {
+    return getPreviewItemTarget(item) !== null;
 }
 
 export function PreviewItemMenuOptions({

@@ -1,6 +1,10 @@
 import { ItemMenuOptions } from "@/app/components/options/item-menu";
 import { Playlist, PlaylistWithEntries } from "@/types/responses/playlist";
 
+export function hasPlaylistMenuOptions(playlist: PlaylistWithEntries | Playlist): boolean {
+    return !playlist.id.startsWith("folder:") && !playlist.appleMusic?.type?.includes("playlist-folders");
+}
+
 interface PlaylistOptionsProps {
     playlist: PlaylistWithEntries | Playlist
     variant?: "context" | "dropdown"
@@ -22,6 +26,10 @@ export function PlaylistOptions({
     disableEdit = false,
     disableDelete = false,
 }: PlaylistOptionsProps) {
+    if (!hasPlaylistMenuOptions(playlist)) {
+        return null;
+    }
+
     return (
         <ItemMenuOptions
             variant={variant}

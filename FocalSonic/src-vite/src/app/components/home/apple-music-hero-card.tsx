@@ -1,4 +1,7 @@
-import { PreviewItemMenuOptions } from "@/app/components/options/preview-item-menu";
+import {
+    hasPreviewItemMenuOptions,
+    PreviewItemMenuOptions,
+} from "@/app/components/options/preview-item-menu";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
 import React from "react";
@@ -10,13 +13,16 @@ export default function AppleMusicHeroCard({ entry, isLarge, title }: { entry: A
 
     const { navigateToResource, handlePlay } = usePreviewCard();
     const imageSrc = Object.values(entry?.attributes?.plainEditorialCard || {})?.[0]?.editorialArtwork?.superHeroWide?.url.replace("{w}", "4320").replace("{h}", "1800").replace("{f}", "jpg");
+    const contextMenuOptions = hasPreviewItemMenuOptions(entry)
+        ? <PreviewItemMenuOptions item={entry} variant="context" />
+        : undefined;
 
     if (!title) {
         title = Object.values(entry?.attributes?.plainEditorialCard || {})?.[0]?.plainEditorialNotes?.tagline;
     }
 
     return (
-        <PreviewCard.Root contextMenuOptions={<PreviewItemMenuOptions item={entry} variant="context" />}>
+        <PreviewCard.Root contextMenuOptions={contextMenuOptions}>
             <PreviewCard.ImageWrapper 
                 onClick={() => navigateToResource(entry)}
                 className="w-full h-auto rounded aspect-auto"

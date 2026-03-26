@@ -213,8 +213,6 @@ function AlbumItemMenu({
 }) {
     const {
         play,
-        playNext,
-        playLast,
         startDownload,
         addToPlaylist,
         createNewPlaylist,
@@ -223,7 +221,7 @@ function AlbumItemMenu({
     const { isAppleMusic } = checkServerType();
 
     async function getAlbumSongs() {
-        if ("song" in album && Array.isArray(album.song)) {
+        if ("song" in album && Array.isArray(album.song) && album.song.length > 0) {
             return album.song;
         }
 
@@ -248,20 +246,6 @@ function AlbumItemMenu({
                 onClick={async (e) => {
                     e.stopPropagation();
                     await withAlbumSongs(play);
-                }}
-            />
-            <OptionsButtons.PlayNext
-                variant={variant}
-                onClick={async (e) => {
-                    e.stopPropagation();
-                    await withAlbumSongs(playNext);
-                }}
-            />
-            <OptionsButtons.PlayLast
-                variant={variant}
-                onClick={async (e) => {
-                    e.stopPropagation();
-                    await withAlbumSongs(playLast);
                 }}
             />
             <MenuSeparatorFactory variant={variant} />
@@ -313,16 +297,9 @@ function ArtistItemMenu({
     context?: ItemMenuContext
 }) {
     const { getArtistAllSongs } = useSongList();
-    const { playNext, playLast, startDownload, openItemInfo } = useOptions();
+    const { startDownload, openItemInfo } = useOptions();
     const { playArtistRadio } = usePlayArtistRadio();
     const { isAppleMusic } = checkServerType();
-
-    async function queueArtistSongs(action: (songs: ISong[]) => void) {
-        const songs = await getArtistAllSongs(isAppleMusic ? artist.id : artist.name);
-        if (!songs) return;
-
-        action(songs);
-    }
 
     return (
         <>
@@ -331,20 +308,6 @@ function ArtistItemMenu({
                 onClick={(e) => {
                     e.stopPropagation();
                     playArtistRadio(artist);
-                }}
-            />
-            <OptionsButtons.PlayNext
-                variant={variant}
-                onClick={async (e) => {
-                    e.stopPropagation();
-                    await queueArtistSongs(playNext);
-                }}
-            />
-            <OptionsButtons.PlayLast
-                variant={variant}
-                onClick={async (e) => {
-                    e.stopPropagation();
-                    await queueArtistSongs(playLast);
                 }}
             />
             {!isAppleMusic && (
@@ -383,15 +346,8 @@ function PlaylistItemMenu({
     const { t } = useTranslation();
     const { setPlaylistDialogState, setData } = usePlaylists();
     const { setPlaylistId, setConfirmDialogState } = useRemovePlaylist();
-    const { play, playNext, playLast, startDownload, openItemInfo } = useOptions();
+    const { play, startDownload, openItemInfo } = useOptions();
     const { isAppleMusic } = checkServerType();
-
-    async function getSongsToQueue(callback: (songs: ISong[]) => void) {
-        const playlistWithEntries = await service.playlists.getOne(playlist.id);
-        if (!playlistWithEntries) return;
-
-        callback(playlistWithEntries.entry);
-    }
 
     function handleEdit() {
         setData({
@@ -430,42 +386,17 @@ function PlaylistItemMenu({
                         return;
                     }
 
-                    void getSongsToQueue(play);
+                    void service.playlists.getOne(playlist.id).then((playlistWithEntries) => {
+                        if (!playlistWithEntries) {
+                            return;
+                        }
+
+                        play(playlistWithEntries.entry);
+                    });
                 }}
             />,
         );
     }
-
-    content.push(
-        <OptionsButtons.PlayNext
-            key="play-next"
-            variant={variant}
-            disabled={context?.disablePlayNext}
-            onClick={(e) => {
-                e.stopPropagation();
-                if (playlist.entry?.length > 0) {
-                    playNext(playlist.entry);
-                    return;
-                }
-
-                void getSongsToQueue(playNext);
-            }}
-        />,
-        <OptionsButtons.PlayLast
-            key="play-last"
-            variant={variant}
-            disabled={context?.disableAddLast}
-            onClick={(e) => {
-                e.stopPropagation();
-                if (playlist.entry?.length > 0) {
-                    playLast(playlist.entry);
-                    return;
-                }
-
-                void getSongsToQueue(playLast);
-            }}
-        />,
-    );
 
     if (!isAppleMusic && !context?.disableDownload) {
         content.push(

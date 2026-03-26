@@ -7,6 +7,21 @@ import { merge } from "lodash";
 import { AlbumListParams } from "../subsonic/albums";
 import { defaultAppleMusicQuery } from "./common";
 
+async function resolveTracks(href: string) {
+    const targetURL = href.replace("/v1/", "/applemusic/");
+
+    const response = await httpClient<any>(targetURL, {
+        method: "GET",
+        query: merge({}, defaultAppleMusicQuery),
+    });
+
+    if (response?.next) {
+        response.data.push(...(await resolveTracks(response.next)).data);
+    }
+
+    return response;
+}
+
 
 async function getAlbumList(params: Partial<AlbumListParams> = {}) {
     const {
@@ -58,10 +73,18 @@ async function getOne(id: string) {
         {
             method: "GET",
             query: merge({
+                include: "tracks",
                 views: "appears-on,more-by-artist,other-versions,you-might-also-like"
             }, defaultAppleMusicQuery)
         }
     );
+
+    const album = response?.data?.[0];
+
+    if (album?.relationships?.tracks?.next) {
+        const resolvedTracks = await resolveTracks(album.relationships.tracks.href || album.relationships.tracks.next);
+        album.relationships.tracks.data = resolvedTracks?.data || album.relationships.tracks.data;
+    }
     
     if (!(response?.data?.length > 0)) {
         // Try again but with the song endpoint
@@ -71,7 +94,7 @@ async function getOne(id: string) {
         }
     }
 
-    return convertAppleMusicAlbumToSubsonic(response?.data[0]);
+    return convertAppleMusicAlbumToSubsonic(album);
 }
 
 async function getInfo(id: string) {

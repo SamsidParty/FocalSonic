@@ -56,7 +56,7 @@ interface DataTableProps<TData, TValue> {
     showHeader?: boolean
     allowRowSelection?: boolean
     showContextMenu?: boolean
-    dataType?: "song" | "artist" | "playlist" | "radio"
+    dataType?: "song" | "artist" | "playlist" | "radio" | "album"
     pageType?: "general" | "queue" | "queue-small"
     fetchNextPage?: () => void
     hasNextPage?: boolean

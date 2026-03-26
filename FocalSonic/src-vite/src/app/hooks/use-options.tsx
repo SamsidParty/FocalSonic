@@ -51,9 +51,24 @@ export function useOptions() {
 
     const updateMutation = useMutation({
         mutationFn: service.playlists.update,
-        onSuccess: () => {
-            if (isOnPlaylistPage) {
+        onSuccess: async (_data, variables) => {
+            await Promise.all([
                 queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playlist.all],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playlist.display],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playlist.single],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playlist.single, variables.playlistId],
+                }),
+            ]);
+
+            if (isOnPlaylistPage && playlistId) {
+                await queryClient.invalidateQueries({
                     queryKey: [queryKeys.playlist.single, playlistId],
                 });
             }
@@ -72,10 +87,18 @@ export function useOptions() {
 
     const createMutation = useMutation({
         mutationFn: service.playlists.createWithDetails,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: [queryKeys.playlist.all],
-            });
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playlist.all],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playlist.display],
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.playlist.single],
+                }),
+            ]);
         },
     });
 

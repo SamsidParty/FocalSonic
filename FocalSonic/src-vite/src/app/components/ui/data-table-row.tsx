@@ -12,7 +12,7 @@ interface RowProps<TData> extends ComponentPropsWithoutRef<"div"> {
     isPrevRowSelected: (rowIndex: number) => boolean
     isNextRowSelected: (rowIndex: number) => boolean
     variant?: "classic" | "modern"
-    dataType?: "song" | "artist" | "playlist" | "radio"
+    dataType?: "song" | "artist" | "playlist" | "radio" | "album"
 }
 
 export function TableRow<TData>({

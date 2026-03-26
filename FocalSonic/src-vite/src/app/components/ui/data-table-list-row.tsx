@@ -21,7 +21,7 @@ interface TableRowProps<TData> {
     handleTouchEnd: (e: TouchEvent<HTMLDivElement>, row: Row<TData>) => void
     handleTouchCancel: () => void
     getContextMenuOptions: (row: Row<TData>) => ReactNode
-    dataType?: "song" | "artist" | "playlist" | "radio"
+    dataType?: "song" | "artist" | "playlist" | "radio" | "album"
     pageType?: "general" | "queue" | "queue-small"
     allowRowReorder?: boolean
 }
