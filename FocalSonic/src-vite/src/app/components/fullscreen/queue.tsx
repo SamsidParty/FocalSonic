@@ -115,12 +115,12 @@ export function FullscreenSongQueue() {
             </div>
         );
 
+
     return (
         <ScrollArea
             ref={parentRef}
             type="always"
             className="min-h-full h-full overflow-auto"
-            thumbClassName="secondary-thumb-bar"
         >
             <div
                 style={{

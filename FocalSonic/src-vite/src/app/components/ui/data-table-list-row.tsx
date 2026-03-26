@@ -99,7 +99,8 @@ export function TableListRow<TData>({
         let newCells = cells.filter((cell) => {
             
             if (pageType === "queue-small") {
-                return cell.column.id == "title" || cell.column.id == "index";
+                // Whitelist these columns in small queue view to save space
+                return cell.column.id == "title" || cell.column.id == "index"|| cell.column.id == "index";
             }
 
             return true;
@@ -165,7 +166,7 @@ function TableCell<TData, TValue>({ cell }: TableCellProps<TData, TValue>) {
         <div
             key={cell.id}
             className={clsx(
-                "p-2 flex flex-row items-center justify-start [&:has([role=checkbox])]:pr-4",
+                "flex flex-row items-center justify-start [&:has([role=checkbox])]:pr-4",
                 columnDef.className,
             )}
             style={columnDef.style}

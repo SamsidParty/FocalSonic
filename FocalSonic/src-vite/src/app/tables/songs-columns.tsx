@@ -1,5 +1,5 @@
 import { ClockIcon, StarIcon } from "lucide-react";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Link } from "react-router-dom";
 
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";

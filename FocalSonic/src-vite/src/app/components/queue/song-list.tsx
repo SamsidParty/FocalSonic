@@ -13,7 +13,7 @@ import { ISong } from "@/types/responses/song";
 import { convertSecondsToHumanRead, convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import clsx from "clsx";
 import { GripVertical, ListX } from "lucide-react";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 
 import { useTranslation } from "react-i18next";
 
@@ -128,7 +128,7 @@ function QueueDragOverlayRow({
 }) {
     return (
         <div
-            className="flex items-center rounded-md border border-border/50 bg-background/95 px-2 py-2 shadow-2xl backdrop-blur-sm"
+            className="flex items-center rounded-md bg-background px-2 py-2 shadow-2xl"
             style={{
                 width: width ?? undefined,
             }}
