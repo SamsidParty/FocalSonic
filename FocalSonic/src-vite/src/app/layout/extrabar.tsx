@@ -3,14 +3,9 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAppSettings } from "@/store/app.store";
 import { usePlayerStyle } from "@/store/theme.store";
-import React, { memo } from "react";
 import ExtrabarEffects from "../components/extrabar/effects";
 import ExtrabarLyrics from "../components/extrabar/lyrics";
 import ExtrabarQueue from "../components/extrabar/queue";
-
-const MemoExtrabarLyrics = memo(ExtrabarLyrics);
-const MemoExtrabarQueue = memo(ExtrabarQueue);
-const MemoExtrabarEffects = memo(ExtrabarEffects);
 
 export function Extrabar() {
     const { t } = useTranslation();
@@ -31,9 +26,9 @@ export function Extrabar() {
                 {
                     (extraBarContent !== "none") && (
                         <div className="bg-body rounded-md w-full h-full flex flex-col">
-                            {extraBarContent === "lyrics" && <MemoExtrabarLyrics />}
-                            {extraBarContent === "queue" && <MemoExtrabarQueue />}
-                            {extraBarContent === "effects" && <MemoExtrabarEffects />}
+                            {extraBarContent === "lyrics" && <ExtrabarLyrics />}
+                            {extraBarContent === "queue" && <ExtrabarQueue />}
+                            {extraBarContent === "effects" && <ExtrabarEffects />}
                         </div>
                     )
                 }

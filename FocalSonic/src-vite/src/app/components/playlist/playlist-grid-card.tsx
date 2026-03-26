@@ -6,7 +6,6 @@ import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { Playlists } from "@/types/responses/playlist";
 import { FolderIcon, Shuffle } from "lucide-react";
-import React, { memo } from "react";
 
 import { Button } from "../ui/button";
 
@@ -14,7 +13,7 @@ type PlaylistCardProps = {
     playlist: Playlists
 }
 
-function PlaylistCard({ playlist }: PlaylistCardProps) {
+export function PlaylistGridCard({ playlist }: PlaylistCardProps) {
     const { setSongList } = usePlayerActions();
 
     if (playlist?.appleMusic?.type?.includes("playlist-folders")) {
@@ -76,5 +75,3 @@ function PlaylistCard({ playlist }: PlaylistCardProps) {
         </PreviewCard.Root>
     );
 }
-
-export const PlaylistGridCard = memo(PlaylistCard);

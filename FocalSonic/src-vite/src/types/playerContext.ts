@@ -76,11 +76,6 @@ interface IReplayGain {
     actions: IReplayGainActions
 }
 
-interface IFullscreen {
-    autoFullscreenEnabled: boolean
-    setAutoFullscreenEnabled: (value: boolean) => void
-}
-
 interface IBlurSettings {
     value: number
     settings: {
@@ -104,7 +99,6 @@ interface IColorsSettings {
 export interface IPlayerSettings {
     volume: IVolumeSettings
     speed: ISpeedSettings
-    fullscreen: IFullscreen
     replayGain: IReplayGain
     colors: IColorsSettings
 }

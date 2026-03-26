@@ -20,7 +20,7 @@ import { hasPiPSupport, isFullscreen } from "@/utils/browser";
 import { ReplayGainParams } from "@/utils/replayGain";
 import { checkServerType } from "@/utils/servers";
 import clsx from "clsx";
-import React, { memo, useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useCastStatus } from "../header/cast";
 import { AudioPlayer } from "./audio";
 import { PlayerClearQueueButton } from "./clear-queue-button";
@@ -31,19 +31,6 @@ import { PlayerLyricsButton } from "./lyrics-button";
 import { PlayerProgress } from "./progress";
 import { PlayerQueueButton } from "./queue-button";
 import { PlayerVolume } from "./volume";
-
-const MemoTrackInfo = memo(TrackInfo);
-const MemoRadioInfo = memo(RadioInfo);
-const MemoPlayerControls = memo(PlayerControls);
-const MemoPlayerProgress = memo(PlayerProgress);
-const MemoPlayerLikeButton = memo(PlayerLikeButton);
-const MemoPlayerQueueButton = memo(PlayerQueueButton);
-const MemoPlayerClearQueueButton = memo(PlayerClearQueueButton);
-const MemoPlayerVolume = memo(PlayerVolume);
-const MemoPlayerEffects = memo(PlayerEffects);
-const MemoLyricsButton = memo(PlayerLyricsButton);
-const MemoMiniPlayerButton = memo(MiniPlayerButton);
-const MemoAudioPlayer = memo(AudioPlayer);
 
 export function Player() {
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -180,8 +167,8 @@ export function Player() {
                             playerStyle !== "floating" && "w-full",
                         )}
                     >
-                        {isSong && <MemoTrackInfo song={song} />}
-                        {isRadio && <MemoRadioInfo radio={radio} />}
+                        {isSong && <TrackInfo song={song} />}
+                        {isRadio && <RadioInfo radio={radio} />}
                     </div>
 
                     <div
@@ -192,44 +179,44 @@ export function Player() {
                             "[grid-area:controls]",
                         )}
                     >
-                        <MemoPlayerControls song={song} radio={radio} />
+                        <PlayerControls song={song} radio={radio} />
 
-                        {isSong && <MemoPlayerProgress audioRef={getAudioRef()} />}
+                        {isSong && <PlayerProgress audioRef={getAudioRef()} />}
                     </div>
 
                     <div className="flex w-full items-center justify-end [grid-area:extrabuttons] xxs:hidden">
                         <div className="flex items-center gap-1">
                             {isSong && (
                                 <>
-                                    <MemoPlayerLikeButton disabled={!song} />
-                                    <MemoLyricsButton disabled={!song} />
-                                    <MemoPlayerQueueButton disabled={!song} />
+                                    <PlayerLikeButton disabled={!song} />
+                                    <PlayerLyricsButton disabled={!song} />
+                                    <PlayerQueueButton disabled={!song} />
                                 </>
                             )}
 
-                            {isRadio && <MemoPlayerClearQueueButton disabled={!radio} />}
+                            {isRadio && <PlayerClearQueueButton disabled={!radio} />}
 
                             {isAppleMusic && !castStatus && (
-                                <MemoPlayerEffects
+                                <PlayerEffects
                                     audioRef={getAudioRef()}
                                     disabled={!song && !radio}
                                 />
                             )}
 
                             {!castStatus && (
-                                <MemoPlayerVolume
+                                <PlayerVolume
                                     audioRef={getAudioRef()}
                                     disabled={!song && !radio}
                                 />
                             )}
 
-                            {isSong && hasPiPSupport && <MemoMiniPlayerButton />}
+                            {isSong && hasPiPSupport && <MiniPlayerButton />}
                         </div>
                     </div>
                 </div>
 
                 {isSong && song && (
-                    <MemoAudioPlayer
+                    <AudioPlayer
                         replayGain={getTrackReplayGain()}
                         src={getSongStreamUrl(song.id, song.contentType)}
                         autoPlay={isPlaying}
@@ -246,7 +233,7 @@ export function Player() {
                 )}
 
                 {isRadio && radio && (
-                    <MemoAudioPlayer
+                    <AudioPlayer
                         src={radio.streamUrl}
                         autoPlay={isPlaying}
                         audioRef={radioRef}

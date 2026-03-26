@@ -1,6 +1,6 @@
 import randomCSSHexColor from "@chriscodesthings/random-css-hex-color";
 import clsx from "clsx";
-import React, { memo, useState } from "react";
+import React, { useState } from "react";
 
 import { getCoverArtUrl } from "@/api/httpClient";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
@@ -14,8 +14,6 @@ import hexToCssFilter from "@/utils/hexToCssFilter.js";
 import CoverArtImage from "../cover-art";
 import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
 import { AlbumArtistInfo } from "./artists";
-
-const DarkVeilMemo = memo(DarkVeil, (o, n) => o.style?.opacity === n.style?.opacity);
 
 export interface ImageHeaderProps {
     type: string
@@ -96,7 +94,7 @@ export default function ImageHeader({
                     "w-full px-8 py-6 flex gap-4 absolute inset-0",
                 )}
             >
-                <DarkVeilMemo style={{ filter: bgEffectStyle!, opacity: (!bgEffectStyle ? "0" : "1") }} className="transition-opacity duration-1000" speed={2} warpAmount={5}></DarkVeilMemo>
+                <DarkVeil style={{ filter: bgEffectStyle!, opacity: (!bgEffectStyle ? "0" : "1") }} className="transition-opacity duration-1000" speed={2} warpAmount={5}></DarkVeil>
 
                 <div
                     className={cn(

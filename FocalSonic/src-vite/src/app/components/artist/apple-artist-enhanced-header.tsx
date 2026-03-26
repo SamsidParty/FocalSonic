@@ -1,14 +1,9 @@
-import React, { memo } from "react";
-
 import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import clsx from "clsx";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { AlbumArtistInfo } from "../album/artists";
 import { ImageHeaderProps } from "../album/image-header";
 import { HeaderInfoGenerator } from "../header-info";
-import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
-
-const DarkVeilMemo = memo(DarkVeil, (o, n) => o.style?.opacity === n.style?.opacity);
 
 
 export default function AppleArtistEnhancedHeader({

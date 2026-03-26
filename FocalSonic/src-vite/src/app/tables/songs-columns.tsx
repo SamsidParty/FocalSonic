@@ -1,5 +1,4 @@
 import { ClockIcon, StarIcon } from "lucide-react";
-import { memo } from "react";
 import { Link } from "react-router-dom";
 
 import { ArtistLink, ArtistsLinks } from "@/app/components/song/artist-link";
@@ -15,16 +14,6 @@ import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import dateTime from "@/utils/dateTime";
-
-const MemoSimpleTooltip = memo(SimpleTooltip);
-const MemoBadge = memo(Badge);
-const MemoPlaySongButton = memo(PlaySongButton);
-const MemoTableSongTitle = memo(TableSongTitle);
-const MemoLink = memo(Link);
-const MemoSongTableActions = memo(SongTableActions);
-const MemoDataTableColumnHeader = memo(
-    DataTableColumnHeader,
-) as typeof DataTableColumnHeader;
 
 export function songsColumns(): ColumnDefType<ISong>[] {
     return [
@@ -43,7 +32,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
                 const song = row.original;
 
                 return (
-                    <MemoPlaySongButton
+                    <PlaySongButton
                         trackNumber={trackNumber}
                         trackId={song.id}
                         handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
@@ -66,7 +55,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
                 const trackNumber = song.track;
 
                 return (
-                    <MemoPlaySongButton
+                    <PlaySongButton
                         trackNumber={trackNumber}
                         trackId={song.id}
                         handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
@@ -84,11 +73,11 @@ export function songsColumns(): ColumnDefType<ISong>[] {
             enableSorting: true,
             sortingFn: "customSortFn",
             header: ({ column, table }) => (
-                <MemoDataTableColumnHeader column={column} table={table}>
+                <DataTableColumnHeader column={column} table={table}>
                     {i18n.t("table.columns.title")}
-                </MemoDataTableColumnHeader>
+                </DataTableColumnHeader>
             ),
-            cell: ({ row }) => <MemoTableSongTitle song={row.original} />,
+            cell: ({ row }) => <TableSongTitle song={row.original} />,
         },
         {
             id: "artist",
@@ -100,9 +89,9 @@ export function songsColumns(): ColumnDefType<ISong>[] {
             enableSorting: true,
             sortingFn: "customSortFn",
             header: ({ column, table }) => (
-                <MemoDataTableColumnHeader column={column} table={table}>
+                <DataTableColumnHeader column={column} table={table}>
                     {i18n.t("table.columns.artist")}
-                </MemoDataTableColumnHeader>
+                </DataTableColumnHeader>
             ),
             cell: ({ row }) => {
                 const { artist, artistId, artists } = row.original;
@@ -128,13 +117,13 @@ export function songsColumns(): ColumnDefType<ISong>[] {
             enableSorting: true,
             sortingFn: "customSortFn",
             header: ({ column, table }) => (
-                <MemoDataTableColumnHeader column={column} table={table}>
+                <DataTableColumnHeader column={column} table={table}>
                     {i18n.t("table.columns.album")}
-                </MemoDataTableColumnHeader>
+                </DataTableColumnHeader>
             ),
             cell: ({ row }) => {
                 return (
-                    <MemoLink
+                    <Link
                         to={ROUTES.ALBUM.PAGE(row.original.albumId)}
                         className="hover:underline truncate text-foreground/70 hover:text-foreground"
                         onContextMenu={(e) => {
@@ -143,7 +132,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
                         }}
                     >
                         {row.original.album}
-                    </MemoLink>
+                    </Link>
                 );
             },
         },
@@ -166,13 +155,13 @@ export function songsColumns(): ColumnDefType<ISong>[] {
             enableSorting: true,
             sortingFn: "basic",
             header: ({ column, table }) => (
-                <MemoSimpleTooltip text={i18n.t("table.columns.duration")}>
+                <SimpleTooltip text={i18n.t("table.columns.duration")}>
                     <div>
-                        <MemoDataTableColumnHeader column={column} table={table}>
+                        <DataTableColumnHeader column={column} table={table}>
                             <ClockIcon className="w-4 h-4" />
-                        </MemoDataTableColumnHeader>
+                        </DataTableColumnHeader>
                     </div>
-                </MemoSimpleTooltip>
+                </SimpleTooltip>
             ),
             cell: ({ row }) => {
                 const { duration } = row.original;
@@ -193,9 +182,9 @@ export function songsColumns(): ColumnDefType<ISong>[] {
             sortingFn: "basic",
             sortUndefined: -1,
             header: ({ column, table }) => (
-                <MemoDataTableColumnHeader column={column} table={table}>
+                <DataTableColumnHeader column={column} table={table}>
                     {i18n.t("table.columns.plays")}
-                </MemoDataTableColumnHeader>
+                </DataTableColumnHeader>
             ),
             cell: ({ row }) => row.original.playCount ?? 0,
         },
@@ -253,7 +242,7 @@ export function songsColumns(): ColumnDefType<ISong>[] {
             cell: ({ row }) => {
                 const { suffix } = row.original;
 
-                return <MemoBadge>{suffix.toUpperCase()}</MemoBadge>;
+                return <Badge>{suffix.toUpperCase()}</Badge>;
             },
         },
         {
@@ -264,11 +253,11 @@ export function songsColumns(): ColumnDefType<ISong>[] {
                 justifyContent: "end",
             },
             header: () => (
-                <MemoSimpleTooltip text={i18n.t("table.columns.favorite")}>
+                <SimpleTooltip text={i18n.t("table.columns.favorite")}>
                     <StarIcon className="w-4 h-4 mr-2" />
-                </MemoSimpleTooltip>
+                </SimpleTooltip>
             ),
-            cell: ({ row }) => <MemoSongTableActions row={row} />,
+            cell: ({ row }) => <SongTableActions row={row} />,
         },
     ];
 }

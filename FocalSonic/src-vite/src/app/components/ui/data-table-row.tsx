@@ -3,7 +3,7 @@ import { usePlayerCurrentSong } from "@/store/player.store";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { Cell, flexRender, Row } from "@tanstack/react-table";
 import clsx from "clsx";
-import { ComponentPropsWithoutRef, memo, ReactNode, useMemo } from "react";
+import { ComponentPropsWithoutRef, ReactNode } from "react";
 
 interface RowProps<TData> extends ComponentPropsWithoutRef<"div"> {
     index: number
@@ -14,9 +14,6 @@ interface RowProps<TData> extends ComponentPropsWithoutRef<"div"> {
     variant?: "classic" | "modern"
     dataType?: "song" | "artist" | "playlist" | "radio"
 }
-
-const MemoContextMenuProvider = memo(ContextMenuProvider);
-const MemoTableCell = memo(TableCell) as typeof TableCell;
 
 export function TableRow<TData>({
     index,
@@ -32,16 +29,11 @@ export function TableRow<TData>({
 
     const isClassic = variant === "classic";
     const isModern = variant === "modern";
-
-    const isRowSongActive = useMemo(() => {
-        if (dataType !== "song") return false;
-
-        // @ts-expect-error row type
-        return row.original.id === currentSong.id;
-    }, [currentSong.id, dataType, row.original]);
+    const isRowSongActive = dataType === "song"
+        && (row.original as { id?: string }).id === currentSong.id;
 
     return (
-        <MemoContextMenuProvider options={contextMenuOptions}>
+        <ContextMenuProvider options={contextMenuOptions}>
             <div
                 {...props}
                 role="row"
@@ -64,10 +56,10 @@ export function TableRow<TData>({
                 )}
             >
                 {row.getVisibleCells().map((cell) => (
-                    <MemoTableCell key={cell.id} cell={cell} />
+                    <TableCell key={cell.id} cell={cell} />
                 ))}
             </div>
-        </MemoContextMenuProvider>
+        </ContextMenuProvider>
     );
 }
 

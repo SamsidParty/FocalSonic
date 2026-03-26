@@ -1,18 +1,14 @@
-import { memo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger,
 } from "@/app/components/ui/tabs";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { LyricsTab } from "./lyrics";
 import { FullscreenSongQueue } from "./queue";
 import { SongInfo } from "./song-info";
-
-const MemoSongQueue = memo(FullscreenSongQueue);
-const MemoSongInfo = memo(SongInfo);
-const MemoLyricsTab = memo(LyricsTab);
 
 enum TabsEnum {
     Queue = "queue",
@@ -82,7 +78,7 @@ export function FullscreenTabs() {
                     }}
                     forceMount={true}
                 >
-                    <MemoSongQueue />
+                    <FullscreenSongQueue />
                 </TabsContent>
                 <TabsContent
                     value={TabsEnum.Playing}
@@ -93,7 +89,7 @@ export function FullscreenTabs() {
                     }}
                     forceMount={true}
                 >
-                    <MemoSongInfo />
+                    <SongInfo />
                 </TabsContent>
                 <TabsContent
                     value={TabsEnum.Lyrics}
@@ -104,7 +100,7 @@ export function FullscreenTabs() {
                     }}
                     forceMount={true}
                 >
-                    <MemoLyricsTab />
+                    <LyricsTab />
                 </TabsContent>
             </div>
         </Tabs>

@@ -14,18 +14,11 @@ import { ISimilarArtist } from "@/types/responses/artist";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
-import React, { memo } from "react";
 
 import { useTranslation } from "react-i18next";
 
-const MemoShadowHeader = memo(ShadowHeader);
-const MemoHeaderTitle = memo(HeaderTitle);
-const MemoDataTable = memo(DataTable) as typeof DataTable;
-const MemoListWrapper = memo(ListWrapper);
-
 export default function ArtistsList() {
     const { t } = useTranslation();
-    const { isAppleMusic } = checkServerType();
 
     const { displayMode, setDisplayMode } = useListDisplayMode("primary_artists");
 
@@ -50,10 +43,10 @@ export default function ArtistsList() {
 
     return (
         <div className="w-full h-full">
-            <MemoShadowHeader className="flex justify-between">
-                <MemoHeaderTitle title={t("sidebar.artists")} count={artists.length} />
+            <ShadowHeader className="flex justify-between">
+                <HeaderTitle title={t("sidebar.artists")} count={artists.length} />
                 <ListDisplayModePicker className="ml-auto" displayMode={displayMode} setDisplayMode={setDisplayMode} />
-            </MemoShadowHeader>
+            </ShadowHeader>
             <ListDisplay artists={artists} />
         </div>
     );
@@ -64,13 +57,13 @@ function ArtistsListGrid({ artists }: { artists: ISimilarArtist[] }) {
     return (
         <ListWrapper className="pt-shadow-header-distance px-0">
             <div className="grid grid-cols-6 2xl:grid-cols-8 gap-4 px-4" data-testid="artists-grid">
-                {artists && artists.map((artist) => <ArtistGridCard key={artist.id || artist.name} artist={artist} />)}
+                {artists.map((artist) => <ArtistGridCard key={artist.id || artist.name} artist={artist} />)}
             </div>
         </ListWrapper>
     );
 }
 
-function  ArtistsListCoverflow({ artists }: { artists: ISimilarArtist[] }) {
+function ArtistsListCoverflow({ artists }: { artists: ISimilarArtist[] }) {
     return (
         <div className="w-full h-fs-content flex flex-col overflow-hidden">
             <div className="flex-1 h-full">
@@ -96,8 +89,8 @@ function ArtistsListStandard({ artists }: { artists: ISimilarArtist[] }) {
     ];
 
     return (
-        <MemoListWrapper className="pt-shadow-header-distance">
-            <MemoDataTable
+        <ListWrapper className="pt-shadow-header-distance">
+            <DataTable
                 columns={columns}
                 columnFilter={columnFilter}
                 data={artists}
@@ -108,6 +101,6 @@ function ArtistsListStandard({ artists }: { artists: ISimilarArtist[] }) {
                 allowRowSelection={false}
                 dataType="artist"
             />
-        </MemoListWrapper>
+        </ListWrapper>
     );
 }

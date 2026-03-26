@@ -4,14 +4,13 @@ import { PreviewCard } from "@/app/components/preview-card/card";
 import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
 import { ROUTES } from "@/routes/routesList";
 import { ISimilarArtist } from "@/types/responses/artist";
-import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 type ArtistCardProps = {
     artist: ISimilarArtist
 }
 
-function ArtistCard({ artist }: ArtistCardProps) {
+export function ArtistGridCard({ artist }: ArtistCardProps) {
     const { t } = useTranslation();
     const { playArtistRadio } = usePlayArtistRadio();
 
@@ -40,5 +39,3 @@ function ArtistCard({ artist }: ArtistCardProps) {
         </PreviewCard.Root>
     );
 }
-
-export const ArtistGridCard = memo(ArtistCard);

@@ -7,13 +7,9 @@ import { Playlist } from "@/types/responses/playlist";
 import { GridViewWrapperType, resetGridClickedItem } from "@/utils/gridTools";
 import clsx from "clsx";
 import { FolderIcon, ListMusicIcon, PinIcon, Star } from "lucide-react";
-import React, { ElementType, Fragment, memo, useCallback } from "react";
+import { ElementType, Fragment, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
-
-const ListMusic = memo(ListMusicIcon);
-const MemoContextMenuProvider = memo(ContextMenuProvider);
-const MemoPlaylistOptions = memo(PlaylistOptions);
 
 export interface ISidebarItem {
     id: string
@@ -128,7 +124,7 @@ export function SidebarPlaylistGenerator({
             );
         }
 
-        return (<ListMusic color="var(--primary)" className="mr-3 min-h-4 min-w-4 h-4 w-4" />);
+        return (<ListMusicIcon color="var(--primary)" className="mr-3 min-h-4 min-w-4 h-4 w-4" />);
     };
 
     return (
@@ -145,9 +141,9 @@ export function SidebarPlaylistGenerator({
                             }
                         }}
                     >
-                        <MemoContextMenuProvider
+                        <ContextMenuProvider
                             options={
-                                <MemoPlaylistOptions
+                                <PlaylistOptions
                                     variant="context"
                                     playlist={playlist}
                                     showPlay={true}
@@ -179,7 +175,7 @@ export function SidebarPlaylistGenerator({
                                     )
                                 }
                             </Button>
-                        </MemoContextMenuProvider>
+                        </ContextMenuProvider>
                     </Link>
                 </Fragment>
             ))}

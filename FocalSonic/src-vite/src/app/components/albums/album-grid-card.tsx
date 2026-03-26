@@ -5,13 +5,12 @@ import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { Albums } from "@/types/responses/album";
-import { memo } from "react";
 
 type AlbumCardProps = {
     album: Albums
 }
 
-function AlbumCard({ album }: AlbumCardProps) {
+export function AlbumGridCard({ album }: AlbumCardProps) {
     const { setSongList } = usePlayerActions();
 
     async function handlePlayAlbum() {
@@ -47,5 +46,3 @@ function AlbumCard({ album }: AlbumCardProps) {
         </PreviewCard.Root>
     );
 }
-
-export const AlbumGridCard = memo(AlbumCard);

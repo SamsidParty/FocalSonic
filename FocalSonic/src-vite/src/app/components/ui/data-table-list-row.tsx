@@ -9,25 +9,22 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Cell, flexRender, Row } from "@tanstack/react-table";
 import clsx from "clsx";
-import { memo, MouseEvent, TouchEvent, useMemo } from "react";
-
-const MemoContextMenuProvider = memo(ContextMenuProvider);
-const MemoTableCell = memo(TableCell) as typeof TableCell;
+import { MouseEvent, ReactNode, TouchEvent } from "react";
 
 interface TableRowProps<TData> {
     row: Row<TData>
     virtualRow: { index: number; size: number; start: number }
     handleClicks: (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => void
     handleRowDbClick: (e: MouseEvent<HTMLDivElement>, row: Row<TData>) => void
-    handleRowTap: (e: TouchEvent<HTMLDivElement>, row: Row<TData>) => void
-    getContextMenuOptions: (row: Row<TData>) => JSX.Element | undefined
+    handleTouchStart: () => void
+    handleTouchMove: () => void
+    handleTouchEnd: (e: TouchEvent<HTMLDivElement>, row: Row<TData>) => void
+    handleTouchCancel: () => void
+    getContextMenuOptions: (row: Row<TData>) => ReactNode
     dataType?: "song" | "artist" | "playlist" | "radio"
     pageType?: "general" | "queue" | "queue-small"
     allowRowReorder?: boolean
 }
-
-let isTap = false;
-let tapTimeout: NodeJS.Timeout;
 
 const animateLayoutChanges: AnimateLayoutChanges = (args) => {
     if (args.isSorting) {
@@ -42,7 +39,10 @@ export function TableListRow<TData>({
     virtualRow,
     handleClicks,
     handleRowDbClick,
-    handleRowTap,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    handleTouchCancel,
     getContextMenuOptions,
     dataType = "song",
     pageType = "general",
@@ -64,57 +64,14 @@ export function TableListRow<TData>({
         disabled: !allowRowReorder,
         animateLayoutChanges,
     });
-
-    function handleTouchStart() {
-        isTap = true;
-        tapTimeout = setTimeout(() => {
-            isTap = false;
-        }, 500);
-    }
-
-    function handleTouchMove() {
-        isTap = false;
-    }
-
-    function handleTouchEnd(e: TouchEvent<HTMLDivElement>) {
-        clearTimeout(tapTimeout);
-        if (isTap) handleRowTap(e, row);
-    }
-
-    function handleTouchCancel() {
-        clearTimeout(tapTimeout);
-        isTap = false;
-    }
-
-    const isRowSongActive = useMemo(() => {
-        if (dataType !== "song") return false;
-
-        // @ts-expect-error row type
-        return row.original.id === currentSong.id;
-    }, [currentSong.id, dataType, row.original]);
+    const isRowSongActive = dataType === "song"
+        && (row.original as { id?: string }).id === currentSong.id;
 
     const isQueue = pageType === "queue";
-
-    const filterCells = (cells: Cell<TData, unknown>[]) => {
-        let newCells = cells.filter((cell) => {
-            
-            if (pageType === "queue-small") {
-                // Whitelist these columns in small queue view to save space
-                return cell.column.id == "title" || cell.column.id == "index"|| cell.column.id == "index";
-            }
-
-            return true;
-        });
-
-        if (pageType === "queue-small") {
-            newCells = newCells.reverse();
-        }
-
-        return newCells;
-    };
+    const visibleCells = getVisibleCells(row.getVisibleCells(), pageType);
 
     return (
-        <MemoContextMenuProvider options={getContextMenuOptions(row)}>
+        <ContextMenuProvider options={getContextMenuOptions(row)}>
             <div
                 ref={allowRowReorder ? setNodeRef : undefined}
                 role="row"
@@ -125,7 +82,7 @@ export function TableListRow<TData>({
                 onDoubleClick={(e) => handleRowDbClick(e, row)}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+                onTouchEnd={(e) => handleTouchEnd(e, row)}
                 onTouchCancel={handleTouchCancel}
                 onContextMenu={(e) => handleClicks(e, row)}
                 {...(allowRowReorder ? attributes : {})}
@@ -147,12 +104,25 @@ export function TableListRow<TData>({
                     willChange: allowRowReorder ? "transform" : undefined,
                 }}
             >
-                {filterCells(row.getVisibleCells()).map((cell) => (
-                    <MemoTableCell key={cell.id} cell={cell} />
+                {visibleCells.map((cell) => (
+                    <TableCell key={cell.id} cell={cell} />
                 ))}
             </div>
-        </MemoContextMenuProvider>
+        </ContextMenuProvider>
     );
+}
+
+function getVisibleCells<TData>(
+    cells: Cell<TData, unknown>[],
+    pageType: "general" | "queue" | "queue-small",
+) {
+    if (pageType !== "queue-small") {
+        return cells;
+    }
+
+    return cells
+        .filter((cell) => cell.column.id === "title" || cell.column.id === "index")
+        .reverse();
 }
 
 interface TableCellProps<TData, TValue> {

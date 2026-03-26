@@ -1,4 +1,3 @@
-import { memo } from "react";
 import { Dot } from "@/app/components/dot";
 import { MarqueeTitle } from "@/app/components/fullscreen/marquee-title";
 import { Badge } from "@/app/components/ui/badge";
@@ -7,14 +6,12 @@ import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import { FullscreenSongImage } from "./song-image";
 
-const MemoFullscreenSongImage = memo(FullscreenSongImage);
-
 export function SongInfo() {
     const currentSong = usePlayerStore((state) => state.songlist.currentSong);
 
     return (
         <div className="flex items-center justify-start h-full min-h-full max-h-full gap-4 2xl:gap-6 flex-1 pt-2 overflow-hidden">
-            <MemoFullscreenSongImage />
+            <FullscreenSongImage />
 
             <div className="flex flex-col w-[66%] max-w-full h-full max-h-[450px] 2xl:max-h-[550px] justify-end text-left overflow-hidden">
                 <MarqueeTitle gap="mr-6">

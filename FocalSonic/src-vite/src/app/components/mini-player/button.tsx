@@ -5,13 +5,8 @@ import { usePlayerStyle } from "@/store/theme.store";
 import { enterMiniPlayer, exitMiniPlayer } from "@/utils/browser";
 import clsx from "clsx";
 import { PictureInPicture2Icon } from "lucide-react";
-import React, { memo, useCallback } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { MiniPlayer } from "./player";
-import { MiniPlayerPortal } from "./portal";
-
-const MemoMiniPlayerPortal = memo(MiniPlayerPortal);
-const MemoMiniPlayer = memo(MiniPlayer);
 
 export function MiniPlayerButton() {
     const { t } = useTranslation();

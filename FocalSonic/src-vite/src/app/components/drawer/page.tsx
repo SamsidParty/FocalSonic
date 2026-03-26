@@ -17,16 +17,16 @@ import { enterFullscreen, exitFullscreen, isFullscreen } from "@/utils/browser";
 import "@/utils/idle"; // for idle detection
 import clsx from "clsx";
 import { ChevronDownIcon, Maximize2Icon } from "lucide-react";
-import React, { ComponentPropsWithoutRef } from "react";
+import { ComponentPropsWithoutRef } from "react";
 import { useFullscreenBackdrop } from "../fullscreen/backdrop";
 import Equalizer from "../player/equalizer";
 
 export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
     const { queueState } = useQueueState();
-    const { extraBarContent, setExtraBarContent } = useAppSettings();
+    const { extraBarContent } = useAppSettings();
     const { lyricsState } = useLyricsState();
-    const { isPlayerAtTop, isMiniPlayer, playerStyle } = usePlayerStyle();
+    const { isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
     const { hideAlbumArt } = useCustomFullscreenBackground();
     const hasExtraContent = extraBarContent != "none";
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: extraBarContent == "queue" || extraBarContent == "effects" });

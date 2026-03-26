@@ -156,14 +156,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             step: 0.01,
                             wheelStep: 0.1,
                         },
-                        fullscreen: {
-                            autoFullscreenEnabled: false,
-                            setAutoFullscreenEnabled: (value) => {
-                                set((state) => {
-                                    state.settings.fullscreen.autoFullscreenEnabled = value;
-                                });
-                            },
-                        },
                         replayGain: {
                             values: {
                                 enabled: false,
@@ -831,7 +823,6 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             set((state) => {
                                 state.settings.colors.bigPlayer.blur.value = 40;
                                 state.settings.colors.bigPlayer.blur.settings = blurSettings;
-                                state.settings.fullscreen.autoFullscreenEnabled = true;
                                 state.settings.replayGain.values = {
                                     enabled: false,
                                     type: "track",
@@ -1051,9 +1042,6 @@ export const useReplayGainState = () => {
 
 export const useReplayGainActions = () =>
     usePlayerStore((state) => state.settings.replayGain.actions);
-
-export const useFullscreenPlayerSettings = () =>
-    usePlayerStore((state) => state.settings.fullscreen);
 
 
 export const usePlayerSettings = () => usePlayerStore((state) => state.settings);

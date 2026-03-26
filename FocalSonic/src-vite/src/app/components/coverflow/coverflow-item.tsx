@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/store/theme.store";
 import { SingleAlbum } from "@/types/responses/album";
 import { Play } from "lucide-react";
-import React, { memo, useEffect } from "react";
+import { useEffect } from "react";
 import CoverArtImage from "../cover-art";
 import usePreviewCard from "../preview-card/use-preview-card";
 import { Button } from "../ui/button";
@@ -15,7 +15,7 @@ interface CoverflowItemCardProps {
     onClick: () => void;
 }
 
-function CoverflowItemCardComponent({
+export function CoverflowItemCard({
     item,
     position,
     isCenter,
@@ -167,5 +167,3 @@ function CoverflowItemCardComponent({
         </div>
     );
 }
-
-export const CoverflowItemCard = memo(CoverflowItemCardComponent);

@@ -1,4 +1,3 @@
-import { memo } from "react";
 import { ArtistTitle } from "@/app/components/table/artist-title.tsx";
 import { TableLikeButton } from "@/app/components/table/like-button";
 import PlaySongButton from "@/app/components/table/play-button";
@@ -6,13 +5,6 @@ import { DataTableColumnHeader } from "@/app/components/ui/data-table-column-hea
 import i18n from "@/i18n";
 import { ColumnDefType } from "@/types/react-table/columnDef";
 import { ISimilarArtist } from "@/types/responses/artist";
-
-const MemoArtistTitle = memo(ArtistTitle);
-const MemoPlaySongButton = memo(PlaySongButton);
-const MemoDataTableColumnHeader = memo(
-    DataTableColumnHeader,
-) as typeof DataTableColumnHeader;
-const MemoTableLikeButton = memo(TableLikeButton);
 
 export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
     return [
@@ -31,7 +23,7 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
                 const artist = row.original;
 
                 return (
-                    <MemoPlaySongButton
+                    <PlaySongButton
                         trackNumber={index}
                         trackId={artist.id}
                         handlePlayButton={() => table.options.meta?.handlePlaySong?.(row)}
@@ -49,11 +41,11 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
                 minWidth: 100,
             },
             header: ({ column, table }) => (
-                <MemoDataTableColumnHeader column={column} table={table}>
+                <DataTableColumnHeader column={column} table={table}>
                     {i18n.t("table.columns.name")}
-                </MemoDataTableColumnHeader>
+                </DataTableColumnHeader>
             ),
-            cell: ({ row }) => <MemoArtistTitle artist={row.original} />,
+            cell: ({ row }) => <ArtistTitle artist={row.original} />,
         },
         {
             id: "albumCount",
@@ -65,9 +57,9 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
                 maxWidth: "15%",
             },
             header: ({ column, table }) => (
-                <MemoDataTableColumnHeader column={column} table={table}>
+                <DataTableColumnHeader column={column} table={table}>
                     {i18n.t("table.columns.albumCount")}
-                </MemoDataTableColumnHeader>
+                </DataTableColumnHeader>
             ),
         },
         {
@@ -82,7 +74,7 @@ export function artistsColumns(): ColumnDefType<ISimilarArtist>[] {
                 const { starred, id } = row.original;
 
                 return (
-                    <MemoTableLikeButton
+                    <TableLikeButton
                         type="artist"
                         entityId={id}
                         starred={typeof starred === "string"}

@@ -1,19 +1,11 @@
 import { ResizeHandler } from "@/app/components/icons/resize-handler";
 import { useDynamicColors } from "@/store/player.store";
 import clsx from "clsx";
-import { memo } from "react";
 import { MiniPlayerControls, MiniPlayerLikeButton } from "./controls";
 import { MiniPlayerProgress } from "./progress";
 import { MiniPlayerSongImage } from "./song-image";
 import { MiniPlayerSongTitle } from "./song-title";
 import { MiniPlayerVolume } from "./volume";
-
-const MemoMiniPlayerControls = memo(MiniPlayerControls);
-const MemoMiniPlayerLikeButton = memo(MiniPlayerLikeButton);
-const MemoMiniPlayerProgress = memo(MiniPlayerProgress);
-const MemoMiniPlayerSongImage = memo(MiniPlayerSongImage);
-const MemoMiniPlayerSongTitle = memo(MiniPlayerSongTitle);
-const MemoMiniPlayerVolume = memo(MiniPlayerVolume);
 
 export function MiniPlayer() {
     const { currentSongColor } = useDynamicColors();
@@ -45,7 +37,7 @@ export function MiniPlayer() {
                             "mini-player:min-h-fit mini-player:max-h-full mini-player:p-0 mini-player:aspect-square",
                         )}
                     >
-                        <MemoMiniPlayerSongImage />
+                        <MiniPlayerSongImage />
                         <div
                             className={clsx(
                                 "flex flex-col w-full gap-4 absolute inset-0",
@@ -56,13 +48,13 @@ export function MiniPlayer() {
                             )}
                         >
                             <div className="flex flex-col flex-1 px-2 justify-center items-center absolute inset-0">
-                                <MemoMiniPlayerControls />
+                                <MiniPlayerControls />
                             </div>
                             <div className="mb-auto px-2 pt-0.5">
-                                <MemoMiniPlayerVolume />
+                                <MiniPlayerVolume />
                             </div>
                             <div className="mt-auto px-2 pb-0.5">
-                                <MemoMiniPlayerProgress />
+                                <MiniPlayerProgress />
                             </div>
                         </div>
                     </div>
@@ -73,15 +65,15 @@ export function MiniPlayer() {
                         "mid-player:pl-0 mini-player:pl-0 mid-player:pb-0 mini-player:pb-0.5 mid-player:flex-1",
                     )}
                 >
-                    <MemoMiniPlayerSongTitle />
-                    <MemoMiniPlayerLikeButton />
+                    <MiniPlayerSongTitle />
+                    <MiniPlayerLikeButton />
                 </div>
                 <div className="hidden mini-player:flex">
-                    <MemoMiniPlayerControls />
+                    <MiniPlayerControls />
                 </div>
             </div>
             <div className="hidden mid-player:flex justify-center items-center h-10 max-h-10">
-                <MemoMiniPlayerControls />
+                <MiniPlayerControls />
             </div>
             <ResizeHandler className="absolute w-5 h-5 bottom-0 right-0 text-foreground/50" />
         </div>
