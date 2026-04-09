@@ -11,7 +11,7 @@ import {
     Root
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
-import { useAppSettings } from "@/store/app.store";
+import { useSharedSettings } from "@/store/shared.store";
 import { checkServerType } from "@/utils/servers";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,7 +25,7 @@ export function isAtmosSupported() {
 
 export function AtmosSettings() {
     const { t } = useTranslation();
-    const { enableAtmos, setEnableAtmos: _setEnableAtmos } = useAppSettings();
+    const { enableAtmos, setEnableAtmos: _setEnableAtmos } = useSharedSettings();
     const { isAppleMusic } = checkServerType();
     const [hasChanged, setHasChanged] = useState(false);
 

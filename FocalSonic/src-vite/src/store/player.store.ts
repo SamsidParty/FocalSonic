@@ -16,8 +16,9 @@ import { createJSONStorage, devtools, persist, subscribeWithSelector } from "zus
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
-import { useAppSettings, useAppStore } from "./app.store";
+import { useAppSettings } from "./app.store";
 import { usePersongOverrides } from "./persong.store";
+import { getSharedVolume, useSharedStore } from "@/store/shared.store";
 
 const blurSettings = {
     min: 20,
@@ -25,7 +26,7 @@ const blurSettings = {
     step: 10,
 };
 
-let lastSongList = null;
+let lastSongList: string | null = null;
 
 function isAppleMusicStationDisplay(
     station: AppleMusicStation | AppleMusicStationDisplay | null | undefined,
@@ -50,7 +51,7 @@ function getAppleMusicStationDisplay(
     song?: ISong,
 ): AppleMusicStationDisplay | null {
     const existingDisplay = isAppleMusicStationDisplay(station) ? station : null;
-    const normalizedStation = getNormalizedStation(existingDisplay ? null : station, song);
+    const normalizedStation = getNormalizedStation(existingDisplay ? null : station as AppleMusicStation | null | undefined, song);
     const stationName = existingDisplay?.name ?? normalizedStation?.attributes?.name;
 
     if (!normalizedStation?.id && !stationName) {
@@ -110,31 +111,33 @@ const igniteViewPlayerStore = {
     },
     setItem: async (key: string, value: string) => {
         if (key !== "player_store") { return; }
-        value = JSON.parse(value);
+        const nextValue = JSON.parse(value) as {
+            extraProperties?: Record<string, string>
+            state: {
+                songlist?: Record<string, unknown>
+            }
+        };
 
         // Insert extra properties to allow C# to have extra context
         const { isAppleMusic } = checkServerType();
-        const appStore = useAppStore.getState();
-        value.extraProperties = {
+        nextValue.extraProperties = {
             coverArtBaseURL: isAppleMusic ? "{id}" : getCoverArtUrl("{id}"),
             streamBaseURL: isAppleMusic ? "{id}" : getSongStreamUrl("{id}"),
         };
 
-        value.extraProperties = { ...value.extraProperties, ...appStore?.settings };
-
-        const songListCompare = JSON.stringify(value.state.songlist ?? {});
+        const songListCompare = JSON.stringify(nextValue.state.songlist ?? {});
 
         if (songListCompare === lastSongList) {
             // Do a mini sync without the songlist to avoid large data transfers
             //console.log("[Player Bridge] Mini sync triggered");
-            value.state.songlist = {};
-            await window.igniteView?.commandBridge.setPlayerStoreMini(JSON.stringify(value));
+            nextValue.state.songlist = {};
+            await window.igniteView?.commandBridge.setPlayerStoreMini(JSON.stringify(nextValue));
         }
         else {
             // Do a full sync
             lastSongList = songListCompare;
             //console.log("[Player Bridge] Full sync triggered");
-            await window.igniteView?.commandBridge.setPlayerStore(JSON.stringify(value));
+            await window.igniteView?.commandBridge.setPlayerStore(JSON.stringify(nextValue));
         }
 
 
@@ -167,7 +170,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         loopState: LoopState.Off,
                         isShuffleActive: false,
                         isSongStarred: false,
-                        volume: 100,
+                        volume: getSharedVolume(),
                         speed: 1,
                         filterData: "",
                         currentDuration: 0,
@@ -493,7 +496,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         playNextSong: () => {
 
                             if (window.igniteView) {
-                                igniteView.commandBridge.nextButtonPressed(); // Tell C# to do it instead
+                                window.igniteView.commandBridge.nextButtonPressed(); // Tell C# to do it instead
                                 return;
                             }
 
@@ -514,7 +517,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         playPrevSong: () => {
 
                             if (window.igniteView) {
-                                igniteView.commandBridge.previousButtonPressed(); // Tell C# to do it instead
+                                window.igniteView.commandBridge.previousButtonPressed(); // Tell C# to do it instead
                                 return;
                             }
 
@@ -558,7 +561,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         disposePlayer: () => {
                             set((state) => {
                                 const disposeFn = state.playerState?.audioPlayerRef?.dispose;
-                                disposeFn && disposeFn(state.playerState?.audioPlayerRef); // Only native-audio will have the dispose function
+                                disposeFn && disposeFn(state.playerState?.audioPlayerRef as any); // Only native-audio will have the dispose function
                             });
                         },
                         resetProgress: () => {
@@ -572,9 +575,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             });
                         },
                         setVolume: (volume) => {
-                            set((state) => {
-                                state.playerState.volume = volume;
-                            });
+                            useSharedStore.getState().actions.setVolume(volume);
                         },
                         setSpeed: (speed) => {
                             set((state) => {
@@ -587,19 +588,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             });
                         },
                         handleVolumeWheel: (isScrollingDown) => {
-                            const { min, max, wheelStep } = get().settings.volume;
-                            const { volume } = get().playerState;
-
-                            if (isScrollingDown && volume === min) return;
-                            if (!isScrollingDown && volume === max) return;
-
-                            const volumeAdjustment = isScrollingDown ? -wheelStep : wheelStep;
-                            const adjustedVolume = volume + volumeAdjustment;
-                            const finalVolume = clamp(adjustedVolume, min, max);
-
-                            set((state) => {
-                                state.playerState.volume = finalVolume;
-                            });
+                            useSharedStore.getState().actions.handleVolumeWheel(isScrollingDown);
                         },
                         setCurrentDuration: (duration) => {
                             set((state) => {
@@ -939,11 +928,14 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     };
                 },
                 partialize: (state) => {
-                    const appStore = omit(state, [
+                    const playerStore = omit(state, [
                         "actions",
                         "playerState.audioPlayerRef",
-                    ]);
-                    return appStore;
+                    ]) as any;
+
+                    delete playerStore.playerState.volume;
+
+                    return playerStore;
                 },
             },
         ),
@@ -951,7 +943,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
     shallow,
 );
 
-window.rehydratePlayerStore = async (newState) => {
+window.rehydratePlayerStore = async (newState: string) => {
     const stateToSet = JSON.parse(newState).state;
     const current = usePlayerStore.getState();
     const isLegacyPodcastState = stateToSet?.playerState?.mediaType === "podcast";
@@ -980,6 +972,7 @@ window.rehydratePlayerStore = async (newState) => {
             },
             actions: current.actions,
             playerState: {
+                volume: stateToSet.playerState?.volume ?? current.playerState?.volume,
                 ...stateToSet.playerState,
                 audioPlayerRef: current.playerState?.audioPlayerRef,
             },
@@ -1047,6 +1040,23 @@ usePlayerStore.subscribe(
     },
 );
 
+useSharedStore.subscribe(
+    (state) => state.volume,
+    (volume) => {
+        if (usePlayerStore.getState().playerState.volume === volume) {
+            return;
+        }
+
+        usePlayerStore.setState((state) => ({
+            ...state,
+            playerState: {
+                ...state.playerState,
+                volume,
+            },
+        }));
+    },
+);
+
 export const usePlayerActions = () => usePlayerStore((state) => state.actions);
 export const usePlayerCallbackData = (key: string) => usePlayerStore((state) => state.playerCallbackData[key] || undefined);
 
@@ -1077,9 +1087,9 @@ export const usePlayerProgress = () =>
     usePlayerStore((state) => state.playerProgress.progress);
 
 export const usePlayerVolume = () => ({
-    volume: usePlayerStore((state) => state.playerState.volume),
-    setVolume: usePlayerStore((state) => state.actions.setVolume),
-    handleVolumeWheel: usePlayerStore((state) => state.actions.handleVolumeWheel),
+    volume: useSharedStore((state) => state.volume),
+    setVolume: useSharedStore((state) => state.actions.setVolume),
+    handleVolumeWheel: useSharedStore((state) => state.actions.handleVolumeWheel),
 });
 
 export const usePlayerSpeed = () => ({
@@ -1153,7 +1163,7 @@ export const usePlayerPrevAndNext = () =>
 export const usePlayerRef = () =>
     usePlayerStore((state) => state.playerState.audioPlayerRef);
 
-export const getVolume = () => usePlayerStore.getState().playerState.volume;
+export const getVolume = () => getSharedVolume();
 
 export const useMainDrawerState = () =>
     usePlayerStore((state) => ({
@@ -1198,8 +1208,8 @@ export const useDynamicColors = () => {
         setCurrentSongIntensity: setLyricBackgroundIntensity,
         useDynamicColorsOnQueue: lyricBackgroundIntensity > 1,
         useDynamicColorsOnBigPlayer: lyricBackgroundIntensity > 1,
-        setuseDynamicColorsOnQueue: (v) =>  setLyricBackgroundIntensity(v ? 1.01 : 0.5),
-        setuseDynamicColorsOnBigPlayer: (v) =>  setLyricBackgroundIntensity(v ? 1.01 : 0.5),
+        setuseDynamicColorsOnQueue: (v: boolean) =>  setLyricBackgroundIntensity(v ? 1.01 : 0.5),
+        setuseDynamicColorsOnBigPlayer: (v: boolean) =>  setLyricBackgroundIntensity(v ? 1.01 : 0.5),
         bigPlayerBlur: 0,
         setBigPlayerBlurValue,
     };

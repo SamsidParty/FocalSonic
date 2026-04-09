@@ -18,7 +18,7 @@ export interface IServerConfig {
 
 export type PageViewType = "grid" | "table"
 
-interface IAppPages {
+export interface IAppPages {
     showInfoPanel: boolean
     toggleShowInfoPanel: () => void
     showRadiosSection: boolean
@@ -42,7 +42,6 @@ export interface IAppActions {
     setPassword: (value: string) => void
     saveConfig: (data: IServerConfig) => Promise<boolean>
     removeConfig: () => void
-    setLogoutDialogState: (value: boolean) => void
     toggleSidebar: () => void
 }
 
@@ -67,10 +66,6 @@ export interface IAppSettings {
     setEnableLRCLib: (value: boolean) => void
     altLyricsMode: "off" | "transliteration" | "translation"
     setAltLyricsMode: (value: "off" | "transliteration" | "translation") => void
-    enableDiscordPresence: boolean
-    setEnableDiscordPresence: (value: boolean) => void
-    enableAtmos: boolean
-    setEnableAtmos: (value: boolean) => void
     sidebarOpen: boolean
     setSidebarOpen: (value: boolean) => void
     extraBarContent: ExtraBarContent

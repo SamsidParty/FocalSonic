@@ -1,4 +1,5 @@
 ﻿using FocalSonic.AppleMusic;
+using FocalSonic.Persistence;
 using FocalSonic.Presence;
 using IgniteView.Core;
 using Newtonsoft.Json;
@@ -34,6 +35,7 @@ namespace FocalSonic.AudioPlayer
         public AudioPlayer(string id)
         {
             ID = id;
+            Volume = (float)(SharedStore.GetCurrentState().Volume / 100.0);
             ActivePlayers.TryAdd(id, this);
         }
 
@@ -166,7 +168,7 @@ namespace FocalSonic.AudioPlayer
 
         public async Task UpdatePrePlaybackParameters()
         {
-            await SetEnableAtmos(MediaPlaybackInfo.Instance?.Store?.ExtraProperties?.EnableAtmos ?? false);
+            await SetEnableAtmos(SharedStore.GetCurrentState().EnableAtmos);
         }
 
         public async Task UpdatePlaybackParameters()

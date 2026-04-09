@@ -1,4 +1,5 @@
 ﻿using DiscordRPC;
+using FocalSonic.Persistence;
 using SamsidParty.Subsonic.Common;
 using System;
 using System.Collections.Generic;
@@ -57,7 +58,7 @@ namespace FocalSonic.Presence
                 playbackInfo?.CurrentSong == null || 
                 string.IsNullOrEmpty(playbackInfo.CurrentSong?.Title) || 
                 !playbackInfo.IsPlaying ||
-                (!playbackInfo?.Store?.ExtraProperties?.EnableDiscordPresence ?? true)
+                !SharedStore.GetCurrentState().EnableDiscordPresence
             )
             {
                 if (Client?.CurrentPresence != null) Client.ClearPresence();

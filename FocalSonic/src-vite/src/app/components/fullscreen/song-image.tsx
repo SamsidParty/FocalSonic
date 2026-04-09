@@ -1,8 +1,8 @@
-import { useMemo } from "react";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { getCoverArtUrl } from "@/api/httpClient";
 import { AspectRatio } from "@/app/components/ui/aspect-ratio";
 import { usePlayerStore } from "@/store/player.store";
+import { useMemo } from "react";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 export function FullscreenSongImage() {
     const coverArt = usePlayerStore(({ songlist }) => songlist.currentSong?.coverArt);

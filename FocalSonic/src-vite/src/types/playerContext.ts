@@ -31,7 +31,9 @@ export interface IPlayerState {
     filterData: string
     currentDuration: number
     mediaType: "song" | "radio"
-    audioPlayerRef: HTMLAudioElement | null
+    audioPlayerRef: (HTMLAudioElement & {
+        dispose?: (self: HTMLAudioElement | null) => void
+    }) | null
     mainDrawerState: boolean
     hasPrev: boolean
     hasNext: boolean
@@ -65,7 +67,7 @@ interface IReplayGainData {
     defaultGain: number
 }
 
-interface IReplayGainActions {
+export interface IReplayGainActions {
     setReplayGainEnabled: (value: boolean) => void
     setReplayGainType: (value: ReplayGainType) => void
     setReplayGainPreAmp: (value: number) => void

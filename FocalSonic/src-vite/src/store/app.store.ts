@@ -14,7 +14,7 @@ import { createJSONStorage, devtools, persist, subscribeWithSelector } from "zus
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
-import { usePlayerActions, usePlayerStore } from "./player.store";
+import { usePlayerActions } from "./player.store";
 
 const { SHOW_RADIOS_SECTION, SERVER_TYPE } = window;
 
@@ -104,29 +104,11 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.settings.enableLRCLib = value;
                             });
                         },
-                        enableAtmos: false,
-                        setEnableAtmos: (value) => {
-                            set((state) => {
-                                state.settings.enableAtmos = value;
-                            });
-                        },
-                        enableDiscordPresence: false,
                         altLyricsMode: "off",
                         setAltLyricsMode: (value) => {
                             set((state) => {
                                 state.settings.altLyricsMode = value;
                             });
-                        },
-                        setEnableDiscordPresence: (value) => {
-                            set((state) => {
-                                state.settings.enableDiscordPresence = value;
-                            });
-
-                            // Try to update the presence nonce on the player store, which will trigger the change instantly
-                            const playerStore = usePlayerStore?.getState();
-                            if (playerStore) {
-                                playerStore.actions.setPresenceNonce(Date.now());
-                            }
                         },
                         sidebarOpen: true,
                         setSidebarOpen: (value) => {

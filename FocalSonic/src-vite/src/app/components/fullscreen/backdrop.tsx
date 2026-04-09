@@ -2,7 +2,7 @@ import { getCoverArtUrl } from "@/api/httpClient.js";
 import { useCustomFullscreenBackground, useDynamicColors, usePlayerCurrentSong } from "@/store/player.store";
 import { hexToRgba } from "@/utils/getAverageColor";
 import clsx from "clsx";
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { LyricsScene } from "../../../lib/lyricsScene.js";
 import VideoBackground from "./video-background.js";
 

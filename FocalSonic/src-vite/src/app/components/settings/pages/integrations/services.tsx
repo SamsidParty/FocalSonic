@@ -11,13 +11,15 @@ import {
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
 import { useAppSettings } from "@/store/app.store";
+import { useSharedSettings } from "@/store/shared.store";
 import { checkServerType } from "@/utils/servers";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
 export function Services() {
     const { t } = useTranslation();
-    const { enableLRCLib, setEnableLRCLib, enableDiscordPresence, setEnableDiscordPresence } = useAppSettings();
+    const { enableLRCLib, setEnableLRCLib } = useAppSettings();
+    const { enableDiscordPresence, setEnableDiscordPresence } = useSharedSettings();
     const { isAppleMusic } = checkServerType();
 
     return (
