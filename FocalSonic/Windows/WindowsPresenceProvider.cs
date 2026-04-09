@@ -21,7 +21,8 @@ namespace FocalSonic.Windows
     {
         public static MediaPlayer HostPlayer = new MediaPlayer();
 
-        private string? LastSongID;
+        private string? LastMetadataHash;
+        private string? LastWindowTitle;
         private bool HasRegisteredEvents = false;
         private RandomAccessStreamReference LastAlbumArt; // Prevents refreshing album art every time which wastes resources
 
@@ -31,6 +32,23 @@ namespace FocalSonic.Windows
         {
             var song = playbackInfo.CurrentSong;
             SystemMediaTransportControls smtc = HostPlayer.SystemMediaTransportControls;
+            var player = AudioPlayer.AudioPlayer.Instance;
+            var playerSpeed = player?.Speed ?? 1.0f;
+            var isAppleMusicPlayer = player is AppleMusicAudioPlayer;
+            var artistNames = string.Join(", ", song?.Artists?.Select((a) => a.Name) ?? new string[] { song?.Artist ?? "" });
+            var albumArtistNames = string.Join(", ", song?.AlbumArtists?.Select((a) => a.Name) ?? new string[] { song?.DisplayAlbumArtist ?? "" });
+            var coverArt = playbackInfo.Store?.ExtraProperties.GetCoverArtForSong(song?.CoverArt!);
+            var metadataHash = string.Join("|", new[]
+            {
+                song?.Id ?? "unknown",
+                song?.Title ?? "Unknown Title",
+                artistNames,
+                song?.Album ?? "Unknown Album",
+                albumArtistNames,
+                coverArt ?? string.Empty,
+                playerSpeed.ToString(),
+                isAppleMusicPlayer ? "apple" : "default"
+            });
 
             HostPlayer.CommandManager.IsEnabled = false;
             smtc.PlaybackStatus = playbackInfo.IsPlaying ? MediaPlaybackStatus.Playing : MediaPlaybackStatus.Paused;
@@ -40,40 +58,44 @@ namespace FocalSonic.Windows
             smtc.IsNextEnabled = playbackInfo.NextSongIndex != null;
             smtc.IsPreviousEnabled = playbackInfo.PreviousSongIndex != null;
 
-            smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
-            
-            smtc.DisplayUpdater.MusicProperties.Title = song?.Title ?? "Unknown Title";
-            smtc.DisplayUpdater.MusicProperties.Artist = string.Join(", ", song?.Artists?.Select((a) => a.Name) ?? new string[] { song?.Artist ?? "" });
-            smtc.DisplayUpdater.MusicProperties.AlbumTitle = song?.Album ?? "Unknown Album";
-            smtc.DisplayUpdater.MusicProperties.AlbumArtist = string.Join(", ", song?.AlbumArtists?.Select((a) => a.Name) ?? new string[] { song?.DisplayAlbumArtist ?? "" });
-
-            smtc.DisplayUpdater.MusicProperties.Genres.Clear();
-            smtc.DisplayUpdater.MusicProperties.Genres.Add("FocalSonic-" + (song?.Id ?? "unknown"));
-
-            // Request from a fellow developer, they want to be able to read the Apple Music Catalog ID from SMTC
-            if (AudioPlayer.AudioPlayer.Instance is AppleMusicAudioPlayer && !string.IsNullOrEmpty(song?.Id))
-                smtc.DisplayUpdater.MusicProperties.Genres.Add("AM-" + song?.Id);
-                smtc.DisplayUpdater.MusicProperties.Genres.Add("AppleMusic-" + song?.Id);
-
-            if (AudioPlayer.AudioPlayer.Instance != null)
-                smtc.DisplayUpdater.MusicProperties.Genres.Add("PlaybackSpeed-" + AudioPlayer.AudioPlayer.Instance.Speed);
-
-            var coverArt = playbackInfo.Store?.ExtraProperties.GetCoverArtForSong(song?.CoverArt!);
-
-            if (song?.Id != LastSongID || LastAlbumArt == null)
+            if (metadataHash != LastMetadataHash)
             {
+                smtc.DisplayUpdater.Type = MediaPlaybackType.Music;
+                smtc.DisplayUpdater.MusicProperties.Title = song?.Title ?? "Unknown Title";
+                smtc.DisplayUpdater.MusicProperties.Artist = artistNames;
+                smtc.DisplayUpdater.MusicProperties.AlbumTitle = song?.Album ?? "Unknown Album";
+                smtc.DisplayUpdater.MusicProperties.AlbumArtist = albumArtistNames;
+
+                smtc.DisplayUpdater.MusicProperties.Genres.Clear();
+                smtc.DisplayUpdater.MusicProperties.Genres.Add("FocalSonic-" + (song?.Id ?? "unknown"));
+
+                // Request from a fellow developer, they want to be able to read the Apple Music Catalog ID from SMTC
+                if (isAppleMusicPlayer && !string.IsNullOrEmpty(song?.Id))
+                {
+                    smtc.DisplayUpdater.MusicProperties.Genres.Add("AM-" + song?.Id);
+                    smtc.DisplayUpdater.MusicProperties.Genres.Add("AppleMusic-" + song?.Id);
+                }
+
+                if (player != null)
+                {
+                    smtc.DisplayUpdater.MusicProperties.Genres.Add("PlaybackSpeed-" + playerSpeed);
+                }
+
                 if (string.IsNullOrEmpty(coverArt))
                 {
                     using (var stream = Program.App.CurrentServerManager.Resolver.OpenFileStream("/default_album_art.png"))
                     {
-                        smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(stream.AsRandomAccessStream());
+                        LastAlbumArt = RandomAccessStreamReference.CreateFromStream(stream.AsRandomAccessStream());
                     }
                 }
                 else
                 {
-                    smtc.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(coverArt));
+                    LastAlbumArt = RandomAccessStreamReference.CreateFromUri(new Uri(coverArt));
                 }
-                LastAlbumArt = smtc.DisplayUpdater.Thumbnail;
+
+                smtc.DisplayUpdater.Thumbnail = LastAlbumArt;
+                smtc.DisplayUpdater.Update();
+                LastMetadataHash = metadataHash;
             }
 
             smtc.UpdateTimelineProperties(new SystemMediaTransportControlsTimelineProperties()
@@ -86,32 +108,40 @@ namespace FocalSonic.Windows
             if (!HasRegisteredEvents)
             {
                 HasRegisteredEvents = true;
-                smtc.ButtonPressed += (sender, args) =>
+                smtc.ButtonPressed += async (sender, args) =>
                 {
+                    var info = MediaPlaybackInfo.Instance;
+                    if (info == null) return;
+
+                    // Immediately update SMTC status so repeated presses register correctly
                     if (args.Button == SystemMediaTransportControlsButton.Play)
                     {
-                        playbackInfo?.Play();
+                        smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+                        await info.Play();
                     }
                     else if (args.Button == SystemMediaTransportControlsButton.Pause)
                     {
-                        playbackInfo?.Pause();
+                        smtc.PlaybackStatus = MediaPlaybackStatus.Paused;
+                        await info.Pause();
                     }
                     else if (args.Button == SystemMediaTransportControlsButton.Next)
                     {
-                        playbackInfo?.NextSong();
+                        await info.NextSong();
                     }
                     else if (args.Button == SystemMediaTransportControlsButton.Previous)
                     {
-                        playbackInfo?.PreviousSong();
+                        await info.PreviousSong();
                     }
                 };
             }
 
             // Window title
-            if (Program.MainWindow != null && !string.IsNullOrEmpty(song?.Title)) Program.MainWindow.Title = song?.Title + " | FocalSonic"; 
-
-            smtc.DisplayUpdater.Update();
-            LastSongID = song?.Id ?? null;
+            var windowTitle = !string.IsNullOrEmpty(song?.Title) ? song?.Title + " | FocalSonic" : null;
+            if (Program.MainWindow != null && !string.IsNullOrEmpty(windowTitle) && windowTitle != LastWindowTitle)
+            {
+                Program.MainWindow.Title = windowTitle;
+                LastWindowTitle = windowTitle;
+            }
         }
     }
 }

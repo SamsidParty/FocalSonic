@@ -71,7 +71,7 @@ namespace FocalSonic.AudioPlayer
                 MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(Player?.Duration ?? 0);
                 MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(Player?.Time ?? 0);
             }
-            base.SendTimeUpdate();
+            await base.SendTimeUpdate();
         }
 
 
@@ -107,7 +107,7 @@ namespace FocalSonic.AudioPlayer
                 }
                 if (Player?.Duration > 0)
                 {
-                    CallLoadEvent(Player!.Duration);
+                    await CallLoadEvent(Player!.Duration);
                 }
             }
             else
@@ -119,13 +119,13 @@ namespace FocalSonic.AudioPlayer
         public override async Task PlayAudio()
         {
             Player?.Play();
-            SendTimeUpdate(false);
+            await SendTimeUpdate(false);
         }
 
         public override async Task PauseAudio()
         {
             Player?.Pause();
-            SendTimeUpdate(false);
+            await SendTimeUpdate(false);
         }
 
         public override async Task SeekAudio(double time)
@@ -133,7 +133,7 @@ namespace FocalSonic.AudioPlayer
             if (Player != null)
             {
                 Player.Seek((float)Math.Clamp(time, 0, Player.Duration - 1));
-                SendTimeUpdate(false);
+                await SendTimeUpdate(false);
             }
         }
 

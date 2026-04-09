@@ -30,8 +30,8 @@ namespace FocalSonic.Presence
 
         public string GetStreamURLForSong(string songID)
         {
-            if (string.IsNullOrEmpty(CoverArtBaseURL)) return string.Empty;
-            return CoverArtBaseURL.Replace("{id}", songID);
+            if (string.IsNullOrEmpty(StreamBaseURL)) return string.Empty;
+            return StreamBaseURL.Replace("{id}", songID);
         }
 
         [JsonExtensionData]

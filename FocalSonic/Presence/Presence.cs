@@ -46,7 +46,7 @@ namespace FocalSonic.Presence
             {
                 try
                 {
-                    provider.UpdateMediaStatus(playbackInfo);
+                    await provider.UpdateMediaStatus(playbackInfo);
                 }
                 catch (Exception ex)
                 {
@@ -63,7 +63,7 @@ namespace FocalSonic.Presence
             {
                 try
                 {
-                    provider.Scrobble(playbackInfo);
+                    await provider.Scrobble(playbackInfo);
                 }
                 catch (Exception ex) {
                     // Silent fail but log the error for debugging purposes

@@ -42,7 +42,7 @@ namespace FocalSonic.Presence
             {
                 if (CurrentSong == null || string.IsNullOrEmpty(CurrentSong.Title)) return "no-song";
 
-                var timeHash = $"{DateTime.UtcNow - Position}-{Duration.TotalSeconds}";
+                var timeHash = $"{(int)Position.TotalSeconds}-{(int)Duration.TotalSeconds}";
                 if (AssociatedPlayer?.Speed != 1)
                 {
                     // Custom speed will mess up calculations for position and duration, so just override the hash
@@ -176,13 +176,13 @@ namespace FocalSonic.Presence
         public async Task Play()
         {
             await PlayerStore.Mutate(async (s) => s.State.PlayerState.IsPlaying = true);
-            await AssociatedPlayer.PlayAudio();
+            if (AssociatedPlayer != null) await AssociatedPlayer.PlayAudio();
         }
 
         public async Task Pause()
         {
             await PlayerStore.Mutate(async (s) => s.State.PlayerState.IsPlaying = false);
-            await AssociatedPlayer.PauseAudio();
+            if (AssociatedPlayer != null) await AssociatedPlayer.PauseAudio();
         }
 
         [Command("nextButtonPressed")]

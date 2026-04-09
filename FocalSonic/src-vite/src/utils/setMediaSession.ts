@@ -70,8 +70,6 @@ function setHandlers() {
     mediaSession.setActionHandler("pause", () => togglePlayPause());
     mediaSession.setActionHandler("previoustrack", () => playPrevSong());
     mediaSession.setActionHandler("nexttrack", () => playNextSong());
-    mediaSession.setActionHandler("seekbackward", null);
-    mediaSession.setActionHandler("seekforward", null);
 }
 
 export const manageMediaSession = {

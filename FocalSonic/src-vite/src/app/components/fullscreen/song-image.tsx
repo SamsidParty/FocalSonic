@@ -5,9 +5,9 @@ import { AspectRatio } from "@/app/components/ui/aspect-ratio";
 import { usePlayerStore } from "@/store/player.store";
 
 export function FullscreenSongImage() {
-    const { coverArt, artist, title } = usePlayerStore(({ songlist }) => {
-        return songlist.currentSong;
-    });
+    const coverArt = usePlayerStore(({ songlist }) => songlist.currentSong?.coverArt);
+    const artist = usePlayerStore(({ songlist }) => songlist.currentSong?.artist);
+    const title = usePlayerStore(({ songlist }) => songlist.currentSong?.title);
     const imageUrl = useMemo(() => {
         return getCoverArtUrl(coverArt, "song", "800");
     }, [coverArt]);

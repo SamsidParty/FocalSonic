@@ -14,6 +14,7 @@ export default defineConfig([
         "tailwind.config.js",
         "public/meta/**",
         "src/lib/lyricsScene.js",
+        "src/utils/hexToCssFilter.js",
     ]),
     {
         files: ["**/*.{js,jsx,ts,tsx}"],

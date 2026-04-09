@@ -16,6 +16,7 @@ class NativeVirtualAudioPlayer {
     _state = "idle";
     id?: string;
     paused: boolean = true;
+    volumeTimeout: ReturnType<typeof setTimeout> | undefined;
 
     initialize() {
         if (this._state === "created" || this._state === "creating") return;
@@ -125,8 +126,8 @@ class NativeVirtualAudioPlayer {
         if (this._volume === value) return;
         this._volume = value;
 
-        setTimeout(async () => {
-            clearTimeout(this.volumeTimeout);
+        clearTimeout(this.volumeTimeout);
+        this.volumeTimeout = setTimeout(async () => {
             await this.waitForCreation();
             window.igniteView?.commandBridge.setAudioPlayerVolume(this.id!, this._volume);
         }, 0);

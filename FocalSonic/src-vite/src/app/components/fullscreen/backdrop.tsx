@@ -16,6 +16,7 @@ interface BackdropProps {
 export function useFullscreenBackdrop(props: BackdropProps) {
     const { useDynamicColorsOnQueue } = useDynamicColors();
     const { customBackgroundType, videoBackgroundURL } = useCustomFullscreenBackground();
+    const { lightenBackground, overrideArtSample } = props;
 
     return useMemo(() => {
 
@@ -25,16 +26,16 @@ export function useFullscreenBackdrop(props: BackdropProps) {
                     "absolute inset-0 w-full h-full -z-1",
                 )}
             >
-                <VideoBackground className={clsx("transition-opacity duration-300", props.lightenBackground && "opacity-40")} videoUrl={videoBackgroundURL} />
+                <VideoBackground className={clsx("transition-opacity duration-300", lightenBackground && "opacity-40")} videoUrl={videoBackgroundURL} />
             </div>;
         }
 
         if (!useDynamicColorsOnQueue) {
-            return <DynamicColorBackdrop {...props}></DynamicColorBackdrop>;
+            return <DynamicColorBackdrop lightenBackground={lightenBackground} overrideArtSample={overrideArtSample}></DynamicColorBackdrop>;
         }
 
-        return <SwirlBackdrop {...props}></SwirlBackdrop>;
-    }, [useDynamicColorsOnQueue, props]);
+        return <SwirlBackdrop lightenBackground={lightenBackground} overrideArtSample={overrideArtSample}></SwirlBackdrop>;
+    }, [useDynamicColorsOnQueue, lightenBackground, overrideArtSample, customBackgroundType, videoBackgroundURL]);
 }
 
 export function SwirlBackdrop(props: BackdropProps) {

@@ -53,7 +53,7 @@ export function LyricsTab(props: LyricProps) {
                 title,
                 duration,
                 id,
-                isrc: currentSong?.appleMusic?.data.attributes.isrc
+                isrc: currentSong?.appleMusic?.data?.attributes?.isrc
             });
 
 

@@ -518,10 +518,18 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 return;
                             }
 
-                            if (get().actions.hasPrevSong()) {
+                            const { currentSongIndex, currentList } = get().songlist;
+                            const { loopState } = get().playerState;
+
+                            if (currentSongIndex > 0) {
                                 get().actions.resetProgress();
                                 set((state) => {
                                     state.songlist.currentSongIndex -= 1;
+                                });
+                            } else if (loopState === LoopState.All && currentList.length > 0) {
+                                get().actions.resetProgress();
+                                set((state) => {
+                                    state.songlist.currentSongIndex = currentList.length - 1;
                                 });
                             }
                         },
@@ -606,7 +614,7 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             const nextIndex = currentSongIndex + 1;
 
                             if (mediaType === "song") {
-                                return (nextIndex < currentList.length) || loopState === LoopState.InfiniteRadio;
+                                return (nextIndex < currentList.length) || loopState === LoopState.All || loopState === LoopState.InfiniteRadio;
                             }
                             if (mediaType === "radio") {
                                 return nextIndex < radioList.length;
@@ -616,7 +624,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         },
                         hasPrevSong: () => {
                             const { currentSongIndex } = get().songlist;
-                            return currentSongIndex > 0;
+                            const { loopState } = get().playerState;
+                            return currentSongIndex > 0 || loopState === LoopState.All;
                         },
                         isPlayingOneSong: () => {
                             const { currentList } = get().songlist;
@@ -1023,10 +1032,12 @@ usePlayerStore.subscribe(
 );
 
 usePlayerStore.subscribe(
-    ({ songlist }) => [
+    ({ songlist, playerState }) => [
         songlist.currentList,
         songlist.radioList,
         songlist.currentSongIndex,
+        playerState.loopState,
+        playerState.mediaType,
     ],
     () => {
         usePlayerStore.getState().actions.updateQueueChecks();
