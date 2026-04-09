@@ -13,7 +13,7 @@ import {
 import { Switch } from "@/app/components/ui/switch";
 import { useSharedSettings } from "@/store/shared.store";
 import { checkServerType } from "@/utils/servers";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function isAtmosSupported() {

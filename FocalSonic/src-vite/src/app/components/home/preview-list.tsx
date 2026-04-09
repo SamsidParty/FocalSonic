@@ -15,7 +15,8 @@ import { ROUTES } from "@/routes/routesList";
 import { AppleMusicRecommendationContent } from "@/types/applemusic/recommendations";
 import { Albums } from "@/types/responses/album";
 import { checkServerType } from "@/utils/servers";
-import React, { useEffect, useState } from "react";
+import useAverageColor from "@/utils/useAverageColor";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import usePreviewCard from "../preview-card/use-preview-card";
@@ -160,6 +161,29 @@ export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | 
         ? <PreviewItemMenuOptions item={entry} variant="context" />
         : undefined;
 
+        
+    const getPreviewImage = () => (entry.coverArt || entry?.attributes?.artwork?.url || entry?.attributes?.editorialArtwork?.brandLogo?.url);
+
+    const [imageForAverageColor, setImageForAverageColor] = useState<string | null>(null);
+    const imageAverageColor = useAverageColor(imageForAverageColor, "Muted");
+
+    const getLargePreviewColor = () => {
+        let val = "0000003a";
+
+        val = imageAverageColor || val;
+        val = entry?.attributes?.editorialVideo?.motionDetailSquare?.previewFrame?.bgColor || val;
+        val = entry?.attributes?.artwork?.bgColor || val;
+
+        if (val === "0000003a" && !imageAverageColor) {
+            // Fallback to average color if apple doesn't provide a bg color
+            setTimeout(() => {
+                setImageForAverageColor(getCoverArtUrl(getPreviewImage(), "album", "20"));
+            }, 0);
+        }
+
+        return !val.startsWith("#") ? `#${val}` : val;
+    };
+
     return (
         <PreviewCard.Root contextMenuOptions={contextMenuOptions}>
             <PreviewCard.ImageWrapper 
@@ -167,7 +191,7 @@ export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | 
                 className={isLarge && "rounded-b-none rounded-t"}
             >
                 <PreviewCard.Image
-                    src={getCoverArtUrl(entry.coverArt || entry?.attributes?.artwork?.url || entry?.attributes?.editorialArtwork?.brandLogo?.url, "album")}
+                    src={getCoverArtUrl(getPreviewImage(), "album")}
                     alt={title}
                 />
                 <PreviewCard.PlayButton
@@ -182,14 +206,14 @@ export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | 
                 }
             </PreviewCard.ImageWrapper>
             <PreviewCard.InfoWrapper
-                className={(isLarge && isAppleMusic) && "min-h-16 max-h-16 flex-col rounded-b overflow-hidden"}
+                className={(isLarge && isAppleMusic) && "min-h-16 max-h-16 flex-col rounded-b overflow-hidden transition-all duration-300"}
                 style={(isLarge && isAppleMusic) ? {
-                    backgroundImage: "url('" + getCoverArtUrl(entry.coverArt || entry?.attributes?.artwork?.url || entry?.attributes?.editorialArtwork?.brandLogo?.url) + "')",
+                    backgroundColor: getLargePreviewColor(),
                     backgroundPosition: "bottom",
                     color: "white"
                 } : {}}
             >
-                <div className={(isLarge && isAppleMusic) && "backdrop-blur-3xl backdrop-brightness-[80%] px-4 grow text-center flex flex-col rounded-b-sm overflow-hidden justify-center align-center"}>
+                <div className={(isLarge && isAppleMusic) && "backdrop-brightness-[80%] px-4 grow text-center flex flex-col rounded-b-sm overflow-hidden justify-center align-center"}>
                     <PreviewCard.Title className={isLarge ? "justify-center" : ""} entry={entry} onClick={() => navigateToResource(entry)}/>
                     <PreviewCard.Subtitle
                         enableLink={(entry.relationships?.artists?.data[0]?.id || entry.artistId) !== undefined}
