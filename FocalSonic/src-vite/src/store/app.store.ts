@@ -20,7 +20,7 @@ const { SHOW_RADIOS_SECTION, SERVER_TYPE } = window;
 
 const igniteViewAppStore = {
     getItem: async (key: string) => {
-        let item = localStorage.getItem(key);
+        let item = localStorage.getItem(key) || "{\"state\":{\"data\":{}}}";
 
         if (item && JSON.parse(item)?.state?.data && window.igniteView) {
             // Overwrite the credential state with the one stored by C#
