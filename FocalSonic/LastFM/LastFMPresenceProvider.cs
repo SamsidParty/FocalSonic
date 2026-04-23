@@ -14,7 +14,13 @@ namespace FocalSonic.LastFM
         {
             get
             {
-                return !string.IsNullOrEmpty(LocalStorage.GetItem("lastfm_session_key", "default"));
+                try
+                {
+                    return !string.IsNullOrEmpty(LocalStorage.GetItem("lastfm_session_key", "default"));
+                }
+                catch {  }
+                
+                return false;
             }
         }
 
