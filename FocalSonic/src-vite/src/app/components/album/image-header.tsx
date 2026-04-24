@@ -14,7 +14,8 @@ import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import hexToCssFilter from "@/utils/hexToCssFilter.js";
 import CoverArtImage from "../cover-art";
 import BasicGradientHeader from "../ui/Backgrounds/BasicGradientHeader";
-import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
+import BlurredHeader from "../ui/Backgrounds/BlurredHeader";
+import DarkVeil from "../ui/Backgrounds/DarkVeil";
 import { AlbumArtistInfo } from "./artists";
 
 export interface ImageHeaderProps {
@@ -99,9 +100,10 @@ export default function ImageHeader({
             );
             break;
         case "gradient":
-            HeaderEffect = (
-                <BasicGradientHeader bgColor={bgColor} />
-            );
+            HeaderEffect = (<BasicGradientHeader loaded={!!bgColor} bgColor={bgColor} />);
+            break;
+        case "blur":
+            HeaderEffect = (<BlurredHeader loaded={!!bgColor} bgImage={getCoverArtUrl(coverArtId, coverArtType, coverArtSize)} />);
             break;
         default:
             HeaderEffect = null;

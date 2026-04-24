@@ -85,7 +85,7 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                             state.playlistPageStyle = style;
                         });
                     },
-                    albumPageStyle: "gradient",
+                    albumPageStyle: "blur",
                     setAlbumPageStyle(style: SongPageStyle) {
                         set((state) => {
                             state.albumPageStyle = style;

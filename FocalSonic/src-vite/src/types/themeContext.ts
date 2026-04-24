@@ -25,7 +25,7 @@ export enum Theme {
     Classic = "classic",
 }
 
-export type SongPageStyle = "darkveil" | "gradient";
+export type SongPageStyle = "darkveil" | "gradient" | "blur";
 
 export interface IThemeContext {
     theme: Theme
