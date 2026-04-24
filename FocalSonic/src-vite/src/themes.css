@@ -35,7 +35,7 @@
     --border: color-mix(in lch, var(--system-background), var(--origin-color-flipped) 10%);
     --input: color-mix(in lch, var(--system-background), var(--origin-color-flipped) 15%);
     --body: color-mix(in hsl, var(--system-body), var(--origin-color) 20%);
-    --bar: color-mix(in srgb, transparent, var(--origin-color) 50%);
+    --bar: color-mix(in srgb, var(--system-body), var(--origin-color) 50%);
     --ring: var(--system-accent-override, var(--system-accent));
   }
 
