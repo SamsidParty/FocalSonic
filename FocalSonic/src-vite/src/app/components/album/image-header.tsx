@@ -6,12 +6,14 @@ import { getCoverArtUrl } from "@/api/httpClient";
 import { BadgesData, HeaderInfoGenerator } from "@/app/components/header-info";
 import { CustomLightBox } from "@/app/components/lightbox";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/store/theme.store";
 import { CoverArt } from "@/types/coverArtType";
 import { IFeaturedArtist } from "@/types/responses/artist";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import hexToCssFilter from "@/utils/hexToCssFilter.js";
 import CoverArtImage from "../cover-art";
+import BasicGradientHeader from "../ui/Backgrounds/BasicGradientHeader";
 import DarkVeil from "../ui/Backgrounds/DarkVeil/DarkVeil";
 import { AlbumArtistInfo } from "./artists";
 
@@ -49,6 +51,7 @@ export default function ImageHeader({
     const [open, setOpen] = useState(false);
     const [bgColor, setBgColor] = useState("");
     const [bgEffectStyle, setBgEffectStyle] = useState(null);
+    const { albumPageStyle } = useTheme();
 
     function getImage() {
         return document.getElementById("cover-art-image") as HTMLImageElement;
@@ -83,6 +86,28 @@ export default function ImageHeader({
 
     const hasMultipleArtists = artists ? artists.length > 1 : false;
 
+    let HeaderEffect;
+    switch (albumPageStyle) {
+        case "darkveil":
+            HeaderEffect = (
+                <DarkVeil
+                    style={{ filter: bgEffectStyle!, opacity: (!bgEffectStyle ? "0" : "1") }}
+                    className="transition-opacity duration-1000"
+                    speed={2}
+                    warpAmount={5}
+                />
+            );
+            break;
+        case "gradient":
+            HeaderEffect = (
+                <BasicGradientHeader bgColor={bgColor} />
+            );
+            break;
+        default:
+            HeaderEffect = null;
+            break;
+    }
+
     return (
         <div
             className="flex relative w-full h-[calc(3rem+200px)] 2xl:h-[calc(3rem+250px)]"
@@ -94,14 +119,14 @@ export default function ImageHeader({
                     "w-full px-8 py-6 flex gap-4 absolute inset-0",
                 )}
             >
-                <DarkVeil style={{ filter: bgEffectStyle!, opacity: (!bgEffectStyle ? "0" : "1") }} className="transition-opacity duration-1000" speed={2} warpAmount={5}></DarkVeil>
+                {HeaderEffect}
 
                 <div
                     className={cn(
                         "w-[200px] h-[200px] min-w-[200px] min-h-[200px]",
                         "2xl:w-[250px] 2xl:h-[250px] 2xl:min-w-[250px] 2xl:min-h-[250px]",
                         "bg-skeleton aspect-square bg-cover bg-center rounded",
-                        "shadow-header-image overflow-hidden z-10",
+                        "shadow-sm overflow-hidden z-10",
                         "hover:scale-[1.02] ease-linear duration-100",
                     )}
                 >

@@ -1,4 +1,4 @@
-import { IThemeContext, Theme } from "@/types/themeContext";
+import { IThemeContext, SongPageStyle, Theme } from "@/types/themeContext";
 import merge from "lodash/merge";
 import { useEffect, useState } from "react";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
@@ -78,7 +78,19 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                         set((state) => {
                             state.coverflowStyle = style;
                         });
-                    }
+                    },
+                    playlistPageStyle: "darkveil",
+                    setPlaylistPageStyle(style: SongPageStyle) {
+                        set((state) => {
+                            state.playlistPageStyle = style;
+                        });
+                    },
+                    albumPageStyle: "gradient",
+                    setAlbumPageStyle(style: SongPageStyle) {
+                        set((state) => {
+                            state.albumPageStyle = style;
+                        });
+                    },
                 })),
                 {
                     name: "theme_store",
