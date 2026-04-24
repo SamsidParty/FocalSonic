@@ -1,4 +1,3 @@
-import { PauseIcon, PlayIcon } from "lucide-react";
 import { EqualizerBars } from "@/app/components/icons/equalizer-bars";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -7,6 +6,7 @@ import {
     usePlayerMediaType,
     usePlayerSonglist,
 } from "@/store/player.store";
+import { PauseIcon, PlayIcon } from "lucide-react";
 
 interface PlaySongButtonProps {
     trackNumber: number
@@ -56,9 +56,9 @@ export default function PlaySongButton({
                 </div>
             )}
             {isCurrentSongPlaying() && isPlaying && (
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative w-full h-full flex items-center justify-center ">
                     <div className="absolute opacity-100 group-hover/tablerow:opacity-0 w-8 h-8 flex items-center">
-                        <div className="w-8 h-8 flex items-center justify-center">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-background-foreground">
                             <EqualizerBars size={18} className="mb-1" />
                         </div>
                     </div>
@@ -82,7 +82,7 @@ export default function PlaySongButton({
             )}
             {!isCurrentSongPlaying() && (
                 <>
-                    <div className="group-hover/tablerow:hidden w-8 h-8 flex items-center justify-center">
+                    <div className="group-hover/tablerow:hidden w-8 h-8 rounded-full bg-background-foreground flex items-center justify-center">
                         {trackNumber}
                     </div>
                     <div className="hidden group-hover/tablerow:block">
