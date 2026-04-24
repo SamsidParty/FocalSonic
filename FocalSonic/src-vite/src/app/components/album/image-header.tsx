@@ -12,6 +12,7 @@ import { IFeaturedArtist } from "@/types/responses/artist";
 import { getAverageColor } from "@/utils/getAverageColor";
 import { getTextSizeClass } from "@/utils/getTextSizeClass";
 import hexToCssFilter from "@/utils/hexToCssFilter.js";
+import { createPortal } from "react-dom";
 import CoverArtImage from "../cover-art";
 import BasicGradientHeader from "../ui/Backgrounds/BasicGradientHeader";
 import BlurredHeader from "../ui/Backgrounds/BlurredHeader";
@@ -52,7 +53,7 @@ export default function ImageHeader({
     const [open, setOpen] = useState(false);
     const [bgColor, setBgColor] = useState("");
     const [bgEffectStyle, setBgEffectStyle] = useState(null);
-    const { albumPageStyle } = useTheme();
+    const { songPageStyle } = useTheme();
 
     function getImage() {
         return document.getElementById("cover-art-image") as HTMLImageElement;
@@ -88,7 +89,7 @@ export default function ImageHeader({
     const hasMultipleArtists = artists ? artists.length > 1 : false;
 
     let HeaderEffect;
-    switch (albumPageStyle) {
+    switch (songPageStyle) {
         case "darkveil":
             HeaderEffect = (
                 <DarkVeil
@@ -101,6 +102,9 @@ export default function ImageHeader({
             break;
         case "gradient":
             HeaderEffect = (<BasicGradientHeader loaded={!!bgColor} bgColor={bgColor} />);
+            break;
+        case "fullscreen-gradient":
+            HeaderEffect = createPortal(<BasicGradientHeader loaded={!!bgColor} bgColor={bgColor} />, document.querySelector(".app-inner")!);
             break;
         case "blur":
             HeaderEffect = (<BlurredHeader loaded={!!bgColor} bgImage={getCoverArtUrl(coverArtId, coverArtType, coverArtSize)} />);
@@ -115,7 +119,7 @@ export default function ImageHeader({
             className="flex relative w-full h-[calc(3rem+200px)] 2xl:h-[calc(3rem+250px)]"
             key={`header-${coverArtId}`}
         >
-            
+
             <div
                 className={cn(
                     "w-full px-8 py-6 flex gap-4 absolute inset-0",

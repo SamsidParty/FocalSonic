@@ -25,7 +25,7 @@ export enum Theme {
     Classic = "classic",
 }
 
-export type SongPageStyle = "darkveil" | "gradient" | "blur";
+export type SongPageStyle = "darkveil" | "gradient" | "fullscreen-gradient" | "blur" | "none";
 
 export interface IThemeContext {
     theme: Theme
@@ -48,8 +48,6 @@ export interface IThemeContext {
     setAccentColor: (color: string) => void
     coverflowStyle: "modern" | "classic",
     setCoverflowStyle: (style: "modern" | "classic") => void,
-    playlistPageStyle: SongPageStyle
-    setPlaylistPageStyle: (style: SongPageStyle) => void,
-    albumPageStyle: SongPageStyle
-    setAlbumPageStyle: (style: SongPageStyle) => void,
+    songPageStyle: SongPageStyle
+    setSongPageStyle: (style: SongPageStyle) => void,
 }

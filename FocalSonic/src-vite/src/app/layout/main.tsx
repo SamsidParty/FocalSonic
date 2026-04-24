@@ -40,7 +40,7 @@ export function MainRoutes() {
                     isPlayerAtTop ? "mt-[calc(var(--player-height)+var(--header-height))]" : "mb-player mt-header"
                 )}
             />
-            <div className="relative overflow-hidden flex h-full w-full rounded-md mr-3">
+            <div className="relative overflow-hidden flex h-full w-full rounded-md mr-3 app-inner">
                 <ScrollArea
                     id="main-scroll-area"
                     className={clsx(

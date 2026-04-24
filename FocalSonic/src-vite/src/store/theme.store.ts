@@ -79,16 +79,10 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                             state.coverflowStyle = style;
                         });
                     },
-                    playlistPageStyle: "darkveil",
-                    setPlaylistPageStyle(style: SongPageStyle) {
+                    songPageStyle: "fullscreen-gradient",
+                    setSongPageStyle(style: SongPageStyle) {
                         set((state) => {
-                            state.playlistPageStyle = style;
-                        });
-                    },
-                    albumPageStyle: "blur",
-                    setAlbumPageStyle(style: SongPageStyle) {
-                        set((state) => {
-                            state.albumPageStyle = style;
+                            state.songPageStyle = style;
                         });
                     },
                 })),

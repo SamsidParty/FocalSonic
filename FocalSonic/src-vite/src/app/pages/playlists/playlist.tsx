@@ -15,7 +15,6 @@ import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
