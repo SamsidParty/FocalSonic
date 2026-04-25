@@ -37,11 +37,13 @@ public class Program
             return; // Now the window will open on the main process
         }
 
-        // Needed for background playback with Apple Music
-        Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--autoplay-policy=no-user-gesture-required --disable-features=HardwareMediaKeyHandling");
-
         DesktopPlatformManager.Activate();
         App = new ViteAppManager();
+
+        // Needed for background playback with Apple Music
+        App.BrowserFlags.Add("--autoplay-policy=no-user-gesture-required");
+        App.BrowserFlags.Add("--no-user-gesture-required");
+        App.BrowserFlags.Add("--disable-features=HardwareMediaKeyHandling");
 
         App.RegisterDynamicFileRoute("/show-window", async (HttpContextBase ctx) => { CreateMainWindow(); }, WatsonWebserver.Core.HttpMethod.GET);
 

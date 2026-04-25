@@ -15,7 +15,7 @@ declare global {
 if (window.location.href.includes("music.apple.com")) {
     startTokenGrabber();
 }
-else if (window.location.href.includes("proxy.html") || (window.igniteView?.platformHints?.includes("linux"))) {
+else if (window.location.href.includes("proxy.html")) {
     window.virtualMusicKit = new MusicKit();
     if (!window.injectedQueue) { window.injectedQueue = []; }
 

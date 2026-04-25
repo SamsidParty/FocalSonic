@@ -21,10 +21,6 @@ async function checkAuthState() {
         window.foundDeveloperToken = music.developerToken;
         await window.igniteView?.commandBridge.saveAppleMusicDeveloperKey(music.developerToken);
 
-        if (window.igniteView?.platformHints?.includes("linux")) {
-            await window.igniteView?.commandBridge.transferAppleMusicProxyToMainWindow();
-        }
-
         window.location.href = window.igniteView?.resolverURL.replace("/dynamic", "/meta/applemusic/proxy.html");
     }
 }
