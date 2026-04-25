@@ -46,12 +46,10 @@ namespace FocalSonic.AppleMusic
                     .WithPlatformBasedAdditions()
                     .WithSharedContext("AppleMusicWindow", "");
 
-                // Since we're serving from apple.com instead of localhost, interop needs to be setup manually
-                ProxyWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
                 InitializeProxy(ProxyWindow);
             });
         }
-
+ 
         public static void InitializeProxy(WebWindow ctx)
         {
             ctx.ExecuteJavaScript(
@@ -305,7 +303,6 @@ namespace FocalSonic.AppleMusic
                     .WithSharedContext("AppleMusicSignIn", "")
                     .Show();
 
-                signInWindow.ExecuteJavaScript(ScriptManager.CombinedScriptData);
                 signInWindow.ExecuteJavaScript(Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/signin.js"));
             });
         }

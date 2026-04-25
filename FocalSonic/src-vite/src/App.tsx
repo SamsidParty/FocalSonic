@@ -7,10 +7,9 @@ import { UpdateObserver } from "@/app/observers/update-observer";
 import { Mobile } from "@/app/pages/mobile";
 import { router } from "@/routes/router";
 import { isTauri } from "@/utils/tauriTools";
-import React from "react";
 import { isDesktop } from "react-device-detect";
 import { RouterProvider } from "react-router-dom";
-import AppleMusicLoader from "./app/components/fallbacks/apple-music-loader";
+import InitialLoader from "./app/components/fallbacks/initial-loader";
 import DefaultTitlebar from "./app/components/header/default-titlebar";
 import { useAppStore } from "./store/app.store";
 
@@ -39,9 +38,7 @@ function Loader() {
         <div className="flex flex-col w-screen h-screen">
             <DefaultTitlebar />
             <main className="flex flex-col w-full h-full justify-center items-center bg-body">
-                {
-                    serverType === "applemusic" && <AppleMusicLoader/>
-                }
+                <InitialLoader/>
             </main>
         </div>
     );

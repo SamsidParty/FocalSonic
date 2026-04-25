@@ -59,7 +59,7 @@ namespace FocalSonic.Persistence
         {
             try
             {
-                return LocalStorage.GetItem(StorageKey, StorageNamespace);
+                return LocalStorage.GetItem(StorageKey, StorageNamespace).Result;
             }
             catch { }
             return string.Empty;

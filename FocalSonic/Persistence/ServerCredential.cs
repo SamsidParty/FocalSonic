@@ -41,7 +41,7 @@ namespace FocalSonic.Persistence
         {
             try
             {
-                var data = LocalStorage.GetItem("credentials", $"profile_{id}");
+                var data = LocalStorage.GetItem("credentials", $"profile_{id}").Result;
 
                 if (!string.IsNullOrEmpty(data))
                 {
@@ -62,16 +62,16 @@ namespace FocalSonic.Persistence
             // Try to migrate credentials from the old format
             try
             {
-                if (currentCredentials == null && !string.IsNullOrEmpty(LocalStorage.GetItem("applemusic_media_user_token", "default")))
+                if (currentCredentials == null && !string.IsNullOrEmpty(LocalStorage.GetItem("applemusic_media_user_token", "default").Result))
                 {
                     var newCredentials = new ServerCredential(currentID);
                     newCredentials.ServerType = "applemusic";
                     newCredentials.AuthType = "token";
                     newCredentials.URL = "applemusic";
                     newCredentials.Username = "Apple Music";
-                    newCredentials.Password = LocalStorage.GetItem("applemusic_media_user_token", "default");
-                    newCredentials.DeveloperToken = LocalStorage.GetItem("applemusic_developer_token", "default");
-                    newCredentials.Region = LocalStorage.GetItem("applemusic_region", "default");
+                    newCredentials.Password = LocalStorage.GetItem("applemusic_media_user_token", "default").Result;
+                    newCredentials.DeveloperToken = LocalStorage.GetItem("applemusic_developer_token", "default").Result;
+                    newCredentials.Region = LocalStorage.GetItem("applemusic_region", "default").Result;
                     newCredentials.Save();
 
                     // Delete the old ones

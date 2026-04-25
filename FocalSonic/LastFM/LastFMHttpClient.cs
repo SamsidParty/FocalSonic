@@ -48,7 +48,7 @@ namespace FocalSonic.LastFM
             parameters["format"] = "json"; // Aint nobody wanna parse XML its not 2008 anymore
 
             // Insert secret keys
-            parameters["sk"] = LocalStorage.GetItem("lastfm_session_key", "default");
+            parameters["sk"] = LocalStorage.GetItem("lastfm_session_key", "default").Result;
             parameters["api_key"] = LastFMConstants.APIKey;
 
             // Sign the request

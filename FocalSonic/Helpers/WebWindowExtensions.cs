@@ -17,7 +17,7 @@ namespace FocalSonic.Helpers
 
             try
             {
-                var vibrancyMode = LocalStorage.GetItem("vibrancy", "windows");
+                var vibrancyMode = LocalStorage.GetItem("vibrancy", "windows").Result;
 
                 if (vibrancyMode == "acrylic")
                 {

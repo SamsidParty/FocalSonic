@@ -155,4 +155,5 @@ window.executeInjectedQueue = async () => {
     await window.igniteView?.commandBridge.appleMusicRecieveTimeUpdate(window.proxyMusicInstance.isPlaying, getAudioElement()?.currentTime || 0, window.proxyMusicInstance.currentPlaybackDuration);
 };
 
+console.log("[FocalSonic][Apple Music Proxy] Injected");
 setInterval(window.executeInjectedQueue, 250);

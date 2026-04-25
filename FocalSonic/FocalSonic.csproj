@@ -9,6 +9,7 @@
 	 <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
 	 <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
 	 <IsMac Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsMac>
+	 <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
 
@@ -28,13 +29,21 @@
 	<PropertyGroup Condition="'$(IsMac)'=='true'">
 		<DefineConstants>MACOS</DefineConstants>
 	</PropertyGroup>
-	
+
 	<!-- IgniteView -->
+	<ItemGroup Condition="'$(Configuration)'=='Local Debug'">
+		<ProjectReference Include="..\..\WebFramework\IgniteView.Core\IgniteView.Core.csproj" />
+		<ProjectReference Include="..\..\WebFramework\IgniteView.Desktop\IgniteView.Desktop.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)'!='Local Debug'">
+		<PackageReference Include="IgniteView.Desktop" Version="2.2.7" />
+		<PackageReference Include="IgniteView.Core" Version="*" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="GoogleCast" Version="1.7.0" />
-		<PackageReference Include="IgniteView.Desktop" Version="2.2.5" />
-		<PackageReference Include="IgniteView.Core" Version="*" />
 		<PackageReference Include="SoundFlow" Version="1.2.0" />
 		<PackageReference Include="System.Drawing.Common" Version="9.0.8" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />

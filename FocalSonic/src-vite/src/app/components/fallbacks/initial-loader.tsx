@@ -2,7 +2,7 @@ import { useSignOut } from "@/store/app.store";
 import { t } from "i18next";
 import { useEffect, useState } from "react";
 
-export default function AppleMusicLoader() {
+export default function InitialLoader() {
 
     const [loadingIsStuck, setLoadingIsStuck] = useState(false);
     const signOut = useSignOut();

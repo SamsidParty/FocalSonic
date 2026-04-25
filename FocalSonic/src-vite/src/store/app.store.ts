@@ -296,6 +296,9 @@ export const useAppArtistsViewType = () =>
     });
 
 export const waitForAppHydration = async () => {
+
+    if (!window.igniteView) return;
+
     // Wait until the app store has rehydrated before accessing its state
     if (!useAppStore.getState().data.isHydrated) {
         await new Promise<void>((resolve) => {
