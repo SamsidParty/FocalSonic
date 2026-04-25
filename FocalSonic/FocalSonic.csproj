@@ -69,6 +69,12 @@
 			<PackageCopyToOutput>true</PackageCopyToOutput>
 		</Content>
 	</ItemGroup>
+	<ItemGroup Condition="'$(IsLinux)'=='true'">
+		<Content Include="src-vite\public\favicons\favicon-32x32.png" Link="iv2runtime\focalsonic-tray.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<PackageCopyToOutput>true</PackageCopyToOutput>
+		</Content>
+	</ItemGroup>
 	<ItemGroup>
 	  <Content Remove="C:\Users\Samarth\.nuget\packages\igniteview.desktop\2.2.5\contentFiles\any\net9.0\iv2runtime\linux-arm64\native\libIgniteView.Desktop.Native.so" />
 	  <Content Remove="C:\Users\Samarth\.nuget\packages\igniteview.desktop\2.2.5\contentFiles\any\net9.0\iv2runtime\linux-x64\native\libIgniteView.Desktop.Native.so" />

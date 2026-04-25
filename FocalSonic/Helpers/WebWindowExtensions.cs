@@ -39,9 +39,18 @@ namespace FocalSonic.Helpers
             catch { }
 
             return window
-                .With((w) => { if (w is DesktopWebWindow) (w as DesktopWebWindow)!.AcrylicBackground = true; })
+                .With((w) => { if (w is DesktopWebWindow) SetOptionalProperty(w, "AcrylicBackground", true); })
                 .With((w) => { if (PlatformManager.HasPlatformHint("win32")) w.WithoutTitleBar(); })
                 .With((w) => { if (w is Win32WebWindow) (w as Win32WebWindow)!.BackgroundMode = mode; });
+        }
+
+        private static void SetOptionalProperty(WebWindow window, string propertyName, object value)
+        {
+            var property = window.GetType().GetProperty(propertyName);
+            if (property?.CanWrite == true)
+            {
+                property.SetValue(window, value);
+            }
         }
 
         [Command("setWindowVibrancy")]

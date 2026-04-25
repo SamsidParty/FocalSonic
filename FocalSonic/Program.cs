@@ -41,9 +41,9 @@ public class Program
         App = new ViteAppManager();
 
         // Needed for background playback with Apple Music
-        App.BrowserFlags.Add("--autoplay-policy=no-user-gesture-required");
-        App.BrowserFlags.Add("--no-user-gesture-required");
-        App.BrowserFlags.Add("--disable-features=HardwareMediaKeyHandling");
+        AddBrowserFlag("--autoplay-policy=no-user-gesture-required");
+        AddBrowserFlag("--no-user-gesture-required");
+        AddBrowserFlag("--disable-features=HardwareMediaKeyHandling");
 
         App.RegisterDynamicFileRoute("/show-window", async (HttpContextBase ctx) => { CreateMainWindow(); }, WatsonWebserver.Core.HttpMethod.GET);
 
@@ -72,10 +72,13 @@ public class Program
         Presence.Setup();
         OverrideManager.Setup();
 
-        #if WINDOWS
+    #if WINDOWS
         WPFStyling.Setup();
         TrayIcon.Setup();
-        #endif
+    #elif LINUX
+        LinuxAppLifetime.Setup();
+        LinuxTrayIcon.Setup();
+    #endif
 
         CreateMainWindow();
 
@@ -83,12 +86,6 @@ public class Program
         while (true)
         {
             App.Run();
-
-            #if !WINDOWS
-            // Only windows has background playback support for now
-            // On other platforms just exit when the main window is closed
-            break;
-            #endif
         }
     }
 
@@ -153,5 +150,14 @@ public class Program
             File.WriteAllText(LockFilePath, serverURL);
         }
         catch { }
+    }
+
+    private static void AddBrowserFlag(string flag)
+    {
+        var browserFlagsProperty = App.GetType().GetProperty("BrowserFlags");
+        if (browserFlagsProperty?.GetValue(App) is ICollection<string> browserFlags)
+        {
+            browserFlags.Add(flag);
+        }
     }
 }
