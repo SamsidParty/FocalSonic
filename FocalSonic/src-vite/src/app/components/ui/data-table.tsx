@@ -16,7 +16,9 @@ import clsx from "clsx";
 import { Disc2Icon, XIcon } from "lucide-react";
 import {
     Fragment,
+    useCallback,
     useMemo,
+    useRef,
     useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,10 +31,11 @@ import { ColumnDefType } from "@/types/react-table/columnDef";
 import { getDataTableContextMenuOptions } from "./data-table-context-menu";
 import { TableRow } from "./data-table-row";
 import { useDataTableRowInteractions } from "./use-data-table-row-interactions";
+import { useDataTableTypeAhead } from "./use-data-table-typeahead";
 
 declare module "@tanstack/react-table" {
     interface TableMeta<TData extends RowData> {
-        handlePlaySong: ((row: Row<TData>) => void) | undefined
+        handlePlaySong?: (row: Row<TData>) => void
     }
     interface SortingFns {
         customSortFn: SortingFn<unknown>
@@ -80,6 +83,7 @@ export function DataTable<TData, TValue>({
     const [columnSearch, setColumnSearch] = useState<ColumnFiltersState>([]);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+    const tableRootRef = useRef<HTMLDivElement>(null);
 
     const isClassic = variant === "classic";
     const isModern = variant === "modern";
@@ -118,6 +122,26 @@ export function DataTable<TData, TValue>({
     });
 
     const { rows } = table.getRowModel();
+
+    const handleTypeAheadMatch = useCallback((row: Row<TData>) => {
+        tableRootRef.current
+            ?.querySelector(`[data-row-index="${row.index}"]`)
+            ?.scrollIntoView({ block: "center" });
+    }, []);
+
+    const {
+        handleTypeAheadKeyDown,
+        handleTypeAheadMouseEnter,
+        handleTypeAheadMouseDown,
+        typeAheadRowId,
+    } = useDataTableTypeAhead({
+        allowRowSelection,
+        enabled: dataType === "song",
+        getItemText: (row) => String((row.original as { title?: unknown }).title ?? ""),
+        onMatch: handleTypeAheadMatch,
+        rows,
+        setRowSelection,
+    });
 
     const {
         handleClicks,
@@ -198,10 +222,16 @@ export function DataTable<TData, TValue>({
                 <div
                     className={clsx(
                         "relative w-full overflow-hidden rounded-md cursor-default caption-bottom text-sm",
+                        "focus:outline-none",
                         isClassic ? "bg-background" : "bg-transparent",
                     )}
                     data-testid="data-table"
+                    onKeyDown={handleTypeAheadKeyDown}
+                    onMouseEnter={handleTypeAheadMouseEnter}
+                    onMouseDown={handleTypeAheadMouseDown}
+                    ref={tableRootRef}
                     role="table"
+                    tabIndex={dataType === "song" ? 0 : undefined}
                 >
                     {showHeader && (
                         <div>
@@ -275,6 +305,7 @@ export function DataTable<TData, TValue>({
                                             })}
                                             isPrevRowSelected={isPrevRowSelected}
                                             isNextRowSelected={isNextRowSelected}
+                                            isTypeAheadMatch={row.id === typeAheadRowId}
                                             variant={variant}
                                             dataType={dataType}
                                             onClick={(e) => handleClicks(e, row)}

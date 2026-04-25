@@ -11,26 +11,35 @@ export function MainRoutes() {
     const { pathname } = useLocation() as Location;
     const { sidebarOpen, extraBarContent } = useAppStore().settings;
     const { isPlayerAtTop, playerStyle } = usePlayerStyle();
+    const mainRef = useRef<HTMLElement>(null);
     const animationRef = useRef<HTMLDivElement>(null);
 
 
     useEffect(() => {
         scrollPageToTop();
+        const animationFrame = requestAnimationFrame(() => {
+            mainRef.current?.focus({ preventScroll: true });
+        });
 
         if (animationRef?.current) {
             animationRef.current.style.animation = "mainPageAnimation 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards";
         }
+
+        return () => cancelAnimationFrame(animationFrame);
     }, [pathname]);
 
     return (
-        <main className={
-            clsx(
-                "flex h-full transition-[padding-left,transform,padding-right] duration-500 ease-long",
-                sidebarOpen ? "pl-sidebar" : "pl-mini-sidebar",
-                (extraBarContent != "none") ? "pr-sidebar" : "pr-0",
-                isPlayerAtTop ? "pt-[calc(var(--player-height)+var(--header-height))]" : "pb-player pt-header"
-            )
-        }
+        <main
+            ref={mainRef}
+            className={
+                clsx(
+                    "flex h-full transition-[padding-left,transform,padding-right] duration-500 ease-long focus:outline-none",
+                    sidebarOpen ? "pl-sidebar" : "pl-mini-sidebar",
+                    (extraBarContent != "none") ? "pr-sidebar" : "pr-0",
+                    isPlayerAtTop ? "pt-[calc(var(--player-height)+var(--header-height))]" : "pb-player pt-header"
+                )
+            }
+            tabIndex={-1}
         >
             <div className={
                 clsx(

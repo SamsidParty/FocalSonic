@@ -38,11 +38,12 @@ import { DataTableListHeader } from "./data-table-list-header";
 import { TableListRow } from "./data-table-list-row";
 import { ScrollArea, scrollAreaViewportSelector } from "./scroll-area";
 import { useDataTableRowInteractions } from "./use-data-table-row-interactions";
+import { useDataTableTypeAhead } from "./use-data-table-typeahead";
 
 declare module "@tanstack/react-table" {
     interface TableMeta<TData extends RowData> {
-        handlePlaySong: ((row: Row<TData>) => void) | undefined
-        handleLeftClick: ((row: Row<TData>) => void) | undefined
+        handlePlaySong?: (row: Row<TData>) => void
+        handleLeftClick?: (row: Row<TData>) => void
     }
 }
 
@@ -122,6 +123,7 @@ export function DataTableList<TData, TValue>({
     });
 
     const { rows } = table.getRowModel();
+
     const {
         handleClicks,
         handleRowDoubleClick,
@@ -165,6 +167,29 @@ export function DataTableList<TData, TValue>({
         getScrollElement,
         estimateSize,
         overscan: 5,
+    });
+
+    const handleTypeAheadMatch = useCallback(
+        (row: Row<TData>) => {
+            virtualizer.scrollToIndex(row.index, {
+                align: "center",
+            });
+        },
+        [virtualizer],
+    );
+
+    const {
+        handleTypeAheadKeyDown,
+        handleTypeAheadMouseEnter,
+        handleTypeAheadMouseDown,
+        typeAheadRowId,
+    } = useDataTableTypeAhead({
+        allowRowSelection,
+        enabled: dataType === "song",
+        getItemText: (row) => String((row.original as { title?: unknown }).title ?? ""),
+        onMatch: handleTypeAheadMatch,
+        rows,
+        setRowSelection,
     });
 
     const handleScroll = useCallback(() => {
@@ -266,6 +291,7 @@ export function DataTableList<TData, TValue>({
                     dataType={dataType}
                     pageType={pageType}
                     allowRowReorder={allowRowReorder}
+                    isTypeAheadMatch={row.id === typeAheadRowId}
                 />
             );
         })
@@ -283,9 +309,13 @@ export function DataTableList<TData, TValue>({
     return (
         <div className="h-full">
             <div
-                className={clsx("relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent")}
+                className={clsx("relative w-full h-full overflow-hidden cursor-default caption-bottom text-sm bg-transparent focus:outline-none")}
                 data-testid="data-table"
+                onKeyDown={handleTypeAheadKeyDown}
+                onMouseEnter={handleTypeAheadMouseEnter}
+                onMouseDown={handleTypeAheadMouseDown}
                 role="table"
+                tabIndex={dataType === "song" ? 0 : undefined}
             >
                 <div className={clsx(!showHeader && "hidden")}>
                     {table.getHeaderGroups().map((headerGroup) => (

@@ -110,6 +110,10 @@ module.exports = {
                     from: { transform: "scale(1.05)", opacity: 0 },
                     to: { transform: "scale(1)", opacity: 1 },
                 },
+                "highlight-flash": {
+                    "0%": { backgroundColor: "var(--primary)" },
+                    "100%": { backgroundColor: "transparent" },
+                },
             },
             animation: {
                 "accordion-down": "accordion-down 0.2s ease-out",
@@ -117,7 +121,8 @@ module.exports = {
                 marquee: "marquee var(--tw-marquee-time) linear 2s infinite",
                 "slide-down": "slide-down 0.3s ease-out",
                 "slide-up": "slide-up 0.3s ease-out",
-                "pop-in": "pop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1)"
+                "pop-in": "pop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+                "highlight-flash": "highlight-flash 1400ms -500ms ease-out",
             },
             gridTemplateColumns: {
                 player: "var(--grid-player)",

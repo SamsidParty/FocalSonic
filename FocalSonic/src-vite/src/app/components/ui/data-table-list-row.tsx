@@ -24,6 +24,7 @@ interface TableRowProps<TData> {
     dataType?: "song" | "artist" | "playlist" | "radio" | "album"
     pageType?: "general" | "queue" | "queue-small"
     allowRowReorder?: boolean
+    isTypeAheadMatch?: boolean
 }
 
 const animateLayoutChanges: AnimateLayoutChanges = (args) => {
@@ -47,6 +48,7 @@ export function TableListRow<TData>({
     dataType = "song",
     pageType = "general",
     allowRowReorder = false,
+    isTypeAheadMatch = false,
 }: TableRowProps<TData>) {
     const currentSong = usePlayerCurrentSong();
     const sortableId = allowRowReorder
@@ -78,6 +80,7 @@ export function TableListRow<TData>({
                 data-test-id="table-row"
                 data-row-index={virtualRow.index}
                 data-state={row.getIsSelected() && "selected"}
+                data-typeahead-match={isTypeAheadMatch ? "true" : undefined}
                 onClick={(e) => handleClicks(e, row)}
                 onDoubleClick={(e) => handleRowDbClick(e, row)}
                 onTouchStart={handleTouchStart}
@@ -90,6 +93,8 @@ export function TableListRow<TData>({
                 className={clsx(
                     "group/tablerow w-[calc(100%-10px)] flex flex-row transition-[background-color,transform,box-shadow,opacity]",
                     "data-[state=selected]:bg-foreground/30 hover:bg-foreground/20",
+                    "data-[typeahead-match=true]:bg-foreground/30 data-[typeahead-match=true]:animate-highlight-flash",
+                    "data-[typeahead-match=true]:[&_a]:text-foreground data-[typeahead-match=true]:[&_span]:text-foreground",
                     isQueue && "rounded-md",
                     allowRowReorder && "cursor-grab active:cursor-grabbing",
                     isRowSongActive && "row-active bg-foreground/20",

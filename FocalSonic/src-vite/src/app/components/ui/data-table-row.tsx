@@ -11,6 +11,7 @@ interface RowProps<TData> extends ComponentPropsWithoutRef<"div"> {
     contextMenuOptions: ReactNode
     isPrevRowSelected: (rowIndex: number) => boolean
     isNextRowSelected: (rowIndex: number) => boolean
+    isTypeAheadMatch?: boolean
     variant?: "classic" | "modern"
     dataType?: "song" | "artist" | "playlist" | "radio" | "album"
 }
@@ -23,6 +24,7 @@ export function TableRow<TData>({
     dataType,
     isPrevRowSelected,
     isNextRowSelected,
+    isTypeAheadMatch = false,
     ...props
 }: RowProps<TData>) {
     const currentSong = usePlayerCurrentSong();
@@ -38,7 +40,9 @@ export function TableRow<TData>({
                 {...props}
                 role="row"
                 data-test-id="table-row"
+                data-row-index={index}
                 data-state={row.getIsSelected() && "selected"}
+                data-typeahead-match={isTypeAheadMatch ? "true" : undefined}
                 className={clsx(
                     "group/tablerow w-full flex flex-row transition-colors",
                     isModern &&
@@ -51,6 +55,8 @@ export function TableRow<TData>({
             "rounded-b-md",
                     isModern && !row.getIsSelected() && "rounded-md",
                     "hover:bg-foreground/20 data-[state=selected]:bg-foreground/30",
+                    "data-[typeahead-match=true]:bg-foreground/30] data-[typeahead-match=true]:animate-highlight-flash",
+                    "data-[typeahead-match=true]:[&_a]:text-foreground data-[typeahead-match=true]:[&_span]:text-foreground",
                     isClassic && "border-b",
                     isRowSongActive && isModern && "row-active bg-foreground/20",
                 )}
