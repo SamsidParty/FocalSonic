@@ -209,7 +209,7 @@ export function DataTable<TData, TValue>({
                                 <div
                                     key={headerGroup.id}
                                     className={clsx(
-                                        "w-full flex flex-row border-b",
+                                        "w-full flex flex-row border-b border-black/10",
                                         isModern && "mb-2 border-foreground/20",
                                     )}
                                     role="row"

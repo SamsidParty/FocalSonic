@@ -58,7 +58,7 @@ export default function PlaySongButton({
             {isCurrentSongPlaying() && isPlaying && (
                 <div className="relative w-full h-full flex items-center justify-center ">
                     <div className="absolute opacity-100 group-hover/tablerow:opacity-0 w-8 h-8 flex items-center">
-                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-background-foreground">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full [.queue-small_&]:bg-background-foreground">
                             <EqualizerBars size={18} className="mb-1" />
                         </div>
                     </div>
@@ -82,7 +82,7 @@ export default function PlaySongButton({
             )}
             {!isCurrentSongPlaying() && (
                 <>
-                    <div className="group-hover/tablerow:hidden w-8 h-8 rounded-full bg-background-foreground flex items-center justify-center">
+                    <div className="group-hover/tablerow:hidden w-8 h-8 rounded-full [.queue-small_&]:bg-background-foreground flex items-center justify-center">
                         {trackNumber}
                     </div>
                     <div className="hidden group-hover/tablerow:block">

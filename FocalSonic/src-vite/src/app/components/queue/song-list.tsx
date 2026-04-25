@@ -44,7 +44,7 @@ export function QueueSongList({ small } : { small?: boolean } ) {
     ];
 
     return (
-        <div className={clsx("flex flex-1 flex-col h-full", small ? "max-w-none" : "max-w-[50vw] mx-auto")}>
+        <div className={clsx("flex flex-1 flex-col h-full", small ? "max-w-none queue-small" : "max-w-[50vw] mx-auto")}>
             <h1 className="sr-only">{t("queue.title")}</h1>
             <div className="flex items-center justify-between h-8 mb-2">
                 <div className="flex gap-2 h-6 items-center text-foreground/70">
