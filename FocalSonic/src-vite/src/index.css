@@ -108,7 +108,7 @@
 
 body,
 html {
-  background-color: var(--bar);
+  background-color: var(--system-body);
 }
 
 .Toastify__toast-container {

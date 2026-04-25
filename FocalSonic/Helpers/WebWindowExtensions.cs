@@ -35,15 +35,12 @@ namespace FocalSonic.Helpers
                 {
                     mode = Win32WebWindow.WindowBackgroundMode.BlurBehind;
                 }
-                else if (vibrancyMode == "disabled")
-                {
-                    mode = Win32WebWindow.WindowBackgroundMode.Disabled;
-                }
             }
             catch { }
 
             return window
-                .With((w) => { if (!PlatformManager.HasPlatformHint("macos")) w.WithoutTitleBar(); })
+                .With((w) => { if (w is DesktopWebWindow) (w as DesktopWebWindow)!.AcrylicBackground = true; })
+                .With((w) => { if (PlatformManager.HasPlatformHint("win32")) w.WithoutTitleBar(); })
                 .With((w) => { if (w is Win32WebWindow) (w as Win32WebWindow)!.BackgroundMode = mode; });
         }
 
