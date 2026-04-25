@@ -1,5 +1,11 @@
 import { Resource } from "i18next";
 
+const APPLE_MUSIC_FAVORITE_FALLBACK_DATE = "1970-01-01T00:00:00.000Z";
+
+export function getAppleMusicStarredDate(inFavorites?: boolean, fallbackDate?: string) {
+    return inFavorites === true ? (fallbackDate || APPLE_MUSIC_FAVORITE_FALLBACK_DATE) : undefined;
+}
+
 export interface AppleMusicResource {
     href?: string | undefined;
     id: string;

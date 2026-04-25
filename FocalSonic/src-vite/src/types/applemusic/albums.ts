@@ -1,7 +1,7 @@
 import removeUndefined from "@/utils/removeUndefined";
 import { Resource } from "i18next";
 import { SingleAlbum } from "../responses/album";
-import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
+import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship, getAppleMusicStarredDate } from "./common";
 import { convertAppleMusicSongToSubsonic } from "./song";
 
 export interface AppleMusicAlbum extends Resource {
@@ -46,7 +46,7 @@ export function convertAppleMusicAlbumToSubsonic(album: AppleMusicAlbum): Single
         trackCount: album.attributes?.trackCount || 0,
         coverArt: album.attributes?.artwork?.url || "",
         song: album.relationships?.tracks?.data.map(convertAppleMusicSongToSubsonic) || [],
-        starred: album.attributes?.inFavorites === true ? new Date().toISOString() : undefined,
+        starred: getAppleMusicStarredDate(album.attributes?.inFavorites, album.attributes?.releaseDate),
         comment: album.attributes?.editorialNotes?.standard || "",
         genres: album.attributes?.genreNames?.map(name => ({ name })) || [],
         genre: album.attributes?.genreNames?.filter((g) => g != "Music").join(" / ") || "",

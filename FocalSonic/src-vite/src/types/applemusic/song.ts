@@ -2,7 +2,7 @@ import removeUndefined from "@/utils/removeUndefined";
 import { Resource } from "i18next";
 import { AppleMusicAlbum } from "./albums";
 import { AppleMusicArtist } from "./artist";
-import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicGenre, AppleMusicPlayParams, AppleMusicRelationship } from "./common";
+import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicGenre, AppleMusicPlayParams, AppleMusicRelationship, getAppleMusicStarredDate } from "./common";
 
 export interface AppleMusicLyricsResponse {
     data: AppleMusicLyrics[];
@@ -70,7 +70,7 @@ export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: an
         duration: Math.ceil((song.attributes?.durationInMillis || 0) / 1000),
         suffix: "m4a",
         coverArt: song.attributes?.artwork?.url || "",
-        starred: song.attributes?.inFavorites === true ? new Date().toISOString() : undefined,
+        starred: getAppleMusicStarredDate(song.attributes?.inFavorites, song.attributes?.releaseDate),
         explicitStatus: song.attributes?.contentRating || "clean",
         track: song.attributes?.trackNumber || -1,
         appleMusic: {

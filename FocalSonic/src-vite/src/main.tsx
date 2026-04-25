@@ -1,5 +1,3 @@
-import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -13,11 +11,11 @@ import "@/i18n";
 
 import App from "@/App";
 
-import { queryClient } from "@/lib/queryClient";
+import { persistOptions, queryClient } from "@/lib/queryClient";
 import { blockFeatures } from "@/utils/browser";
 import { isLinux } from "@/utils/osType";
 import { AppWindowProvider } from "./app/hooks/use-app-window";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 
 if (isLinux) {
     import("@/tw-fix-linux.css");
@@ -30,11 +28,11 @@ function main() {
 
     createRoot(document.getElementById("root") as HTMLElement).render(
         <StrictMode>
-            <QueryClientProvider client={queryClient}>
+            <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
                 <AppWindowProvider>
                     <App />
                 </AppWindowProvider>
-            </QueryClientProvider>
+            </PersistQueryClientProvider>
         </StrictMode>,
     );
 

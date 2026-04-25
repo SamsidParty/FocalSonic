@@ -1,6 +1,6 @@
 import removeUndefined from "@/utils/removeUndefined";
 import { Playlist } from "../responses/playlist";
-import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship, AppleMusicResource } from "./common";
+import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicPlayParams, AppleMusicRelationship, AppleMusicResource, getAppleMusicStarredDate } from "./common";
 import { AppleMusicCurator } from "./recommendations";
 import { AppleMusicSong, convertAppleMusicSongToSubsonic } from "./song";
 
@@ -36,6 +36,7 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
     const isFavoritesPlaylist = playlist.attributes?.inFavorites && !playlist.attributes.canEdit && !playlist.attributes.canDelete && !playlist.attributes.isPublic;
     const isPlaylistFolder = playlist?.type?.includes("playlist-folders");
     const id = isPlaylistFolder ? `folder:${playlist.id}` : playlist.id;
+    const lastModifiedDate = playlist.attributes?.lastModifiedDate || "1970-01-01T00:00:00.000Z";
 
     return removeUndefined({
         isDir: true,
@@ -47,10 +48,10 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
         duration: 0, // Duration is not provided in the Apple Music API
         public: playlist.attributes?.isChart || false,
         owner: "",
-        changed: new Date(playlist.attributes?.lastModifiedDate || "").toString() || new Date().toISOString(),
-        created: new Date(playlist.attributes?.lastModifiedDate || "").toString() || new Date().toISOString(),
+        changed: lastModifiedDate,
+        created: lastModifiedDate,
         entry: playlist.relationships?.tracks?.data.map((s) => convertAppleMusicSongToSubsonic(s, playlist.attributes)) || [],
-        starred: playlist.attributes?.inFavorites === true ? new Date().toISOString() : undefined,
+        starred: getAppleMusicStarredDate(playlist.attributes?.inFavorites, lastModifiedDate),
         isFavorites: isFavoritesPlaylist,
         appleMusic: {
             data: playlist?.attributes,
