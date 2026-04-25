@@ -79,7 +79,7 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
                             state.coverflowStyle = style;
                         });
                     },
-                    songPageStyle: "fullscreen-gradient",
+                    songPageStyle: "blur",
                     setSongPageStyle(style: SongPageStyle) {
                         set((state) => {
                             state.songPageStyle = style;

@@ -609,6 +609,19 @@
       "player": {
         "showAtTop": "Player at top",
         "variant": "Player Style",
+        "songPageStyle": "Song Page Style",
+        "songPageStyles": {
+          "darkveil": "Dark Veil",
+          "gradient": "Gradient",
+          "fullscreen-gradient": "Fullscreen Gradient",
+          "blur": "Blur",
+          "none": "None"
+        },
+        "coverflowStyle": "Coverflow Style",
+        "coverflowStyles": {
+          "modern": "Modern",
+          "classic": "Classic"
+        },
         "alternateLyric": "Alternate Lyrics"
       },
       "lyrics": {
