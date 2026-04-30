@@ -29,7 +29,7 @@ namespace FocalSonic
 
             try
             {
-                var licenses = await Context.GetStoreProductsAsync(["Durable", "Consumable"], [ProductID, "9PDC6NWKV4H6"]); // Product ID as well as trial IDs
+                var licenses = await Context.GetStoreProductsAsync(["Durable", "Consumable"], [ProductID]); // Product ID as well as trial IDs
                 foreach (var license in licenses.Products)
                 {
                     if (license.Value.IsInUserCollection)
@@ -45,7 +45,7 @@ namespace FocalSonic
             var trialActivationTime = 0l;
             try
             {
-                trialActivationTime = long.Parse(LocalStorage.GetItem("freetrial", "licensing"));
+                trialActivationTime = long.Parse(LocalStorage.GetItem("freetrial", "licensing").Result);
             }
             catch
             {

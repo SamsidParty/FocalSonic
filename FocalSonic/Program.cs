@@ -41,9 +41,9 @@ public class Program
         App = new ViteAppManager();
 
         // Needed for background playback with Apple Music
-        AddBrowserFlag("--autoplay-policy=no-user-gesture-required");
-        AddBrowserFlag("--no-user-gesture-required");
-        AddBrowserFlag("--disable-features=HardwareMediaKeyHandling");
+        App.BrowserFlags.Add("--autoplay-policy=no-user-gesture-required");
+        App.BrowserFlags.Add("--no-user-gesture-required");
+        App.BrowserFlags.Add("--disable-features=HardwareMediaKeyHandling");
 
         App.RegisterDynamicFileRoute("/show-window", async (HttpContextBase ctx) => { CreateMainWindow(); }, WatsonWebserver.Core.HttpMethod.GET);
 
@@ -150,14 +150,5 @@ public class Program
             File.WriteAllText(LockFilePath, serverURL);
         }
         catch { }
-    }
-
-    private static void AddBrowserFlag(string flag)
-    {
-        var browserFlagsProperty = App.GetType().GetProperty("BrowserFlags");
-        if (browserFlagsProperty?.GetValue(App) is ICollection<string> browserFlags)
-        {
-            browserFlags.Add(flag);
-        }
     }
 }

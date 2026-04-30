@@ -1,11 +1,20 @@
 import { Dialog, DialogContent } from "@/app/components/ui/dialog";
 import { ROUTES } from "@/routes/routesList";
 import { Check, Lock } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { CardDescription, CardHeader, CardTitle } from "./ui/card";
+
+export function PurchaseLicense() {
+    if (window.igniteView?.commandBridge?.purchaseLicense) {
+        window.igniteView?.commandBridge?.purchaseLicense();
+        return;
+    }
+    
+    window.open("https://ko-fi.com/samsidparty");
+}
 
 export function LicenseDialog() {
     const { t } = useTranslation();
@@ -74,7 +83,7 @@ export function LicenseDialog() {
                     </CardHeader>
                     <CardHeader className="flex pt-0">
                         <div className="flex flex-col gap-2">
-                            <Button onClick={() => window.igniteView?.commandBridge?.purchaseLicense()}>{t("license.buyNow", { price: price })}</Button>
+                            <Button onClick={PurchaseLicense}>{t("license.buyNow", { price: price })}</Button>
                             <div className="text-sm text-muted-foreground"><Lock className="inline mr-2 mb-1 h-4 w-4" /> {t("license.feature4")} </div>
                         </div>
                     </CardHeader>

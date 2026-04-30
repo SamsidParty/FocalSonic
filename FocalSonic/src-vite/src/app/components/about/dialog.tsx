@@ -10,8 +10,8 @@ import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
 import { DollarSign, ExternalLink, HeartHandshake, MessagesSquare } from "lucide-react";
-import React from "react";
 import { useTranslation } from "react-i18next";
+import { PurchaseLicense } from "../license";
 
 interface AboutDialogProps {
     open: boolean
@@ -81,10 +81,10 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                     {window.igniteView?.commandBridge?.purchaseLicense && (
                         <button
                             className="group w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 border border-primary/20 hover:border-primary/30 transition-all duration-200 text-sm font-medium"
-                            onClick={() => window.igniteView?.commandBridge?.purchaseLicense()}
+                            onClick={PurchaseLicense}
                         >
                             <DollarSign className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                            <span>Donate</span>
+                            <span>Buy FocalSonic</span>
                             <ExternalLink className="w-3 h-3 text-muted-foreground ml-1" />
                         </button>
                     )}
