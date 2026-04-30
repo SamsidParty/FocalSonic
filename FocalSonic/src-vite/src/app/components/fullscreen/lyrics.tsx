@@ -17,7 +17,6 @@ import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef } fro
 import { useTranslation } from "react-i18next";
 import { areLyricsSynced, areLyricsTTML, convertTTMLToLRC } from "../lyrics/lyric-helpers";
 
-// Move regex patterns outside component to avoid recreation
 const NON_LATIN_REGEX = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Oriya}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Thai}\p{Script=Khmer}\p{Script=Lao}\p{Script=Myanmar}\p{Script=Ethiopic}\p{Script=Georgian}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Yi}]/u;
 
 interface LyricProps {
@@ -103,6 +102,7 @@ function SyncedLyrics(props: LyricProps) {
             if (altLyricsMode === "translation" || altLyricsMode === "transliteration") {
                 const lines = lyrics!.split("\n");
                 let needsTranslation = false;
+                let linesWithoutAlt = 0;
 
                 for (const line of lines) {
                     const parts = line.split("⏩");
@@ -111,10 +111,15 @@ function SyncedLyrics(props: LyricProps) {
 
                     if (NON_LATIN_REGEX.test(mainLyric)) {
                         if (altLyric.trim() === "") {
-                            needsTranslation = true;
-                            break;
+                            linesWithoutAlt++;
                         }
                     }
+                }
+
+                // Sometimes a few lines might be missing translation but most of them are there
+                // Trigger translation if more than 20% of lines are missing alt lyrics
+                if (linesWithoutAlt > 0 && linesWithoutAlt / lines.length > 0.2) {
+                    needsTranslation = true;
                 }
 
                 if (needsTranslation) {

@@ -41,7 +41,7 @@ export const queryCacheStorage = {
 };
 
 const persister = createAsyncStoragePersister({
-    storage: localStorage,
+    storage: sessionStorage,
 });
 
 export const persistOptions = {
