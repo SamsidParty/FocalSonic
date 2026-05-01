@@ -1,0 +1,157 @@
+name: Build Windows MSIX
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Ensure forks/PRs cannot access secrets — no pull_request trigger
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    name: Build Windows MSIX (Store + Beta)
+    runs-on: windows-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Setup toolchains ──────────────────────────────────────
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+          cache-dependency-path: FocalSonic/src-vite/package-lock.json
+
+      # ── Frontend build ────────────────────────────────────────
+      - name: Install frontend dependencies
+        working-directory: FocalSonic/src-vite
+        run: npm ci --force
+
+      # ── .NET publish ──────────────────────────────────────────
+      - name: Publish .NET project
+        working-directory: FocalSonic
+        run: >
+          dotnet publish FocalSonic.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:Platform=x64
+          -o bin/production/x64
+
+      # ── Locate Windows SDK tools ──────────────────────────────
+      - name: Locate MakeAppx and SignTool
+        id: sdk-tools
+        shell: pwsh
+        run: |
+          $sdkDir = "C:\Program Files (x86)\Windows Kits\10\bin"
+          $latestSdk = Get-ChildItem $sdkDir -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1
+          $makeappx = Join-Path $latestSdk.FullName "x64\makeappx.exe"
+          $signtool = Join-Path $latestSdk.FullName "x64\signtool.exe"
+
+          if (-not (Test-Path $makeappx)) { throw "MakeAppx.exe not found at $makeappx" }
+          if (-not (Test-Path $signtool)) { throw "SignTool.exe not found at $signtool" }
+
+          Write-Host "MakeAppx: $makeappx"
+          Write-Host "SignTool: $signtool"
+
+          echo "MAKEAPPX=$makeappx" >> $env:GITHUB_OUTPUT
+          echo "SIGNTOOL=$signtool" >> $env:GITHUB_OUTPUT
+
+      # ── Decode signing certificate ────────────────────────────
+      - name: Decode signing certificate
+        shell: pwsh
+        run: |
+          $pfxBytes = [System.Convert]::FromBase64String("${{ secrets.SIGNING_CERTIFICATE_BASE64 }}")
+          $pfxPath = Join-Path $env:RUNNER_TEMP "signing-cert.pfx"
+          [System.IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+          echo "PFX_PATH=$pfxPath" >> $env:GITHUB_ENV
+
+      # ── Sign the EXE ──────────────────────────────────────────
+      - name: Sign EXE
+        shell: pwsh
+        run: |
+          $signtool = "${{ steps.sdk-tools.outputs.SIGNTOOL }}"
+          & $signtool sign /f $env:PFX_PATH /p "${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}" /fd SHA256 "FocalSonic\bin\production\x64\FocalSonic.exe"
+
+      # ── Build Store MSIX (unsigned) ───────────────────────────
+      - name: Build Store MSIX
+        shell: pwsh
+        run: |
+          $makeappx = "${{ steps.sdk-tools.outputs.MAKEAPPX }}"
+          $buildDir = "BUILD-Store"
+
+          if (Test-Path $buildDir) { Remove-Item $buildDir -Recurse -Force }
+
+          # Copy MSIX skeleton (manifest, assets, content types)
+          Copy-Item -Path "FocalSonic\MSIX\*" -Destination $buildDir -Recurse -Force
+
+          # Copy build output on top
+          Copy-Item -Path "FocalSonic\bin\production\x64\*" -Destination $buildDir -Recurse -Force
+
+          # Pack MSIX
+          & $makeappx pack /d $buildDir /p "$buildDir\FocalSonic-Store.msix" /o
+          if ($LASTEXITCODE -ne 0) { throw "MakeAppx failed for Store MSIX" }
+
+      # ── Build Beta MSIX (self-signed) ─────────────────────────
+      - name: Build Beta MSIX
+        shell: pwsh
+        run: |
+          $makeappx = "${{ steps.sdk-tools.outputs.MAKEAPPX }}"
+          $signtool = "${{ steps.sdk-tools.outputs.SIGNTOOL }}"
+          $buildDir = "BUILD-Beta"
+
+          if (Test-Path $buildDir) { Remove-Item $buildDir -Recurse -Force }
+
+          # Copy MSIX Beta skeleton (manifest, assets, content types)
+          Copy-Item -Path "FocalSonic\MSIX Beta\*" -Destination $buildDir -Recurse -Force
+
+          # Copy build output on top
+          Copy-Item -Path "FocalSonic\bin\production\x64\*" -Destination $buildDir -Recurse -Force
+
+          # Pack MSIX
+          & $makeappx pack /d $buildDir /p "$buildDir\FocalSonic-Beta.msix" /o
+          if ($LASTEXITCODE -ne 0) { throw "MakeAppx failed for Beta MSIX" }
+
+          # Sign the Beta MSIX for sideloading
+          & $signtool sign /f $env:PFX_PATH /p "${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}" /fd SHA256 "$buildDir\FocalSonic-Beta.msix"
+          if ($LASTEXITCODE -ne 0) { throw "SignTool failed for Beta MSIX" }
+
+      # ── Cleanup certificate ───────────────────────────────────
+      - name: Cleanup signing certificate
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path $env:PFX_PATH) {
+            # Overwrite with random data before deleting
+            $size = (Get-Item $env:PFX_PATH).Length
+            $random = New-Object byte[] $size
+            (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($random)
+            [System.IO.File]::WriteAllBytes($env:PFX_PATH, $random)
+            Remove-Item $env:PFX_PATH -Force
+            Write-Host "Signing certificate securely deleted"
+          }
+
+      # ── Upload artifacts ──────────────────────────────────────
+      - name: Upload Store MSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocalSonic-Store-MSIX
+          path: BUILD-Store/FocalSonic-Store.msix
+          retention-days: 90
+
+      - name: Upload Beta MSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocalSonic-Beta-MSIX
+          path: BUILD-Beta/FocalSonic-Beta.msix
+          retention-days: 90

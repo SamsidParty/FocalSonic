@@ -14,4 +14,3 @@ c:\windows\system32\xcopy.exe /s .\bin\production\x64 .\BUILD
 cd .\BUILD
 
 MakeAppx pack /d .\ /p .\FocalSonic.msix
-signtool sign /f "%USERPROFILE%\Documents\Certificates\SamsidParty Private.pfx" /p %SP_KEY% /fd SHA256 .\FocalSonic.msix
