@@ -12,7 +12,7 @@ export function PurchaseLicense() {
         window.igniteView?.commandBridge?.purchaseLicense();
         return;
     }
-    
+
     window.open("https://ko-fi.com/samsidparty");
 }
 
@@ -40,6 +40,12 @@ export function LicenseDialog() {
         setPrice(foundPrice);
     };
 
+    const suppressLicenseCheck = () => {
+        localStorage.hasPurchased = "true";
+        localStorage.hasRemindedLicense = "true";
+        setIsDialogOpen(false);
+    };
+
     useEffect(() => {
         checkPrice();
         if (location.pathname === ROUTES.LIBRARY.HOME) {
@@ -50,15 +56,15 @@ export function LicenseDialog() {
     return (
         <>
             {
-                remainingDays >= 0 && (
+                (remainingDays >= 0 && localStorage.hasPurchased !== "true") && (
                     <>
-                        <Button 
+                        <Button
                             data-webview-ignore={""}
                             onClick={() => setIsDialogOpen(true)}
-                            variant={remainingDays == 0 ? "destructive" : "secondary"}
+                            variant={"secondary"}
                             className="rounded-full h-8 w-fit"
                         >
-                            {t("license.remainingDays", { count: remainingDays })}
+                            {t("license.purchase")}
                         </Button>
                     </>
                 )
@@ -84,7 +90,14 @@ export function LicenseDialog() {
                     <CardHeader className="flex pt-0">
                         <div className="flex flex-col gap-2">
                             <Button onClick={PurchaseLicense}>{t("license.buyNow", { price: price })}</Button>
-                            <div className="text-sm text-muted-foreground"><Lock className="inline mr-2 mb-1 h-4 w-4" /> {t("license.feature4")} </div>
+                            <Button variant={"secondary"} onClick={suppressLicenseCheck}>{t("license.alreadyPurchased")}</Button>
+                            {
+                                // Microsoft store badge on windows only
+                                igniteView?.platformHints?.includes?.("win32") && (
+                                    <div className="text-sm text-muted-foreground"><Lock className="inline mr-2 mb-1 h-4 w-4" /> {t("license.feature4")} </div>
+                                )
+                            }
+
                         </div>
                     </CardHeader>
                 </DialogContent>

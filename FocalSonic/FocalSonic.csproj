@@ -29,19 +29,10 @@
 	<PropertyGroup Condition="'$(IsMac)'=='true'">
 		<DefineConstants>MACOS</DefineConstants>
 	</PropertyGroup>
-
-	<!-- IgniteView -->
-	<ItemGroup Condition="'$(Configuration)'=='Local Debug'">
-		<ProjectReference Include="..\..\WebFramework\IgniteView.Core\IgniteView.Core.csproj" />
-		<ProjectReference Include="..\..\WebFramework\IgniteView.Desktop\IgniteView.Desktop.csproj" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(Configuration)'!='Local Debug'">
-		<PackageReference Include="IgniteView.Desktop" Version="2.2.8" />
-		<PackageReference Include="IgniteView.Core" Version="*" />
-	</ItemGroup>
 	
 	<ItemGroup>
+		<PackageReference Include="IgniteView.Desktop" Version="2.2.9" />
+		<PackageReference Include="IgniteView.Core" Version="*" />
 		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="GoogleCast" Version="1.7.0" />
 		<PackageReference Include="SoundFlow" Version="1.2.0" />
@@ -52,7 +43,6 @@
 	<PropertyGroup>
 		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
 		<JSFramework>react</JSFramework>
-		<!-- This is required for IgniteView to know what js framework you are using -->
 		<ScriptsURL>https://raw.githubusercontent.com/SamsidParty/IgniteView/refs/heads/main/IgniteView.Scripts</ScriptsURL>
 		<PreBuildCommand>node -e "fetch('$(ScriptsURL)/Prebuild.js').then((c) =&gt; c.text().then(eval))" "$(ScriptsURL)" "$(MSBuildProjectDirectory.Replace('\', '\\'))" "$(Configuration)" "$(JSFramework)"</PreBuildCommand>
 		<PostBuildCommand>node -e "fetch('$(ScriptsURL)/Postbuild.js').then((c) =&gt; c.text().then(eval))" "$(ScriptsURL)" "$(MSBuildProjectDirectory.Replace('\', '\\'))" "$(Configuration)" "$(JSFramework)"</PostBuildCommand>
