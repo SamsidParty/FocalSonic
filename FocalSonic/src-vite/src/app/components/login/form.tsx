@@ -161,7 +161,7 @@ export function LoginForm() {
                             </Button>
                         </CardFooter>
 
-                        <CardContent className="space-y-2">
+                        <CardContent className="space-y-2 hidden">
                             <FormField
                                 control={form.control}
                                 name="url"
