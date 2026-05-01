@@ -92,11 +92,13 @@ jobs:
 
           if (Test-Path $buildDir) { Remove-Item $buildDir -Recurse -Force }
 
-          # Copy MSIX skeleton (manifest, assets, content types)
-          Copy-Item -Path "FocalSonic\MSIX\*" -Destination $buildDir -Recurse -Force
+          # Copy MSIX skeleton (manifest, assets, content types) — use xcopy like the local build scripts
+          & xcopy "FocalSonic\MSIX" $buildDir /E /H /C /I /Y
+          if ($LASTEXITCODE -gt 7) { throw "xcopy MSIX skeleton failed with code $LASTEXITCODE" }
 
           # Copy build output on top
-          Copy-Item -Path "FocalSonic\bin\production\x64\*" -Destination $buildDir -Recurse -Force
+          & xcopy "FocalSonic\bin\production\x64" $buildDir /S /Y
+          if ($LASTEXITCODE -gt 7) { throw "xcopy build output failed with code $LASTEXITCODE" }
 
           # Pack MSIX
           & $makeappx pack /d $buildDir /p "$buildDir\FocalSonic-Store.msix" /o
@@ -112,11 +114,13 @@ jobs:
 
           if (Test-Path $buildDir) { Remove-Item $buildDir -Recurse -Force }
 
-          # Copy MSIX Beta skeleton (manifest, assets, content types)
-          Copy-Item -Path "FocalSonic\MSIX Beta\*" -Destination $buildDir -Recurse -Force
+          # Copy MSIX Beta skeleton (manifest, assets, content types) — use xcopy like the local build scripts
+          & xcopy "FocalSonic\MSIX Beta" $buildDir /E /H /C /I /Y
+          if ($LASTEXITCODE -gt 7) { throw "xcopy MSIX Beta skeleton failed with code $LASTEXITCODE" }
 
           # Copy build output on top
-          Copy-Item -Path "FocalSonic\bin\production\x64\*" -Destination $buildDir -Recurse -Force
+          & xcopy "FocalSonic\bin\production\x64" $buildDir /S /Y
+          if ($LASTEXITCODE -gt 7) { throw "xcopy build output failed with code $LASTEXITCODE" }
 
           # Pack MSIX
           & $makeappx pack /d $buildDir /p "$buildDir\FocalSonic-Beta.msix" /o
