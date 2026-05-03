@@ -18,12 +18,12 @@ interface StoredResult {
 }
 
 export default function SearchResults({ query, latestSearchId, isLiveSearch, onSearchSuccess }: SearchResultsProps) {
-    // Track the latest successful search and its results
+    // Keep track of successful searches to avoid stale results overwriting newer ones
     const latestSuccessfulSearchIdRef = useRef(0);
     const [lastResults, setLastResults] = useState<StoredResult | null>(null);
     const [lastError, setLastError] = useState<string | null>(null);
 
-    const { data: searchResult, isLoading, isError, error } = useQuery({
+    const { data: searchResult, isLoading, isError } = useQuery({
         queryKey: [queryKeys.search, query],
         queryFn: async () => {
             const currentSearchId = latestSearchId;
@@ -35,24 +35,21 @@ export default function SearchResults({ query, latestSearchId, isLiveSearch, onS
                 songCount: 4,
             });
 
-            // Only update lastResults if this is still the latest search
+            // Only save if this is still the most recent search
             if (currentSearchId >= latestSuccessfulSearchIdRef.current) {
                 latestSuccessfulSearchIdRef.current = currentSearchId;
                 setLastResults({ searchId: currentSearchId, data: result });
-                setLastError(null); // Clear error on success
+                setLastError(null);
                 onSearchSuccess?.(query);
             }
 
             return result;
         },
         enabled: query.length >= 2,
-        retry: 1, // Only retry once to avoid infinite loops
+        retry: 1,
     });
 
-    // Determine which results to display
     const isCurrentSearch = latestSearchId >= latestSuccessfulSearchIdRef.current;
-
-    // Show current search results if available, otherwise show last successful results
     const displayData = isCurrentSearch && searchResult ? searchResult : lastResults?.data;
 
     const hasResults = displayData !== undefined;
@@ -64,13 +61,13 @@ export default function SearchResults({ query, latestSearchId, isLiveSearch, onS
         (displayData?.playlist?.length ?? 0) > 0
     );
 
-    // For live search: only show results if this is the current search
+    // Only show live search results if they're the most recent
     const shouldShowResults = isLiveSearch ? isCurrentSearch : true;
 
-    // Only show "no results" after loading completes and query is still valid
+    // Show no results only after loading finishes and we have nothing
     const showNoResults = !isLoading && !isError && isLiveSearch && shouldShowResults && query.length >= 2 && !hasAnyResults;
 
-    // Show error but preserve last successful results
+    // If error but we have old results, show error but keep old results visible
     const showError = isError && lastResults !== null;
 
     return (
@@ -79,19 +76,16 @@ export default function SearchResults({ query, latestSearchId, isLiveSearch, onS
                 <h2 className="text-lg font-semibold mb-4">Search results for "{query}"</h2>
             )}
 
-            {/* Loading state for live search */}
             {isLoading && isLiveSearch && shouldShowResults && (
                 <div className="text-muted-foreground text-sm">Searching...</div>
             )}
 
-            {/* Error state - show error message but keep old results visible */}
             {showError && (
                 <div className="text-destructive text-sm mb-2">
                     {t("command.error") || "Search failed. Showing previous results."}
                 </div>
             )}
 
-            {/* Show results if we have data */}
             {shouldShowResults && hasAnyResults && displayData && (
                 <>
                     <PreviewList title={t("sidebar.top")} list={displayData?.top} showMore={false} />
@@ -102,7 +96,6 @@ export default function SearchResults({ query, latestSearchId, isLiveSearch, onS
                 </>
             )}
 
-            {/* No results state - only show after loading completes with empty results */}
             {showNoResults && (
                 <div className="text-muted-foreground text-sm">
                     {t("command.noResults")}

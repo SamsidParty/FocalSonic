@@ -9,20 +9,18 @@ import { SearchInput } from "../components/ui/searchinput";
 import SearchResults from "./search-results";
 
 export default function Search() {
-    // Get route params
     const [searchParams] = useSearchParams();
     const query = searchParams.get("q");
 
-    // Return search page if the query param is not present
+    // No query param? Show the search page with input
     if (!query) {
         return <SearchPage />;
     }
 
-    // Render a simple results placeholder when a query is present
+    // Has query? Show results
     return <SearchResults query={query} latestSearchId={0} isLiveSearch={false} />;
 }
 
-// Normalize query: trim and collapse multiple spaces to single space
 function normalizeQuery(query: string): string {
     return query.trim().replace(/\s+/g, " ");
 }
@@ -35,11 +33,11 @@ function SearchPage() {
     const latestSearchIdRef = useRef(0);
     const lastSuccessfulQueryRef = useRef("");
 
-    // Debounce callback - 800ms delay
+    // Debounce to avoid spamming requests
     const debouncedSetQuery = useDebouncedCallback((value: string) => {
         const normalized = normalizeQuery(value);
 
-        // Duplicate query protection - don't search if same as last successful
+        // Skip if same as last successful query
         if (normalized === lastSuccessfulQueryRef.current) {
             setIsSearching(false);
             return;
@@ -49,50 +47,41 @@ function SearchPage() {
         setIsSearching(false);
     }, 800);
 
-    // Handle input change
     const handleInputChange = useCallback((value: string) => {
         setSearchInput(value);
-
-        // Cancel any pending debounce
         debouncedSetQuery.cancel();
 
         const normalized = normalizeQuery(value);
 
-        // Do NOT clear results when input is cleared - keep last results visible
+        // Don't search if input is too short - keep showing old results
         if (normalized.length < 2) {
             setIsSearching(false);
             return;
         }
 
-        // Duplicate query protection - don't restart search if same as last successful
+        // Skip if same as last successful query
         if (normalized === lastSuccessfulQueryRef.current) {
             return;
         }
 
-        // Increment search ID for new valid search
         latestSearchIdRef.current += 1;
-
-        // Set searching state and debounce
         setIsSearching(true);
         debouncedSetQuery(normalized);
     }, [debouncedSetQuery]);
 
-    // Handle form submit (Enter key)
+    // Handle Enter key
     const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
-
-        // Cancel debounce and search immediately
         debouncedSetQuery.cancel();
+
         const normalized = normalizeQuery(searchInput.trim());
 
         if (normalized.length >= 2) {
-            // Duplicate query protection
             if (normalized === lastSuccessfulQueryRef.current) {
                 setIsSearching(false);
                 return;
             }
 
-            // Increment search ID for immediate search
             latestSearchIdRef.current += 1;
             setDebouncedQuery(normalized);
             setIsSearching(false);
@@ -134,7 +123,6 @@ function SearchPage() {
                 </Button>
             </Form>
 
-            {/* Live Search Results - always render but conditionally show */}
             <div className="w-full mt-4">
                 <SearchResults
                     query={debouncedQuery}
