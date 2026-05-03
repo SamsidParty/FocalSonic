@@ -42,16 +42,6 @@ function stringSimilarity(a: string, b: string): number {
     return (longer.length - costs[shorter.length]) / longer.length;
 }
 
-// Routes external requests through the IgniteView resolver to bypass WebView2 CORS restrictions.
-// Requires a /proxy?url= route on the C# resolver server.
-// Falls back to direct fetch outside the native app (where CORS may apply).
-function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
-    if (window.igniteView?.resolverURL) {
-        return fetch(`${window.igniteView.resolverURL}/proxy?${encodeURIComponent(url)}`, init);
-    }
-    return fetch(url, init);
-}
-
 export interface GetLyricsData {
     artist: string
     title: string
@@ -59,6 +49,12 @@ export interface GetLyricsData {
     duration?: number
     id?: string
     isrc?: string
+}
+
+export interface LyricsResult {
+    value: string | undefined
+    source: string
+    durationMs: number
 }
 
 interface LRCLibResponse {
@@ -69,12 +65,15 @@ interface LRCLibResponse {
     syncedLyrics: string
 }
 
-async function getLyrics(getLyricsData: GetLyricsData) {
-    
+async function getLyrics(getLyricsData: GetLyricsData): Promise<LyricsResult> {
+    const startTime = Date.now();
+
     let lyrics = useCacheStore.getState().tryGetLyrics(getLyricsData.id!);
     if (lyrics) {
-        return lyrics;
+        return { value: lyrics, source: "Cache", durationMs: 0 };
     }
+
+    let source = "";
 
     const response = await httpClient<LyricsResponse>("/getLyrics", {
         method: "GET",
@@ -87,6 +86,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     const basicLyrics = response?.data?.lyrics?.value;
     if (basicLyrics) {
         lyrics = basicLyrics;
+        source = "Server";
     }
 
     if (lyrics && response?.data.openSubsonic) {
@@ -100,28 +100,31 @@ async function getLyrics(getLyricsData: GetLyricsData) {
 
         if ((openResponse?.data?.lyricsList?.structuredLyrics?.length || 0) > 0) {
             lyrics = convertToLRC(openResponse?.data?.lyricsList)?.value;
+            source = "Server";
         }
-    
+
     }
 
     if (!lyrics) {
-        lyrics = (await getLyricsFromLRCLib(getLyricsData)).value;
+        const result = await getLyricsFromLRCLib(getLyricsData);
+        if (result.value) { lyrics = result.value; source = "LRCLib"; }
     }
 
     if (!lyrics) {
-        lyrics = (await getLyricsFromMusixmatch(getLyricsData)).value;
+        const result = await getLyricsFromMusixmatch(getLyricsData);
+        if (result.value) { lyrics = result.value; source = "Musixmatch"; }
     }
 
     if (!lyrics) {
-        lyrics = (await getLyricsFromNetEase(getLyricsData)).value;
+        const result = await getLyricsFromNetEase(getLyricsData);
+        if (result.value) { lyrics = result.value; source = "NetEase"; }
     }
 
-    if (!lyrics) {
-        lyrics = (await getLyricsFromGenius(getLyricsData)).value;
+    if (lyrics) {
+        useCacheStore.getState().saveLyrics(getLyricsData.id!, lyrics);
     }
 
-    useCacheStore.getState().saveLyrics(getLyricsData.id!, lyrics);
-    return lyrics;
+    return { value: lyrics, source, durationMs: Date.now() - startTime };
 }
 
 export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
@@ -285,7 +288,7 @@ interface NetEaseSearchSong {
 async function searchNetEaseSongId(getLyricsData: GetLyricsData): Promise<number | undefined> {
     const { artist, title, album } = getLyricsData;
 
-    const searchResp = await proxyFetch(
+    const searchResp = await fetch(
         `${NETEASE_API}/search?keywords=${encodeURIComponent(`${title} ${artist}`)}&limit=5`
     );
     const searchData = await searchResp.json();
@@ -312,7 +315,7 @@ export async function getLyricsFromNetEase(getLyricsData: GetLyricsData) {
         const songId = await searchNetEaseSongId(getLyricsData);
         if (!songId) return { artist, title, value: "" };
 
-        const lyricsResp = await proxyFetch(`${NETEASE_API}/lyric?id=${songId}`);
+        const lyricsResp = await fetch(`${NETEASE_API}/lyric?id=${songId}`);
         const lyricsData = await lyricsResp.json();
         const lrc: string | undefined = lyricsData?.lrc?.lyric;
         if (!lrc) return { artist, title, value: "" };
@@ -325,40 +328,6 @@ export async function getLyricsFromNetEase(getLyricsData: GetLyricsData) {
         }
 
         return { artist, title, value: formatLyrics(unescapeHtmlEntities(lrc)) };
-    } catch {}
-
-    return { artist, title, value: "" };
-}
-
-export async function getLyricsFromGenius(getLyricsData: GetLyricsData) {
-    const { artist, title } = getLyricsData;
-
-    try {
-        const searchResp = await proxyFetch(
-            `https://genius.com/api/search?q=${encodeURIComponent(`${artist} ${title}`)}`
-        );
-        const searchData = await searchResp.json();
-        const hit = searchData?.response?.hits?.find((h: { type: string }) => h.type === "song");
-        if (!hit) return { artist, title, value: "" };
-
-        const pageResp = await proxyFetch(`https://genius.com${hit.result.path}`);
-        const html = await pageResp.text();
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-
-        const containers = doc.querySelectorAll("[data-lyrics-container='true']");
-        if (!containers.length) return { artist, title, value: "" };
-
-        const lyricsLines: string[] = [];
-        containers.forEach((container) => {
-            const clone = container.cloneNode(true) as Element;
-            clone.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
-            lyricsLines.push(clone.textContent ?? "");
-        });
-
-        const value = lyricsLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
-        if (value) return { artist, title, value };
     } catch {}
 
     return { artist, title, value: "" };
@@ -398,5 +367,4 @@ export const lyrics = {
     getLyricsFromLRCLib,
     getLyricsFromMusixmatch,
     getLyricsFromNetEase,
-    getLyricsFromGenius,
 };

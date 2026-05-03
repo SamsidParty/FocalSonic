@@ -55,7 +55,6 @@ public class Program
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.PUT);
 
         // Proxies for assets and streaming
-        App.RegisterDynamicFileRoute("/proxy", GenericHttpProxy.GenericHttpProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
         App.RegisterDynamicFileRoute("/s3imageproxy", S3ImageProxy.S3ImageProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
         App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.POST);
         App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.GET);

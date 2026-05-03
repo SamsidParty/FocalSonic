@@ -13,9 +13,10 @@ import { translateText } from "@/utils/translate";
 import useDebouncedWindowSize from "@/utils/useDebouncedWindowSize";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef } from "react";
+import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { areLyricsSynced, areLyricsTTML, convertTTMLToLRC } from "../lyrics/lyric-helpers";
+import { LyricsResult } from "@/service/subsonic/lyrics";
 
 const NON_LATIN_REGEX = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Oriya}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Thai}\p{Script=Khmer}\p{Script=Lao}\p{Script=Myanmar}\p{Script=Ethiopic}\p{Script=Georgian}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Yi}]/u;
 
@@ -31,10 +32,12 @@ interface LyricProps {
 export function LyricsTab(props: LyricProps) {
     const { currentSong } = usePlayerSonglist();
     const { t } = useTranslation();
+    const [showLyricsSource, setShowLyricsSource] = useState(false);
+    const hideSourceTimerRef = useRef<number | null>(null);
 
     const { artist, title, duration, id } = currentSong;
 
-    const { data: lyrics, isLoading } = useQuery({
+    const { data: lyricsResult, isLoading } = useQuery<LyricsResult | undefined>({
         queryKey: ["get-lyrics", id, artist, title, duration],
         queryFn: async () => {
 
@@ -43,37 +46,85 @@ export function LyricsTab(props: LyricProps) {
                 const overriddenLyrics = await window?.igniteView?.commandBridge?.getLyricOverride(id);
 
                 if (overriddenLyrics) {
-                    return overriddenLyrics;
+                    return {
+                        value: overriddenLyrics,
+                        source: "Override",
+                        durationMs: 0,
+                    };
                 }
             }
 
-            const foundLyrics = await service.lyrics.getLyrics({
+            return await service.lyrics.getLyrics({
                 artist,
                 title,
                 duration,
                 id,
                 isrc: currentSong?.appleMusic?.data?.attributes?.isrc
             });
-
-
-            return foundLyrics;
         },
     });
 
     const noLyricsFound = t("fullscreen.noLyrics");
     const loadingLyrics = t("fullscreen.loadingLyrics");
+    const lyrics = lyricsResult?.value;
+
+    const showSourceBadge = useCallback(() => {
+        if (!lyricsResult?.source) return;
+
+        setShowLyricsSource(true);
+
+        if (hideSourceTimerRef.current) {
+            window.clearTimeout(hideSourceTimerRef.current);
+        }
+
+        hideSourceTimerRef.current = window.setTimeout(() => {
+            setShowLyricsSource(false);
+        }, 3000);
+    }, [lyricsResult]);
+
+    useEffect(() => {
+        showSourceBadge();
+
+        return () => {
+            if (hideSourceTimerRef.current) {
+                window.clearTimeout(hideSourceTimerRef.current);
+            }
+        };
+    }, [showSourceBadge]);
 
     if (isLoading) {
         return <CenteredMessage>{loadingLyrics}</CenteredMessage>;
     } else if (lyrics) {
-        return areLyricsSynced(lyrics) ? (
-            <SyncedLyrics {...props} lyrics={lyrics} />
-        ) : (
-            <UnsyncedLyrics {...props} lyrics={lyrics} />
+        return (
+            <div className="relative w-full h-full" onWheel={showSourceBadge} onTouchMove={showSourceBadge}>
+                {areLyricsSynced(lyrics) ? (
+                    <SyncedLyrics {...props} lyrics={lyrics} />
+                ) : (
+                    <UnsyncedLyrics {...props} lyrics={lyrics} />
+                )}
+                <LyricsSourceBadge lyricsResult={lyricsResult} visible={showLyricsSource} />
+            </div>
         );
     } else {
         return <CenteredMessage>{noLyricsFound}</CenteredMessage>;
     }
+}
+
+function LyricsSourceBadge({ lyricsResult, visible }: { lyricsResult?: LyricsResult, visible: boolean }) {
+    if (!lyricsResult?.source) return null;
+
+    const seconds = (lyricsResult.durationMs / 1000).toFixed(lyricsResult.durationMs < 1000 ? 1 : 2);
+
+    return (
+        <div
+            className={clsx(
+                "pointer-events-none absolute bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-4 py-2 text-xs font-semibold text-white/90 shadow-2xl backdrop-blur-md transition-all duration-300",
+                visible ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
+            )}
+        >
+            {lyricsResult.source} {seconds}s
+        </div>
+    );
 }
 
 function SyncedLyrics(props: LyricProps) {
