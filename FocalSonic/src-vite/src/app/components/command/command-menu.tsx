@@ -18,7 +18,7 @@ import { SearchIcon } from "lucide-react";
 import React, { KeyboardEvent, useCallback, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
 import { CommandAlbumResult } from "./album-result";
 import { CommandArtistResult } from "./artist-result";
@@ -39,8 +39,6 @@ export default function CommandMenu() {
 
     const [query, setQuery] = useState("");
     const [pages, setPages] = useState<CommandPages[]>(["HOME"]);
-    const [searchParams] = useSearchParams();
-    const urlQuery = searchParams.get("q");
 
     const activePage = pages[pages.length - 1];
     const isHome = activePage === "HOME";
@@ -127,18 +125,25 @@ export default function CommandMenu() {
         enableQuery && !showAlbumGroup && !showArtistGroup && !showSongGroup,
     );
 
+    const location = useLocation();
+    const isActive = location.pathname === ROUTES.LIBRARY.SEARCH;
+
     return (
         <>
-            <Button
-                variant={"outline"}
-                className="flex justify-start w-full px-3 gap-2 bg-card relative"
-                onClick={() => navigate(ROUTES.LIBRARY.SEARCH)}
+            <Link
+                to={ROUTES.LIBRARY.SEARCH}
+                className="block"
+                tabIndex={-1}
             >
-                <SearchIcon  className="h-4 w-4 text-primary" />
-                <span className="inline-flex text-foreground text-sm">
-                    {query || urlQuery || t("sidebar.search")}
-                </span>
-            </Button>
+                <Button
+                    variant={isActive ? "secondary" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start"
+                >
+                    <SearchIcon color="var(--primary)" className="w-4 h-4 mr-2" />
+                    {t("sidebar.search")}
+                </Button>
+            </Link>
             <CommandDialog
                 open={open}
                 onOpenChange={(state) => {
