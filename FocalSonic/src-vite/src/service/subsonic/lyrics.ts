@@ -6,6 +6,41 @@ import { lrclibClient } from "@/utils/appName";
 import { checkServerType } from "@/utils/servers";
 
 const MUSIXMATCH_TOKEN = "2203269256b9d8c343bc4c2cde8e6b21";
+const NETEASE_API = "https://neteasecloudmusicapi-ten-wine.vercel.app";
+
+function unescapeHtmlEntities(text: string): string {
+    return text
+        .replaceAll("&apos;", "'")
+        .replaceAll("&quot;", "\"")
+        .replaceAll("&amp;", "&")
+        .replaceAll("&lt;", "<")
+        .replaceAll("&gt;", ">")
+        .replaceAll("&#39;", "'")
+        .replaceAll("&#x27;", "'")
+        .replaceAll("\\\n", "\n");
+}
+
+// Normalized Levenshtein similarity, 0..1
+function stringSimilarity(a: string, b: string): number {
+    const normalize = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+    const na = normalize(a);
+    const nb = normalize(b);
+    if (na === nb) return 1;
+    if (!na || !nb) return 0;
+    const longer = na.length >= nb.length ? na : nb;
+    const shorter = na.length >= nb.length ? nb : na;
+    const costs = Array.from({ length: shorter.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= longer.length; i++) {
+        let prev = i;
+        for (let j = 1; j <= shorter.length; j++) {
+            const cost = longer[i - 1] === shorter[j - 1] ? costs[j - 1] : Math.min(costs[j - 1] + 1, prev + 1, costs[j] + 1);
+            costs[j - 1] = prev;
+            prev = cost;
+        }
+        costs[shorter.length] = prev;
+    }
+    return (longer.length - costs[shorter.length]) / longer.length;
+}
 
 // Routes external requests through the IgniteView resolver to bypass WebView2 CORS restrictions.
 // Requires a /proxy?url= route on the C# resolver server.
@@ -240,23 +275,56 @@ export async function getLyricsFromMusixmatch(getLyricsData: GetLyricsData) {
     return { artist, title, value: "" };
 }
 
+interface NetEaseSearchSong {
+    id: number;
+    name: string;
+    artists: { name: string }[];
+    album: { name: string };
+}
+
+async function searchNetEaseSongId(getLyricsData: GetLyricsData): Promise<number | undefined> {
+    const { artist, title, album } = getLyricsData;
+
+    const searchResp = await proxyFetch(
+        `${NETEASE_API}/search?keywords=${encodeURIComponent(`${title} ${artist}`)}&limit=5`
+    );
+    const searchData = await searchResp.json();
+    const songs: NetEaseSearchSong[] = searchData?.result?.songs ?? [];
+    if (!songs.length) return undefined;
+
+    for (const song of songs) {
+        const resultArtist = song.artists[0]?.name ?? "";
+        const conditions = [
+            stringSimilarity(title, song.name) > 0.75,
+            stringSimilarity(artist, resultArtist) > 0.75,
+            album ? stringSimilarity(album, song.album.name) > 0.75 : false,
+        ];
+        if (conditions.filter(Boolean).length >= 2) return song.id;
+    }
+
+    return undefined;
+}
+
 export async function getLyricsFromNetEase(getLyricsData: GetLyricsData) {
     const { artist, title } = getLyricsData;
 
     try {
-        const searchResp = await proxyFetch(
-            `https://music.163.com/api/search/get?s=${encodeURIComponent(`${title} ${artist}`)}&type=1&limit=1`
-        );
-        const searchData = await searchResp.json();
-        const songId = searchData?.result?.songs?.[0]?.id;
+        const songId = await searchNetEaseSongId(getLyricsData);
         if (!songId) return { artist, title, value: "" };
 
-        const lyricsResp = await proxyFetch(
-            `https://music.163.com/api/song/lyric?id=${songId}&lv=1&kv=1&tv=-1`
-        );
+        const lyricsResp = await proxyFetch(`${NETEASE_API}/lyric?id=${songId}`);
         const lyricsData = await lyricsResp.json();
-        const lrc = lyricsData?.lrc?.lyric;
-        if (lrc) return { artist, title, value: formatLyrics(lrc) };
+        const lrc: string | undefined = lyricsData?.lrc?.lyric;
+        if (!lrc) return { artist, title, value: "" };
+
+        // NetEase returns metadata-only "lyrics" with all timestamps at [00:00] when it has no real lyrics
+        const timestamps = [...lrc.matchAll(/\[(\d{2}):(\d{2})\.\d+\]/g)];
+        const lastTs = timestamps[timestamps.length - 1];
+        if (!lastTs || (lastTs[1] === "00" && lastTs[2] === "00")) {
+            return { artist, title, value: "" };
+        }
+
+        return { artist, title, value: formatLyrics(unescapeHtmlEntities(lrc)) };
     } catch {}
 
     return { artist, title, value: "" };

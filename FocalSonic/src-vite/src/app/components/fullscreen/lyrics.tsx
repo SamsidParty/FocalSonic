@@ -35,7 +35,7 @@ export function LyricsTab(props: LyricProps) {
     const { artist, title, duration, id } = currentSong;
 
     const { data: lyrics, isLoading } = useQuery({
-        queryKey: ["get-lyrics", artist, title, duration],
+        queryKey: ["get-lyrics", id, artist, title, duration],
         queryFn: async () => {
 
             if (window?.igniteView) {
