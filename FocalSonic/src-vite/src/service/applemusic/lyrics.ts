@@ -1,6 +1,6 @@
 import { httpClient } from "@/api/httpClient";
 import { AppleMusicLyricsResponse } from "@/types/applemusic/song";
-import { GetLyricsData, getLyricsFromLRCLib } from "../subsonic/lyrics";
+import { GetLyricsData, getLyricsFromGenius, getLyricsFromLRCLib, getLyricsFromMusixmatch, getLyricsFromNetEase } from "../subsonic/lyrics";
 
 async function getLyrics(getLyricsData: GetLyricsData) {
     
@@ -25,15 +25,32 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     });
 
     let lyrics = response?.data[0]?.attributes?.ttmlLocalizations || response?.data[0]?.attributes?.ttml;
-    
-    // No point using unsynced lyrics from apple when we can find synced ones from other providers
-    if (lyrics?.includes("itunes:timing=\"None\"")) {
+
+    // Keep unsynced Apple lyrics as a last resort — prefer synced from other providers
+    const unsyncedAppleLyrics = lyrics?.includes("itunes:timing=\"None\"") ? lyrics : null;
+    if (unsyncedAppleLyrics) {
         lyrics = null;
     }
 
-    
     if (!lyrics) {
         lyrics = (await getLyricsFromLRCLib(getLyricsData)).value;
+    }
+
+    if (!lyrics) {
+        lyrics = (await getLyricsFromMusixmatch(getLyricsData)).value;
+    }
+
+    if (!lyrics) {
+        lyrics = (await getLyricsFromNetEase(getLyricsData)).value;
+    }
+
+    if (!lyrics) {
+        lyrics = (await getLyricsFromGenius(getLyricsData)).value;
+    }
+
+    // Absolute last resort: unsynced Apple Music lyrics (no karaoke scroll, but at least readable)
+    if (!lyrics && unsyncedAppleLyrics) {
+        lyrics = unsyncedAppleLyrics;
     }
 
     /*if (window?.igniteView?.commandBridge?.saveCustomOverride && lyrics) {

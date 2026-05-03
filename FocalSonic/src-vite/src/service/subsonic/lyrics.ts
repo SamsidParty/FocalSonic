@@ -5,6 +5,18 @@ import { ILyricsList, LyricsResponse, OpenLyricsResponse } from "@/types/respons
 import { lrclibClient } from "@/utils/appName";
 import { checkServerType } from "@/utils/servers";
 
+const MUSIXMATCH_TOKEN = "2203269256b9d8c343bc4c2cde8e6b21";
+
+// Routes external requests through the IgniteView resolver to bypass WebView2 CORS restrictions.
+// Requires a /proxy?url= route on the C# resolver server.
+// Falls back to direct fetch outside the native app (where CORS may apply).
+function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
+    if (window.igniteView?.resolverURL) {
+        return fetch(`${window.igniteView.resolverURL}/proxy?${encodeURIComponent(url)}`, init);
+    }
+    return fetch(url, init);
+}
+
 export interface GetLyricsData {
     artist: string
     title: string
@@ -61,6 +73,18 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         lyrics = (await getLyricsFromLRCLib(getLyricsData)).value;
     }
 
+    if (!lyrics) {
+        lyrics = (await getLyricsFromMusixmatch(getLyricsData)).value;
+    }
+
+    if (!lyrics) {
+        lyrics = (await getLyricsFromNetEase(getLyricsData)).value;
+    }
+
+    if (!lyrics) {
+        lyrics = (await getLyricsFromGenius(getLyricsData)).value;
+    }
+
     useCacheStore.getState().saveLyrics(getLyricsData.id!, lyrics);
     return lyrics;
 }
@@ -103,6 +127,11 @@ export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
                 "Lrclib-Client": lrclibClient,
             },
         });
+
+        if (!request.ok) {
+            return { artist, title, value: "" };
+        }
+
         const response: LRCLibResponse = await request.json();
 
         if (response) {
@@ -163,6 +192,110 @@ export async function getLyricsFromLyricOtter(getLyricsData: GetLyricsData) {
     };
 }
 
+export async function getLyricsFromMusixmatch(getLyricsData: GetLyricsData) {
+    const { artist, title } = getLyricsData;
+    const BASE = "https://apic-desktop.musixmatch.com/ws/1.1";
+
+    try {
+        const searchParams = new URLSearchParams({
+            q_track: title,
+            q_artist: artist,
+            f_has_lyrics: "1",
+            format: "json",
+            app_id: "web-desktop-app-v1.0",
+            usertoken: MUSIXMATCH_TOKEN,
+        });
+
+        const searchResp = await fetch(`${BASE}/track.search?${searchParams}`);
+        const searchData = await searchResp.json();
+        const trackId = searchData?.message?.body?.track_list?.[0]?.track?.track_id;
+        if (!trackId) return { artist, title, value: "" };
+
+        const subtitleParams = new URLSearchParams({
+            track_id: String(trackId),
+            subtitle_format: "lrc",
+            format: "json",
+            app_id: "web-desktop-app-v1.0",
+            usertoken: MUSIXMATCH_TOKEN,
+        });
+
+        const subtitleResp = await fetch(`${BASE}/track.subtitle.get?${subtitleParams}`);
+        const subtitleData = await subtitleResp.json();
+        const subtitle = subtitleData?.message?.body?.subtitle?.subtitle_body;
+        if (subtitle) return { artist, title, value: formatLyrics(subtitle) };
+
+        const lyricsParams = new URLSearchParams({
+            track_id: String(trackId),
+            format: "json",
+            app_id: "web-desktop-app-v1.0",
+            usertoken: MUSIXMATCH_TOKEN,
+        });
+
+        const lyricsResp = await fetch(`${BASE}/track.lyrics.get?${lyricsParams}`);
+        const lyricsData = await lyricsResp.json();
+        const lyricsBody = lyricsData?.message?.body?.lyrics?.lyrics_body;
+        if (lyricsBody) return { artist, title, value: formatLyrics(lyricsBody) };
+    } catch {}
+
+    return { artist, title, value: "" };
+}
+
+export async function getLyricsFromNetEase(getLyricsData: GetLyricsData) {
+    const { artist, title } = getLyricsData;
+
+    try {
+        const searchResp = await proxyFetch(
+            `https://music.163.com/api/search/get?s=${encodeURIComponent(`${title} ${artist}`)}&type=1&limit=1`
+        );
+        const searchData = await searchResp.json();
+        const songId = searchData?.result?.songs?.[0]?.id;
+        if (!songId) return { artist, title, value: "" };
+
+        const lyricsResp = await proxyFetch(
+            `https://music.163.com/api/song/lyric?id=${songId}&lv=1&kv=1&tv=-1`
+        );
+        const lyricsData = await lyricsResp.json();
+        const lrc = lyricsData?.lrc?.lyric;
+        if (lrc) return { artist, title, value: formatLyrics(lrc) };
+    } catch {}
+
+    return { artist, title, value: "" };
+}
+
+export async function getLyricsFromGenius(getLyricsData: GetLyricsData) {
+    const { artist, title } = getLyricsData;
+
+    try {
+        const searchResp = await proxyFetch(
+            `https://genius.com/api/search?q=${encodeURIComponent(`${artist} ${title}`)}`
+        );
+        const searchData = await searchResp.json();
+        const hit = searchData?.response?.hits?.find((h: { type: string }) => h.type === "song");
+        if (!hit) return { artist, title, value: "" };
+
+        const pageResp = await proxyFetch(`https://genius.com${hit.result.path}`);
+        const html = await pageResp.text();
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        const containers = doc.querySelectorAll("[data-lyrics-container='true']");
+        if (!containers.length) return { artist, title, value: "" };
+
+        const lyricsLines: string[] = [];
+        containers.forEach((container) => {
+            const clone = container.cloneNode(true) as Element;
+            clone.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
+            lyricsLines.push(clone.textContent ?? "");
+        });
+
+        const value = lyricsLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+        if (value) return { artist, title, value };
+    } catch {}
+
+    return { artist, title, value: "" };
+}
+
 function formatLyrics(lyrics: string) {
     return lyrics.trim().replaceAll("\r\n", "\n");
 }
@@ -195,4 +328,7 @@ function convertToLRC(lyricsList?: ILyricsList) {
 export const lyrics = {
     getLyrics,
     getLyricsFromLRCLib,
+    getLyricsFromMusixmatch,
+    getLyricsFromNetEase,
+    getLyricsFromGenius,
 };
