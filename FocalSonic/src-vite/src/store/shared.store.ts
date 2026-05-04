@@ -59,7 +59,7 @@ const sharedVolumeSettings = {
     min: 0,
     max: 100,
     step: 1,
-    wheelStep: 5,
+    wheelStep: 2,
 };
 
 function parseJSON<T>(value: string | null | undefined) {
