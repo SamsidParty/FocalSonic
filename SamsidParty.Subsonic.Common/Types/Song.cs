@@ -10,8 +10,8 @@ namespace SamsidParty.Subsonic.Common.Types
 {
     // The only reason that this class exists is because it's confusing to use "Child" in the codebase instead of "Song"
     public class Song : Child {
-        [JsonProperty("playbackID")]
-        [JsonPropertyName("playbackID")]
+        [JsonProperty("playbackId")]
+        [JsonPropertyName("playbackId")]
         public string PlaybackID { get; set; }
     }
 }
