@@ -27,6 +27,7 @@ interface PreviewListProps {
     list: Albums[] | AppleMusicRecommendationContent[]
     title: string
     showMore?: boolean
+    stagger?: number
     isLarge: boolean
     appleMusic?: {
         attributes?: {
@@ -46,6 +47,7 @@ export default function PreviewList({
     moreTitle,
     appleMusic,
     isLarge,
+    stagger,
     moreRoute,
 }: PreviewListProps) {
     const [api, setApi] = useState<CarouselApi>();
@@ -141,7 +143,7 @@ export default function PreviewList({
                                     className={className}
                                     data-testid={`preview-list-carousel-item-${index}`}
                                 >
-                                    <CardType entry={entry} isLarge={isLarge} />
+                                    <CardType entry={entry} isLarge={isLarge} stagger={(stagger || 0) + index}  />
                                 </CarouselItem>
                             );
                         })}
@@ -153,7 +155,7 @@ export default function PreviewList({
 }
 
 
-export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | AppleMusicRecommendationContent, isLarge: boolean, title?: string }) {
+export function RegularPreviewCard({ entry, isLarge, title, stagger }: { entry: Albums | AppleMusicRecommendationContent, isLarge: boolean, title?: string, stagger?: number }) {
 
     const { handlePlay, navigateToResource } = usePreviewCard();
     const { isAppleMusic } = checkServerType();
@@ -185,7 +187,16 @@ export function RegularPreviewCard({ entry, isLarge, title }: { entry: Albums | 
     };
 
     return (
-        <PreviewCard.Root contextMenuOptions={contextMenuOptions}>
+        <PreviewCard.Root 
+            contextMenuOptions={contextMenuOptions}
+            style={{
+                animationDelay: stagger ? `${stagger * 50}ms` : undefined,
+                animationName: stagger ? "cardStaggerAnimation" : undefined,
+                animationDuration: "1000ms",
+                animationFillMode: "both",
+                animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+            }}
+        >
             <PreviewCard.ImageWrapper 
                 onClick={() => navigateToResource(entry)}
                 className={isLarge && "rounded-b-none rounded-t"}

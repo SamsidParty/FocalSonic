@@ -84,11 +84,11 @@ export default function SearchResults({ query, latestSearchId, isLiveSearch, onS
 
             {shouldShowResults && hasAnyResults && displayData && !isLoading && (
                 <>
-                    <PreviewList title={t("sidebar.top")} list={displayData?.top} showMore={false} />
-                    <PreviewList title={t("sidebar.songs")} list={displayData?.song} showMore={false} />
-                    <PreviewList title={t("sidebar.albums")} list={displayData?.album} showMore={false} />
-                    <PreviewList title={t("sidebar.artists")} list={displayData?.artist} showMore={false} />
-                    <PreviewList title={t("sidebar.playlists")} list={displayData?.playlist} showMore={false} />
+                    <PreviewList title={t("sidebar.top")} list={displayData?.top} showMore={false} stagger={1} />
+                    <PreviewList title={t("sidebar.songs")} list={displayData?.song} showMore={false} stagger={2} />
+                    <PreviewList title={t("sidebar.albums")} list={displayData?.album} showMore={false} stagger={3} />
+                    <PreviewList title={t("sidebar.artists")} list={displayData?.artist} showMore={false} stagger={4} />
+                    <PreviewList title={t("sidebar.playlists")} list={displayData?.playlist} showMore={false} stagger={5} />
                 </>
             )}
 
