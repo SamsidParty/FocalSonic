@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { t } from "i18next";
-import { ArrowRightIcon, Loader2Icon } from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
 import { Form, useSearchParams } from "react-router-dom";
 import { useDebouncedCallback } from "use-debounce";
@@ -114,9 +114,6 @@ function SearchPage() {
                         onChange={(e) => handleInputChange(e.target.value)}
                         autoFocus
                     />
-                    {showLoading && (
-                        <Loader2Icon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
                 </div>
                 <Button type="submit">
                     <ArrowRightIcon />
