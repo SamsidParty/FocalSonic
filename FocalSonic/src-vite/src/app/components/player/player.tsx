@@ -218,7 +218,7 @@ export function Player() {
                 {isSong && song && (
                     <AudioPlayer
                         replayGain={getTrackReplayGain()}
-                        src={getSongStreamUrl(song.id, song.contentType)}
+                        src={getSongStreamUrl(song.playbackId || song.id, song.contentType)}
                         autoPlay={isPlaying}
                         audioRef={audioRef}
                         loop={loopState === LoopState.One}

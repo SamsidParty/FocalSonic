@@ -164,7 +164,7 @@ namespace FocalSonic.Presence
                 s.State.SongList.CurrentSong = song;
             });
 
-            var playbackURL = Store.ExtraProperties.GetStreamURLForSong(song.Id);
+            var playbackURL = Store.ExtraProperties.GetStreamURLForSong(song);
 
 
             await AssociatedPlayer.ResetSource();

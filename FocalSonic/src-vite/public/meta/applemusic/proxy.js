@@ -748,7 +748,7 @@
             adamId: contentID,
             "key-system": "com.widevine.alpha",
             "user-initiated": true,
-            isLibrary: false,
+            isLibrary: true,
             uri: magicDataURI.replace("enhanced/", ""),
             challenge: challenge,
         };
@@ -38763,14 +38763,25 @@
         return getAudioElement().attachedHls;
     }
 
-    async function getContentSources(contentID) {
-        const isNumericId = !Number.isNaN(parseInt(contentID));
-        const body = isNumericId ? { salableAdamId: contentID } : { universalLibraryId: contentID };
+    async function getContentSources(catalogID, libraryID) {
+        let body = {};
+        if (catalogID && !libraryID) {
+            body = { salableAdamId: catalogID };
+        }
+        else if (catalogID && libraryID) {
+            body = {
+                subscriptionAdamId: catalogID,
+                universalLibraryId: libraryID
+            };
+        }
+        else {
+            body = { universalLibraryId: libraryID };
+        }
         // Run enhanced HLS and webPlayback requests concurrently for faster startup
         const [enhancedHls, webPlaybackResponse] = await Promise.all([
-            // Enhanced HLS request (only for Atmos-enabled numeric IDs)
-            (isAtmosEnabled() && isNumericId)
-                ? tryGetEnhancedHLS(contentID)
+            // Enhanced HLS request (only for Atmos-enabled catalog IDs)
+            (isAtmosEnabled() && catalogID)
+                ? tryGetEnhancedHLS(catalogID)
                 : Promise.resolve(undefined),
             // Main webPlayback request
             fetch(webPlaybackURL, {
@@ -38790,7 +38801,7 @@
             if (ERROR_CODES[webPlaybackResponse?.failureType] === errorNames.SUBSCRIPTION_ERROR) {
                 console.warn("[FocalMK] User does not have an active subscription, attempting to find preview source");
                 // Try to resolve preview sources
-                const previewSources = await tryGetPreview(contentID);
+                const previewSources = await tryGetPreview(catalogID);
                 if (previewSources && previewSources[0]?.URL) {
                     // We found a preview playback URL. Use it
                     console.warn("[FocalMK] Preview source found, only a small part of the song will play");
@@ -38865,7 +38876,21 @@
 
     async function loadContent(hls, contentID) {
         try {
-            const sources = await getContentSources(contentID);
+            const isCatalogId = !isNaN(contentID);
+            const isCombinedId = contentID.split("/").length === 2; // Where both catalog and library ID are concated together
+            let catalogID = null;
+            let libraryID = null;
+            if (isCatalogId) {
+                catalogID = contentID;
+            }
+            else if (isCombinedId) {
+                catalogID = contentID.split("/")[0];
+                libraryID = contentID.split("/")[1];
+            }
+            else {
+                libraryID = contentID;
+            }
+            const sources = await getContentSources(catalogID, libraryID);
             const mainSource = findBestContentSource(sources);
             if (!mainSource.bestAsset)
                 handleError("[FocalMK] No valid content source found", true);
@@ -38884,7 +38909,7 @@
                 });
                 hls.playbackSource = mainSource;
                 hls.useDesirableAsset = mainSource.bestAsset?.desirable || false;
-                hls.contentID = contentID;
+                hls.contentID = catalogID || libraryID || null;
                 hls.loadSource(sourceURL);
             });
         }
