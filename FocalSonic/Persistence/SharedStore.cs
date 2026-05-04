@@ -18,6 +18,9 @@ namespace FocalSonic.Persistence
         [JsonProperty("enableAtmos")]
         public bool EnableAtmos = false;
 
+        [JsonProperty("enableExponentialVolume")]
+        public bool EnableExponentialVolume = false;
+
         [JsonProperty("volume")]
         public double Volume = 100;
 
@@ -132,6 +135,26 @@ namespace FocalSonic.Persistence
             if (shouldApplyVolume && previousState.Volume != nextState.Volume)
             {
                 var normalizedVolume = nextState.Volume / 100.0;
+
+                if (nextState.EnableExponentialVolume)
+                {
+                    normalizedVolume = normalizedVolume * normalizedVolume;
+                }
+
+                foreach (var player in AudioPlayer.AudioPlayer.ActivePlayers.Values)
+                {
+                    await AudioPlayer.AudioPlayer.RunOnPlayer(player.ID, (p) => p.SetVolume(normalizedVolume));
+                }
+            }
+
+            if (shouldApplyVolume && previousState.EnableExponentialVolume != nextState.EnableExponentialVolume)
+            {
+                var normalizedVolume = nextState.Volume / 100.0;
+
+                if (nextState.EnableExponentialVolume)
+                {
+                    normalizedVolume = normalizedVolume * normalizedVolume;
+                }
 
                 foreach (var player in AudioPlayer.AudioPlayer.ActivePlayers.Values)
                 {

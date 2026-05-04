@@ -11,7 +11,7 @@ import {
     Root
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
-import { useSharedSettings } from "@/store/shared.store";
+import { useSharedSettings, useExponentialVolume } from "@/store/shared.store";
 import { checkServerType } from "@/utils/servers";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,6 +26,7 @@ export function isAtmosSupported() {
 export function AtmosSettings() {
     const { t } = useTranslation();
     const { enableAtmos, setEnableAtmos: _setEnableAtmos } = useSharedSettings();
+    const { enableExponentialVolume, setEnableExponentialVolume } = useExponentialVolume();
     const { isAppleMusic } = checkServerType();
     const [hasChanged, setHasChanged] = useState(false);
 
@@ -67,6 +68,18 @@ export function AtmosSettings() {
                         <Switch
                             checked={enableAtmos}
                             onCheckedChange={setEnableAtmos}
+                        />
+                    </ContentItemForm>
+                </ContentItem>
+
+                <ContentItem>
+                    <ContentItemTitle info={t("settings.audio.exponentialVolume.note")}>
+                        {t("settings.audio.exponentialVolume.title")}
+                    </ContentItemTitle>
+                    <ContentItemForm>
+                        <Switch
+                            checked={enableExponentialVolume}
+                            onCheckedChange={setEnableExponentialVolume}
                         />
                     </ContentItemForm>
                 </ContentItem>

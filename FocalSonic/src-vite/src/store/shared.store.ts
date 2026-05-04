@@ -12,12 +12,14 @@ import { createWithEqualityFn } from "zustand/traditional";
 interface ISharedStoreState {
     enableDiscordPresence: boolean
     enableAtmos: boolean
+    enableExponentialVolume: boolean
     volume: number
 }
 
 interface ISharedStoreActions {
     setEnableDiscordPresence: (value: boolean) => void
     setEnableAtmos: (value: boolean) => void
+    setEnableExponentialVolume: (value: boolean) => void
     setVolume: (value: number) => void
     handleVolumeWheel: (isScrollingDown: boolean) => void
 }
@@ -52,6 +54,7 @@ interface ILegacySharedStoreState {
 const sharedStoreDefaults: ISharedStoreState = {
     enableDiscordPresence: false,
     enableAtmos: false,
+    enableExponentialVolume: false,
     volume: 100,
 };
 
@@ -79,6 +82,7 @@ function sanitizeSharedState(state?: Partial<ISharedStoreState>) {
     return {
         enableDiscordPresence: Boolean(state?.enableDiscordPresence),
         enableAtmos: Boolean(state?.enableAtmos),
+        enableExponentialVolume: Boolean(state?.enableExponentialVolume),
         volume: clamp(Number(state?.volume ?? sharedStoreDefaults.volume), sharedVolumeSettings.min, sharedVolumeSettings.max),
     } satisfies ISharedStoreState;
 }
@@ -169,6 +173,11 @@ export const useSharedStore = createWithEqualityFn<ISharedStore>()(
                                 state.enableAtmos = value;
                             });
                         },
+                        setEnableExponentialVolume: (value) => {
+                            set((state) => {
+                                state.enableExponentialVolume = value;
+                            });
+                        },
                         setVolume: (value) => {
                             const finalVolume = clamp(value, sharedVolumeSettings.min, sharedVolumeSettings.max);
 
@@ -214,6 +223,7 @@ export const useSharedStore = createWithEqualityFn<ISharedStore>()(
                 partialize: (state) => ({
                     enableDiscordPresence: state.enableDiscordPresence,
                     enableAtmos: state.enableAtmos,
+                    enableExponentialVolume: state.enableExponentialVolume,
                     volume: state.volume,
                 }),
             },
@@ -241,6 +251,8 @@ export const useSharedSettings = () => ({
     setEnableDiscordPresence: useSharedStore((state) => state.actions.setEnableDiscordPresence),
     enableAtmos: useSharedStore((state) => state.enableAtmos),
     setEnableAtmos: useSharedStore((state) => state.actions.setEnableAtmos),
+    enableExponentialVolume: useSharedStore((state) => state.enableExponentialVolume),
+    setEnableExponentialVolume: useSharedStore((state) => state.actions.setEnableExponentialVolume),
 });
 
 export const useSharedVolume = () => ({
@@ -250,3 +262,8 @@ export const useSharedVolume = () => ({
 });
 
 export const getSharedVolume = () => useSharedStore.getState().volume;
+
+export const useExponentialVolume = () => ({
+    enableExponentialVolume: useSharedStore((state) => state.enableExponentialVolume),
+    setEnableExponentialVolume: useSharedStore((state) => state.actions.setEnableExponentialVolume),
+});
