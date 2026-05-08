@@ -42,5 +42,7 @@ Ensure to install the following dependencies:
 
 After that, running from source is simple:  
 1. `git clone https://github.com/SamsidParty/FocalSonic.git`
-2. `cd ./FocalSonic/FocalSonic`
-3. `dotnet run`
+2. `cd ./FocalSonic/FocalSonic/src-vite`
+3. `npm install --force`
+4. `cd ..`
+5. `dotnet run`
