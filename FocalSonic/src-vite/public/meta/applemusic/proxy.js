@@ -38738,6 +38738,9 @@
             }
             tryAcquireLicense(instance);
         });
+        // Track recovery attempts for non-fatal buffer stalls so we don't loop forever
+        let stallRecoveryAttempts = 0;
+        let lastStallRecoveryAt = 0;
         // Propagate fatal HLS errors to the global handler so playback can show a message
         instance.on(Hls.Events.ERROR, (event, data) => {
             console.error("HLS error event:", data);
@@ -38747,6 +38750,56 @@
                 return;
             }
             try {
+                const details = data?.details;
+                // Active recovery for non-fatal `bufferStalledError`.
+                //
+                // hls.js's built-in nudge logic (_tryNudgeBuffer) only fires when there are
+                // multiple buffered ranges with a hole, OR a `nextStart` exists. When the
+                // playhead is wedged inside a single contiguous buffered range (typical at
+                // the very start of a track when the audio element claims to be unpaused
+                // but currentTime never advances) hls.js reports the stall once with
+                // `fatal: false` and then does nothing -- the user just sees silence.
+                //
+                // We work around that here by nudging currentTime forward and re-issuing
+                // play(), which kicks the decoder/EME pipeline in essentially every case
+                // we've seen in user reports.
+                if (details === "bufferStalledError" && data && !data.fatal) {
+                    const media = instance.media;
+                    if (media) {
+                        // Reset the attempt counter if the previous stall was a while ago
+                        const now = performance.now();
+                        if (now - lastStallRecoveryAt > 30_000) {
+                            stallRecoveryAttempts = 0;
+                        }
+                        lastStallRecoveryAt = now;
+                        if (stallRecoveryAttempts < 5) {
+                            stallRecoveryAttempts++;
+                            const bufferEnd = data?.bufferInfo?.end ?? 0;
+                            const nudgeTarget = Math.min(bufferEnd - 0.05, media.currentTime + 0.1 * stallRecoveryAttempts);
+                            console.warn(`[FocalMK] Recovering from non-fatal buffer stall (attempt ${stallRecoveryAttempts}): ` +
+                                `nudging currentTime ${media.currentTime} -> ${nudgeTarget}`);
+                            try {
+                                if (nudgeTarget > media.currentTime) {
+                                    media.currentTime = nudgeTarget;
+                                }
+                                // Re-issue play() in case the audio element silently paused
+                                // (autoplay policy expiry, audio device transition, etc.)
+                                const p = media.play();
+                                if (p && typeof p.catch === "function") {
+                                    p.catch(err => console.warn("[FocalMK] play() during stall recovery rejected:", err));
+                                }
+                            }
+                            catch (recoverErr) {
+                                console.warn("[FocalMK] Stall recovery threw:", recoverErr);
+                            }
+                            return;
+                        }
+                        // Repeated stalls -- escalate so the user actually sees something
+                        console.error("[FocalMK] Buffer stall could not be recovered after multiple attempts");
+                        handleError("Playback is stuck and could not recover. Please try skipping this song.");
+                        return;
+                    }
+                }
                 if (data && data.fatal) {
                     const details = data.error?.message || JSON.stringify(data);
                     handleError(details);
@@ -39057,8 +39110,20 @@
             console.log(`[FocalMK] Now playing: ${itemToPlay.song}`);
             itemToPlay.setActive();
             await itemToPlay.prepareForPlayback();
-            getAudioElement().playbackRate = this._playbackRate;
-            getAudioElement().play();
+            const audio = getAudioElement();
+            audio.playbackRate = this._playbackRate;
+            try {
+                await audio.play();
+            }
+            catch (err) {
+                // Most commonly: Chromium's autoplay policy rejected play() because the
+                // user gesture activation expired while we were awaiting license/manifest
+                // requests. Surface it instead of swallowing -- otherwise the audio
+                // element stays paused while hls.js keeps thinking playback is healthy,
+                // and the user just sees silence.
+                console.error("[FocalMK] audio.play() rejected:", err);
+                handleError(err);
+            }
         }
         stop() {
             this.isPlaying = false;
