@@ -97,8 +97,20 @@ export class MusicKitInstance {
         itemToPlay.setActive();
         await itemToPlay.prepareForPlayback();
 
-        getAudioElement().playbackRate = this._playbackRate;
-        getAudioElement().play();
+        const audio = getAudioElement();
+        audio.playbackRate = this._playbackRate;
+        try {
+            await audio.play();
+        }
+        catch (err) {
+            // Most commonly: Chromium's autoplay policy rejected play() because the
+            // user gesture activation expired while we were awaiting license/manifest
+            // requests. Surface it instead of swallowing -- otherwise the audio
+            // element stays paused while hls.js keeps thinking playback is healthy,
+            // and the user just sees silence.
+            console.error("[FocalMK] audio.play() rejected:", err);
+            handleError(err as Error);
+        }
     }
 
     stop() {
