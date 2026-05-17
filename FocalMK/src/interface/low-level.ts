@@ -6,25 +6,7 @@ import Hls from "../playback/hls.js";
 
 export async function loadContent(hls: FocalHls, contentID: string) {
     try {
-
-        const isCatalogId = !isNaN(contentID as unknown as any);
-        const isCombinedId = contentID.split("/").length === 2; // Where both catalog and library ID are concated together
-
-        let catalogID: string | null = null;
-        let libraryID: string | null = null;
-
-        if (isCatalogId) {
-            catalogID = contentID;
-        }
-        else if (isCombinedId) {
-            catalogID = contentID.split("/")[0];
-            libraryID = contentID.split("/")[1];
-        }
-        else {
-            libraryID = contentID;
-        }
-
-        const sources = await getContentSources(catalogID, libraryID);
+        const sources = await getContentSources(contentID);
         const mainSource = findBestContentSource(sources);
         if (!mainSource.bestAsset) handleError("[FocalMK] No valid content source found", true);
 
@@ -48,7 +30,7 @@ export async function loadContent(hls: FocalHls, contentID: string) {
 
             hls.playbackSource = mainSource;
             hls.useDesirableAsset = mainSource.bestAsset?.desirable || false;
-            hls.contentID = catalogID || libraryID || null!;
+            hls.contentID = contentID;
             hls.loadSource(sourceURL);
         });
     }

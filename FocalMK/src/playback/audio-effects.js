@@ -311,8 +311,7 @@ class AudioEffectController {
             muteVolume = 0.0; // Mute local audio when outputting to external device (eg. chromecast)
         }
 
-        let mergedVolume = this.baseVolume * this.fadeGain * muteVolume;
-        this.rawSource.volume = Math.pow(mergedVolume, 2); // Exponential volume
+        this.rawSource.volume = this.baseVolume * this.fadeGain * muteVolume;
     }
 
     resetFade() {

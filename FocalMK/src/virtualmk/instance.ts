@@ -97,39 +97,8 @@ export class MusicKitInstance {
         itemToPlay.setActive();
         await itemToPlay.prepareForPlayback();
 
-        const audio = getAudioElement();
-        audio.playbackRate = this._playbackRate;
-
-        // Make sure the Web Audio graph is actually running before we ask the
-        // media element to play. If the AudioContext is `suspended` (very common
-        // when the user-gesture activation expired during license/manifest fetches
-        // above) the media element is gated by Web Audio -- output is silent AND
-        // currentTime never advances, which surfaces as a confusing hls.js
-        // `bufferStalledError` later on.
-        try {
-            const ctx: AudioContext | undefined = (getAudioEffectController(audio) as any)?.audioCtx;
-            if (ctx && ctx.state === "suspended") {
-                await ctx.resume().catch(err => {
-                    console.warn("[FocalMK] AudioContext.resume() rejected:", err);
-                });
-            }
-        }
-        catch (ctxErr) {
-            console.warn("[FocalMK] Error resuming AudioContext before play():", ctxErr);
-        }
-
-        try {
-            await audio.play();
-        }
-        catch (err) {
-            // Most commonly: Chromium's autoplay policy rejected play() because the
-            // user gesture activation expired while we were awaiting license/manifest
-            // requests. Surface it instead of swallowing -- otherwise the audio
-            // element stays paused while hls.js keeps thinking playback is healthy,
-            // and the user just sees silence.
-            console.error("[FocalMK] audio.play() rejected:", err);
-            handleError(err as Error);
-        }
+        getAudioElement().playbackRate = this._playbackRate;
+        getAudioElement().play();
     }
 
     stop() {
