@@ -658,10 +658,54 @@
         return url;
     }
 
-    function getWebPlaybackPssh() {
-        const e = Uint8Array.from(appleMagic1);
+    /**
+     * Extract the 16-byte content key ID from an EXT-X-KEY URI of the form
+     * `data:[mime];base64,<base64>`. For Apple's regular (non-enhanced) web playback
+     * streams the payload is the raw 16-byte key ID.
+     */
+    function extractKeyIdFromDataUri(licenseURL) {
+        if (!licenseURL || !licenseURL.includes("base64,"))
+            return null;
+        try {
+            const base64 = licenseURL.split("base64,")[1];
+            const bytes = base64ToUint8Array(base64);
+            // A bare key ID is exactly 16 bytes. Anything else (e.g. a full PSSH box)
+            // is handled by the enhanced path.
+            if (bytes.length === 16)
+                return bytes;
+            return null;
+        }
+        catch {
+            return null;
+        }
+    }
+    /**
+     * Build a Widevine PSSH box for Apple Music web playback.
+     *
+     * Apple used to serve a single constant key ID for every web-playback track, so
+     * the original implementation just baked a hardcoded key ID into the PSSH
+     * template. Around mid-2026 Apple started issuing per-track key IDs that match
+     * the `tenc` box inside each fMP4 init segment, which made the constant key ID
+     * mismatch the segment (CDM holds key A, MSE wants key B -> silent stall at
+     * 0:00 and an "Init segment with encrypted track with has no key" warning from
+     * hls.js's passthrough remuxer).
+     *
+     * If `licenseURL` is the manifest's EXT-X-KEY data URI we can pull the real key
+     * ID out of it and patch it into the PSSH so the CDM's stored key matches what
+     * MSE actually asks for.
+     */
+    function getWebPlaybackPssh(licenseURL) {
         const n = new Uint8Array(appleMagic2);
-        for (let d = 0; d < e.length; d++)
+        const realKeyId = licenseURL ? extractKeyIdFromDataUri(licenseURL) : null;
+        if (realKeyId) {
+            // The last 16 bytes of the Widevine PSSH data are the key ID slot.
+            n.set(realKeyId, n.length - 16);
+            return n;
+        }
+        // Legacy fallback: use the historical hardcoded key ID. Kept so old content
+        // (and any caller that doesn't pass a license URL) still works.
+        const e = Uint8Array.from(appleMagic1);
+        for (let d = 0; d < e.length && (n.length - 16 + d) < n.length; d++)
             n[n.length - 16 + d] = e[d];
         return n;
     }
@@ -679,8 +723,9 @@
         if (licenseURL.startsWith("enhanced/")) {
             return getEnhancedPssh(licenseURL.replace("enhanced/", ""));
         }
-        console.log("[FocalMK]: Using default Web Playback PSSH " + btoa(String.fromCharCode(...getWebPlaybackPssh())));
-        return getWebPlaybackPssh();
+        const pssh = getWebPlaybackPssh(licenseURL);
+        console.log("[FocalMK]: Using Web Playback PSSH " + uint8ArrayToBase64(pssh));
+        return pssh;
     }
 
     // Track active renewal timers for cleanup
