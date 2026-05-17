@@ -370,7 +370,8 @@
                 muteVolume = 0.0; // Mute local audio when outputting to external device (eg. chromecast)
             }
 
-            this.rawSource.volume = this.baseVolume * this.fadeGain * muteVolume;
+            let mergedVolume = this.baseVolume * this.fadeGain * muteVolume;
+            this.rawSource.volume = Math.pow(mergedVolume, 2); // Exponential volume
         }
 
         resetFade() {
@@ -38706,7 +38707,7 @@
                     const sessionKeyData = JSON.parse(atob(sessionKeyInfo?.VALUE || ""));
                     Object.entries(sessionKeyData).forEach((keyInfo) => {
                         if (keyInfo[0] != "1" && keyInfo && keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]) {
-                            instance.magicDataURI = "enhanced/" + keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
+                            focalHls.magicDataURI = "enhanced/" + keyInfo[1]["urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"]?.URI;
                             console.log("Found magic data URI (enhancedHls):", instance.magicDataURI);
                             instance.dolbyAtmosAvailable = true;
                         }
@@ -38738,6 +38739,135 @@
             }
             tryAcquireLicense(instance);
         });
+        // Track recovery state for non-fatal buffer stalls.
+        //
+        // Why we need this: hls.js only fires the BUFFER_STALLED_ERROR event ONCE per
+        // stall (it sets an internal `stallReported` flag that's only cleared once the
+        // playhead actually moves). So we can't drive recovery off the ERROR event --
+        // if our first attempt doesn't unstick playback, no further events arrive and
+        // playback sits silently broken. Instead, we kick off our own watchdog loop.
+        let stallWatchdogTimer = null;
+        let stallRecoveryAttempts = 0;
+        const clearStallWatchdog = () => {
+            if (stallWatchdogTimer !== null) {
+                window.clearTimeout(stallWatchdogTimer);
+                stallWatchdogTimer = null;
+            }
+        };
+        const attemptStallRecovery = () => {
+            stallWatchdogTimer = null;
+            const media = instance.media;
+            if (!media || getActiveHlsInstance() !== instance) {
+                // Instance is no longer the active one; stop trying.
+                stallRecoveryAttempts = 0;
+                return;
+            }
+            const beforeTime = media.currentTime;
+            stallRecoveryAttempts++;
+            // Step 1 (always): make sure the Web Audio graph is actually running.
+            //
+            // The audio-effects controller routes the audio element through a
+            // MediaElementAudioSourceNode. If its AudioContext is `suspended` (very
+            // common when the user-gesture activation expired during license/manifest
+            // fetches) the media element is gated -- output is silent AND currentTime
+            // never advances, which produces exactly the bufferStalledError pattern
+            // we've been seeing in user reports.
+            try {
+                const ctrl = getAudioEffectController(media);
+                const ctx = ctrl?.audioCtx;
+                if (ctx && ctx.state === "suspended") {
+                    console.warn("[FocalMK] AudioContext is suspended during stall; resuming");
+                    ctx.resume().catch(err => {
+                        console.warn("[FocalMK] AudioContext.resume() rejected:", err);
+                    });
+                }
+            }
+            catch (ctxErr) {
+                console.warn("[FocalMK] Error inspecting AudioContext during stall recovery:", ctxErr);
+            }
+            try {
+                if (stallRecoveryAttempts <= 2) {
+                    // Step 2: gentle nudge -- bump currentTime forward inside the buffered range
+                    // and re-issue play() in case the element silently paused.
+                    const bufferEnd = (() => {
+                        try {
+                            return media.buffered.length > 0 ? media.buffered.end(media.buffered.length - 1) : 0;
+                        }
+                        catch {
+                            return 0;
+                        }
+                    })();
+                    const nudgeTarget = Math.min(Math.max(bufferEnd - 0.05, 0), media.currentTime + 0.1 * stallRecoveryAttempts);
+                    console.warn(`[FocalMK] Stall recovery attempt ${stallRecoveryAttempts}: ` +
+                        `nudge currentTime ${media.currentTime} -> ${nudgeTarget}`);
+                    if (nudgeTarget > media.currentTime) {
+                        media.currentTime = nudgeTarget;
+                    }
+                    const p = media.play();
+                    if (p && typeof p.catch === "function") {
+                        p.catch(err => console.warn("[FocalMK] play() during stall recovery rejected:", err));
+                    }
+                }
+                else if (stallRecoveryAttempts === 3) {
+                    // Step 3: ask hls.js to recover the media pipeline.
+                    console.warn(`[FocalMK] Stall recovery attempt ${stallRecoveryAttempts}: recoverMediaError()`);
+                    try {
+                        instance.recoverMediaError?.();
+                    }
+                    catch (e) {
+                        console.warn("recoverMediaError threw:", e);
+                    }
+                    const p = media.play();
+                    if (p && typeof p.catch === "function") {
+                        p.catch(err => console.warn("[FocalMK] play() after recoverMediaError rejected:", err));
+                    }
+                }
+                else if (stallRecoveryAttempts === 4) {
+                    // Step 4: full source reload. Last-ditch before giving up.
+                    console.warn(`[FocalMK] Stall recovery attempt ${stallRecoveryAttempts}: reloading source`);
+                    try {
+                        const url = instance.playbackSource?.bestAsset?.URL || instance.playbackSource?.backupAsset?.URL;
+                        if (url) {
+                            instance.stopLoad();
+                            instance.loadSource(url);
+                            instance.startLoad(0);
+                            const p = media.play();
+                            if (p && typeof p.catch === "function") {
+                                p.catch(err => console.warn("[FocalMK] play() after reload rejected:", err));
+                            }
+                        }
+                    }
+                    catch (e) {
+                        console.warn("source reload threw:", e);
+                    }
+                }
+                else {
+                    // Give up; surface a real error to the user.
+                    console.error("[FocalMK] Buffer stall could not be recovered after multiple attempts");
+                    handleError("Playback is stuck and could not recover. Please try skipping this song.");
+                    stallRecoveryAttempts = 0;
+                    return;
+                }
+            }
+            catch (recoverErr) {
+                console.warn("[FocalMK] Stall recovery threw:", recoverErr);
+            }
+            // Schedule a follow-up check. If currentTime advanced, we'll clear the
+            // counter and stop; otherwise we escalate.
+            stallWatchdogTimer = window.setTimeout(() => {
+                const m = instance.media;
+                if (!m) {
+                    stallRecoveryAttempts = 0;
+                    return;
+                }
+                if (m.currentTime > beforeTime + 0.05) {
+                    console.log("[FocalMK] Playback recovered from stall");
+                    stallRecoveryAttempts = 0;
+                    return;
+                }
+                attemptStallRecovery();
+            }, 1500);
+        };
         // Propagate fatal HLS errors to the global handler so playback can show a message
         instance.on(Hls.Events.ERROR, (event, data) => {
             console.error("HLS error event:", data);
@@ -38747,15 +38877,31 @@
                 return;
             }
             try {
+                const details = data?.details;
+                if (details === "bufferStalledError" && data && !data.fatal) {
+                    // Only kick off the watchdog if it isn't already running. hls.js only
+                    // fires this event once per stall, so we can't rely on repeated events.
+                    if (stallWatchdogTimer === null && stallRecoveryAttempts === 0) {
+                        attemptStallRecovery();
+                    }
+                    return;
+                }
                 if (data && data.fatal) {
-                    const details = data.error?.message || JSON.stringify(data);
-                    handleError(details);
+                    clearStallWatchdog();
+                    stallRecoveryAttempts = 0;
+                    const msg = data.error?.message || JSON.stringify(data);
+                    handleError(msg);
                 }
             }
             catch (e) {
                 // Swallow handler errors but log
                 console.error("Error while handling HLS error:", e);
             }
+        });
+        // Clear watchdog state when playback resolves naturally.
+        instance.on(Hls.Events.DESTROYING, () => {
+            clearStallWatchdog();
+            stallRecoveryAttempts = 0;
         });
         return instance;
     }
@@ -39082,8 +39228,37 @@
             console.log(`[FocalMK] Now playing: ${itemToPlay.song}`);
             itemToPlay.setActive();
             await itemToPlay.prepareForPlayback();
-            getAudioElement().playbackRate = this._playbackRate;
-            getAudioElement().play();
+            const audio = getAudioElement();
+            audio.playbackRate = this._playbackRate;
+            // Make sure the Web Audio graph is actually running before we ask the
+            // media element to play. If the AudioContext is `suspended` (very common
+            // when the user-gesture activation expired during license/manifest fetches
+            // above) the media element is gated by Web Audio -- output is silent AND
+            // currentTime never advances, which surfaces as a confusing hls.js
+            // `bufferStalledError` later on.
+            try {
+                const ctx = getAudioEffectController(audio)?.audioCtx;
+                if (ctx && ctx.state === "suspended") {
+                    await ctx.resume().catch(err => {
+                        console.warn("[FocalMK] AudioContext.resume() rejected:", err);
+                    });
+                }
+            }
+            catch (ctxErr) {
+                console.warn("[FocalMK] Error resuming AudioContext before play():", ctxErr);
+            }
+            try {
+                await audio.play();
+            }
+            catch (err) {
+                // Most commonly: Chromium's autoplay policy rejected play() because the
+                // user gesture activation expired while we were awaiting license/manifest
+                // requests. Surface it instead of swallowing -- otherwise the audio
+                // element stays paused while hls.js keeps thinking playback is healthy,
+                // and the user just sees silence.
+                console.error("[FocalMK] audio.play() rejected:", err);
+                handleError(err);
+            }
         }
         stop() {
             this.isPlaying = false;
