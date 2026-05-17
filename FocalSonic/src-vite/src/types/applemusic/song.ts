@@ -2,7 +2,7 @@ import removeUndefined from "@/utils/removeUndefined";
 import { Resource } from "i18next";
 import { AppleMusicAlbum } from "./albums";
 import { AppleMusicArtist } from "./artist";
-import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicGenre, AppleMusicPlayParams, AppleMusicRelationship, getAppleMusicStarredDate } from "./common";
+import { AppleMusicArtwork, AppleMusicEditorialNotes, AppleMusicGenre, AppleMusicPlayParams, AppleMusicRelationship, AppleMusicStation, getAppleMusicStarredDate } from "./common";
 
 export interface AppleMusicLyricsResponse {
     data: AppleMusicLyrics[];
@@ -57,9 +57,14 @@ export interface AppleMusicSongRelationships {
 export function convertAppleMusicSongToSubsonic(song: AppleMusicSong, parent: any | undefined): Song {
     if (!song) { return; }
 
+    const catalogId = song.attributes?.playParams?.catalogId;
+    const libraryId = (song.id && isNaN(song.id)) ? song.id : null;
+    const id = catalogId || song.attributes?.playParams?.id || libraryId;
+
     return removeUndefined({
         isDir: false,
-        id: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
+        id: id,
+        playbackId: (catalogId && libraryId) ? `${catalogId}/${libraryId}` : id,
         parent: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
         albumId: song.attributes?.playParams?.catalogId || song.attributes?.playParams?.id || song.id,
         title: song.attributes?.name || "Unknown",

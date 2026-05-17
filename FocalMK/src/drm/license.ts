@@ -95,7 +95,7 @@ export async function acquireWebPlaybackLicense(challenge: string, contentID: st
         adamId: contentID,
         "key-system": "com.widevine.alpha",
         "user-initiated": true,
-        isLibrary: false,
+        isLibrary: true,
         uri: magicDataURI.replace("enhanced/", ""),
         challenge: challenge,
     };

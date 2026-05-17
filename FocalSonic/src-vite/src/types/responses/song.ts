@@ -44,6 +44,7 @@ export interface IContributor {
 
 export interface ISong {
     id: string
+    playbackId: string
     parent: string
     isDir: boolean
     title: string

@@ -63,7 +63,7 @@ export function AlbumsFallback() {
     );
 }
 
-function GridFallback() {
+export function GridFallback() {
     return (
         <MainGrid>
             {Array.from({ length: 40 }).map((_, index) => (

@@ -153,8 +153,7 @@ namespace FocalSonic.AppleMusic
 
             // Try to determine the next source based on the queue
             if (MediaPlaybackInfo.Instance == null || MediaPlaybackInfo.Instance.NextQueueItem == null) { return; }
-            var trackID = (await MediaPlaybackInfo.Instance.ResolveNextSong()).Id;
-            var src = MediaPlaybackInfo.Instance.Store.ExtraProperties.GetStreamURLForSong(trackID);
+            var src = MediaPlaybackInfo.Instance.Store.ExtraProperties.GetStreamURLForSong((await MediaPlaybackInfo.Instance.ResolveNextSong()));
 
             if (Source == src || string.IsNullOrEmpty(src)) { return; }
 

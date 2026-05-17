@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SamsidParty.Subsonic.Common.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,10 +23,10 @@ namespace FocalSonic.Presence
             return CoverArtBaseURL.Replace("{id}", coverArtID).Replace("{w}", "300").Replace("{h}", "300").Replace("{f}", "jpg");
         }
 
-        public string GetStreamURLForSong(string songID)
+        public string GetStreamURLForSong(Song song)
         {
             if (string.IsNullOrEmpty(StreamBaseURL)) return string.Empty;
-            return StreamBaseURL.Replace("{id}", songID);
+            return StreamBaseURL.Replace("{id}", song.PlaybackID ?? song.Id);
         }
 
         [JsonExtensionData]

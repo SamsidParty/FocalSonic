@@ -1,40 +1,102 @@
 import { service } from "@/service/service";
 import { queryKeys } from "@/utils/queryKeys";
-import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "i18next";
-import React from "react";
+import { useRef, useState } from "react";
+import { GridFallback } from "../components/fallbacks/album-fallbacks";
 import PreviewList from "../components/home/preview-list";
 
-export default function SearchResults({ query }: { query: string }) {
+interface SearchResultsProps {
+    query: string;
+    latestSearchId: number;
+    isLiveSearch?: boolean;
+    onSearchSuccess?: (query: string) => void;
+}
 
-    const { isAppleMusic } = checkServerType();
+interface StoredResult {
+    searchId: number;
+    data: Awaited<ReturnType<typeof service.search.get>>;
+}
 
-    const { data: searchResult } = useQuery({
+export default function SearchResults({ query, latestSearchId, isLiveSearch, onSearchSuccess }: SearchResultsProps) {
+    // Keep track of successful searches to avoid stale results overwriting newer ones
+    const latestSuccessfulSearchIdRef = useRef(0);
+    const [lastResults, setLastResults] = useState<StoredResult | null>(null);
+    const [lastError, setLastError] = useState<string | null>(null);
+
+    const { data: searchResult, isLoading, isError } = useQuery({
         queryKey: [queryKeys.search, query],
-        queryFn: () =>
-            service.search.get({
+        queryFn: async () => {
+            const currentSearchId = latestSearchId;
+
+            const result = await service.search.get({
                 query,
                 albumCount: 4,
                 artistCount: 4,
                 songCount: 4,
-            })
+            });
+
+            // Only save if this is still the most recent search
+            if (currentSearchId >= latestSuccessfulSearchIdRef.current) {
+                latestSuccessfulSearchIdRef.current = currentSearchId;
+                setLastResults({ searchId: currentSearchId, data: result });
+                setLastError(null);
+                onSearchSuccess?.(query);
+            }
+
+            return result;
+        },
+        enabled: query.length >= 2,
+        retry: 1,
     });
 
+    const isCurrentSearch = latestSearchId >= latestSuccessfulSearchIdRef.current;
+    const displayData = isCurrentSearch && searchResult ? searchResult : lastResults?.data;
+
+    const hasResults = displayData !== undefined;
+    const hasAnyResults = hasResults && (
+        (displayData?.top?.length ?? 0) > 0 ||
+        (displayData?.song?.length ?? 0) > 0 ||
+        (displayData?.album?.length ?? 0) > 0 ||
+        (displayData?.artist?.length ?? 0) > 0 ||
+        (displayData?.playlist?.length ?? 0) > 0
+    );
+
+    // Only show live search results if they're the most recent
+    const shouldShowResults = isLiveSearch ? isCurrentSearch : true;
+
+    // Show no results only after loading finishes and we have nothing
+    const showNoResults = !isLoading && !isError && isLiveSearch && shouldShowResults && query.length >= 2 && !hasAnyResults;
+
+    // If error but we have old results, show error but keep old results visible
+    const showError = isError && lastResults !== null;
+
     return (
-        <div className="p-4">
-            <h2 className="text-lg font-semibold">Search results for "{query}"</h2>
-            {
-                searchResult !== undefined && (
-                    <>
-                        <PreviewList title={t("sidebar.top")} list={searchResult?.top} showMore={false} />
-                        <PreviewList title={t("sidebar.songs")} list={searchResult?.song} showMore={false} />
-                        <PreviewList title={t("sidebar.albums")} list={searchResult?.album} showMore={false} />
-                        <PreviewList title={t("sidebar.artists")} list={searchResult?.artist} showMore={false} />
-                        <PreviewList title={t("sidebar.playlists")} list={searchResult?.playlist} showMore={false} />
-                    </>
-                )
-            }
+        <div>
+
+            {showError && (
+                <div className="text-destructive text-sm mb-2">
+                    {t("command.error") || "Search failed. Showing previous results."}
+                </div>
+            )}
+
+            {isLoading && (<GridFallback />)}
+
+            {shouldShowResults && hasAnyResults && displayData && !isLoading && (
+                <>
+                    <PreviewList title={t("sidebar.top")} list={displayData?.top} showMore={false} stagger={1} />
+                    <PreviewList title={t("sidebar.songs")} list={displayData?.song} showMore={false} stagger={2} />
+                    <PreviewList title={t("sidebar.albums")} list={displayData?.album} showMore={false} stagger={3} />
+                    <PreviewList title={t("sidebar.artists")} list={displayData?.artist} showMore={false} stagger={4} />
+                    <PreviewList title={t("sidebar.playlists")} list={displayData?.playlist} showMore={false} stagger={5} />
+                </>
+            )}
+
+            {showNoResults && (
+                <div className="text-muted-foreground text-sm">
+                    {t("command.noResults")}
+                </div>
+            )}
         </div>
     );
 }

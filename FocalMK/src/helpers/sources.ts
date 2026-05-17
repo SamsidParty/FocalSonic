@@ -18,15 +18,27 @@ export interface PlaybackSource {
     backupAsset: PlaybackAsset | null;
 }
 
-export async function getContentSources(contentID: string) {
-    const isNumericId = !Number.isNaN(parseInt(contentID));
-    const body = isNumericId ? { salableAdamId: contentID } : { universalLibraryId: contentID };
+export async function getContentSources(catalogID: string | null, libraryID: string | null) {
+    let body = {};
+
+    if (catalogID && !libraryID) {
+        body = { salableAdamId: catalogID };
+    } 
+    else if (catalogID && libraryID) {
+        body = { 
+            subscriptionAdamId: catalogID,
+            universalLibraryId: libraryID
+        };
+    }
+    else {
+        body = { universalLibraryId: libraryID };
+    }
     
     // Run enhanced HLS and webPlayback requests concurrently for faster startup
     const [enhancedHls, webPlaybackResponse] = await Promise.all([
-        // Enhanced HLS request (only for Atmos-enabled numeric IDs)
-        (isAtmosEnabled() && isNumericId) 
-            ? tryGetEnhancedHLS(contentID) 
+        // Enhanced HLS request (only for Atmos-enabled catalog IDs)
+        (isAtmosEnabled() && catalogID) 
+            ? tryGetEnhancedHLS(catalogID) 
             : Promise.resolve(undefined),
         // Main webPlayback request
         fetch(webPlaybackURL, {
@@ -49,7 +61,7 @@ export async function getContentSources(contentID: string) {
         if (ERROR_CODES[webPlaybackResponse?.failureType as string] === errorNames.SUBSCRIPTION_ERROR) {
             console.warn("[FocalMK] User does not have an active subscription, attempting to find preview source");
             // Try to resolve preview sources
-            const previewSources = await tryGetPreview(contentID);
+            const previewSources = await tryGetPreview(catalogID!);
 
             if (previewSources && previewSources[0]?.URL) {
                 // We found a preview playback URL. Use it
