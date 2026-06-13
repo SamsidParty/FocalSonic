@@ -49,25 +49,27 @@ namespace FocalSonic.LastFM
             if (!IsWaitingForToken) return; // Prevents being called multiple times, the token can only be redeemed once
             IsWaitingForToken = false;
 
-            // Redeem auth token into session key
+            // Redeem auth token into session key.
+            // This writes through the main window's LocalStorage instance, which also
+            // hydrates the JS side, so we only need to refresh the auth state in the UI here.
             await RedeemAuthToken(token);
 
-            // Callbacks
-            // GetAllItems is async; await it so the resolved dictionary is hydrated, not the Task object
-            var items = await LocalStorage.GetAllItems("default");
-            Program.MainWindow?.CallFunction("window._localStorage.hydrate", items); // Reload localStorage
             Program.MainWindow?.CallFunction("window.reloadLastFMAuthState");
         }
 
         [Command("logoutOfLastFM")]
         public static async Task LogOutOfLastFM()
         {
-            // Await the writes so the cleared values are persisted before we read them back
-            await LocalStorage.SetItem("lastfm_session_key", "", "default");
-            await LocalStorage.SetItem("lastfm_username", "", "default");
+            var storage = Program.MainWindow?.LocalStorage;
+            if (storage != null)
+            {
+                // Clear to "" rather than removing the keys: the JS-side hydrate only
+                // overwrites keys present in the dictionary, so a removed key would keep
+                // its stale value in the in-page cache and the UI would still look signed in.
+                await storage.SetItem("lastfm_session_key", "");
+                await storage.SetItem("lastfm_username", "");
+            }
 
-            var items = await LocalStorage.GetAllItems("default");
-            Program.MainWindow?.CallFunction("window._localStorage.hydrate", items); // Reload localStorage
             Program.MainWindow?.CallFunction("window.reloadLastFMAuthState");
         }
 
@@ -76,9 +78,18 @@ namespace FocalSonic.LastFM
             // Implemented according to https://www.last.fm/api/show/auth.getSession
             var (sessionKey, username) = await LastFMHttpClient.Instance.GetSessionAsync(authToken);
 
-            // Await the writes so they are persisted before GetAllItems reads them back in RecieveLastFMToken
-            await LocalStorage.SetItem("lastfm_session_key", sessionKey, "default");
-            await LocalStorage.SetItem("lastfm_username", username, "default");
+            // Write through the main window's LocalStorage instance (not the static
+            // LocalStorage.SetItem helpers, which create a throwaway instance with its own
+            // cache). The window flushes its in-memory cache to disk on every JS-side write,
+            // so keys written out-of-band via a separate instance get clobbered by the next
+            // JS write (e.g. opening the Settings dialog), silently wiping the session and
+            // stopping scrobbling. Saving through the window instance keeps its cache
+            // consistent and hydrates the JS side at the same time.
+            var storage = Program.MainWindow?.LocalStorage;
+            if (storage == null) return;
+
+            await storage.SetItem("lastfm_session_key", sessionKey);
+            await storage.SetItem("lastfm_username", username);
         }
     }
 }
