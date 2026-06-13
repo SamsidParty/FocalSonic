@@ -1,6 +1,5 @@
 import { base64ToUint8Array, uint8ArrayToBase64 } from "../helpers/base64";
 import { appleMagic1, appleMagic2 } from "../helpers/constants";
-import handleError from "../helpers/error-handler";
 
 /**
  * Extract the 16-byte content key ID from an EXT-X-KEY URI of the form
@@ -61,11 +60,11 @@ export function getEnhancedPssh(licenseURL: string) {
         const base64Decoded = base64ToUint8Array(split[1]);
         return base64Decoded;
     }
-    handleError("Invalid enhanced PSSH license URL", true);
+    throw new Error("Invalid enhanced PSSH license URL");
 }
 
 export function getPssh(licenseURL: string) {
-    if (!licenseURL) handleError("No license URL provided for PSSH generation", true);
+    if (!licenseURL) throw new Error("No license URL provided for PSSH generation");
     if (licenseURL.startsWith("enhanced/")) {
         return getEnhancedPssh(licenseURL.replace("enhanced/", ""));
     }

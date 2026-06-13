@@ -53,17 +53,21 @@ namespace FocalSonic.LastFM
             await RedeemAuthToken(token);
 
             // Callbacks
-            Program.MainWindow?.CallFunction("window._localStorage.hydrate", LocalStorage.GetAllItems("default")); // Reload localStorage
+            // GetAllItems is async; await it so the resolved dictionary is hydrated, not the Task object
+            var items = await LocalStorage.GetAllItems("default");
+            Program.MainWindow?.CallFunction("window._localStorage.hydrate", items); // Reload localStorage
             Program.MainWindow?.CallFunction("window.reloadLastFMAuthState");
         }
 
         [Command("logoutOfLastFM")]
         public static async Task LogOutOfLastFM()
         {
-            LocalStorage.SetItem("lastfm_session_key", "", "default");
-            LocalStorage.SetItem("lastfm_username", "", "default");
+            // Await the writes so the cleared values are persisted before we read them back
+            await LocalStorage.SetItem("lastfm_session_key", "", "default");
+            await LocalStorage.SetItem("lastfm_username", "", "default");
 
-            Program.MainWindow?.CallFunction("window._localStorage.hydrate", LocalStorage.GetAllItems("default")); // Reload localStorage
+            var items = await LocalStorage.GetAllItems("default");
+            Program.MainWindow?.CallFunction("window._localStorage.hydrate", items); // Reload localStorage
             Program.MainWindow?.CallFunction("window.reloadLastFMAuthState");
         }
 
@@ -72,8 +76,9 @@ namespace FocalSonic.LastFM
             // Implemented according to https://www.last.fm/api/show/auth.getSession
             var (sessionKey, username) = await LastFMHttpClient.Instance.GetSessionAsync(authToken);
 
-            LocalStorage.SetItem("lastfm_session_key", sessionKey, "default");
-            LocalStorage.SetItem("lastfm_username", username, "default");
+            // Await the writes so they are persisted before GetAllItems reads them back in RecieveLastFMToken
+            await LocalStorage.SetItem("lastfm_session_key", sessionKey, "default");
+            await LocalStorage.SetItem("lastfm_username", username, "default");
         }
     }
 }

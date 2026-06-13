@@ -330,7 +330,9 @@ namespace FocalSonic.AppleMusic
                 creds.Save();
                 LoadKeys();
 
-                Program.MainWindow?.CallFunction("window._localStorage.hydrate", LocalStorage.GetAllItems("default")); // Reload localStorage
+                // GetAllItems is async; await it so the resolved dictionary is hydrated, not the Task object
+                var items = await LocalStorage.GetAllItems("default");
+                Program.MainWindow?.CallFunction("window._localStorage.hydrate", items); // Reload localStorage
                 Program.MainWindow?.CallFunction("window.completeAppleMusicLogin");
             }
             catch

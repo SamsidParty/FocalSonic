@@ -459,12 +459,12 @@
 
         // This doesn't even work bruh and Apple has horrible documentation so I don't know how to fix it
         window.proxyMusicInstance.addEventListener("mediaPlaybackError", (error) => {
-            handleError(error);
+            console.error(`Apple music MKError: ${error}`);
         });
 
         window.addEventListener("unhandledrejection", function (e) {
             if (e.reason.name === "MKError") {
-                handleError(e);
+                window.igniteView?.commandBridge.displayError("Something went wrong with Apple Music", e.reason.reason);
                 e.preventDefault();
             }
         });
@@ -715,11 +715,11 @@
             const base64Decoded = base64ToUint8Array(split[1]);
             return base64Decoded;
         }
-        handleError("Invalid enhanced PSSH license URL", true);
+        throw new Error("Invalid enhanced PSSH license URL");
     }
     function getPssh(licenseURL) {
         if (!licenseURL)
-            handleError("No license URL provided for PSSH generation", true);
+            throw new Error("No license URL provided for PSSH generation");
         if (licenseURL.startsWith("enhanced/")) {
             return getEnhancedPssh(licenseURL.replace("enhanced/", ""));
         }
@@ -39084,7 +39084,7 @@
             const sources = await getContentSources(catalogID, libraryID);
             const mainSource = findBestContentSource(sources);
             if (!mainSource.bestAsset)
-                handleError("[FocalMK] No valid content source found", true);
+                throw new Error("[FocalMK] No valid content source found");
             let sourceURL = mainSource.bestAsset?.URL;
             if (!sourceURL?.endsWith(".m3u8")) {
                 console.warn("[FocalMK] Content source is not an HLS stream, falling back to default player");
@@ -39105,7 +39105,10 @@
             });
         }
         catch (err) {
-            handleError(err);
+            // Loading content can fail for non-active / preloaded sources (e.g. PSSH
+            // generation throwing before the source is ever the active one). These are
+            // not user-facing playback errors, so log them instead of surfacing a dialog.
+            console.error("Error loading content:", err);
         }
     }
 
@@ -39302,7 +39305,6 @@
                 // element stays paused while hls.js keeps thinking playback is healthy,
                 // and the user just sees silence.
                 console.error("[FocalMK] audio.play() rejected:", err);
-                handleError(err);
             }
         }
         stop() {
@@ -39375,7 +39377,7 @@
                 currentEffectCtrl.adjustVolume(0, fadeDuration);
                 nextEffectCtrl.adjustVolume(1, fadeDuration);
             }).catch((error) => {
-                handleError(error);
+                console.error("[FocalMK] Crossfade transition play() rejected:", error);
             });
         }
         skipToNextItem() {

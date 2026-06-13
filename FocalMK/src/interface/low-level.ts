@@ -1,5 +1,4 @@
 import { getAudioElement } from "../helpers/dom";
-import handleError from "../helpers/error-handler";
 import { FocalHls } from "../helpers/hls-instance";
 import { findBestContentSource, getContentSources } from "../helpers/sources";
 import Hls from "../playback/hls.js";
@@ -26,7 +25,7 @@ export async function loadContent(hls: FocalHls, contentID: string) {
 
         const sources = await getContentSources(catalogID, libraryID);
         const mainSource = findBestContentSource(sources);
-        if (!mainSource.bestAsset) handleError("[FocalMK] No valid content source found", true);
+        if (!mainSource.bestAsset) throw new Error("[FocalMK] No valid content source found");
 
         let sourceURL = mainSource.bestAsset?.URL;
         
@@ -53,6 +52,9 @@ export async function loadContent(hls: FocalHls, contentID: string) {
         });
     }
     catch (err) {
-        handleError(err as Error);
+        // Loading content can fail for non-active / preloaded sources (e.g. PSSH
+        // generation throwing before the source is ever the active one). These are
+        // not user-facing playback errors, so log them instead of surfacing a dialog.
+        console.error("Error loading content:", err);
     }
 }

@@ -1,5 +1,4 @@
 import { getAudioElement } from "../helpers/dom";
-import handleError from "../helpers/error-handler";
 import { getAudioEffectController } from "../playback/audio-effects.js";
 import { QueueItem, QueueItemParam } from "./types";
 import { PlaybackStates } from "./virtualmk-constants";
@@ -128,7 +127,6 @@ export class MusicKitInstance {
             // element stays paused while hls.js keeps thinking playback is healthy,
             // and the user just sees silence.
             console.error("[FocalMK] audio.play() rejected:", err);
-            handleError(err as Error);
         }
     }
 
@@ -218,7 +216,7 @@ export class MusicKitInstance {
             currentEffectCtrl.adjustVolume(0, fadeDuration);
             nextEffectCtrl.adjustVolume(1, fadeDuration);
         }).catch((error) => {
-            handleError(error);
+            console.error("[FocalMK] Crossfade transition play() rejected:", error);
         });
     }
 
