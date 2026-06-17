@@ -66,6 +66,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
 }
 
 export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
+
     const { enableLRCLib } = useAppStore.getState().settings;
     const { isLms } = checkServerType();
 
@@ -78,7 +79,7 @@ export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
         ? getLyricsData.artist.split(",")[0]
         : getLyricsData.artist;
 
-    if (!enableLRCLib) {
+    if (!enableLRCLib || !title) {
         return {
             artist,
             title,

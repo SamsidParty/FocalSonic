@@ -60,6 +60,15 @@ export function TableRow<TData>({
                     isClassic && "border-b",
                     isRowSongActive && isModern && "row-active bg-foreground/20",
                 )}
+
+                /* Stagger Animation */
+                style={{
+                    animationDelay: `${(Math.min(index, 10) + 1) * 50}ms`,
+                    animationName: "cardStaggerAnimation",
+                    animationDuration: "1000ms",
+                    animationFillMode: "both",
+                    animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+                }}
             >
                 {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} cell={cell} />

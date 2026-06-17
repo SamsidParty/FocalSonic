@@ -34,6 +34,8 @@ namespace FocalSonic.OverrideSystem
         [Command("getLyricOverride")]
         public static async Task<string?> GetLyricOverride(string trackId)
         {
+            if (string.IsNullOrWhiteSpace(trackId)) return null;
+
             var filePath = Path.Join(LyricOverridesDirectory, $"{trackId}.txt");
             if (File.Exists(filePath))
             {
@@ -63,6 +65,8 @@ namespace FocalSonic.OverrideSystem
         [Command("getCustomOverride")]
         public static async Task<string?> GetCustomOverride(string overrideType, string trackId)
         {
+            if (string.IsNullOrWhiteSpace(overrideType) || string.IsNullOrWhiteSpace(trackId)) return null;
+
             var overrideDirectory = Path.Join(OverridesDirectory, overrideType);
             Directory.CreateDirectory(overrideDirectory);
             var filePath = Path.Join(overrideDirectory, $"{trackId}.txt");

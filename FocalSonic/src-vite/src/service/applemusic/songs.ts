@@ -66,7 +66,7 @@ async function getSong(id: string) {
 
 async function getAnimatedCoverArt(id: string, type: "songs" | "albums" = "songs") : Promise<string | null> {
 
-    if (window?.igniteView?.commandBridge?.getCustomOverride) {
+    if (window?.igniteView?.commandBridge?.getCustomOverride && id) {
         const cachedURL = await window.igniteView.commandBridge.getCustomOverride("AppleEditorialVideos", id);
         if (cachedURL) {
             return cachedURL !== "none" ? cachedURL : null;

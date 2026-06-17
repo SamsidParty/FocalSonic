@@ -6,7 +6,7 @@ async function getLyrics(getLyricsData: GetLyricsData) {
     
 
     
-    if (window?.igniteView?.commandBridge?.getCustomOverride) {
+    if (window?.igniteView?.commandBridge?.getCustomOverride && getLyricsData.id) {
         const cachedLyrics = await window.igniteView.commandBridge.getCustomOverride("AppleLyrics2", getLyricsData.id!);
         if (cachedLyrics) {
             return cachedLyrics !== "none" ? cachedLyrics : null;

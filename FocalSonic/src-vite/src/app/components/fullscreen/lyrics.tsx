@@ -40,7 +40,7 @@ export function LyricsTab(props: LyricProps) {
 
             if (window?.igniteView) {
                 // Check for overriden lyrics
-                const overriddenLyrics = await window?.igniteView?.commandBridge?.getLyricOverride(id);
+                const overriddenLyrics = id ? (await window?.igniteView?.commandBridge?.getLyricOverride(id)) : null;
 
                 if (overriddenLyrics) {
                     return overriddenLyrics;

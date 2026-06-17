@@ -1,3 +1,5 @@
+// Caching still in broken state, can't figure out how to make it work well
+
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { QueryKey, UndefinedInitialDataOptions } from "@tanstack/react-query";
 import { QueryClient } from "@tanstack/react-query";
@@ -9,11 +11,47 @@ export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             refetchOnWindowFocus: false,
-            staleTime: QUERY_CACHE_STALE_TIME,
-            gcTime: QUERY_CACHE_MAX_AGE,
+            structuralSharing: (oldData, newData) => {
+                if (!oldData) return newData;
+
+                return preserveArtworkUrls(oldData, newData);
+            }
         },
     },
 });
+
+function preserveArtworkUrls(oldObj: any, newObj: any): any {
+    if (!oldObj || !newObj) return newObj;
+
+    if (Array.isArray(newObj)) {
+        return newObj.map((item, i) =>
+            preserveArtworkUrls(oldObj[i], item));
+    }
+
+    if (typeof newObj === "object") {
+        const result: any = {};
+
+        for (const key of Object.keys(newObj)) {
+            if (
+                key === "url" &&
+        oldObj?.url &&
+        newObj?.url &&
+        (newObj.url.includes("X-Amz-Credential"))
+            ) {
+                result[key] = oldObj.url;
+            } else {
+                result[key] = preserveArtworkUrls(
+                    oldObj[key],
+                    newObj[key]
+                );
+            }
+        }
+
+        return result;
+    }
+
+    return newObj;
+}
 
 export const queryCacheStorage = {
     getItem: async (key: string) => {
@@ -56,8 +94,6 @@ export const makeQueryPersistent = <
     TQueryKey extends QueryKey = QueryKey,
 >(options: UndefinedInitialDataOptions<TQueryFnData, TError, TData, TQueryKey>) => {
     return {
-        staleTime: QUERY_CACHE_STALE_TIME,
-        gcTime: QUERY_CACHE_MAX_AGE,
         ...options,
     };
 };

@@ -21,7 +21,7 @@ async function savePersongData(songID: string, data: IPersongContext) {
 async function loadPersongData(songID: string): Promise<IPersongContext | null> {
     // Loads per-song data
     
-    if (window.igniteView?.commandBridge?.getCustomOverride) {
+    if (window.igniteView?.commandBridge?.getCustomOverride && songID) {
         const data = await window.igniteView?.commandBridge?.getCustomOverride("PersongOverrides", songID);
         if (data) return JSON.parse(data) as IPersongContext;
     }

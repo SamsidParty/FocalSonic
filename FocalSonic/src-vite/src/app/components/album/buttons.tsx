@@ -44,6 +44,7 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
         starMutation.mutate({
             id: album.id,
             starred: isAlbumStarred,
+            type: "album",
         });
     }
 

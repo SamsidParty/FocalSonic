@@ -22,6 +22,7 @@ async function unstarItem(id: string) {
 interface HandleStarItem {
     id: string
     starred: boolean
+    type?: "song" | "album" | "artist"
 }
 
 async function handleStarItem({ id, starred }: HandleStarItem) {

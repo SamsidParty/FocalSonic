@@ -103,13 +103,22 @@ function moveSongRelativeToNeighbors<T extends { id: string }>(
 
 const igniteViewPlayerStore = {
     getItem: async (key: string) => {
-        console.log("[Player Bridge] Downstream sync triggered");
         if (key !== "player_store") { return; }
+        console.log("[Player Bridge] Downstream sync triggered", key);
         const result = await window.igniteView?.commandBridge.getPlayerStore();
         return result;
     },
     setItem: async (key: string, value: string) => {
         if (key !== "player_store") { return; }
+
+        // Don't persist before hydration has finished. On reload the store
+        // initializes to empty defaults and hydrates from C# asynchronously.
+        // Any set() that fires during that window (e.g. setAudioPlayerRef on
+        // mount, volume sync) would otherwise write those empty defaults back
+        // to C#, clobbering the real persisted store while the native audio
+        // player keeps playing.
+        if (!usePlayerStore.persist.hasHydrated()) { return; }
+
         const nextValue = JSON.parse(value) as {
             extraProperties?: Record<string, string>
             state: {
@@ -146,6 +155,7 @@ const igniteViewPlayerStore = {
         await window.igniteView?.commandBridge.setPlayerStore("{}");
     }
 };
+
 
 export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
     subscribeWithSelector(
