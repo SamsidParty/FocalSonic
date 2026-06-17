@@ -207,7 +207,9 @@ namespace FocalSonic.AudioPlayer
 
         public virtual void Dispose()
         {
-            MediaPlaybackInfo.Instance = new MediaPlaybackInfo(null);
+            // Don't reset MediaPlaybackInfo.Instance here — disposing one player
+            // must not wipe the global playback store. The queue is cleared from
+            // JS on logout (useSignOut -> clearPlayerState).
             ActivePlayers.TryRemove(ID, out _);
         }
     }

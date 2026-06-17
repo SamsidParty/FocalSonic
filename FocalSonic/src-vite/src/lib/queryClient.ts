@@ -14,37 +14,48 @@ export const queryClient = new QueryClient({
             structuralSharing: (oldData, newData) => {
                 if (!oldData) return newData;
 
-                return preserveArtworkUrls(oldData, newData);
+                // Apple's APIs return presigned S3 URLs that change on every fetch which causes annoying rerender flickering
+                // This function prevents that
+                return preservePresignedUrls(oldData, newData);
             }
         },
     },
 });
 
-function preserveArtworkUrls(oldObj: any, newObj: any): any {
-    if (!oldObj || !newObj) return newObj;
+// Merges together any S3 presigned URL ("X-Amz-Credential" marker) to stop it from rerendering
+function preservePresignedUrls(oldObj: any, newObj: any): any {
+    if (
+        typeof oldObj === "string" &&
+        typeof newObj === "string"
+    ) {
+        const oldIsPresigned = oldObj.includes("X-Amz-Credential=");
+        const newIsPresigned = newObj.includes("X-Amz-Credential=");
 
-    if (Array.isArray(newObj)) {
-        return newObj.map((item, i) =>
-            preserveArtworkUrls(oldObj[i], item));
+        if (oldIsPresigned && newIsPresigned) {
+            return oldObj;
+        }
+
+        return newObj;
     }
 
-    if (typeof newObj === "object") {
+    if (Array.isArray(newObj)) {
+        return newObj.map((item, index) =>
+            preservePresignedUrls(oldObj?.[index], item));
+    }
+
+    if (
+        oldObj &&
+        newObj &&
+        typeof oldObj === "object" &&
+        typeof newObj === "object"
+    ) {
         const result: any = {};
 
         for (const key of Object.keys(newObj)) {
-            if (
-                key === "url" &&
-        oldObj?.url &&
-        newObj?.url &&
-        (newObj.url.includes("X-Amz-Credential"))
-            ) {
-                result[key] = oldObj.url;
-            } else {
-                result[key] = preserveArtworkUrls(
-                    oldObj[key],
-                    newObj[key]
-                );
-            }
+            result[key] = preservePresignedUrls(
+                oldObj[key],
+                newObj[key]
+            );
         }
 
         return result;

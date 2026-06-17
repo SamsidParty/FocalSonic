@@ -27,6 +27,9 @@ const blurSettings = {
 
 let lastSongList: string | null = null;
 
+// True once hydration from C# is done. Before that we drop empty writes (setItem).
+let playerStoreHydrated = false;
+
 function isAppleMusicStationDisplay(
     station: AppleMusicStation | AppleMusicStationDisplay | null | undefined,
 ): station is AppleMusicStationDisplay {
@@ -103,28 +106,61 @@ function moveSongRelativeToNeighbors<T extends { id: string }>(
 
 const igniteViewPlayerStore = {
     getItem: async (key: string) => {
-        if (key !== "player_store") { return; }
+        if (key !== "player_store") { return null; }
         console.log("[Player Bridge] Downstream sync triggered", key);
-        const result = await window.igniteView?.commandBridge.getPlayerStore();
-        return result;
+
+        // The bridge isn't always ready when hydration runs. Returning undefined
+        // would make zustand JSON.parse(undefined) and abort hydration, so retry
+        // and never return undefined (null = "nothing stored").
+        for (let attempt = 0; attempt < 20; attempt++) {
+            try {
+                const bridge = window.igniteView?.commandBridge;
+
+                if (typeof bridge?.getPlayerStore === "function") {
+                    const result = await bridge.getPlayerStore();
+
+                    // Any non-empty string ("{}" included) is a valid answer.
+                    if (typeof result === "string" && result.trim()) {
+                        return result;
+                    }
+                }
+            }
+            catch (error) {
+                console.warn("[Player Bridge] getPlayerStore failed, retrying", error);
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+
+        console.warn("[Player Bridge] getPlayerStore did not respond; skipping rehydration");
+        return null;
     },
     setItem: async (key: string, value: string) => {
         if (key !== "player_store") { return; }
-
-        // Don't persist before hydration has finished. On reload the store
-        // initializes to empty defaults and hydrates from C# asynchronously.
-        // Any set() that fires during that window (e.g. setAudioPlayerRef on
-        // mount, volume sync) would otherwise write those empty defaults back
-        // to C#, clobbering the real persisted store while the native audio
-        // player keeps playing.
-        if (!usePlayerStore.persist.hasHydrated()) { return; }
-
         const nextValue = JSON.parse(value) as {
             extraProperties?: Record<string, string>
             state: {
                 songlist?: Record<string, unknown>
             }
         };
+
+        // Before hydration finishes, drop empty-default writes so a set() racing
+        // ahead of hydration can't wipe the real queue in C#. Non-empty writes
+        // always go through, so playback/queue changes are never blocked.
+        if (!playerStoreHydrated) {
+            const songlist = nextValue.state?.songlist as {
+                currentList?: unknown[]
+                radioList?: unknown[]
+                currentSong?: { id?: string }
+            } | undefined;
+
+            const isEmptyDefault =
+                (songlist?.currentList?.length ?? 0) === 0 &&
+                (songlist?.radioList?.length ?? 0) === 0 &&
+                !songlist?.currentSong?.id;
+
+            if (isEmptyDefault) { return; }
+        }
 
         // Insert extra properties to allow C# to have extra context
         const { isAppleMusic } = checkServerType();
@@ -927,10 +963,13 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 storage: createJSONStorage(() => !window.igniteView ? localStorage : igniteViewPlayerStore),
 
                 merge: (persistedState, currentState) => {
-                    return merge(currentState, persistedState);
+                    // Merge into a fresh object — immer freezes the state, so
+                    // mutating currentState directly would drop the persisted data.
+                    return merge({}, currentState, persistedState);
                 },
-                onRehydrateStorage(state) { 
-                    return () => { 
+                onRehydrateStorage(state) {
+                    return () => {
+                        playerStoreHydrated = true;
                         // Recalculate the current song incase the index changed
                         state.actions.setCurrentSong();
                         state.actions.setIsLoading(false);
