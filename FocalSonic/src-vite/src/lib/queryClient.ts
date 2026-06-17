@@ -22,14 +22,24 @@ export const queryClient = new QueryClient({
     },
 });
 
+
 // Merges together any S3 presigned URL ("X-Amz-Credential" marker) to stop it from rerendering
 function preservePresignedUrls(oldObj: any, newObj: any): any {
+    // Exact same reference/value
+    if (oldObj === newObj) {
+        return oldObj;
+    }
+
+    // Preserve AWS presigned URLs
     if (
         typeof oldObj === "string" &&
         typeof newObj === "string"
     ) {
-        const oldIsPresigned = oldObj.includes("X-Amz-Credential=");
-        const newIsPresigned = newObj.includes("X-Amz-Credential=");
+        const oldIsPresigned =
+            oldObj.includes("X-Amz-Credential=");
+
+        const newIsPresigned =
+            newObj.includes("X-Amz-Credential=");
 
         if (oldIsPresigned && newIsPresigned) {
             return oldObj;
@@ -38,27 +48,71 @@ function preservePresignedUrls(oldObj: any, newObj: any): any {
         return newObj;
     }
 
-    if (Array.isArray(newObj)) {
-        return newObj.map((item, index) =>
-            preservePresignedUrls(oldObj?.[index], item));
+    // Arrays
+    if (Array.isArray(oldObj) && Array.isArray(newObj)) {
+        if (oldObj.length !== newObj.length) {
+            return newObj.map((item, i) =>
+                preservePresignedUrls(oldObj[i], item));
+        }
+
+        let changed = false;
+
+        const result = new Array(newObj.length);
+
+        for (let i = 0; i < newObj.length; i++) {
+            result[i] = preservePresignedUrls(
+                oldObj[i],
+                newObj[i]
+            );
+
+            if (result[i] !== oldObj[i]) {
+                changed = true;
+            }
+        }
+
+        return changed ? result : oldObj;
     }
 
+    // Objects
     if (
         oldObj &&
         newObj &&
         typeof oldObj === "object" &&
-        typeof newObj === "object"
+        typeof newObj === "object" &&
+        !Array.isArray(oldObj) &&
+        !Array.isArray(newObj)
     ) {
+        const oldKeys = Object.keys(oldObj);
+        const newKeys = Object.keys(newObj);
+
+        if (oldKeys.length !== newKeys.length) {
+            const result: any = {};
+
+            for (const key of newKeys) {
+                result[key] = preservePresignedUrls(
+                    oldObj[key],
+                    newObj[key]
+                );
+            }
+
+            return result;
+        }
+
+        let changed = false;
         const result: any = {};
 
-        for (const key of Object.keys(newObj)) {
+        for (const key of newKeys) {
             result[key] = preservePresignedUrls(
                 oldObj[key],
                 newObj[key]
             );
+
+            if (result[key] !== oldObj[key]) {
+                changed = true;
+            }
         }
 
-        return result;
+        return changed ? result : oldObj;
     }
 
     return newObj;
