@@ -1,4 +1,4 @@
-import { CastIcon, RefreshCwIcon, SpeakerIcon, UnplugIcon } from "lucide-react";
+import { AirplayIcon, CastIcon, RefreshCwIcon, SpeakerIcon, UnplugIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
@@ -18,15 +18,20 @@ import clsx from "clsx";
 
 interface DeviceReference {
     Name: string;
-    ReferenceID: string
+    ReferenceID: string;
+    // "chromecast" (remote playback) or "airplay" (direct local capture).
+    Type?: string;
 }
 
 export function useCastStatus() {
     const [castStatus, setCastStatus] = useState<string | null>(null);
+    const [castDeviceType, setCastDeviceType] = useState<string | null>(null);
 
     const updateCastStatus = async () => {
         const status = await window.igniteView?.commandBridge?.getCastStatus?.();
         setCastStatus(status || null);
+        const type = await window.igniteView?.commandBridge?.getCastDeviceType?.();
+        setCastDeviceType(type || null);
     };
 
     useEffect(() => {
@@ -36,8 +41,8 @@ export function useCastStatus() {
 
         return () => clearInterval(interval);
     }, []);
-    
-    return { castStatus, setCastStatus };
+
+    return { castStatus, setCastStatus, castDeviceType };
 }
 
 export function Cast() {
@@ -102,12 +107,15 @@ export function Cast() {
                     <DropdownMenuSeparator />
 
                     {
-                        deviceList.map((device) => (
-                            <DropdownMenuItem disabled={!!castStatus} onClick={() => castToDevice(device.ReferenceID)} key={device.ReferenceID}>
-                                <SpeakerIcon className={clsx("mr-2 h-4 w-4", !!(castStatus == device.ReferenceID) && "text-primary")} />
-                                <span className={clsx(!!(castStatus == device.ReferenceID) && "text-primary")}>{device.Name}</span>
-                            </DropdownMenuItem>
-                        ))
+                        deviceList.map((device) => {
+                            const DeviceIcon = device.Type === "airplay" ? AirplayIcon : SpeakerIcon;
+                            return (
+                                <DropdownMenuItem disabled={!!castStatus} onClick={() => castToDevice(device.ReferenceID)} key={device.ReferenceID}>
+                                    <DeviceIcon className={clsx("mr-2 h-4 w-4", !!(castStatus == device.ReferenceID) && "text-primary")} />
+                                    <span className={clsx(!!(castStatus == device.ReferenceID) && "text-primary")}>{device.Name}</span>
+                                </DropdownMenuItem>
+                            );
+                        })
                     }
 
                     {

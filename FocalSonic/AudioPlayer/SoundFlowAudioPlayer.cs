@@ -146,12 +146,27 @@ namespace FocalSonic.AudioPlayer
             }
         }
 
+        // Effective output gain, folding in the AirPlay near-silent capture mute.
+        // SoundFlow renders in-process via WASAPI, so this scaled signal is exactly
+        // what the per-process loopback captures; the Python module scales it back.
+        float EffectiveVolume() => (float)(Volume * (OutputDevice == "airplay" ? AirPlayGain : 1.0));
+
         public override async Task SetVolume(double volume)
         {
             await base.SetVolume(volume);
             if (Player != null)
             {
-                Player.Volume = (float)volume;
+                Player.Volume = EffectiveVolume();
+            }
+        }
+
+        public override async Task SetOutputDevice(string outputDevice)
+        {
+            await base.SetOutputDevice(outputDevice);
+            // Re-apply the gain: entering/leaving "airplay" toggles the capture mute.
+            if (Player != null)
+            {
+                Player.Volume = EffectiveVolume();
             }
         }
 

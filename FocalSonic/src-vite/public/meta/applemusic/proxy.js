@@ -15,49 +15,6 @@
         return audioElement;
     }
 
-    function handleError(error, throwError) {
-        const errorMessage = error?.reason?.reason || error?.reason || error.toString();
-        console.error("[FocalMK] Fatal error occured: ", errorMessage);
-        // Show message box if in igniteView
-        if (window.igniteView?.commandBridge?.displayError) {
-            window.igniteView.commandBridge.displayError("Something went wrong with audio playback", errorMessage);
-        }
-        if (throwError) {
-            throw new Error(errorMessage);
-        }
-    }
-    const errorNames = {
-        AUTHORIZATION_ERROR: "AUTHORIZATION_ERROR",
-        CONTENT_RESTRICTED: "CONTENT_RESTRICTED",
-        CONTENT_UNAVAILABLE: "CONTENT_UNAVAILABLE",
-        DEVICE_LIMIT: "DEVICE_LIMIT",
-        GEO_BLOCK: "GEO_BLOCK",
-        PLAYREADY_CBC_ENCRYPTION_ERROR: "PLAYREADY_CBC_ENCRYPTION_ERROR",
-        MEDIA_LICENSE: "MEDIA_LICENSE",
-        NOT_FOUND: "NOT_FOUND",
-        SERVER_ERROR: "SERVER_ERROR",
-        STREAM_UPSELL: "STREAM_UPSELL",
-        SUBSCRIPTION_ERROR: "SUBSCRIPTION_ERROR",
-        TOKEN_EXPIRED: "TOKEN_EXPIRED",
-        WIDEVINE_CDM_EXPIRED: "WIDEVINE_CDM_EXPIRED"
-    };
-    const ERROR_CODES = {
-        "-1003": errorNames.MEDIA_LICENSE,
-        "-1004": errorNames.DEVICE_LIMIT,
-        "-1017": errorNames.GEO_BLOCK,
-        "1010": errorNames.NOT_FOUND,
-        "2002": errorNames.AUTHORIZATION_ERROR,
-        "2034": errorNames.TOKEN_EXPIRED,
-        "3059": errorNames.DEVICE_LIMIT,
-        "3063": errorNames.SUBSCRIPTION_ERROR,
-        "3076": errorNames.CONTENT_UNAVAILABLE,
-        "3082": errorNames.CONTENT_RESTRICTED,
-        "3084": errorNames.STREAM_UPSELL,
-        "5002": errorNames.SERVER_ERROR,
-        "180202": errorNames.PLAYREADY_CBC_ENCRYPTION_ERROR,
-        "190121": errorNames.WIDEVINE_CDM_EXPIRED
-    };
-
     function swing(p) {
         return 0.5 - Math.cos(p * Math.PI) / 2;
     }
@@ -366,12 +323,27 @@
         updateVolume() {
             let muteVolume = 1.0;
 
-            if (window.outputDevice && !window.outputDevice.includes("local")) {
-                muteVolume = 0.0; // Mute local audio when outputting to external device (eg. chromecast)
+            // Chromecast (and other remote outputs) play remotely, so fully mute local
+            // audio. AirPlay is the exception: it captures local audio, so it must keep
+            // playing (just near-silent — see below).
+            if (window.outputDevice && !window.outputDevice.includes("local") && window.outputDevice !== "airplay") {
+                muteVolume = 0.0;
             }
 
             let mergedVolume = this.baseVolume * this.fadeGain * muteVolume;
-            this.rawSource.volume = Math.pow(mergedVolume, 2); // Exponential volume
+            let outputVolume = Math.pow(mergedVolume, 2); // Exponential volume
+
+            // AirPlay: drop the rendered output to a near-silent factor so nothing
+            // audible leaves the PC speakers. The host captures this scaled signal
+            // per-process (in float, losslessly) and multiplies it back up before
+            // streaming. Applied AFTER the exponential curve so the captured waveform is
+            // exactly the normal output x 1e-6 — a single reverse multiplier (1e6) on the
+            // host restores it precisely.
+            if (window.outputDevice === "airplay") {
+                outputVolume *= 1e-6;
+            }
+
+            this.rawSource.volume = outputVolume;
         }
 
         resetFade() {
@@ -995,6 +967,49 @@
             session.generateRequest("cenc", base64ToUint8Array("AAAAOHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABgSEAAAAAAAAAAAczEvZTEgICBI88aJmwY=")); // Hardcoded PSSH for atmos
         });
     }
+
+    function handleError(error, throwError) {
+        const errorMessage = error?.reason?.reason || error?.reason || error.toString();
+        console.error("[FocalMK] Fatal error occured: ", errorMessage);
+        // Show message box if in igniteView
+        if (window.igniteView?.commandBridge?.displayError) {
+            window.igniteView.commandBridge.displayError("Something went wrong with audio playback", errorMessage);
+        }
+        if (throwError) {
+            throw new Error(errorMessage);
+        }
+    }
+    const errorNames = {
+        AUTHORIZATION_ERROR: "AUTHORIZATION_ERROR",
+        CONTENT_RESTRICTED: "CONTENT_RESTRICTED",
+        CONTENT_UNAVAILABLE: "CONTENT_UNAVAILABLE",
+        DEVICE_LIMIT: "DEVICE_LIMIT",
+        GEO_BLOCK: "GEO_BLOCK",
+        PLAYREADY_CBC_ENCRYPTION_ERROR: "PLAYREADY_CBC_ENCRYPTION_ERROR",
+        MEDIA_LICENSE: "MEDIA_LICENSE",
+        NOT_FOUND: "NOT_FOUND",
+        SERVER_ERROR: "SERVER_ERROR",
+        STREAM_UPSELL: "STREAM_UPSELL",
+        SUBSCRIPTION_ERROR: "SUBSCRIPTION_ERROR",
+        TOKEN_EXPIRED: "TOKEN_EXPIRED",
+        WIDEVINE_CDM_EXPIRED: "WIDEVINE_CDM_EXPIRED"
+    };
+    const ERROR_CODES = {
+        "-1003": errorNames.MEDIA_LICENSE,
+        "-1004": errorNames.DEVICE_LIMIT,
+        "-1017": errorNames.GEO_BLOCK,
+        "1010": errorNames.NOT_FOUND,
+        "2002": errorNames.AUTHORIZATION_ERROR,
+        "2034": errorNames.TOKEN_EXPIRED,
+        "3059": errorNames.DEVICE_LIMIT,
+        "3063": errorNames.SUBSCRIPTION_ERROR,
+        "3076": errorNames.CONTENT_UNAVAILABLE,
+        "3082": errorNames.CONTENT_RESTRICTED,
+        "3084": errorNames.STREAM_UPSELL,
+        "5002": errorNames.SERVER_ERROR,
+        "180202": errorNames.PLAYREADY_CBC_ENCRYPTION_ERROR,
+        "190121": errorNames.WIDEVINE_CDM_EXPIRED
+    };
 
     function getDefaultExportFromCjs (x) {
     	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;

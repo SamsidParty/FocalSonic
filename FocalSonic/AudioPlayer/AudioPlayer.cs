@@ -18,6 +18,15 @@ namespace FocalSonic.AudioPlayer
         public static ConcurrentDictionary<string, AudioPlayer> ActivePlayers = new ConcurrentDictionary<string, AudioPlayer>();
         public static AudioPlayer? Instance => ActivePlayers.FirstOrDefault().Value;
 
+        // The "airplay" OutputDevice keeps playback LOCAL but drops the rendered gain
+        // to a near-silent factor so the PC speakers stay quiet while the Python
+        // module captures the audio per-process and scales it back up (by 1/this)
+        // before streaming. Float audio makes the round trip lossless. Both playback
+        // engines (Apple Music in WebView2, Subsonic via SoundFlow) apply the SAME
+        // factor so a single restore multiplier on the Python side is correct for both.
+        // FocalMK's audio-effects.js applies the matching factor for the WebView2 path.
+        public const double AirPlayGain = 1e-6;
+
         public string ID;
         public string Source;
         public string OutputDevice = "local";
@@ -87,8 +96,10 @@ namespace FocalSonic.AudioPlayer
 
         public async Task HandleTimeUpdate(bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration, string source = "local")
         {
-            // Only accept time updates from the current source
-            if (source != OutputDevice) return;
+            // Only accept time updates from the current source. AirPlay plays locally
+            // (just muted for capture), so it still produces "local"-sourced updates.
+            var effectiveOutput = OutputDevice == "airplay" ? "local" : OutputDevice;
+            if (source != effectiveOutput) return;
 
             if (isPlaying)
             {
@@ -146,6 +157,7 @@ namespace FocalSonic.AudioPlayer
 
         public virtual async Task SetLoopMode(bool loop) { Looping = loop; }
         public virtual async Task SetOutputDevice(string outputDevice) { OutputDevice = outputDevice; }
+
         public virtual async Task SetVolume(double volume) { Volume = (float)volume; }
         public virtual async Task SetSpeed(double speed) { Speed = (float)speed; }
         public virtual async Task SetFilterData(string filterData) { FilterData = filterData; }
