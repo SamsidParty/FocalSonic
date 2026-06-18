@@ -1,19 +1,12 @@
 """
 AirPlay (RAOP) streaming via pyatv, fed from a live PCM queue.
 
-Pipeline (see GUIDANCE.md for the full rationale):
+Pipeline: ProcessLoopbackCapture (float32) -> restore gain (undo 1e-6 mute) ->
+int16 -> resample to 44.1k -> drop-oldest queue -> LivePCMSource -> RAOP -> device.
 
-    ProcessLoopbackCapture (float32, 48 kHz)
-        -> restore gain (x GAIN_RESTORE, undoes FocalSonic's 1e-6 mute)
-        -> clip + convert to int16
-        -> resample 48 kHz -> 44.1 kHz (audioop.ratecv)
-        -> asyncio queue (drop-oldest, tiny)
-        -> LivePCMSource.readframes -> pyatv RAOP sender -> device
-
-The key trick (GUIDANCE.md §4): pyatv's live/streaming source paths are broken
-on Windows (miniaudio truncates / fails to init). But pyatv's RAOP sender itself
-is solid, so we monkey-patch `pyatv.protocols.raop.open_source` to return our own
-AudioSource that yields raw PCM directly, bypassing miniaudio entirely.
+pyatv's live-streaming source paths are broken on Windows (miniaudio), but its
+RAOP sender is solid — so we monkey-patch `raop.open_source` to feed raw PCM
+directly. See GUIDANCE.md §4/§6.
 """
 
 from __future__ import annotations
@@ -23,9 +16,7 @@ import audioop
 import logging
 
 import numpy as np
-import pyatv
 import pyatv.protocols.raop as raop_mod
-from pyatv.const import Protocol
 from pyatv.protocols.raop.audio_source import AudioSource, _to_audio_samples
 from pyatv.support.metadata import EMPTY_METADATA
 
@@ -38,9 +29,7 @@ RAOP_RATE = 44100
 RAOP_CHANNELS = 2
 RAOP_SAMPLE_SIZE = 2  # bytes (s16)
 
-# Tiny bounded queue with drop-oldest (GUIDANCE.md §6). ~12 chunks of resampled
-# audio is a few hundred ms of jitter headroom — enough to absorb scheduling
-# jitter without letting latency grow unbounded.
+# Drop-oldest queue: a few hundred ms of jitter headroom, no unbounded latency.
 QUEUE_MAXSIZE = 12
 
 
@@ -49,7 +38,7 @@ class StartupSymbolError(RuntimeError):
 
 
 def verify_pyatv_symbols() -> None:
-    """Fail loudly if a pyatv upgrade moved the internals we patch (GUIDANCE.md §4)."""
+    """Fail loudly if a pyatv upgrade moved the internals we monkey-patch."""
     missing = []
     if not hasattr(raop_mod, "open_source"):
         missing.append("pyatv.protocols.raop.open_source")
@@ -122,9 +111,7 @@ class AirPlayStreamer:
         self.capture_rate = capture_rate
         self.gain_restore = gain_restore
 
-        # FocalSonic plays audio inside WebView2, NOT in FocalSonic.exe itself, so
-        # capture the WebView2 browser process tree owned by the host (it contains
-        # the audio service). Fall back to the host PID only if no WebView2 is found.
+        # Audio plays in WebView2, not FocalSonic.exe — capture the WebView2 tree.
         target_pid = find_webview2_target(host_pid) or host_pid
         self._queue: asyncio.Queue = asyncio.Queue(maxsize=QUEUE_MAXSIZE)
         self._capture = ProcessLoopbackCapture(target_pid, sample_rate=capture_rate,
@@ -132,7 +119,7 @@ class AirPlayStreamer:
         self._ratecv_state = None
         self._atv = None
 
-        # Audio-level diagnostics so we can tell silence-captured from audio-flowing.
+        # Audio-level diagnostics (silence vs flowing).
         self._diag_chunks = 0
         self._diag_raw_peak = 0.0
         self._diag_out_peak = 0.0
@@ -161,8 +148,7 @@ class AirPlayStreamer:
         return i16
 
     def _log_levels(self, raw_peak: float, out_peak: float) -> None:
-        # Accumulate peaks and log roughly once a second so we can diagnose whether
-        # real (non-silent) audio is being captured and how the gain restore lands.
+        # Log peak roughly once a second to diagnose silence vs audio + gain restore.
         self._diag_raw_peak = max(self._diag_raw_peak, raw_peak)
         self._diag_out_peak = max(self._diag_out_peak, out_peak)
         self._diag_chunks += 1
@@ -200,12 +186,7 @@ class AirPlayStreamer:
     # -- streaming ---------------------------------------------------------
 
     async def stream(self, atv) -> None:
-        """
-        Capture + stream until the device closes the connection or we're cancelled.
-
-        `atv` is a connected `pyatv.interface.AppleTV`. Capture is started right
-        before stream_file consumes it (GUIDANCE.md §6) so audio doesn't pile up.
-        """
+        """Capture + stream until the device drops us or we're cancelled."""
         self._atv = atv
         source = LivePCMSource(self._queue)
 
@@ -215,16 +196,14 @@ class AirPlayStreamer:
         original_open_source = raop_mod.open_source
         raop_mod.open_source = _patched_open_source
 
-        # Start capture only now — immediately before pyatv begins consuming.
+        # Start capture only now, right before pyatv consumes, so audio doesn't pile up.
         self._capture.start(self._on_capture_chunk)
         try:
-            # The "live" argument is ignored; our patched source is used instead.
-            await atv.stream.stream_file("live")
+            await atv.stream.stream_file("live")  # arg ignored; our source is used
         finally:
             raop_mod.open_source = original_open_source
             self._capture.stop()
-            # Unblock readframes if it's still waiting.
-            self._put_drop_oldest_sentinel()
+            self._put_drop_oldest_sentinel()  # unblock readframes if still waiting
 
     def _put_drop_oldest_sentinel(self) -> None:
         try:

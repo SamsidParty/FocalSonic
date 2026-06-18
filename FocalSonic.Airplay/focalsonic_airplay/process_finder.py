@@ -1,16 +1,9 @@
 """
 Find the WebView2 process to capture audio from.
 
-FocalSonic plays audio inside WebView2 (Apple Music / FocalMK), which runs as a
-tree of `msedgewebview2.exe` processes: a *browser* process (a direct child of
-FocalSonic.exe) with renderer / GPU / and — when audio is playing — an audio
-utility (`--utility-sub-type=audio.mojom.AudioService`) as its children.
-
-Capturing FocalSonic.exe's own process tree does NOT pick up that audio, so we
-locate the WebView2 browser process owned by FocalSonic.exe and capture *its*
-tree (which includes the audio service).
-
-Uses the Toolhelp32 snapshot API (fast, no WMI) for PID/parent/exe-name.
+FocalSonic's audio plays in WebView2, and capturing FocalSonic.exe's own process
+tree picks up nothing. So we find the msedgewebview2.exe browser process owned by
+the host and capture ITS tree (which contains the audio service). Toolhelp32 only.
 """
 
 from __future__ import annotations
@@ -68,13 +61,8 @@ def _snapshot() -> list[tuple[int, int, str]]:
 
 
 def find_webview2_target(host_pid: int) -> int | None:
-    """
-    Return the PID of the WebView2 browser process owned by `host_pid`, or None.
-
-    Capture that PID with INCLUDE_TARGET_PROCESS_TREE to grab the audio service.
-    Picks the WebView2 browser process with the most WebView2 descendants (the one
-    actually hosting renderers/audio) when more than one exists.
-    """
+    """Return the WebView2 browser PID owned by `host_pid` (or None). Picks the one
+    with the most WebView2 descendants when several exist."""
     try:
         procs = _snapshot()
     except OSError as exc:
@@ -97,8 +85,7 @@ def find_webview2_target(host_pid: int) -> int | None:
         descendants.add(pid)
         stack.extend(by_parent.get(pid, []))
 
-    # WebView2 *browser* processes are the WebView2 processes whose parent is NOT
-    # itself a WebView2 process (i.e. the top of each WebView2 tree under the host).
+    # Browser processes = WebView2 procs whose parent isn't itself WebView2.
     browsers = [
         pid for pid in descendants
         if name_of.get(pid) == WEBVIEW2_EXE

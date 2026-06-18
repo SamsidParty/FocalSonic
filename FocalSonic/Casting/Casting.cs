@@ -59,8 +59,7 @@ namespace FocalSonic.Casting
             try { CurrentAirPlay?.Stop(); } catch { }
             CurrentAirPlay = null;
 
-            // Resets OutputDevice from "airplay" back to "local", which restores the
-            // local playback gain (un-mutes the PC speakers).
+            // Back to "local" restores the playback gain (un-mutes the PC speakers).
             AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("local");
             LastSongID = "";
             IsPlaying = false;
@@ -197,11 +196,8 @@ namespace FocalSonic.Casting
             CurrentDeviceID = device.ReferenceID;
             CurrentDeviceType = "airplay";
 
-            // AirPlay is a direct capture overlay: playback stays LOCAL (so effects,
-            // speed and time updates all work normally), but the "airplay" output
-            // device drops the rendered gain to ~1e-6 so nothing audible leaves the
-            // PC speakers. The Python module captures that near-silent signal and
-            // scales it back up losslessly before streaming.
+            // "airplay" keeps playback local but drops the gain to ~1e-6; the Python
+            // module captures that near-silent signal and restores it before streaming.
             await AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("airplay");
 
             CurrentAirPlay = new AirPlay.AirPlaySession();

@@ -54,8 +54,8 @@ export function Player() {
     const { speed } = usePlayerSpeed();
     const { filterData } = usePlayerFilterData();
     const { castStatus, castDeviceType } = useCastStatus();
-    // AirPlay is a direct local capture, so effects/speed/volume still apply to the
-    // streamed audio — only hide local controls for remote (Chromecast) playback.
+    // Only hide local controls for remote (Chromecast) playback; AirPlay captures
+    // local audio so effects/speed/volume still apply.
     const isRemoteCast = !!castStatus && castDeviceType === "chromecast";
 
     const song = currentList[currentSongIndex];

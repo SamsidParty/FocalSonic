@@ -9,9 +9,8 @@ using System.Threading.Tasks;
 
 namespace FocalSonic.Casting
 {
-    // A reference to a cast target. This used to be Chromecast-only; it now also
-    // represents AirPlay devices, distinguished by Type ("chromecast" | "airplay").
-    // The frontend renders both from the same list and the same code paths.
+    // A cast target — Chromecast or AirPlay, distinguished by Type. Both render from
+    // the same device list / code paths on the frontend.
     public class CastDeviceReference
     {
         public static ConcurrentDictionary<string, CastDeviceReference> DiscoveredDevices = new();

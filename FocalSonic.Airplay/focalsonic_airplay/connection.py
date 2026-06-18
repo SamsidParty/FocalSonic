@@ -1,10 +1,8 @@
 """
 Device scan + connect helpers for AirPlay.
 
-Discovery/selection is done on the C# side (Zeroconf). This module receives a
-device address and/or identifier on the command line and does a *targeted*
-pyatv scan (by host, falling back to identifier) so we don't pay for a full
-network scan on every launch.
+Discovery/selection happens C#-side (Zeroconf); here we do a targeted pyatv scan
+by host (falling back to identifier) from the address/identifier args.
 """
 
 from __future__ import annotations
@@ -50,10 +48,8 @@ def apply_credentials(config, credentials: str) -> None:
         raise RuntimeError("Device does not expose an AirPlay service")
     airplay.credentials = credentials
 
-    # The RAOP (audio) stream does its OWN verification — without credentials on the
-    # RAOP service the audio SETUP fails with HTTP 470 "Connection Authorization
-    # Required" even though the AirPlay control connection authorized fine. The same
-    # HAP pairing identity covers both services, so reuse the credential.
+    # The RAOP (audio) stream verifies separately — without creds here it fails with
+    # HTTP 470 even though the control connection authorized. Same pairing covers both.
     raop = config.get_service(Protocol.RAOP)
     if raop is not None:
         raop.credentials = credentials

@@ -1,14 +1,7 @@
 """
-Standalone tkinter PIN dialog.
-
-Run as its OWN subprocess (see pairing.ask_pin) so tkinter always executes on a
-real process main thread. Running tkinter on a worker thread of the main module
-is unreliable — the window may silently fail to appear, especially when the
-module is spawned by the C# host. Isolating it in a subprocess sidesteps that
-entirely.
-
-Usage:   python -m focalsonic_airplay.pin_dialog "Device Name"
-Output:  prints the entered PIN to stdout and exits 0; exits 1 if cancelled.
+Standalone tkinter PIN dialog, run as its own subprocess (see pairing.ask_pin) so
+tkinter gets a real process main thread. Prints the PIN to stdout (exit 0), or
+exits 1 if cancelled.   Usage: python pin_dialog.py "Device Name"
 """
 
 import sys

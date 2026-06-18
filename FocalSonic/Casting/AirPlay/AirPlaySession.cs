@@ -6,17 +6,9 @@ using IgniteView.Core;
 
 namespace FocalSonic.Casting.AirPlay
 {
-    // Owns the lifetime of the spawned Python AirPlay module for one session.
-    //
-    // Design (per spec):
-    //  - The module is launched ONLY after the user picks a device.
-    //  - The only thing we pass it is command-line arguments — no IPC.
-    //  - We treat the module's exit (any reason) as a disconnect signal.
-    //
-    // Module location:
-    //  - Production: a bundled "airplay/focalsonic-airplay.exe" (Nuitka/PyInstaller).
-    //    Not produced yet, so production AirPlay is simply unavailable for now.
-    //  - Development: "airplay/airplay.py" run with the system Python install.
+    // Spawns and supervises the Python AirPlay module (args-only, no IPC); its exit
+    // is treated as a disconnect. Prefers a bundled exe (prod, not built yet), else
+    // runs airplay.py with the system Python (dev).
     public class AirPlaySession
     {
         Process? _process;

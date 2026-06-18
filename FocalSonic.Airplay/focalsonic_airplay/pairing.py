@@ -1,12 +1,6 @@
 """
-AirPlay pairing: HomeKit PIN flow (pyatv) + a small tkinter PIN dialog.
-
-Apple TV / HomePod require HomeKit pairing for AirPlay (Pairing: Mandatory).
-pyatv drives the whole HAP/SRP/Ed25519 flow; we just relay the on-screen PIN.
-
-The PIN is collected with tkinter (the C# host is intentionally not involved —
-no IPC beyond command-line args). This runs the dialog on a worker thread so the
-asyncio event loop driving pyatv keeps spinning.
+AirPlay pairing: pyatv drives the HAP/SRP/Ed25519 flow; we relay the on-screen
+PIN, collected via a tkinter dialog launched as a subprocess.
 """
 
 from __future__ import annotations
@@ -20,20 +14,13 @@ from pyatv.const import Protocol
 
 log = logging.getLogger("focalsonic.airplay.pairing")
 
-# Absolute path to the dialog script — run by full path (NOT `-m`) so it resolves
-# regardless of the host's working directory. pin_dialog.py only imports tkinter,
-# so it needs no package context.
+# Run by absolute path (NOT `-m`) so it resolves regardless of the host's cwd.
 _PIN_DIALOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pin_dialog.py")
 
 
 async def ask_pin(loop: asyncio.AbstractEventLoop, device_name: str) -> str | None:
-    """
-    Collect the PIN by launching pin_dialog as a SEPARATE PROCESS.
-
-    tkinter must run on a process main thread; doing it on a worker thread of this
-    (already asyncio-driven, possibly C#-spawned) process is unreliable and the
-    window can silently fail to appear. A subprocess gets its own clean main thread.
-    """
+    """Collect the PIN via pin_dialog in a subprocess (tkinter needs a real main
+    thread; running it on a worker thread here is unreliable)."""
     log.info("Launching PIN dialog: %s %s", sys.executable, _PIN_DIALOG)
     try:
         proc = await asyncio.create_subprocess_exec(
@@ -57,11 +44,7 @@ async def ask_pin(loop: asyncio.AbstractEventLoop, device_name: str) -> str | No
 
 
 async def pair_device(loop: asyncio.AbstractEventLoop, config, device_name: str) -> str:
-    """
-    Run the interactive pairing flow against a scanned `config`.
-
-    Returns the resulting opaque credentials string. Raises on failure / cancel.
-    """
+    """Run interactive pairing; return the credentials string, or raise on failure."""
     pairing = await pyatv_pair(config, loop)
     try:
         await pairing.begin()  # PIN now appears on the device

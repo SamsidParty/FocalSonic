@@ -1,11 +1,8 @@
 """
 AirPlay pairing-credential persistence.
 
-pyatv credentials are opaque strings that survive reboots; we only re-pair if the
-device is reset/unpaired. They are stored per-device-identifier in a JSON file
-under the FocalSonic app-data folder. The C# host never touches these — per the
-design, the only IPC into this module is command-line args, so the Python module
-owns its own credential store.
+Opaque pyatv credentials, stored per-device-identifier in a JSON file under the
+host data folder. The module owns its own store (host IPC is args-only).
 """
 
 from __future__ import annotations
@@ -17,10 +14,7 @@ from pathlib import Path
 
 log = logging.getLogger("focalsonic.airplay.credentials")
 
-# The host passes its real IgniteView data path via --data-dir; we store creds and
-# logs under an "Airplay" subfolder of it (e.g.
-# %LOCALAPPDATA%\IgniteViewApp\focalsonic\Airplay). set_data_dir() is called once
-# at startup before anything reads/writes.
+# Set once at startup from the host's --data-dir; creds/logs live under <it>/Airplay.
 _DATA_DIR: str | None = None
 
 

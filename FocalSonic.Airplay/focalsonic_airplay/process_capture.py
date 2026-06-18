@@ -1,24 +1,12 @@
 """
 Per-process WASAPI loopback capture (Windows Process Loopback API).
 
-This captures the audio rendered by a *specific process and its child process
-tree* — used to capture only the audio FocalSonic.exe (and its WebView2
-children) produces, rather than the whole system mix.
+Captures audio from a specific process tree (FocalSonic's WebView2 audio), not
+the system mix. Format is 32-bit float so the ~1e-6 AirPlay mute survives the
+scale-down/scale-up round trip (int16 would quantize it to zero).
 
-Why not pyaudiowpatch / default-device loopback (as in GUIDANCE.md)?
-  - The default-output loopback captures *everything* the user hears, including
-    other apps. We only want FocalSonic's audio.
-  - FocalSonic intentionally drops its output gain to ~1e-6 during AirPlay so the
-    PC speakers stay silent. We capture that near-silent signal in 32-bit float
-    (which preserves it losslessly) and scale it back up before streaming.
-
-The capture format is therefore **32-bit IEEE float** — int16 would quantize a
-1e-6 signal to zero. Float32 keeps full relative precision through the
-scale-down / scale-up round trip.
-
-Requires Windows 10 build 19041+ (the AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK
-activation type). Implemented with raw COM via comtypes + ctypes because no pip
-package wraps the process-loopback activation path.
+Requires Windows 10 build 19041+. Raw COM via comtypes/ctypes — no pip package
+wraps the process-loopback activation path.
 """
 
 from __future__ import annotations
@@ -129,8 +117,7 @@ class IActivateAudioInterfaceAsyncOperation(IUnknown):
     _iid_ = GUID("{72A22D78-CDE4-431D-B8CC-843A71199B6D}")
     _methods_ = [
         COMMETHOD([], HRESULT, "GetActivateResult",
-                  # c_long (not HRESULT) so comtypes returns the value instead of
-                  # treating it as the call's own success HRESULT.
+                  # c_long not HRESULT, else comtypes treats it as the call's own result.
                   (["out"], POINTER(ctypes.c_long), "activateResult"),
                   (["out"], POINTER(POINTER(IUnknown)), "activatedInterface")),
     ]
@@ -145,10 +132,8 @@ class IActivateAudioInterfaceCompletionHandler(IUnknown):
 
 
 class IAgileObject(IUnknown):
-    # Marker interface (no methods beyond IUnknown). ActivateAudioInterfaceAsync
-    # completes on its own MTA thread, so it QIs the handler for IAgileObject to
-    # confirm it can be used cross-apartment. Without this the call is rejected
-    # synchronously with E_ILLEGAL_METHOD_CALL (0x8000000E).
+    # Marker interface. The handler MUST advertise this or ActivateAudioInterfaceAsync
+    # rejects the call synchronously with E_ILLEGAL_METHOD_CALL (0x8000000E).
     _iid_ = GUID("{94EA2B94-E9CC-49E0-C0FF-EE64CA8F5B90}")
     _methods_ = []
 
@@ -252,16 +237,8 @@ _CloseHandle.argtypes = [HANDLE]
 
 class ProcessLoopbackCapture:
     """
-    Captures float32 audio from a process tree.
-
-    Usage:
-        cap = ProcessLoopbackCapture(pid, sample_rate=48000, channels=2)
-        cap.start(on_chunk)   # on_chunk(bytes) called with float32-LE interleaved frames
-        ...
-        cap.stop()
-
-    `include_tree=True` captures the target process *and all its descendants*
-    (so a host exe + its WebView2 children are all captured from the host PID).
+    Captures float32 audio from a process tree. on_chunk receives float32-LE
+    interleaved frames. include_tree captures the target PID and its descendants.
     """
 
     def __init__(self, pid: int, sample_rate: int = 48000, channels: int = 2,
@@ -319,9 +296,6 @@ class ProcessLoopbackCapture:
 
         handler = _CompletionHandler()
         async_op = POINTER(IActivateAudioInterfaceAsyncOperation)()
-
-        # The completion handler is passed as a raw IUnknown pointer. Keep the QI'd
-        # pointer referenced for the duration of the call (it AddRefs internally).
         handler_ptr = handler.QueryInterface(IActivateAudioInterfaceCompletionHandler)
 
         hr = _ActivateAudioInterfaceAsync(
@@ -366,8 +340,7 @@ class ProcessLoopbackCapture:
             audio_client = self._activate_audio_client()
             fmt = self._build_format()
 
-            # Process loopback requires AUTOCONVERTPCM so the engine resamples the
-            # per-process render formats into our requested float format.
+            # AUTOCONVERTPCM lets the engine resample per-process formats to our float format.
             stream_flags = (
                 AUDCLNT_STREAMFLAGS_LOOPBACK
                 | AUDCLNT_STREAMFLAGS_EVENTCALLBACK
@@ -415,9 +388,8 @@ class ProcessLoopbackCapture:
 
     def _capture_loop(self, capture_client: IAudioCaptureClient, hEvent):
         timeout_ms = 100
-        # One timeout window of silence keeps the downstream stream real-time when
-        # the target process is briefly silent (event-driven loopback does not
-        # fire events during silence).
+        # Event-driven loopback doesn't fire during silence; emit a matching silence
+        # chunk on timeout so AirPlay timing stays anchored to real time.
         silence_frames = self.sample_rate * timeout_ms // 1000
         silence_chunk = b"\x00" * (silence_frames * self.bytes_per_frame)
 
@@ -442,8 +414,6 @@ class ProcessLoopbackCapture:
                 packet = capture_client.GetNextPacketSize()
 
             if wait == WAIT_TIMEOUT and not got_data:
-                # Target was silent for the whole window — emit matching silence
-                # so AirPlay timing stays anchored to real time.
                 self._emit(silence_chunk)
 
     def _emit(self, data: bytes):

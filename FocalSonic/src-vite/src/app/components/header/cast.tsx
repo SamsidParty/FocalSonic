@@ -1,5 +1,5 @@
-import { AirplayIcon, CastIcon, RefreshCwIcon, SpeakerIcon, UnplugIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { AirplayIcon, RefreshCwIcon, SpeakerIcon, UnplugIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
 
@@ -91,7 +91,7 @@ export function Cast() {
                 <DropdownMenuTrigger className="user-dropdown-trigger">
                     <Avatar className="w-8 h-8 rounded-md cursor-pointer">
                         <AvatarFallback className="text-sm bg-transparent hover:bg-accent rounded-md">
-                            <CastIcon className={clsx("w-4 h-4", !!castStatus && "text-primary")} />
+                            <AirplayIcon className={clsx("w-4 h-4", !!castStatus && "text-primary")} />
                         </AvatarFallback>
                     </Avatar>
                 </DropdownMenuTrigger>

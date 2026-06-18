@@ -7,14 +7,11 @@ using Zeroconf;
 
 namespace FocalSonic.Casting.AirPlay
 {
-    // Discovers AirPlay receivers (Apple TV / HomePod) via Bonjour/mDNS using the
-    // Zeroconf package — the same one GoogleCast already pulls in transitively.
-    // We deliberately do discovery here in C# (not by spawning the Python module)
-    // so a scan is cheap and the module is only launched once a device is picked.
+    // Discovers AirPlay receivers via Bonjour/mDNS (Zeroconf, a GoogleCast transitive
+    // dep). Done here in C# so scans are cheap; the module only launches on selection.
     public static class AirPlayDiscovery
     {
-        // _airplay._tcp carries a clean friendly name and the device identifier
-        // (TXT "deviceid"), which is what pyatv matches on.
+        // Carries the friendly name and TXT "deviceid" (what pyatv matches on).
         const string AirPlayServiceType = "_airplay._tcp.local.";
 
         public static async Task<List<CastDeviceReference>> ScanAsync(TimeSpan? scanTime = null)
@@ -23,11 +20,8 @@ namespace FocalSonic.Casting.AirPlay
 
             try
             {
-                // Scan only on IPv4-capable interfaces. If we let Zeroconf enumerate
-                // every adapter it calls GetIPv4Properties() on each, which throws
-                // NetworkInformationException ("protocol not configured") on adapters
-                // without IPv4 (VPN/tunnel/virtual). Passing a pre-filtered list both
-                // avoids that path and guarantees every adapter we hand it has IPv4.
+                // Pass only IPv4-capable interfaces: letting Zeroconf enumerate all
+                // adapters makes it throw NetworkInformationException on IPv4-less ones.
                 var interfaces = GetViableInterfaces();
                 if (interfaces.Count == 0) return devices;
 
@@ -49,16 +43,13 @@ namespace FocalSonic.Casting.AirPlay
             }
             catch
             {
-                // Network/mDNS errors should never break the device picker — just
-                // return whatever (possibly nothing) we found.
+                // mDNS errors should never break the device picker.
             }
 
             return devices;
         }
 
-        // Up, non-loopback/tunnel, IPv4-configured interfaces. Each candidate is
-        // probed exactly the way Zeroconf will use it (GetIPv4Properties), so any
-        // adapter that would throw is skipped here instead of inside Zeroconf.
+        // Up, non-loopback/tunnel, IPv4-configured interfaces.
         static List<NetworkInterface> GetViableInterfaces()
         {
             var result = new List<NetworkInterface>();
@@ -74,10 +65,7 @@ namespace FocalSonic.Casting.AirPlay
                         if (ni.NetworkInterfaceType == NetworkInterfaceType.Tunnel) continue;
                         if (ni.IsReceiveOnly) continue;
 
-                        // Supports() is the non-throwing IPv4 check. GetIPv4Properties()
-                        // would *throw* ("protocol not configured") on IPv4-less adapters
-                        // — including as a first-chance exception while debugging — so we
-                        // avoid it entirely and confirm IPv4 via a bound unicast address.
+                        // Supports() is the non-throwing IPv4 check (GetIPv4Properties throws).
                         if (!ni.Supports(NetworkInterfaceComponent.IPv4)) continue;
 
                         var props = ni.GetIPProperties();
