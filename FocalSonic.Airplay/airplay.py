@@ -29,7 +29,7 @@ import sys
 
 import credentials
 
-# connection / pairing / streamer pull in pyatv + numpy; they're imported lazily
+# connection / pairing / streamer pull in pyatv; they're imported lazily
 # inside run()/_try_connect() so the --pin-dialog subprocess (which only needs
 # tkinter) starts without loading the whole audio stack.
 
@@ -39,6 +39,64 @@ log = logging.getLogger("focalsonic.airplay")
 
 # Subcommand the pairing flow relaunches us with to show the PIN dialog.
 PIN_DIALOG_FLAG = "--pin-dialog"
+
+# Where to send a user who double-clicks the exe directly (it's not a standalone app).
+PRODUCT_PAGE_URL = "https://www.samsidparty.com/software/focalsonic"
+
+
+def _open_product_page() -> None:
+    """Open the FocalSonic product page. Used when the exe is launched with no
+    args (e.g. a curious user double-clicks it in Explorer) — it isn't a
+    standalone app, so point them at the product instead of failing silently."""
+    try:
+        import webbrowser
+        webbrowser.open(PRODUCT_PAGE_URL)
+    except Exception:  # noqa: BLE001 - best effort; nothing useful to do if it fails
+        pass
+
+
+def _host_process_alive(pid: int) -> bool:
+    """True while the given PID is running (Windows).
+
+    Opens a SYNCHRONIZE handle and does a zero-timeout wait: WAIT_TIMEOUT (0x102)
+    means still running; a signalled handle (WAIT_OBJECT_0) means it has exited.
+    A failed OpenProcess (PID gone/reused) counts as not alive.
+    """
+    import ctypes
+    from ctypes import wintypes
+
+    SYNCHRONIZE = 0x00100000
+    WAIT_TIMEOUT = 0x00000102
+
+    k = ctypes.windll.kernel32
+    k.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+    k.OpenProcess.restype = wintypes.HANDLE  # pointer-sized: avoids 64-bit truncation
+    k.WaitForSingleObject.argtypes = (wintypes.HANDLE, wintypes.DWORD)
+    k.WaitForSingleObject.restype = wintypes.DWORD
+    k.CloseHandle.argtypes = (wintypes.HANDLE,)
+
+    handle = k.OpenProcess(SYNCHRONIZE, False, pid)
+    if not handle:
+        return False
+    try:
+        return k.WaitForSingleObject(handle, 0) == WAIT_TIMEOUT
+    finally:
+        k.CloseHandle(handle)
+
+
+async def _watch_host(host_pid: int, main_task: "asyncio.Task", interval: float = 2.0) -> None:
+    """Cancel the session when the FocalSonic host process exits.
+
+    The host normally kills us on disconnect, but if it crashes or is force-quit
+    it can't — so we poll its PID and bow out ourselves rather than lingering in
+    Task Manager capturing audio nobody is listening to.
+    """
+    while not main_task.done():
+        if not _host_process_alive(host_pid):
+            log.info("Host process %d is gone — shutting down", host_pid)
+            main_task.cancel()
+            return
+        await asyncio.sleep(interval)
 
 
 def _nudge_firewall() -> "socket.socket | None":
@@ -234,6 +292,13 @@ def main(argv=None) -> int:
         device_name = argv[1] if len(argv) > 1 else "AirPlay device"
         return run_dialog(device_name)
 
+    # No args at all: the host always passes some, so this is a bare double-click.
+    # Open the product page rather than crashing on the required-arg error (which
+    # would also blow up writing to a None stderr in our GUI-subsystem build).
+    if not argv:
+        _open_product_page()
+        return 0
+
     args = parse_args(argv)
 
     # Point the credential/log store at the host's data folder before logging starts.
@@ -249,6 +314,8 @@ def main(argv=None) -> int:
     asyncio.set_event_loop(loop)
 
     main_task = loop.create_task(run(args))
+    # Watchdog: exit if FocalSonic dies without getting the chance to kill us.
+    watchdog_task = loop.create_task(_watch_host(args.host_pid, main_task))
 
     def _request_stop(*_):
         if not main_task.done():
@@ -266,6 +333,11 @@ def main(argv=None) -> int:
     except asyncio.CancelledError:
         return 0
     finally:
+        watchdog_task.cancel()
+        try:
+            loop.run_until_complete(asyncio.gather(watchdog_task, return_exceptions=True))
+        except Exception:  # noqa: BLE001
+            pass
         try:
             loop.run_until_complete(loop.shutdown_asyncgens())
         except Exception:  # noqa: BLE001

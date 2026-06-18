@@ -11,12 +11,13 @@ directly. See GUIDANCE.md §4/§6.
 
 from __future__ import annotations
 
+import array
 import asyncio
 import audioop
 import logging
 
-import numpy as np
 import pyatv.protocols.raop as raop_mod
+from pyatv.interface import DeviceListener
 from pyatv.protocols.raop.audio_source import AudioSource, _to_audio_samples
 from pyatv.support.metadata import EMPTY_METADATA
 
@@ -52,6 +53,26 @@ def verify_pyatv_symbols() -> None:
             + ", ".join(missing)
             + ". Pin pyatv and re-validate the monkey-patch."
         )
+
+
+class _ConnectionListener(DeviceListener):
+    """pyatv fires these when the device drops us — either an intentional close
+    or an unexpected network-level loss. We just flag it; the stream loop reacts.
+
+    pyatv holds the listener via a weakref, so the streamer keeps a strong
+    reference (``self._listener``) to stop this being garbage-collected.
+    """
+
+    def __init__(self, on_disconnect):
+        self._on_disconnect = on_disconnect
+
+    def connection_lost(self, exception: Exception) -> None:
+        log.warning("Device connection lost: %s", exception)
+        self._on_disconnect()
+
+    def connection_closed(self) -> None:
+        log.info("Device closed the connection")
+        self._on_disconnect()
 
 
 class LivePCMSource(AudioSource):
@@ -118,6 +139,7 @@ class AirPlayStreamer:
                                                channels=RAOP_CHANNELS)
         self._ratecv_state = None
         self._atv = None
+        self._listener = None  # strong ref; pyatv stores listeners weakly
 
         # Audio-level diagnostics (silence vs flowing).
         self._diag_chunks = 0
@@ -127,16 +149,33 @@ class AirPlayStreamer:
     # -- audio conversion (runs on the capture thread) ---------------------
 
     def _process_chunk(self, float_bytes: bytes) -> bytes:
-        """float32 -> restore gain -> int16 -> resample to 44.1k."""
-        arr = np.frombuffer(float_bytes, dtype="<f4").astype(np.float32)
+        """float32 -> restore gain -> int16 -> resample to 44.1k.
 
-        raw_peak = float(np.abs(arr).max()) if arr.size else 0.0
+        Pure stdlib (no numpy): the ``array`` module parses the float32 capture
+        buffer and we fold gain + clip + int16 cast into a single pass. Windows is
+        always little-endian, so ``array``'s native byte order matches the capture's
+        ``<f4`` floats and the ``<i2`` output pyatv expects.
+        """
+        samples = array.array("f")
+        samples.frombytes(float_bytes)
+        if not samples:
+            self._log_levels(0.0, 0.0)
+            return b""
 
-        if self.gain_restore != 1.0:
-            arr = arr * self.gain_restore
-        out_peak = float(np.abs(arr).max()) if arr.size else 0.0
-        np.clip(arr, -1.0, 1.0, out=arr)
-        i16 = (arr * 32767.0).astype("<i2").tobytes()
+        # abs-peak = max(|x|) = max(max(x), -min(x)); min/max run at C speed.
+        raw_peak = max(max(samples), -min(samples))
+        # gain_restore is a positive scalar, so post-gain abs-peak scales linearly.
+        out_peak = raw_peak * self.gain_restore if self.gain_restore != 1.0 else raw_peak
+
+        # Equivalent to numpy's clip(arr,-1,1) * 32767 then truncate-toward-zero:
+        # clamp the scaled product to +/-32767 and int() (which truncates like astype).
+        scale = self.gain_restore * 32767.0
+        i16 = array.array("h", (
+            32767 if (v := x * scale) > 32767.0
+            else -32767 if v < -32767.0
+            else int(v)
+            for x in samples
+        )).tobytes()
 
         self._log_levels(raw_peak, out_peak)
 
@@ -186,7 +225,14 @@ class AirPlayStreamer:
     # -- streaming ---------------------------------------------------------
 
     async def stream(self, atv) -> None:
-        """Capture + stream until the device drops us or we're cancelled."""
+        """Capture + stream until the device drops us or we're cancelled.
+
+        We race pyatv's ``stream_file`` against a disconnect signal from the
+        device listener: a clean ``stream_file`` return ends the session, a
+        device disconnect (incl. a silent network drop the listener catches)
+        cancels it, and a streaming exception is re-raised so ``run()`` can
+        re-pair on an auth failure (HTTP 470).
+        """
         self._atv = atv
         source = LivePCMSource(self._queue)
 
@@ -196,11 +242,30 @@ class AirPlayStreamer:
         original_open_source = raop_mod.open_source
         raop_mod.open_source = _patched_open_source
 
+        # Exit promptly if the device goes away instead of streaming into the void.
+        disconnected = asyncio.Event()
+        self._listener = _ConnectionListener(
+            lambda: self.loop.call_soon_threadsafe(disconnected.set)
+        )
+        atv.listener = self._listener
+
         # Start capture only now, right before pyatv consumes, so audio doesn't pile up.
         self._capture.start(self._on_capture_chunk)
+        stream_task = self.loop.create_task(atv.stream.stream_file("live"))  # arg ignored
+        disconnect_task = self.loop.create_task(disconnected.wait())
         try:
-            await atv.stream.stream_file("live")  # arg ignored; our source is used
+            await asyncio.wait(
+                {stream_task, disconnect_task}, return_when=asyncio.FIRST_COMPLETED,
+            )
+            if disconnect_task.done() and not stream_task.done():
+                log.info("Device disconnected — ending stream")
+            elif stream_task.done():
+                stream_task.result()  # re-raise a streaming error (e.g. RAOP 470)
         finally:
+            for task in (stream_task, disconnect_task):
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(stream_task, disconnect_task, return_exceptions=True)
             raop_mod.open_source = original_open_source
             self._capture.stop()
             self._put_drop_oldest_sentinel()  # unblock readframes if still waiting

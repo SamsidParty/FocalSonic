@@ -61,7 +61,7 @@ if not exist "%VENV%\Scripts\python.exe" (
 )
 set "VPY=%VENV%\Scripts\python.exe"
 
-echo [build] Installing dependencies ^(pyatv, comtypes, numpy^) + Nuitka ...
+echo [build] Installing dependencies ^(pyatv, comtypes^) + Nuitka ...
 "%VPY%" -m pip install --upgrade pip || ( echo [ERROR] pip upgrade failed & exit /b 1 )
 rem nuitka[onefile] pulls in zstandard so the onefile exe is compressed (smaller).
 "%VPY%" -m pip install -r requirements.txt "nuitka[onefile]" || ( echo [ERROR] dependency install failed & exit /b 1 )
