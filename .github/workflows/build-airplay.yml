@@ -1,0 +1,144 @@
+name: Build AirPlay Module
+
+# Manual only. The AirPlay engine rarely changes, and a Nuitka compile takes ~15
+# min per architecture, so we don't rebuild it on every push. Instead, run this
+# workflow by hand (Actions tab → "Build AirPlay Module" → Run workflow, on the
+# branch you want). It compiles the module for x64 + arm64, Authenticode-signs both
+# as SamsidParty, and commits the executables into the iv2runtime tree on that
+# branch. The MSIX build then just bundles the committed, signed exes.
+on:
+  workflow_dispatch:
+
+# Least privilege by default; only the commit job needs write + the signing secrets.
+permissions:
+  contents: read
+
+jobs:
+  # ── Compile per architecture (Nuitka can't cross-compile) ─────
+  build:
+    name: Build module (${{ matrix.arch }})
+    # Defence-in-depth: never run (and never touch the signing secrets) on a fork.
+    # Forks can't read this repo's secrets anyway, and workflow_dispatch already
+    # requires write access to trigger — this just makes a fork run a clean no-op.
+    if: github.repository == 'SamsidParty/FocalSonic'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64,   os: windows-latest, py-arch: x64 }
+          - { arch: arm64, os: windows-11-arm, py-arch: arm64 }
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          # 3.12 is required — audioop (used for resampling) was removed in 3.13.
+          python-version: "3.12"
+          architecture: ${{ matrix.py-arch }}
+          cache: pip
+          cache-dependency-path: FocalSonic.Airplay/requirements.txt
+
+      - name: Build the module exe (Nuitka)
+        working-directory: FocalSonic.Airplay
+        shell: cmd
+        run: build-airplay.bat
+
+      - name: Upload module artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: airplay-${{ matrix.arch }}
+          path: FocalSonic/iv2runtime/win-${{ matrix.arch }}/native/focalsonic-airplay.exe
+          if-no-files-found: error
+          retention-days: 1
+
+  # ── Sign both exes and commit them to the branch ──────────────
+  commit:
+    name: Sign and commit module exes
+    needs: build
+    if: github.repository == 'SamsidParty/FocalSonic'
+    runs-on: windows-latest
+    permissions:
+      contents: write   # push the signed exes back to the triggering branch
+
+    steps:
+      - name: Checkout triggering branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Download module (x64)
+        uses: actions/download-artifact@v4
+        with:
+          name: airplay-x64
+          path: FocalSonic/iv2runtime/win-x64/native
+
+      - name: Download module (arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: airplay-arm64
+          path: FocalSonic/iv2runtime/win-arm64/native
+
+      - name: Locate SignTool
+        id: sdk-tools
+        shell: pwsh
+        run: |
+          $sdkDir = "C:\Program Files (x86)\Windows Kits\10\bin"
+          $latestSdk = Get-ChildItem $sdkDir -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1
+          $signtool = Join-Path $latestSdk.FullName "x64\signtool.exe"
+          if (-not (Test-Path $signtool)) { throw "SignTool.exe not found at $signtool" }
+          echo "SIGNTOOL=$signtool" >> $env:GITHUB_OUTPUT
+
+      - name: Decode signing certificate
+        shell: pwsh
+        run: |
+          $pfxBytes = [System.Convert]::FromBase64String("${{ secrets.SIGNING_CERTIFICATE_BASE64 }}")
+          $pfxPath = Join-Path $env:RUNNER_TEMP "signing-cert.pfx"
+          [System.IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+          echo "PFX_PATH=$pfxPath" >> $env:GITHUB_ENV
+
+      - name: Sign module exes (SamsidParty)
+        shell: pwsh
+        run: |
+          $signtool = "${{ steps.sdk-tools.outputs.SIGNTOOL }}"
+          $targets = @(
+            "FocalSonic\iv2runtime\win-x64\native\focalsonic-airplay.exe",
+            "FocalSonic\iv2runtime\win-arm64\native\focalsonic-airplay.exe"
+          )
+          foreach ($t in $targets) {
+            if (-not (Test-Path $t)) { throw "Missing module exe: $t" }
+            & $signtool sign /f $env:PFX_PATH /p "${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}" /fd SHA256 $t
+            if ($LASTEXITCODE -ne 0) { throw "SignTool failed for $t" }
+          }
+
+      - name: Cleanup signing certificate
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path $env:PFX_PATH) {
+            $size = (Get-Item $env:PFX_PATH).Length
+            $random = New-Object byte[] $size
+            (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($random)
+            [System.IO.File]::WriteAllBytes($env:PFX_PATH, $random)
+            Remove-Item $env:PFX_PATH -Force
+            Write-Host "Signing certificate securely deleted"
+          }
+
+      - name: Commit and push module exes
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add FocalSonic/iv2runtime/win-x64/native/focalsonic-airplay.exe `
+                  FocalSonic/iv2runtime/win-arm64/native/focalsonic-airplay.exe
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Module exes unchanged — nothing to commit."
+          } else {
+            git commit -m "ci: rebuild signed AirPlay module exes [skip ci]"
+            git push origin "HEAD:${{ github.ref_name }}"
+            Write-Host "Committed updated module exes to ${{ github.ref_name }}."
+          }

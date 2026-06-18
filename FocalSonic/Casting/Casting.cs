@@ -196,7 +196,7 @@ namespace FocalSonic.Casting
             CurrentDeviceID = device.ReferenceID;
             CurrentDeviceType = "airplay";
 
-            // "airplay" keeps playback local but drops the gain to ~1e-6; the Python
+            // "airplay" keeps playback local but drops the gain to ~1e-6; the AirPlay
             // module captures that near-silent signal and restores it before streaming.
             await AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("airplay");
 

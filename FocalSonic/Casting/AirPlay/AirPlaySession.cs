@@ -1,14 +1,18 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using IgniteView.Core;
 
 namespace FocalSonic.Casting.AirPlay
 {
-    // Spawns and supervises the Python AirPlay module (args-only, no IPC); its exit
-    // is treated as a disconnect. Prefers a bundled exe (prod, not built yet), else
-    // runs airplay.py with the system Python (dev).
+    // Spawns and supervises the AirPlay module (args-only, no IPC); its exit is treated
+    // as a disconnect. Debug builds run it from source with the system Python (the .py
+    // module is copied to airplay\) so it can be iterated without recompiling; Release
+    // builds run the self-contained Nuitka exe shipped per-architecture under the
+    // IgniteView native runtime folder (see FocalSonic.Airplay/build-airplay.bat). If
+    // neither is available, AirPlay is simply unavailable.
     public class AirPlaySession
     {
         Process? _process;
@@ -34,7 +38,7 @@ namespace FocalSonic.Casting.AirPlay
                 RedirectStandardOutput = true,
             };
 
-            // Python script path first (dev), then the module args.
+            // Dev mode runs "python airplay.py …"; the script path goes first.
             if (!string.IsNullOrEmpty(module.Value.ScriptPath))
             {
                 psi.ArgumentList.Add(module.Value.ScriptPath);
@@ -67,6 +71,14 @@ namespace FocalSonic.Casting.AirPlay
             {
                 psi.ArgumentList.Add("--identifier");
                 psi.ArgumentList.Add(device.AirPlayIdentifier);
+            }
+
+            // In dev mode, crank up logging so the full pyatv pairing exchange (incl.
+            // the device's pair-setup TLV response) lands in airplay.log for diagnosis.
+            if (!string.IsNullOrEmpty(module.Value.ScriptPath))
+            {
+                psi.ArgumentList.Add("--log-level");
+                psi.ArgumentList.Add("DEBUG");
             }
 
             try
@@ -164,18 +176,11 @@ namespace FocalSonic.Casting.AirPlay
             if (_resolved) return _cached;
             _resolved = true;
 
-            var moduleDir = Path.Combine(AppContext.BaseDirectory, "airplay");
-
-            // Production: a bundled, self-contained executable.
-            var bundledExe = Path.Combine(moduleDir, "focalsonic-airplay.exe");
-            if (File.Exists(bundledExe))
-            {
-                _cached = new ModuleCommand { FileName = bundledExe, ScriptPath = "" };
-                return _cached;
-            }
-
-            // Development: the Python script run with the system Python.
-            var script = Path.Combine(moduleDir, "airplay.py");
+            // Development: Debug builds copy the .py module to airplay\ (see the csproj).
+            // Run it from source with the system Python so edits take effect without a
+            // ~15-min Nuitka recompile. Release builds don't ship the source, so this is
+            // skipped and the bundled exe is used. Set FOCALSONIC_PYTHON to override.
+            var script = Path.Combine(AppContext.BaseDirectory, "airplay", "airplay.py");
             if (File.Exists(script))
             {
                 var python = FindPython();
@@ -186,10 +191,28 @@ namespace FocalSonic.Casting.AirPlay
                 }
             }
 
+            // Production: the bundled, signed, self-contained exe, shipped alongside
+            // IgniteView's own native runtime — iv2runtime\win-<arch>\native\…exe.
+            var exe = Path.Combine(
+                AppContext.BaseDirectory, "iv2runtime", NativeRuntimeFolder(), "native",
+                "focalsonic-airplay.exe");
+            if (File.Exists(exe))
+            {
+                _cached = new ModuleCommand { FileName = exe, ScriptPath = "" };
+                return _cached;
+            }
+
             _cached = null;
             return null;
 #endif
         }
+
+        // The IgniteView native-runtime folder for the current process architecture.
+        static string NativeRuntimeFolder() => RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.Arm64 => "win-arm64",
+            _ => "win-x64",
+        };
 
         static string? FindPython()
         {

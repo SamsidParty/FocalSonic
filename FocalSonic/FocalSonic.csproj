@@ -56,24 +56,25 @@
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="$(PostBuildCommand) &quot;$(OutputPath.Replace('\', '\\'))&quot;" />
 	</Target>
+	<!-- The IgniteView native runtime, plus the self-contained AirPlay module exe
+	     committed under iv2runtime\win-<arch>\native\ (built + signed by the manual
+	     "Build AirPlay Module" workflow). Whatever architectures are present get
+	     bundled; if none are, AirPlay is unavailable in Release. -->
 	<ItemGroup>
 		<Content Include="iv2runtime\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<PackageCopyToOutput>true</PackageCopyToOutput>
 		</Content>
 	</ItemGroup>
-	<!-- Development only: copy the Python AirPlay module next to the exe so the host
-	     can spawn it with the system Python. Production will instead bundle a
-	     self-contained executable (Nuitka/PyInstaller) into airplay\ — not yet
-	     configured, so production AirPlay stays unavailable until then. -->
+	<!-- Debug only: copy the AirPlay module *source* (flat .py files) to airplay\ so
+	     the host runs it with the system Python instead of the Nuitka exe — lets you
+	     iterate on the module without the ~15-min recompile. Release ships only the exe.
+	     AirPlaySession.ResolveModule prefers airplay\airplay.py when present. -->
 	<ItemGroup Condition="'$(Configuration)'=='Debug' And '$(IsWindows)'=='true'">
-		<Content Include="..\FocalSonic.Airplay\airplay.py" Link="airplay\airplay.py">
+		<Content Include="..\FocalSonic.Airplay\*.py" Link="airplay\%(Filename)%(Extension)">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<Content Include="..\FocalSonic.Airplay\requirements.txt" Link="airplay\requirements.txt">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-		<Content Include="..\FocalSonic.Airplay\focalsonic_airplay\**\*.py" Link="airplay\focalsonic_airplay\%(RecursiveDir)%(Filename)%(Extension)">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
