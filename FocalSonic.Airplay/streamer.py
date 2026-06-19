@@ -19,7 +19,7 @@ import logging
 import pyatv.protocols.raop as raop_mod
 from pyatv.interface import DeviceListener
 from pyatv.protocols.raop.audio_source import AudioSource, _to_audio_samples
-from pyatv.support.metadata import EMPTY_METADATA
+from pyatv.interface import MediaMetadata
 from pyatv.support.rtsp import RtspSession
 
 from connection import local_sender_name
@@ -34,6 +34,14 @@ RAOP_SAMPLE_SIZE = 2  # bytes (s16)
 
 # Drop-oldest queue: a few hundred ms of jitter headroom, no unbounded latency.
 QUEUE_MAXSIZE = 12
+
+# Now-playing metadata sent to the receiver.
+DEFAULT_METADATA = MediaMetadata(
+    title="FocalSonic",
+    artist="FocalSonic",
+    album="AirPlay",
+    duration=0.0,
+)
 
 
 class StartupSymbolError(RuntimeError):
@@ -104,7 +112,7 @@ class LivePCMSource(AudioSource):
         return _to_audio_samples(out)  # native s16 -> big-endian for RAOP
 
     async def get_metadata(self):
-        return EMPTY_METADATA
+        return DEFAULT_METADATA
 
     @property
     def sample_rate(self) -> int:
