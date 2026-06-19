@@ -4,6 +4,14 @@
 pyatv==0.17.0
 comtypes>=1.4.8
 
+# cryptography is a transitive dep of pyatv (pyatv requires >=44.0.1). Pin the
+# minimum to 46.0.0: that's the first release to publish Windows ARM64 wheels
+# (cp38-abi3-win_arm64, which covers our 3.12). On <46 there is no win_arm64
+# wheel, so the arm64 CI runner falls back to compiling cryptography's Rust
+# source, which needs an OpenSSL install it doesn't have and the build fails.
+# x64 is unaffected (win_amd64 wheels ship for every version).
+cryptography>=46.0.0
+
 # No numpy: the float32->int16 conversion in streamer._process_chunk is pure
 # stdlib (`array`), which drops a ~50 MB dependency (incl. a 20 MB OpenBLAS DLL)
 # from the bundled exe.
