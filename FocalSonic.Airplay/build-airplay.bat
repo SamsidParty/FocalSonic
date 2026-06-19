@@ -66,7 +66,12 @@ set "VPY=%VENV%\Scripts\python.exe"
 echo [build] Installing dependencies ^(pyatv, comtypes^) + Nuitka ...
 "%VPY%" -m pip install --upgrade pip || ( echo [ERROR] pip upgrade failed & exit /b 1 )
 rem nuitka[onefile] pulls in zstandard so the onefile exe is compressed (smaller).
-"%VPY%" -m pip install -r requirements.txt "nuitka[onefile]" || ( echo [ERROR] dependency install failed & exit /b 1 )
+rem --only-binary cryptography: cryptography has no win_arm64 wheel outside the
+rem 46.0.0-46.0.3 window (see requirements.txt). Forcing a wheel for it makes a
+rem missing wheel fail with a clear "no matching distribution" instead of silently
+rem attempting the Rust/OpenSSL source build, which has no OpenSSL on the runner.
+rem Scoped to cryptography only -- miniaudio/zeroconf still build from source.
+"%VPY%" -m pip install --only-binary cryptography -r requirements.txt "nuitka[onefile]" || ( echo [ERROR] dependency install failed & exit /b 1 )
 
 rem --- compile ----------------------------------------------------------------
 set "OUTDIR=..\FocalSonic\iv2runtime\%ARCH%\native\airplay"
