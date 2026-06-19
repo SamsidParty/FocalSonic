@@ -37,8 +37,9 @@ namespace FocalSonic.Casting.AirPlay
 
                     var name = string.IsNullOrWhiteSpace(host.DisplayName) ? address : host.DisplayName;
                     var identifier = ExtractDeviceId(host);
+                    var icon = ClassifyIcon(ExtractTxt(host, "model"));
 
-                    devices.Add(CastDeviceReference.GetAirPlay(name, address, identifier));
+                    devices.Add(CastDeviceReference.GetAirPlay(name, address, identifier, icon));
                 }
             }
             catch
@@ -96,19 +97,40 @@ namespace FocalSonic.Casting.AirPlay
             return ipv4 ?? host.IPAddress;
         }
 
-        static string ExtractDeviceId(IZeroconfHost host)
+        static string ExtractDeviceId(IZeroconfHost host) => ExtractTxt(host, "deviceid");
+
+        // Pulls a TXT-record value (e.g. "deviceid", "model") from the host's services.
+        static string ExtractTxt(IZeroconfHost host, string key)
         {
             foreach (var service in host.Services.Values)
             {
                 foreach (var props in service.Properties)
                 {
-                    if (props.TryGetValue("deviceid", out var deviceId) && !string.IsNullOrEmpty(deviceId))
+                    if (props.TryGetValue(key, out var value) && !string.IsNullOrEmpty(value))
                     {
-                        return deviceId;
+                        return value;
                     }
                 }
             }
             return "";
+        }
+
+        // Maps the AirPlay TXT "model" string to a frontend icon hint. Apple models look
+        // like "AppleTV6,2", "AudioAccessory5,1" (HomePod), "Macmini9,1"/"MacBookPro18,1".
+        // Falls back to "airplay" when the model is missing or unrecognized.
+        static string ClassifyIcon(string model)
+        {
+            if (string.IsNullOrEmpty(model)) return "airplay";
+
+            if (model.StartsWith("AppleTV", StringComparison.OrdinalIgnoreCase)) return "appletv";
+            if (model.StartsWith("AudioAccessory", StringComparison.OrdinalIgnoreCase)) return "homepod";
+            if (model.StartsWith("iMac", StringComparison.OrdinalIgnoreCase)) return "imac";
+
+            // These two are confusing, my Macbook shows up as Mac17,2 instead of MacBook17,2
+            if (model.StartsWith("MacMini", StringComparison.OrdinalIgnoreCase)) return "mac";
+            if (model.StartsWith("Mac", StringComparison.OrdinalIgnoreCase)) return "macbook";
+
+            return "airplay";
         }
     }
 }

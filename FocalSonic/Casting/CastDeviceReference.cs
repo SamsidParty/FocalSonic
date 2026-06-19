@@ -24,6 +24,9 @@ namespace FocalSonic.Casting
         public string ReferenceID;
         public string Type = "chromecast";
 
+        // Frontend icon hint, independent of Type
+        public string Icon = "speaker";
+
         // AirPlay-specific fields (null/empty for Chromecast devices).
         [JsonIgnore]
         public string AirPlayAddress;
@@ -50,7 +53,7 @@ namespace FocalSonic.Casting
         }
 
         // Registers (or refreshes) an AirPlay device discovered via Zeroconf.
-        public static CastDeviceReference GetAirPlay(string name, string address, string identifier)
+        public static CastDeviceReference GetAirPlay(string name, string address, string identifier, string icon)
         {
             // Prefer the stable device identifier; fall back to the address.
             var referenceID = "airplay_" + (string.IsNullOrEmpty(identifier) ? address : identifier);
@@ -60,6 +63,7 @@ namespace FocalSonic.Casting
             reference.DeviceUri = address;
             reference.ReferenceID = referenceID;
             reference.Type = "airplay";
+            reference.Icon = string.IsNullOrEmpty(icon) ? "airplay" : icon;
             reference.AirPlayAddress = address;
             reference.AirPlayIdentifier = identifier;
 

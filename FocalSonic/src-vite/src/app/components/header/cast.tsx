@@ -1,4 +1,4 @@
-import { AirplayIcon, RefreshCwIcon, SpeakerIcon, UnplugIcon } from "lucide-react";
+import { AirplayIcon, LaptopIcon, MonitorIcon, RefreshCwIcon, ServerIcon, SpeakerIcon, TvMinimalPlayIcon, UnplugIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
@@ -21,7 +21,17 @@ interface DeviceReference {
     ReferenceID: string;
     // "chromecast" (remote playback) or "airplay" (direct local capture).
     Type?: string;
+    Icon?: string;
 }
+
+const DEVICE_ICONS = {
+    appletv: TvMinimalPlayIcon,
+    homepod: SpeakerIcon,
+    macbook: LaptopIcon,
+    imac: MonitorIcon,
+    mac: ServerIcon, // Closest icon to what Apple devices would show for mac minis
+    airplay: AirplayIcon,
+} as const;
 
 export function useCastStatus() {
     const [castStatus, setCastStatus] = useState<string | null>(null);
@@ -108,7 +118,8 @@ export function Cast() {
 
                     {
                         deviceList.map((device) => {
-                            const DeviceIcon = device.Type === "airplay" ? AirplayIcon : SpeakerIcon;
+                            const DeviceIcon = DEVICE_ICONS[device.Icon as keyof typeof DEVICE_ICONS]
+                                ?? (device.Type === "airplay" ? AirplayIcon : SpeakerIcon);
                             return (
                                 <DropdownMenuItem disabled={!!castStatus} onClick={() => castToDevice(device.ReferenceID)} key={device.ReferenceID}>
                                     <DeviceIcon className={clsx("mr-2 h-4 w-4", !!(castStatus == device.ReferenceID) && "text-primary")} />
