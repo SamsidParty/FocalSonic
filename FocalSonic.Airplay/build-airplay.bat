@@ -80,6 +80,12 @@ if not exist "%OUTDIR%" mkdir "%OUTDIR%"
 set "WORKDIR=build\%ARCH%"
 if exist "%WORKDIR%" rmdir /s /q "%WORKDIR%"
 
+rem NOTE: deliberately NO --remove-output. After building the onefile exe, that
+rem flag makes Nuitka delete the intermediate .dist folder, and on the ARM64 CI
+rem runner Defender still holds handles on the freshly written DLLs, so all of
+rem Nuitka's delete retries fail and it exits FATAL -- even though the exe is
+rem already done. We don't need the cleanup: WORKDIR is wiped at the top of every
+rem build and CI runners are ephemeral, so the leftover .dist is harmless.
 echo [build] Compiling with Nuitka -- this can take several minutes ...
 "%VPY%" -m nuitka ^
     --onefile ^
@@ -96,7 +102,6 @@ echo [build] Compiling with Nuitka -- this can take several minutes ...
     --product-version=1.0.0 ^
     --output-filename=focalsonic-airplay.exe ^
     --output-dir="%WORKDIR%" ^
-    --remove-output ^
     airplay.py
 if errorlevel 1 (
     echo [ERROR] Nuitka build failed
