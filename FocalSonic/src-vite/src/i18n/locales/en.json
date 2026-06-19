@@ -39,7 +39,7 @@
   },
   "menu": {
     "language": "Language",
-    "cast": "Chromecast",
+    "cast": "Casting",
     "castDescription": "Select a device to cast music to",
     "castNoDevices": "No devices available",
     "castRefresh": "Scan again",

@@ -35,6 +35,9 @@
 		<PackageReference Include="IgniteView.Core" Version="*" />
 		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="GoogleCast" Version="1.7.0" />
+		<!-- Already a transitive dep of GoogleCast; referenced explicitly so we can
+		     reuse its Bonjour discovery for AirPlay devices. -->
+		<PackageReference Include="Zeroconf" Version="3.4.2" />
 		<PackageReference Include="SoundFlow" Version="1.2.0" />
 		<PackageReference Include="System.Drawing.Common" Version="9.0.8" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
@@ -53,11 +56,27 @@
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="$(PostBuildCommand) &quot;$(OutputPath.Replace('\', '\\'))&quot;" />
 	</Target>
+	<!-- The IgniteView native runtime, plus the self-contained AirPlay module exe
+	     committed under iv2runtime\win-<arch>\native\ (built + signed by the manual
+	     "Build AirPlay Module" workflow). Whatever architectures are present get
+	     bundled; if none are, AirPlay is unavailable in Release. -->
 	<ItemGroup>
 		<Content Include="iv2runtime\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<PackageCopyToOutput>true</PackageCopyToOutput>
 		</Content>
+	</ItemGroup>
+	<!-- Debug only: instead of copying the AirPlay module's .py files into the output
+	     (a snapshot that silently goes stale — a reverted experiment once kept running
+	     from a stale copy and broke pairing), embed the absolute path to the source
+	     module dir. AirPlaySession.ResolveModule runs airplay.py straight from there
+	     with the system Python, so edits take effect with no rebuild and there's never
+	     a stale copy. Release omits this attribute and runs the bundled Nuitka exe. -->
+	<ItemGroup Condition="'$(Configuration)'=='Debug' And '$(IsWindows)'=='true'">
+		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+			<_Parameter1>FocalSonicAirPlayModuleDir</_Parameter1>
+			<_Parameter2>$(MSBuildProjectDirectory)\..\FocalSonic.Airplay</_Parameter2>
+		</AssemblyAttribute>
 	</ItemGroup>
 	<ItemGroup Condition="'$(IsLinux)'=='true'">
 		<Content Include="src-vite\public\favicons\favicon-32x32.png" Link="iv2runtime\focalsonic-tray.png">

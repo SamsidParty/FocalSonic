@@ -87,8 +87,9 @@ namespace FocalSonic.AudioPlayer
 
         public async Task HandleTimeUpdate(bool isPlaying, double currentPlaybackTime, double currentPlaybackDuration, string source = "local")
         {
-            // Only accept time updates from the current source
-            if (source != OutputDevice) return;
+            // Only accept updates from the current source; AirPlay plays locally.
+            var effectiveOutput = OutputDevice == "airplay" ? "local" : OutputDevice;
+            if (source != effectiveOutput) return;
 
             if (isPlaying)
             {
@@ -146,6 +147,7 @@ namespace FocalSonic.AudioPlayer
 
         public virtual async Task SetLoopMode(bool loop) { Looping = loop; }
         public virtual async Task SetOutputDevice(string outputDevice) { OutputDevice = outputDevice; }
+
         public virtual async Task SetVolume(double volume) { Volume = (float)volume; }
         public virtual async Task SetSpeed(double speed) { Speed = (float)speed; }
         public virtual async Task SetFilterData(string filterData) { FilterData = filterData; }

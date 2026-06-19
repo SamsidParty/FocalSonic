@@ -1,5 +1,5 @@
-import { CastIcon, RefreshCwIcon, SpeakerIcon, UnplugIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { AirplayIcon, LaptopIcon, MonitorIcon, RefreshCwIcon, ServerIcon, SpeakerIcon, TvMinimalPlayIcon, UnplugIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
 
@@ -18,15 +18,30 @@ import clsx from "clsx";
 
 interface DeviceReference {
     Name: string;
-    ReferenceID: string
+    ReferenceID: string;
+    // "chromecast" (remote playback) or "airplay" (direct local capture).
+    Type?: string;
+    Icon?: string;
 }
+
+const DEVICE_ICONS = {
+    appletv: TvMinimalPlayIcon,
+    homepod: SpeakerIcon,
+    macbook: LaptopIcon,
+    imac: MonitorIcon,
+    mac: ServerIcon, // Closest icon to what Apple devices would show for mac minis
+    airplay: AirplayIcon,
+} as const;
 
 export function useCastStatus() {
     const [castStatus, setCastStatus] = useState<string | null>(null);
+    const [castDeviceType, setCastDeviceType] = useState<string | null>(null);
 
     const updateCastStatus = async () => {
         const status = await window.igniteView?.commandBridge?.getCastStatus?.();
         setCastStatus(status || null);
+        const type = await window.igniteView?.commandBridge?.getCastDeviceType?.();
+        setCastDeviceType(type || null);
     };
 
     useEffect(() => {
@@ -36,8 +51,8 @@ export function useCastStatus() {
 
         return () => clearInterval(interval);
     }, []);
-    
-    return { castStatus, setCastStatus };
+
+    return { castStatus, setCastStatus, castDeviceType };
 }
 
 export function Cast() {
@@ -86,7 +101,7 @@ export function Cast() {
                 <DropdownMenuTrigger className="user-dropdown-trigger">
                     <Avatar className="w-8 h-8 rounded-md cursor-pointer">
                         <AvatarFallback className="text-sm bg-transparent hover:bg-accent rounded-md">
-                            <CastIcon className={clsx("w-4 h-4", !!castStatus && "text-primary")} />
+                            <AirplayIcon className={clsx("w-4 h-4", !!castStatus && "text-primary")} />
                         </AvatarFallback>
                     </Avatar>
                 </DropdownMenuTrigger>
@@ -102,12 +117,16 @@ export function Cast() {
                     <DropdownMenuSeparator />
 
                     {
-                        deviceList.map((device) => (
-                            <DropdownMenuItem disabled={!!castStatus} onClick={() => castToDevice(device.ReferenceID)} key={device.ReferenceID}>
-                                <SpeakerIcon className={clsx("mr-2 h-4 w-4", !!(castStatus == device.ReferenceID) && "text-primary")} />
-                                <span className={clsx(!!(castStatus == device.ReferenceID) && "text-primary")}>{device.Name}</span>
-                            </DropdownMenuItem>
-                        ))
+                        deviceList.map((device) => {
+                            const DeviceIcon = DEVICE_ICONS[device.Icon as keyof typeof DEVICE_ICONS]
+                                ?? (device.Type === "airplay" ? AirplayIcon : SpeakerIcon);
+                            return (
+                                <DropdownMenuItem disabled={!!castStatus} onClick={() => castToDevice(device.ReferenceID)} key={device.ReferenceID}>
+                                    <DeviceIcon className={clsx("mr-2 h-4 w-4", !!(castStatus == device.ReferenceID) && "text-primary")} />
+                                    <span className={clsx(!!(castStatus == device.ReferenceID) && "text-primary")}>{device.Name}</span>
+                                </DropdownMenuItem>
+                            );
+                        })
                     }
 
                     {

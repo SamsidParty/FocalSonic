@@ -466,3 +466,9 @@ FodyWeavers.xsd
 
 SamsidParty.Subsonic.Proxy.AppleMusic/Properties/launchSettings.json
 DesktopClient/Properties/launchSettings.json
+
+# NOTE: the AirPlay module executables (FocalSonic/iv2runtime/win-<arch>/native/
+# focalsonic-airplay.exe) are intentionally committed — they're built + signed by
+# the manually-triggered "Build AirPlay Module" workflow and checked in, so the
+# MSIX build doesn't have to compile them on every push. Build locally for testing
+# with FocalSonic.Airplay/build-airplay.bat.

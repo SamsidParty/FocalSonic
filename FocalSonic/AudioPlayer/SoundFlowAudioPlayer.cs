@@ -146,12 +146,25 @@ namespace FocalSonic.AudioPlayer
             }
         }
 
+        // When airplaying, make the volume so small it's inaudible on the local PC (the airplay module will multiply it again)
+        float EffectiveVolume() => (float)(Volume * (OutputDevice == "airplay" ? 1e-6 : 1.0));
+
         public override async Task SetVolume(double volume)
         {
             await base.SetVolume(volume);
             if (Player != null)
             {
-                Player.Volume = (float)volume;
+                Player.Volume = EffectiveVolume();
+            }
+        }
+
+        public override async Task SetOutputDevice(string outputDevice)
+        {
+            await base.SetOutputDevice(outputDevice);
+            // Re-apply gain: entering/leaving "airplay" toggles the mute.
+            if (Player != null)
+            {
+                Player.Volume = EffectiveVolume();
             }
         }
 

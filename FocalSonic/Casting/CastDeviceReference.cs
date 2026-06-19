@@ -1,4 +1,4 @@
-﻿using GoogleCast;
+using GoogleCast;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -9,16 +9,29 @@ using System.Threading.Tasks;
 
 namespace FocalSonic.Casting
 {
+    // A cast target — Chromecast or AirPlay, distinguished by Type. Both render from
+    // the same device list / code paths on the frontend.
     public class CastDeviceReference
     {
         public static ConcurrentDictionary<string, CastDeviceReference> DiscoveredDevices = new();
 
+        // Chromecast-specific handle (null for AirPlay devices).
         [JsonIgnore]
         public IReceiver Receiver;
 
         public string Name;
         public string DeviceUri;
         public string ReferenceID;
+        public string Type = "chromecast";
+
+        // Frontend icon hint, independent of Type
+        public string Icon = "speaker";
+
+        // AirPlay-specific fields (null/empty for Chromecast devices).
+        [JsonIgnore]
+        public string AirPlayAddress;
+        [JsonIgnore]
+        public string AirPlayIdentifier;
 
         public static CastDeviceReference Get(IReceiver recv)
         {
@@ -31,11 +44,31 @@ namespace FocalSonic.Casting
                     Receiver = recv,
                     Name = recv.FriendlyName,
                     DeviceUri = recv.IPEndPoint.ToString(),
-                    ReferenceID = referenceID
+                    ReferenceID = referenceID,
+                    Type = "chromecast"
                 };
             }
 
             return DiscoveredDevices[referenceID];
+        }
+
+        // Registers (or refreshes) an AirPlay device discovered via Zeroconf.
+        public static CastDeviceReference GetAirPlay(string name, string address, string identifier, string icon)
+        {
+            // Prefer the stable device identifier; fall back to the address.
+            var referenceID = "airplay_" + (string.IsNullOrEmpty(identifier) ? address : identifier);
+
+            var reference = DiscoveredDevices.GetValueOrDefault(referenceID) ?? new CastDeviceReference();
+            reference.Name = name;
+            reference.DeviceUri = address;
+            reference.ReferenceID = referenceID;
+            reference.Type = "airplay";
+            reference.Icon = string.IsNullOrEmpty(icon) ? "airplay" : icon;
+            reference.AirPlayAddress = address;
+            reference.AirPlayIdentifier = identifier;
+
+            DiscoveredDevices[referenceID] = reference;
+            return reference;
         }
 
         public static CastDeviceReference? GetByID(string referenceID)

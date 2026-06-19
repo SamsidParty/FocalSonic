@@ -44,16 +44,27 @@ namespace FocalSonic.Casting
         static Sender? Client;
         static IMediaChannel? MediaChannel;
 
+        static string CurrentDeviceType = "";
+        static AirPlay.AirPlaySession? CurrentAirPlay;
+
         [Command("disconnectCast")]
         public static void HandleDisconnect()
         {
+            // Chromecast teardown
             try { MediaChannel?.StopAsync(); } catch { }
             try { Client?.Disconnect(); } catch { }
+            Client = null;
+
+            // AirPlay teardown
+            try { CurrentAirPlay?.Stop(); } catch { }
+            CurrentAirPlay = null;
+
+            // Back to "local" restores the playback gain (un-mutes the PC speakers).
             AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("local");
             LastSongID = "";
             IsPlaying = false;
             CurrentDeviceID = "";
-            Client = null;
+            CurrentDeviceType = "";
         }
 
         public static async Task Send(CastMessage message)
@@ -104,8 +115,29 @@ namespace FocalSonic.Casting
         [Command("getCastStatus")]
         public static string GetCastStatus() => CurrentDeviceID;
 
+        // Lets the frontend tell AirPlay (direct capture — keep local effects/volume)
+        // apart from Chromecast (remote playback — hide local controls).
+        [Command("getCastDeviceType")]
+        public static string GetCastDeviceType() => CurrentDeviceType;
+
         [Command("getCastDevices")]
         public static async Task<List<CastDeviceReference>> GetAvailableDevices()
+        {
+            var devices = new List<CastDeviceReference>();
+
+            try { devices.AddRange(await GetChromecastDevices()); } catch { }
+
+            // Only advertise AirPlay if the streaming module is actually available
+            // (it never is in production until the bundler is configured).
+            if (AirPlay.AirPlaySession.IsAvailable)
+            {
+                try { devices.AddRange(await AirPlay.AirPlayDiscovery.ScanAsync()); } catch { }
+            }
+
+            return devices;
+        }
+
+        static async Task<List<CastDeviceReference>> GetChromecastDevices()
         {
             try
             {
@@ -146,8 +178,44 @@ namespace FocalSonic.Casting
         {
             HandleDisconnect();
 
-            var chromecast = CastDeviceReference.GetByID(referenceID);
-            if (chromecast == null) return "device-not-found";
+            var device = CastDeviceReference.GetByID(referenceID);
+            if (device == null) return "device-not-found";
+
+            if (device.Type == "airplay")
+            {
+                return await StartAirPlay(device);
+            }
+
+            return await StartChromecast(device);
+        }
+
+        static async Task<string> StartAirPlay(CastDeviceReference device)
+        {
+            if (!AirPlay.AirPlaySession.IsAvailable) return "airplay-unavailable";
+
+            CurrentDeviceID = device.ReferenceID;
+            CurrentDeviceType = "airplay";
+
+            // "airplay" keeps playback local but drops the gain to ~1e-6; the AirPlay
+            // module captures that near-silent signal and restores it before streaming.
+            await AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("airplay");
+
+            CurrentAirPlay = new AirPlay.AirPlaySession();
+            CurrentAirPlay.OnExited = () => HandleDisconnect();
+
+            var started = CurrentAirPlay.Start(device, Environment.ProcessId);
+            if (!started)
+            {
+                HandleDisconnect();
+                return "failed";
+            }
+
+            return "success";
+        }
+
+        static async Task<string> StartChromecast(CastDeviceReference chromecast)
+        {
+            CurrentDeviceType = "chromecast";
 
             try
             {
@@ -155,7 +223,7 @@ namespace FocalSonic.Casting
                 var service = new ServiceCollection().AddGoogleCast();
                 service.AddTransient(typeof(IChannel), typeof(FocalSonicChannel));
 
-                CurrentDeviceID = referenceID;
+                CurrentDeviceID = chromecast.ReferenceID;
                 Client = new Sender(service.BuildServiceProvider());
                 Client.Disconnected += (_, _) => HandleDisconnect();
                 MediaChannel = Client?.GetChannel<IMediaChannel>();

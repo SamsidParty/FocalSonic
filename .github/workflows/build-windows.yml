@@ -16,6 +16,9 @@ jobs:
 
     steps:
       # ── Checkout ──────────────────────────────────────────────
+      # The signed AirPlay module exes are committed under iv2runtime\win-<arch>\
+      # native\ by the manual "Build AirPlay Module" workflow, so they're already
+      # in the tree here — nothing to build. (If absent, AirPlay is just unavailable.)
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -77,11 +80,27 @@ jobs:
           echo "PFX_PATH=$pfxPath" >> $env:GITHUB_ENV
 
       # ── Sign the EXE ──────────────────────────────────────────
+      # Only FocalSonic.exe is signed here; the AirPlay module exes are committed
+      # already-signed (by the "Build AirPlay Module" workflow), so they ship as-is.
       - name: Sign EXE
         shell: pwsh
         run: |
           $signtool = "${{ steps.sdk-tools.outputs.SIGNTOOL }}"
           & $signtool sign /f $env:PFX_PATH /p "${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}" /fd SHA256 "FocalSonic\bin\production\x64\FocalSonic.exe"
+
+      # ── Trim runtimes the x64 package can't use ───────────────
+      # The published tree carries every platform's iv2runtime (linux / macOS /
+      # win-arm64); an x64 Windows MSIX only needs win-x64, so drop the rest to
+      # shrink the package. (This also drops the arm64 AirPlay module exe, which an
+      # x64 build can't use anyway — the win-x64 one stays.)
+      - name: Prune non-x64 runtimes from iv2runtime
+        shell: pwsh
+        run: |
+          $iv = "FocalSonic\bin\production\x64\iv2runtime"
+          foreach ($rid in @('linux-x64','linux-arm64','osx-universal','win-arm64')) {
+            $p = Join-Path $iv $rid
+            if (Test-Path $p) { Remove-Item $p -Recurse -Force; Write-Host "Pruned $rid" }
+          }
 
       # ── Build Store MSIX (unsigned) ───────────────────────────
       - name: Build Store MSIX

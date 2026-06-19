@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+build/
+dist/
+*.spec
+
+# Nuitka build artifacts (build-airplay.bat)
+.build-venv/
+*.build/
+*.dist/
+*.onefile-build/

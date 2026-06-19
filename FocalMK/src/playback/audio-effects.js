@@ -307,12 +307,22 @@ class AudioEffectController {
     updateVolume() {
         let muteVolume = 1.0;
 
-        if (window.outputDevice && !window.outputDevice.includes("local")) {
-            muteVolume = 0.0; // Mute local audio when outputting to external device (eg. chromecast)
+        // Fully mute local audio for remote outputs (Chromecast). AirPlay is the
+        // exception — it captures local audio, so it keeps playing (near-silent below).
+        if (window.outputDevice && !window.outputDevice.includes("local") && window.outputDevice !== "airplay") {
+            muteVolume = 0.0;
         }
 
         let mergedVolume = this.baseVolume * this.fadeGain * muteVolume;
-        this.rawSource.volume = Math.pow(mergedVolume, 2); // Exponential volume
+        let outputVolume = Math.pow(mergedVolume, 2); // Exponential volume
+
+        // AirPlay: mute to ~1e-6 (after the curve) so the PC stays silent; the host
+        // captures this and restores it x1e6 before streaming.
+        if (window.outputDevice === "airplay") {
+            outputVolume *= 1e-6;
+        }
+
+        this.rawSource.volume = outputVolume;
     }
 
     resetFade() {

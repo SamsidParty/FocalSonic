@@ -1,0 +1,12 @@
+# FocalSonic AirPlay module dependencies.
+# Pin versions: the streamer monkey-patches pyatv internals (see GUIDANCE.md §4),
+# so a pyatv bump must be re-validated against streamer.verify_pyatv_symbols().
+pyatv==0.17.0
+comtypes>=1.4.8
+
+# No numpy: the float32->int16 conversion in streamer._process_chunk is pure
+# stdlib (`array`), which drops a ~50 MB dependency (incl. a 20 MB OpenBLAS DLL)
+# from the bundled exe.
+
+# Python 3.12 only — `audioop` (used for resampling) was removed in 3.13.
+# For 3.13+, vendor a ratecv replacement or switch to soxr/samplerate resampling.
