@@ -4,13 +4,16 @@
 pyatv==0.17.0
 comtypes>=1.4.8
 
-# cryptography is a transitive dep of pyatv (pyatv requires >=44.0.1). Pin the
-# minimum to 46.0.0: that's the first release to publish Windows ARM64 wheels
-# (cp38-abi3-win_arm64, which covers our 3.12). On <46 there is no win_arm64
-# wheel, so the arm64 CI runner falls back to compiling cryptography's Rust
-# source, which needs an OpenSSL install it doesn't have and the build fails.
-# x64 is unaffected (win_amd64 wheels ship for every version).
-cryptography>=46.0.0
+# cryptography is a transitive dep of pyatv (pyatv requires >=44.0.1). It must be
+# pinned EXACTLY because of a narrow Windows-ARM64 wheel window: cryptography only
+# ever published win_arm64 wheels for 46.0.0 - 46.0.3. They did NOT exist before
+# 46.0.0 and were DROPPED again from 46.0.4 onward (47/48/49 are win32/win_amd64
+# only). Any version outside 46.0.0-46.0.3 has no win_arm64 wheel, so the arm64 CI
+# runner falls back to compiling cryptography's Rust source, which needs an OpenSSL
+# install it doesn't have -> build fails. 46.0.3 is the newest patch in that window.
+# (build-airplay.bat also passes --only-binary cryptography so a missing wheel fails
+# loudly instead of silently retrying the doomed source build.) x64 is unaffected.
+cryptography==46.0.3
 
 # No numpy: the float32->int16 conversion in streamer._process_chunk is pure
 # stdlib (`array`), which drops a ~50 MB dependency (incl. a 20 MB OpenBLAS DLL)
