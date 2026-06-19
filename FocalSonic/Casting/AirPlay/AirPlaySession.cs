@@ -197,10 +197,11 @@ namespace FocalSonic.Casting.AirPlay
                 }
             }
 
-            // Production: the bundled, signed, self-contained exe, shipped alongside
-            // IgniteView's own native runtime — iv2runtime\win-<arch>\native\…exe.
+            // Production: the bundled, signed, self-contained exe, shipped in the
+            // module's own folder inside IgniteView's native runtime —
+            // iv2runtime\win-<arch>\native\airplay\focalsonic-airplay.exe.
             var exe = Path.Combine(
-                AppContext.BaseDirectory, "iv2runtime", NativeRuntimeFolder(), "native",
+                AppContext.BaseDirectory, "iv2runtime", NativeRuntimeFolder(), "native", "airplay",
                 "focalsonic-airplay.exe");
             if (File.Exists(exe))
             {

@@ -51,7 +51,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: airplay-${{ matrix.arch }}
-          path: FocalSonic/iv2runtime/win-${{ matrix.arch }}/native/focalsonic-airplay.exe
+          # The module's whole folder: the exe plus favicon.png (loaded at runtime
+          # by the PIN dialog). Uploading the directory roots the artifact at it,
+          # so both files sit at the artifact root.
+          path: FocalSonic/iv2runtime/win-${{ matrix.arch }}/native/airplay/
           if-no-files-found: error
           retention-days: 1
 
@@ -74,13 +77,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: airplay-x64
-          path: FocalSonic/iv2runtime/win-x64/native
+          path: FocalSonic/iv2runtime/win-x64/native/airplay
 
       - name: Download module (arm64)
         uses: actions/download-artifact@v4
         with:
           name: airplay-arm64
-          path: FocalSonic/iv2runtime/win-arm64/native
+          path: FocalSonic/iv2runtime/win-arm64/native/airplay
 
       - name: Locate SignTool
         id: sdk-tools
@@ -105,8 +108,8 @@ jobs:
         run: |
           $signtool = "${{ steps.sdk-tools.outputs.SIGNTOOL }}"
           $targets = @(
-            "FocalSonic\iv2runtime\win-x64\native\focalsonic-airplay.exe",
-            "FocalSonic\iv2runtime\win-arm64\native\focalsonic-airplay.exe"
+            "FocalSonic\iv2runtime\win-x64\native\airplay\focalsonic-airplay.exe",
+            "FocalSonic\iv2runtime\win-arm64\native\airplay\focalsonic-airplay.exe"
           )
           foreach ($t in $targets) {
             if (-not (Test-Path $t)) { throw "Missing module exe: $t" }
@@ -132,11 +135,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add FocalSonic/iv2runtime/win-x64/native/focalsonic-airplay.exe `
-                  FocalSonic/iv2runtime/win-arm64/native/focalsonic-airplay.exe
+          # Stage each module folder: the signed exe plus its favicon.png.
+          git add FocalSonic/iv2runtime/win-x64/native/airplay `
+                  FocalSonic/iv2runtime/win-arm64/native/airplay
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 0) {
-            Write-Host "Module exes unchanged — nothing to commit."
+            Write-Host "Module unchanged — nothing to commit."
           } else {
             git commit -m "ci: rebuild signed AirPlay module exes [skip ci]"
             git push origin "HEAD:${{ github.ref_name }}"

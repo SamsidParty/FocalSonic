@@ -5,10 +5,12 @@ rem ============================================================================
 rem  build-airplay.bat
 rem
 rem  One-click build of the FocalSonic AirPlay module into a single, self-contained
-rem  Windows executable using Nuitka, dropped into the matching IgniteView native
-rem  runtime folder so the FocalSonic build picks it up automatically:
+rem  Windows executable using Nuitka, dropped (with its favicon.png) into the module's
+rem  own folder inside the matching IgniteView native runtime, so the FocalSonic build
+rem  picks it up automatically:
 rem
-rem      ..\FocalSonic\iv2runtime\win-<arch>\native\focalsonic-airplay.exe
+rem      ..\FocalSonic\iv2runtime\win-<arch>\native\airplay\focalsonic-airplay.exe
+rem      ..\FocalSonic\iv2runtime\win-<arch>\native\airplay\favicon.png
 rem
 rem  Nuitka does NOT cross-compile: it builds for the architecture of the Python
 rem  interpreter it runs under (x64 Python -> win-x64, ARM64 Python -> win-arm64).
@@ -67,7 +69,7 @@ rem nuitka[onefile] pulls in zstandard so the onefile exe is compressed (smaller
 "%VPY%" -m pip install -r requirements.txt "nuitka[onefile]" || ( echo [ERROR] dependency install failed & exit /b 1 )
 
 rem --- compile ----------------------------------------------------------------
-set "OUTDIR=..\FocalSonic\iv2runtime\%ARCH%\native"
+set "OUTDIR=..\FocalSonic\iv2runtime\%ARCH%\native\airplay"
 if not exist "%OUTDIR%" mkdir "%OUTDIR%"
 
 set "WORKDIR=build\%ARCH%"
@@ -98,6 +100,10 @@ if errorlevel 1 (
 
 copy /y "%WORKDIR%\focalsonic-airplay.exe" "%OUTDIR%\focalsonic-airplay.exe" >nul ^
     || ( echo [ERROR] failed to copy the exe into "%OUTDIR%" & exit /b 1 )
+
+rem The PIN dialog loads this at runtime for its window/body icon (see pin_dialog.py).
+copy /y "favicon.png" "%OUTDIR%\favicon.png" >nul ^
+    || ( echo [ERROR] failed to copy favicon.png into "%OUTDIR%" & exit /b 1 )
 
 echo.
 echo [build] Success: %OUTDIR%\focalsonic-airplay.exe
