@@ -8,11 +8,12 @@ using IgniteView.Core;
 namespace FocalSonic.Casting.AirPlay
 {
     // Spawns and supervises the AirPlay module (args-only, no IPC); its exit is treated
-    // as a disconnect. Debug builds run it from source with the system Python (the .py
-    // module is copied to airplay\) so it can be iterated without recompiling; Release
-    // builds run the self-contained Nuitka exe shipped per-architecture under the
-    // IgniteView native runtime folder (see FocalSonic.Airplay/build-airplay.bat). If
-    // neither is available, AirPlay is simply unavailable.
+    // as a disconnect. Debug builds run airplay.py straight from the source tree with the
+    // system Python (the source dir is embedded as assembly metadata by the csproj) so it
+    // can be iterated without recompiling and never runs a stale copy; Release builds run
+    // the self-contained Nuitka exe shipped per-architecture under the IgniteView native
+    // runtime folder (see FocalSonic.Airplay/build-airplay.bat). If neither is available,
+    // AirPlay is simply unavailable.
     public class AirPlaySession
     {
         Process? _process;
@@ -176,18 +177,23 @@ namespace FocalSonic.Casting.AirPlay
             if (_resolved) return _cached;
             _resolved = true;
 
-            // Development: Debug builds copy the .py module to airplay\ (see the csproj).
-            // Run it from source with the system Python so edits take effect without a
-            // ~15-min Nuitka recompile. Release builds don't ship the source, so this is
+            // Development: Debug builds embed the source module dir as assembly metadata
+            // (see the csproj). Run airplay.py straight from there with the system Python
+            // so edits take effect without a ~15-min Nuitka recompile — and so a stale
+            // copied snapshot can never run. Release builds don't embed it, so this is
             // skipped and the bundled exe is used. Set FOCALSONIC_PYTHON to override.
-            var script = Path.Combine(AppContext.BaseDirectory, "airplay", "airplay.py");
-            if (File.Exists(script))
+            var sourceDir = SourceModuleDir();
+            if (sourceDir != null)
             {
-                var python = FindPython();
-                if (python != null)
+                var script = Path.Combine(sourceDir, "airplay.py");
+                if (File.Exists(script))
                 {
-                    _cached = new ModuleCommand { FileName = python, ScriptPath = script };
-                    return _cached;
+                    var python = FindPython();
+                    if (python != null)
+                    {
+                        _cached = new ModuleCommand { FileName = python, ScriptPath = script };
+                        return _cached;
+                    }
                 }
             }
 
@@ -205,6 +211,25 @@ namespace FocalSonic.Casting.AirPlay
             _cached = null;
             return null;
 #endif
+        }
+
+        // Absolute path to the AirPlay source module dir, embedded as assembly metadata
+        // by the csproj in Debug builds (null in Release). Lets the host run the module
+        // straight from source instead of a copied-and-possibly-stale snapshot.
+        static string? SourceModuleDir()
+        {
+            foreach (var attr in typeof(AirPlaySession).Assembly
+                         .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false))
+            {
+                if (attr is System.Reflection.AssemblyMetadataAttribute meta
+                    && meta.Key == "FocalSonicAirPlayModuleDir"
+                    && !string.IsNullOrEmpty(meta.Value))
+                {
+                    try { return Path.GetFullPath(meta.Value); }
+                    catch { return meta.Value; }
+                }
+            }
+            return null;
         }
 
         // The IgniteView native-runtime folder for the current process architecture.

@@ -66,17 +66,17 @@
 			<PackageCopyToOutput>true</PackageCopyToOutput>
 		</Content>
 	</ItemGroup>
-	<!-- Debug only: copy the AirPlay module *source* (flat .py files) to airplay\ so
-	     the host runs it with the system Python instead of the Nuitka exe — lets you
-	     iterate on the module without the ~15-min recompile. Release ships only the exe.
-	     AirPlaySession.ResolveModule prefers airplay\airplay.py when present. -->
+	<!-- Debug only: instead of copying the AirPlay module's .py files into the output
+	     (a snapshot that silently goes stale — a reverted experiment once kept running
+	     from a stale copy and broke pairing), embed the absolute path to the source
+	     module dir. AirPlaySession.ResolveModule runs airplay.py straight from there
+	     with the system Python, so edits take effect with no rebuild and there's never
+	     a stale copy. Release omits this attribute and runs the bundled Nuitka exe. -->
 	<ItemGroup Condition="'$(Configuration)'=='Debug' And '$(IsWindows)'=='true'">
-		<Content Include="..\FocalSonic.Airplay\*.py" Link="airplay\%(Filename)%(Extension)">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-		<Content Include="..\FocalSonic.Airplay\requirements.txt" Link="airplay\requirements.txt">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+			<_Parameter1>FocalSonicAirPlayModuleDir</_Parameter1>
+			<_Parameter2>$(MSBuildProjectDirectory)\..\FocalSonic.Airplay</_Parameter2>
+		</AssemblyAttribute>
 	</ItemGroup>
 	<ItemGroup Condition="'$(IsLinux)'=='true'">
 		<Content Include="src-vite\public\favicons\favicon-32x32.png" Link="iv2runtime\focalsonic-tray.png">
