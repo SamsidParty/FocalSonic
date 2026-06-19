@@ -20,7 +20,9 @@ import pyatv.protocols.raop as raop_mod
 from pyatv.interface import DeviceListener
 from pyatv.protocols.raop.audio_source import AudioSource, _to_audio_samples
 from pyatv.support.metadata import EMPTY_METADATA
+from pyatv.support.rtsp import RtspSession
 
+from connection import local_sender_name
 from process_capture import ProcessLoopbackCapture
 from process_finder import find_webview2_target
 
@@ -47,6 +49,8 @@ def verify_pyatv_symbols() -> None:
         missing.append("pyatv.protocols.raop.audio_source._to_audio_samples")
     if not hasattr(AudioSource, "NO_FRAMES"):
         missing.append("AudioSource.NO_FRAMES")
+    if not callable(getattr(RtspSession, "setup", None)):
+        missing.append("pyatv.support.rtsp.RtspSession.setup")
     if missing:
         raise StartupSymbolError(
             "pyatv internals required for live PCM streaming are missing: "
@@ -242,6 +246,21 @@ class AirPlayStreamer:
         original_open_source = raop_mod.open_source
         raop_mod.open_source = _patched_open_source
 
+        # The AirPlay v2 RAOP setup hardcodes {"name": "pyatv"} in its SETUP body
+        # (raop/protocols/airplayv2.py) — that's the source name the receiver shows.
+        # It ignores pyatv's settings, so rewrite it on the way out. Only that one
+        # setup carries a "name" key (the audio-stream setup sends {"streams": …}
+        # and v1 sends Transport headers), so this touches nothing else.
+        original_rtsp_setup = RtspSession.setup
+        sender_name = local_sender_name()
+
+        async def _patched_rtsp_setup(self, headers=None, body=None):
+            if isinstance(body, dict) and "name" in body:
+                body = {**body, "name": sender_name}
+            return await original_rtsp_setup(self, headers=headers, body=body)
+
+        RtspSession.setup = _patched_rtsp_setup
+
         # Exit promptly if the device goes away instead of streaming into the void.
         disconnected = asyncio.Event()
         self._listener = _ConnectionListener(
@@ -267,6 +286,7 @@ class AirPlayStreamer:
                     task.cancel()
             await asyncio.gather(stream_task, disconnect_task, return_exceptions=True)
             raop_mod.open_source = original_open_source
+            RtspSession.setup = original_rtsp_setup
             self._capture.stop()
             self._put_drop_oldest_sentinel()  # unblock readframes if still waiting
 

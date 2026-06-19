@@ -109,4 +109,9 @@ async def pair_device(loop: asyncio.AbstractEventLoop, config, device_name: str)
 async def pyatv_pair(config, loop):
     import pyatv
     from pyatv.const import Protocol
-    return await pyatv.pair(config, Protocol.AirPlay, loop)
+
+    from connection import local_sender_name
+
+    # Register on the device as "<hostname> - FocalSonic" rather than pyatv's
+    # default "pyatv"; the AirPlay pairing handler honours this name kwarg.
+    return await pyatv.pair(config, Protocol.AirPlay, loop, name=local_sender_name())

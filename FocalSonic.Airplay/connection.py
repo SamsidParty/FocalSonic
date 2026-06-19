@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import socket
 
 import pyatv
 from pyatv.const import Protocol
@@ -16,6 +17,21 @@ from pyatv.const import Protocol
 log = logging.getLogger("focalsonic.airplay.connection")
 
 SCAN_TIMEOUT = 8
+
+
+def local_sender_name() -> str:
+    """Name shown on the receiver for our pairing + audio stream.
+
+    pyatv otherwise identifies us as its default ``"pyatv"`` (AirPlay v2) or sends
+    nothing at all (v1, which the device renders blank). We replace that with
+    ``"<hostname> - FocalSonic"`` so the source is recognisable on the Apple TV /
+    HomePod. Falls back to just ``"FocalSonic"`` if the hostname is unavailable.
+    """
+    try:
+        host = (socket.gethostname() or "").strip()
+    except Exception:  # noqa: BLE001 - best effort; never let naming break streaming
+        host = ""
+    return f"{host} - FocalSonic" if host else "FocalSonic"
 
 
 async def scan_for_device(loop, address: str | None, identifier: str | None):
