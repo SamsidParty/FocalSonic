@@ -11,6 +11,7 @@ using IgniteView.Desktop;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using WatsonWebserver.Core;
@@ -29,6 +30,10 @@ public class Program
     [STAThread]
     static void Main(string[] args)
     {
+        // Pin InvariantCulture to keep consistent number conversion
+        CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+        CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+
         if (IsAnotherProcessRunning() && File.Exists(LockFilePath))
         {
             var existingAppServer = File.ReadAllText(LockFilePath);
@@ -64,7 +69,8 @@ public class Program
         JsonConvert.DefaultSettings = () => new JsonSerializerSettings
         {
             ContractResolver = new FocalSonicContractResolver(),
-            NullValueHandling = NullValueHandling.Ignore
+            NullValueHandling = NullValueHandling.Ignore,
+            Culture = CultureInfo.InvariantCulture
         };
 
         // Background setup

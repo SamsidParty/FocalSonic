@@ -12,6 +12,7 @@ using SamsidParty.Subsonic.Common;
 using SamsidParty.Subsonic.Common.Types;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Text;
@@ -100,7 +101,7 @@ namespace FocalSonic.Casting
             {
                 var songID = incomingMessage.Data[0];
                 var syncTime = long.Parse(incomingMessage.Data[1]); // Unix timestamp in milliseconds of when currentTime was set
-                var currentTime = double.Parse(incomingMessage.Data[2]); // The time of the playback head
+                var currentTime = double.Parse(incomingMessage.Data[2], CultureInfo.InvariantCulture); // The time of the playback head
 
                 // Offset the current time based on the latency of the message
                 // Latency is calculated by taking the current time and subtracting the syncTime
@@ -277,7 +278,7 @@ namespace FocalSonic.Casting
             LastSongID = songID;
             IsPlaying = true;
 
-            await Send(new CastMessage("setSource", songID, seekTime.ToString()));
+            await Send(new CastMessage("setSource", songID, seekTime.ToString(CultureInfo.InvariantCulture)));
         }
 
         public static async Task PauseMedia()
@@ -300,7 +301,7 @@ namespace FocalSonic.Casting
         {
             if (Client == null || !IsPlaying) return;
 
-            await Send(new CastMessage("seek", seekTime.ToString()));
+            await Send(new CastMessage("seek", seekTime.ToString(CultureInfo.InvariantCulture)));
         }
     }
 }

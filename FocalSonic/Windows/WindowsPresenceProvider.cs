@@ -3,6 +3,7 @@
 using IgniteView.Core;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ namespace FocalSonic.Windows
                 song?.Album ?? "Unknown Album",
                 albumArtistNames,
                 coverArt ?? string.Empty,
-                playerSpeed.ToString(),
+                playerSpeed.ToString(CultureInfo.InvariantCulture),
                 isAppleMusicPlayer ? "apple" : "default"
             });
 

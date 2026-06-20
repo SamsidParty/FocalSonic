@@ -176,7 +176,7 @@ namespace FocalSonic.AppleMusic
 
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'transitionSources', duration: {NEXT_TRACK_TRANSITION_DURATION * 1000f}, nextSongID: {JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.NextQueueItem.Id)} }});" +
+                $"window.injectedQueue.push({{ type: 'transitionSources', duration: {JsonConvert.SerializeObject(NEXT_TRACK_TRANSITION_DURATION * 1000f)}, nextSongID: {JsonConvert.SerializeObject(MediaPlaybackInfo.Instance.NextQueueItem.Id)} }});" +
                 InjectionSuffix
             );
 
@@ -226,7 +226,7 @@ namespace FocalSonic.AppleMusic
             AssociatedWindow?.CallFunction("handleAudioEvent_" + ID, "timeupdate", time);
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'seek', time: {time.ToString()} }});" +
+                $"window.injectedQueue.push({{ type: 'seek', time: {JsonConvert.SerializeObject(time)} }});" +
                 InjectionSuffix
             );
         }
@@ -256,7 +256,7 @@ namespace FocalSonic.AppleMusic
             await base.SetVolume(volume);
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'setVolume', volume: {volume} }});" +
+                $"window.injectedQueue.push({{ type: 'setVolume', volume: {JsonConvert.SerializeObject(volume)} }});" +
                 InjectionSuffix
             );
         }
@@ -266,7 +266,7 @@ namespace FocalSonic.AppleMusic
             await base.SetSpeed(speed);
             ProxyWindow?.ExecuteJavaScript(
                 InjectionPrefix +
-                $"window.injectedQueue.push({{ type: 'setSpeed', speed: {speed} }});" +
+                $"window.injectedQueue.push({{ type: 'setSpeed', speed: {JsonConvert.SerializeObject(speed)} }});" +
                 InjectionSuffix
             );
         }
