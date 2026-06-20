@@ -225,21 +225,10 @@ function sortAlbums(list: LibraryAlbum[], filter: string, yearSort: string): Lib
             return sorted.sort((a, b) => yearSort === YearSortOptions.Newest
                 ? (b.year || 0) - (a.year || 0)
                 : (a.year || 0) - (b.year || 0));
-        case AlbumsFilters.Random:
-            return shuffle(sorted);
         case AlbumsFilters.RecentlyAdded:
         default:
             return sorted.sort((a, b) => dateValue(b.created) - dateValue(a.created));
     }
-}
-
-/** Fisher–Yates shuffle for the "Random" album order. */
-function shuffle<T>(list: T[]): T[] {
-    for (let i = list.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [list[i], list[j]] = [list[j], list[i]];
-    }
-    return list;
 }
 
 function dateValue(value?: string): number {

@@ -104,11 +104,10 @@ export default function SongList() {
         // 'artist',
         "album",
         "duration",
-        // Play count / last played aren't available from Apple Music's library API.
         (!isAppleMusic && "playCount"),
         (!isAppleMusic && "played"),
-        "contentType",
-        "select",
+        (!isAppleMusic && "contentType"),
+        (!isAppleMusic && "select"),
     ];
 
     const title = filterByArtist

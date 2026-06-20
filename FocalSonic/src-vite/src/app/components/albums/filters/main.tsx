@@ -28,12 +28,11 @@ export function AlbumsMainFilter() {
     const { isAppleMusic } = checkServerType();
 
     if (isAppleMusic) {
-        // Apple Music's library API exposes no play counts / last-played dates, so
-        // these two have nothing to sort by. Everything else is computed locally
-        // from the synced library and works. ByGenre stays hidden — it's a special
-        // grouped picker with no Apple Music genres source.
         hiddenFilters.push(AlbumsFilters.MostPlayed);
+        hiddenFilters.push(AlbumsFilters.Random);
         hiddenFilters.push(AlbumsFilters.RecentlyPlayed);
+        hiddenFilters.push(AlbumsFilters.ByArtist);
+        hiddenFilters.push(AlbumsFilters.ByYear);
         hiddenFilters.push(AlbumsFilters.ByGenre);
     }
 

@@ -47,29 +47,17 @@ async function fetchSongsPage(offset: number, limit: number): Promise<LibrarySon
 
     const songs: SyncSong[] = data.map((raw) => {
         const { key, album } = albumKeyFor(raw);
-        const converted = convertAppleMusicSongToSubsonic(raw, null);
+        const song = convertAppleMusicSongToSubsonic(raw, null);
         const dateAdded = (raw.attributes as { dateAdded?: string } | undefined)?.dateAdded;
 
-        // `convertAppleMusicSongToSubsonic` doesn't carry year/genre; derive them
-        // here so the year/genre album filters have data to work with.
-        const releaseDate = raw.attributes?.releaseDate;
-        const genre = raw.attributes?.genreNames?.filter((g) => g !== "Music")[0];
-        const song = {
-            ...converted,
-            year: releaseDate ? new Date(releaseDate).getFullYear() : converted.year,
-            genre: genre || converted.genre,
-        };
-
         if (album && !albumsByKey.has(key)) {
-            const convertedAlbum = convertAppleMusicAlbumToSubsonic(album);
-            if (convertedAlbum) {
+            const converted = convertAppleMusicAlbumToSubsonic(album);
+            if (converted) {
                 albumsByKey.set(key, {
-                    ...convertedAlbum,
+                    ...converted,
                     id: key,
                     created: (album.attributes as { dateAdded?: string })?.dateAdded
-                        || dateAdded || convertedAlbum.created,
-                    genre: convertedAlbum.genre || song.genre || "",
-                    year: convertedAlbum.year || song.year,
+                        || dateAdded || converted.created,
                 });
             }
         } else if (!album && !albumsByKey.has(key)) {
