@@ -48,7 +48,12 @@
     "server": "Server",
     "about": "About",
     "serverLogout": "Sign out",
+    "refreshLibrary": "Refresh library",
     "devTools": "Developer Tools"
+  },
+  "sync": {
+    "inProgress": "Syncing library…",
+    "progress": "Syncing library… {{synced}} / {{total}}"
   },
   "generic": {
     "seeMore": "See more",

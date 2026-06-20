@@ -7,7 +7,6 @@ import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-s
 import { DataTable } from "@/app/components/ui/data-table";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
-import { makeQueryPersistent } from "@/lib/queryClient";
 import { service } from "@/service/service";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
@@ -28,10 +27,10 @@ export default function Playlist() {
     const {
         data: playlist,
         isLoading,
-    } = useQuery(makeQueryPersistent({
+    } = useQuery({
         queryKey: [queryKeys.playlist.single, playlistId],
         queryFn: () => service.playlists.getOne(playlistId),
-    }));
+    });
 
     if (isLoading) return <PlaylistFallback />;
     if (!playlist) return <ErrorPage status={404} statusText="Not Found" />;

@@ -1,8 +1,8 @@
 // Caching still in broken state, can't figure out how to make it work well
 
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import type { QueryKey, UndefinedInitialDataOptions } from "@tanstack/react-query";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export const QUERY_CACHE_STALE_TIME = 5 * 60 * 1000;
 export const QUERY_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
@@ -152,13 +152,16 @@ export const persistOptions = {
     maxAge: QUERY_CACHE_MAX_AGE,
 };
 
-export const makeQueryPersistent = <
-    TQueryFnData = unknown,
-    TError = Error,
-    TData = TQueryFnData,
-    TQueryKey extends QueryKey = QueryKey,
->(options: UndefinedInitialDataOptions<TQueryFnData, TError, TData, TQueryKey>) => {
-    return {
-        ...options,
-    };
-};
+export function useLibraryQuery<TData>(
+    options: UseQueryOptions<TData>
+) {
+    const query = useQuery(options);
+
+    useEffect(() => {
+        if (!query.data) return;
+
+        console.log(query.data);
+    }, [query.data]);
+
+    return query;
+}

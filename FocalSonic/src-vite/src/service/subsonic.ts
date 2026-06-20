@@ -2,6 +2,7 @@ import { albums } from "./subsonic/albums";
 import { artists } from "./subsonic/artists";
 import { genres } from "./subsonic/genres";
 import { library } from "./subsonic/library";
+import { librarySync } from "./subsonic/librarySync";
 import { lyrics } from "./subsonic/lyrics";
 import { ping } from "./subsonic/ping";
 import { playlists } from "./subsonic/playlists";
@@ -15,6 +16,7 @@ export const subsonic = {
     artists,
     genres,
     library,
+    librarySync,
     ping,
     playlists,
     radios,

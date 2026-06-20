@@ -1,4 +1,4 @@
-import { ChevronDown, Info, Keyboard, LogOut, SettingsIcon } from "lucide-react";
+import { ChevronDown, Info, Keyboard, LogOut, RefreshCwIcon, SettingsIcon } from "lucide-react";
 import React, { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
@@ -6,6 +6,8 @@ import { Fragment } from "react/jsx-runtime";
 
 import { AboutDialog } from "@/app/components/about/dialog";
 import { ShortcutsDialog } from "@/app/components/shortcuts/dialog";
+import { refreshLibrary } from "@/app/hooks/use-library-sync";
+import { useSyncStatus } from "@/store/sync.store";
 import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
 import {
     DropdownMenu,
@@ -25,6 +27,7 @@ export function UserDropdown() {
     const { username, url } = useAppData();
     const { setLogoutDialogState } = useAppRuntimeState();
     const { t } = useTranslation();
+    const syncStatus = useSyncStatus();
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const [aboutOpen, setAboutOpen] = useState(false);
     const { settingsDialogState, setSettingsDialogState } = useAppRuntimeState();
@@ -74,6 +77,16 @@ export function UserDropdown() {
                     <DropdownMenuItem onClick={() => setSettingsDialogState(true)}>
                         <SettingsIcon className="mr-2 h-4 w-4" />
                         <span>{t("settings.label")}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        disabled={syncStatus === "syncing"}
+                        onSelect={(e) => {
+                            e.preventDefault();
+                            refreshLibrary();
+                        }}
+                    >
+                        <RefreshCwIcon className="mr-2 h-4 w-4" />
+                        <span>{t("menu.refreshLibrary")}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setAboutOpen(true)}>
                         <Info className="mr-2 h-4 w-4" />

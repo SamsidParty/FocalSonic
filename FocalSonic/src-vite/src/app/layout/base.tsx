@@ -4,12 +4,14 @@ import { RemovePlaylistDialog } from "@/app/components/playlist/remove-dialog";
 import { SongInfoDialog } from "@/app/components/song/info-dialog";
 import { Header } from "@/app/layout/header";
 import { Sidebar } from "@/app/layout/sidebar";
+import { LibrarySyncObserver } from "@/app/observers/library-sync-observer";
 import { Extrabar } from "./extrabar";
 import { MainRoutes } from "./main";
 
 export default function BaseLayout() {
     return (
         <div className="h-screen w-screen overflow-hidden">
+            <LibrarySyncObserver />
             <Header />
             <Sidebar />
             <Extrabar />

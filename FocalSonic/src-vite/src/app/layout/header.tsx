@@ -11,6 +11,7 @@ import clsx from "clsx";
 import React from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Cast } from "../components/header/cast";
+import { LibrarySyncIndicator } from "../components/header/library-sync-indicator";
 import { LicenseDialog } from "../components/license";
 import { Separator } from "../components/ui/separator";
 
@@ -47,6 +48,7 @@ export function Header() {
             <HeaderSongInfo />
             <div {...igniteViewDragRegion} className="flex justify-end items-center gap-2">
                 <LicenseDialog />
+                <LibrarySyncIndicator />
                 {
                     isAppleMusic && (
                         <Cast />

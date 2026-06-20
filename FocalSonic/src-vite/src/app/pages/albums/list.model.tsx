@@ -1,3 +1,5 @@
+import { useLibraryVersion } from "@/app/hooks/use-library-sync";
+import * as localLibrary from "@/lib/localLibrary";
 import {
     albumSearch,
     getAlbumList,
@@ -16,7 +18,7 @@ import { SearchParamsHandler } from "@/utils/searchParamsHandler";
 import { checkServerType } from "@/utils/servers";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import debounce from "lodash/debounce";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
 export function useAlbumsListModel() {
@@ -40,6 +42,25 @@ export function useAlbumsListModel() {
     const genre = getSearchParam<string>(AlbumsSearchParams.Genre, "");
     const artistId = getSearchParam<string>(AlbumsSearchParams.ArtistId, "");
     const query = getSearchParam<string>(AlbumsSearchParams.Query, "");
+
+    // The synced local library is the source of truth; fall back to live server
+    // queries only until the first sync has populated it.
+    const libraryVersion = useLibraryVersion();
+    const libraryHasAlbums = useMemo(
+        () => localLibrary.getLibraryAlbums().length > 0,
+        [libraryVersion],
+    );
+
+    const libraryAlbums = useMemo(
+        () => localLibrary.queryAlbums({
+            filter: currentFilter,
+            genre,
+            query,
+            artistId,
+            yearSort: yearFilter,
+        }),
+        [libraryVersion, currentFilter, genre, query, artistId, yearFilter],
+    );
 
     useEffect(() => {
         scrollDivRef.current = getMainScrollElement();
@@ -80,6 +101,7 @@ export function useAlbumsListModel() {
     };
 
     function enableMainQuery() {
+        if (libraryHasAlbums) return false;
         if (currentFilter === AlbumsFilters.ByGenre && genre === "") return false;
 
         return true;
@@ -94,6 +116,8 @@ export function useAlbumsListModel() {
     });
 
     useEffect(() => {
+        if (libraryHasAlbums) return;
+
         const scrollElement = scrollDivRef.current;
         if (!scrollElement) return;
 
@@ -112,9 +136,13 @@ export function useAlbumsListModel() {
         return () => {
             scrollElement.removeEventListener("scroll", handleScroll);
         };
-    }, [fetchNextPage, hasNextPage]);
+    }, [fetchNextPage, hasNextPage, libraryHasAlbums]);
 
     function getAlbums() {
+        if (libraryHasAlbums) {
+            return { albums: libraryAlbums.albums, albumsCount: libraryAlbums.total };
+        }
+
         if (!data) return { albums: [], albumsCount: 0 };
 
         const albums = data.pages.flatMap((page) => page.albums);
@@ -128,10 +156,10 @@ export function useAlbumsListModel() {
 
     const { albums, albumsCount } = getAlbums();
 
-    const isEmpty = albums.length === 0 || !data;
+    const isEmpty = albums.length === 0 || (!libraryHasAlbums && !data);
 
     return {
-        isLoading,
+        isLoading: libraryHasAlbums ? false : isLoading,
         isEmpty,
         albums,
         albumsCount,
