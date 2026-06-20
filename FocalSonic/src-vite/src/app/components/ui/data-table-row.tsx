@@ -61,13 +61,13 @@ export function TableRow<TData>({
                     isRowSongActive && isModern && "row-active bg-foreground/20",
                 )}
 
-                /* Stagger Animation */
+                /* Stagger and highlight flash */
                 style={{
-                    animationDelay: `${(Math.min(index, 10) + 1) * 50}ms`,
-                    animationName: "cardStaggerAnimation",
-                    animationDuration: "1000ms",
-                    animationFillMode: "both",
-                    animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+                    animationName: `rowStaggerAnimation, ${isTypeAheadMatch ? "highlight-flash" : "none"}`,
+                    animationDelay: `${(Math.min(index, 10) + 1) * 50}ms, -500ms`,
+                    animationDuration: "1000ms, 1400ms",
+                    animationFillMode: "both, none",
+                    animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1), ease-out"
                 }}
             >
                 {row.getVisibleCells().map((cell) => (
