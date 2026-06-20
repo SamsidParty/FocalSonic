@@ -152,6 +152,7 @@ function enrichAlbumsFromSongs(albums: Albums[], songs: LibrarySong[]): Albums[]
             duration: album.duration || members.reduce((sum, s) => sum + (s.duration || 0), 0),
             coverArt: album.coverArt || members[0].coverArt,
             year: album.year || members[0].year,
+            genre: album.genre || members.find((s) => s.genre)?.genre || "",
         };
     });
 }

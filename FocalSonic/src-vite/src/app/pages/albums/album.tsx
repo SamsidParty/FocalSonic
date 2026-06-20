@@ -103,11 +103,12 @@ export default function Album() {
         "trackNumber",
         "title",
         "duration",
+        // Play count / last played / bitrate aren't exposed by Apple Music.
         (isAppleMusic ? "" : "playCount"),
         (isAppleMusic ? "" : "played"),
         (isAppleMusic ? "" : "bitRate"),
-        (isAppleMusic ? "" : "contentType"),
-        (isAppleMusic ? "" : "select"),
+        "contentType",
+        "select",
     ].filter((i) => i) as ColumnFilter[];
 
     function removeCurrentAlbumFromList(moreAlbums: Albums[], sort = false) {

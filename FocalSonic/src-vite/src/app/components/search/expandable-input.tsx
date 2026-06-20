@@ -29,18 +29,28 @@ export function ExpandableSearchInput({ ...props }: SearchInputProps) {
 
     const setParams = useCallback(
         (value: string) => {
-            const params = new URLSearchParams();
-
+            // The library is searched in memory, so update the query as the user
+            // types — instant, no debounce, no Enter required. `replace` keeps it
+            // out of the history stack.
             if (value) {
+                const params = new URLSearchParams();
                 params.append(AlbumsSearchParams.MainFilter, AlbumsFilters.Search);
                 params.append(AlbumsSearchParams.Query, value);
 
-                setSearchParams(params);
+                setSearchParams(params, { replace: true });
             } else {
-                inputRef.current?.blur();
+                setSearchParams(new URLSearchParams(), { replace: true });
             }
         },
         [setSearchParams],
+    );
+
+    const handleChange = useCallback(
+        (value: string) => {
+            setSearchValue(value);
+            setParams(value);
+        },
+        [setParams],
     );
 
     const close = useCallback(() => {
@@ -71,6 +81,14 @@ export function ExpandableSearchInput({ ...props }: SearchInputProps) {
         [searchValue, setParams],
     );
 
+    const inputRefValueGuard = useCallback((nextValue: string) => {
+        // Avoid clobbering the caret while the user is mid-edit: only write the
+        // DOM value when it actually differs from the current query.
+        if (inputRef.current && inputRef.current.value !== nextValue) {
+            inputRef.current.value = nextValue;
+        }
+    }, []);
+
     useEffect(() => {
         setSearchActive(filter === AlbumsFilters.Search);
     }, [filter]);
@@ -86,8 +104,8 @@ export function ExpandableSearchInput({ ...props }: SearchInputProps) {
             inputRef.current.focus();
         }
 
-        inputRef.current.value = query;
-    }, [filter, query]);
+        inputRefValueGuard(query);
+    }, [filter, query, inputRefValueGuard]);
 
     return (
         <form onSubmit={handleSubmit}>
@@ -98,7 +116,7 @@ export function ExpandableSearchInput({ ...props }: SearchInputProps) {
                 <Input
                     id="search"
                     ref={inputRef}
-                    onChange={(e) => setSearchValue(e.target.value)}
+                    onChange={(e) => handleChange(e.target.value)}
                     className={clsx(
                         "bg-background h-full z-10 left-auto duration-300",
                         "focus-visible:ring-transparent ring-offset-background",
