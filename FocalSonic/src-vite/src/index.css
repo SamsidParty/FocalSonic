@@ -493,6 +493,12 @@ div[data-test-id="table-row"]:hover {
   }
 }
 
+@keyframes blurredHeaderAnimation {
+  0% { background-position: 0% 100% }
+  50% { background-position: 0% 0 }
+  100% { background-position: 0% 100% }
+}
+
 @keyframes mainPageAnimation {
   0% {
     transform: scale(1.02);
