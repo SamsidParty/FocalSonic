@@ -154,6 +154,12 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.runtimeState.logoutDialogState = value;
                             });
                         },
+                        lyricsFinderDialogState: false,
+                        setLyricsFinderDialogState: (value) => {
+                            set((state) => {
+                                state.runtimeState.lyricsFinderDialogState = value;
+                            });
+                        },
                     },
                     actions: {
                         setOsType: (value) => {

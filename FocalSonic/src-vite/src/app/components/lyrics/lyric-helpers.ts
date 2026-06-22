@@ -1,6 +1,6 @@
 import { parseTTML } from "@/lib/ttml";
 
-export function areLyricsSynced(lyrics: string) {
+export function areLyricsSynced(lyrics?: string) {
     // Most LRC files start with the string "[00:" or "[01:" indicating synced lyrics
     const lyric = lyrics?.trim() ?? "";
     return (
@@ -11,7 +11,7 @@ export function areLyricsSynced(lyrics: string) {
     );
 }
 
-export function areLyricsTTML(lyrics: string) {
+export function areLyricsTTML(lyrics?: string) {
     const lyric = lyrics?.trim() ?? "";
     return lyric.startsWith("<tt");
 }

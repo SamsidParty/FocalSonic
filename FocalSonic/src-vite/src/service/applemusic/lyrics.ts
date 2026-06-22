@@ -1,11 +1,8 @@
-import { httpClient } from "@/api/httpClient";
-import { AppleMusicLyricsResponse } from "@/types/applemusic/song";
+import { fetchProviderLyrics } from "@/service/lyrics/providers";
 import { GetLyricsData, getLyricsFromLRCLib } from "../subsonic/lyrics";
 
 async function getLyrics(getLyricsData: GetLyricsData) {
-    
 
-    
     if (window?.igniteView?.commandBridge?.getCustomOverride && getLyricsData.id) {
         const cachedLyrics = await window.igniteView.commandBridge.getCustomOverride("AppleLyrics2", getLyricsData.id!);
         if (cachedLyrics) {
@@ -13,32 +10,19 @@ async function getLyrics(getLyricsData: GetLyricsData) {
         }
     }
 
-    const response = await httpClient<AppleMusicLyricsResponse>(`/applemusic/catalog/{storefront}/songs/${getLyricsData.id}/syllable-lyrics`, {
-        method: "GET",
-        query: {
-            // I spent 4 hours reverse engineering the Apple Music android app to find these parameters
-            l: "en-US",
-            extend: "ttmlLocalizations",
-            "l[script]": "en-Latn",
-            "l[lyrics]": "en-us"
-        }
+    const [apple] = await fetchProviderLyrics("applemusic", {
+        title: getLyricsData.title,
+        artist: getLyricsData.artist,
+        album: getLyricsData.album,
+        duration: getLyricsData.duration,
+        appleMusicId: getLyricsData.id,
     });
 
-    let lyrics = response?.data[0]?.attributes?.ttmlLocalizations || response?.data[0]?.attributes?.ttml;
-    
-    // No point using unsynced lyrics from apple when we can find synced ones from other providers
-    if (lyrics?.includes("itunes:timing=\"None\"")) {
-        lyrics = null;
-    }
+    let lyrics = apple?.lyrics || null;
 
-    
     if (!lyrics) {
         lyrics = (await getLyricsFromLRCLib(getLyricsData)).value;
     }
-
-    /*if (window?.igniteView?.commandBridge?.saveCustomOverride && lyrics) {
-        await window.igniteView.commandBridge.saveCustomOverride("AppleLyrics2", getLyricsData.id!, lyrics);
-    }*/
 
     return lyrics;
 }

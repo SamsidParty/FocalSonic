@@ -1,5 +1,7 @@
-import { useAppStore } from "@/store/app.store";
+import { useAppRuntimeState, useAppStore } from "@/store/app.store";
+import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../ui/button";
 import { DropdownSettingOptions, DropdownSettingWrapper } from "../ui/dropdown-settings";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
@@ -7,7 +9,21 @@ export function LyricSettings() {
     return (
         <>
             <AlternateLyricOption />
+            <GetMoreLyricsOption />
         </>
+    );
+}
+
+function GetMoreLyricsOption(props: DropdownSettingOptions) {
+    const { t } = useTranslation();
+    const { setLyricsFinderDialogState } = useAppRuntimeState();
+
+    return (
+        <DropdownSettingWrapper text={t("lyricsFinder.getMore")} {...props}>
+            <Button variant="ghost" size="sm" onClick={() => setLyricsFinderDialogState(true)}>
+                <Search className="size-4" />
+            </Button>
+        </DropdownSettingWrapper>
     );
 }
 

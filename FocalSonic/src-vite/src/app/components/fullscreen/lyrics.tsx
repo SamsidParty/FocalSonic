@@ -21,6 +21,8 @@ const NON_LATIN_REGEX = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p
 
 interface LyricProps {
     lyrics?: string,
+    customLyrics?: string, // bypass auto-fetch and render this TTML/eLRC string directly
+    disableAltLyrics?: boolean, // ignore the global alt-lyric mode (used by finder previews)
     leftAlign?: boolean,
     small?: boolean,
     oneLine?: boolean,
@@ -36,6 +38,7 @@ export function LyricsTab(props: LyricProps) {
 
     const { data: lyrics, isLoading } = useQuery({
         queryKey: ["get-lyrics", artist, title, duration],
+        enabled: !props.customLyrics,
         queryFn: async () => {
 
             if (window?.igniteView) {
@@ -63,13 +66,15 @@ export function LyricsTab(props: LyricProps) {
     const noLyricsFound = t("fullscreen.noLyrics");
     const loadingLyrics = t("fullscreen.loadingLyrics");
 
-    if (isLoading) {
+    const effectiveLyrics = props.customLyrics ?? lyrics;
+
+    if (!props.customLyrics && isLoading) {
         return <CenteredMessage>{loadingLyrics}</CenteredMessage>;
-    } else if (lyrics) {
-        return areLyricsSynced(lyrics) ? (
-            <SyncedLyrics {...props} lyrics={lyrics} />
+    } else if (effectiveLyrics) {
+        return areLyricsSynced(effectiveLyrics) ? (
+            <SyncedLyrics {...props} lyrics={effectiveLyrics} />
         ) : (
-            <UnsyncedLyrics {...props} lyrics={lyrics} />
+            <UnsyncedLyrics {...props} lyrics={effectiveLyrics} />
         );
     } else {
         return <CenteredMessage>{noLyricsFound}</CenteredMessage>;
@@ -78,7 +83,8 @@ export function LyricsTab(props: LyricProps) {
 
 function SyncedLyrics(props: LyricProps) {
     const playerRef = usePlayerRef();
-    const { altLyricsMode } = useAppStore().settings;
+    const { altLyricsMode: storeAltLyricsMode } = useAppStore().settings;
+    const altLyricsMode = props.disableAltLyrics ? "off" : storeAltLyricsMode;
     const { isMiniPlayer } = usePlayerStyle();
     const { width, height, isResizing } = useDebouncedWindowSize(100);
     const { enableLyricBlur, enableLyricGlow } = useTheme();

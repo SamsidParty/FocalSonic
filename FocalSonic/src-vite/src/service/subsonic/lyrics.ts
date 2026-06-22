@@ -1,8 +1,8 @@
 import { httpClient } from "@/api/httpClient";
+import { fetchProviderLyrics } from "@/service/lyrics/providers";
 import { useAppStore } from "@/store/app.store";
 import { useCacheStore } from "@/store/cache.store";
 import { ILyricsList, LyricsResponse, OpenLyricsResponse } from "@/types/responses/song";
-import { lrclibClient } from "@/utils/appName";
 import { checkServerType } from "@/utils/servers";
 
 export interface GetLyricsData {
@@ -12,14 +12,6 @@ export interface GetLyricsData {
     duration?: number
     id?: string
     isrc?: string
-}
-
-interface LRCLibResponse {
-    id: number
-    trackName: string
-    artistName: string
-    plainLyrics: string
-    syncedLyrics: string
 }
 
 async function getLyrics(getLyricsData: GetLyricsData) {
@@ -87,48 +79,13 @@ export async function getLyricsFromLRCLib(getLyricsData: GetLyricsData) {
         };
     }
 
-    try {
-        const params = new URLSearchParams({
-            artist_name: artist,
-            track_name: title,
-        });
-
-        if (duration) params.append("duration", duration.toString());
-        if (album) params.append("album_name", album);
-
-        const url = new URL("https://lrclib.net/api/get");
-        url.search = params.toString();
-
-        const request = await fetch(url.toString(), {
-            headers: {
-                "Lrclib-Client": lrclibClient,
-            },
-        });
-        const response: LRCLibResponse = await request.json();
-
-        if (response) {
-            const { syncedLyrics, plainLyrics } = response;
-
-            let finalLyric = "";
-
-            if (syncedLyrics) {
-                finalLyric = syncedLyrics;
-            } else if (plainLyrics) {
-                finalLyric = plainLyrics;
-            }
-
-            return {
-                artist,
-                title,
-                value: formatLyrics(finalLyric),
-            };
-        }
-    } catch {}
+    // LRCLIB now lives on the C# side, behind the unified provider interface.
+    const [result] = await fetchProviderLyrics("lrclib", { title, artist, album, duration });
 
     return {
         artist,
         title,
-        value: "",
+        value: result?.lyrics ? formatLyrics(result.lyrics) : "",
     };
 }
 

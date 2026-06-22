@@ -59,6 +59,8 @@ export interface IAppRuntimeState {
     setCurrentPage: (page: SettingsOptions) => void
     logoutDialogState: boolean
     setLogoutDialogState: (value: boolean) => void
+    lyricsFinderDialogState: boolean
+    setLyricsFinderDialogState: (value: boolean) => void
 }
 
 export interface IAppSettings {

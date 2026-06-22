@@ -5,6 +5,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Lyricify Lyrics Helper uses fixed/pointer string helpers -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>AnyCPU;x64</Platforms>
 	 <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
 	 <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
@@ -32,6 +34,8 @@
 	
 	<ItemGroup>
 		<PackageReference Include="IgniteView.Desktop" Version="2.2.9" />
+		<!-- KRC/QRC lyric decompression in Lyricify Lyrics Helper -->
+		<PackageReference Include="SharpZipLib" Version="1.4.2" />
 		<PackageReference Include="IgniteView.Core" Version="*" />
 		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="GoogleCast" Version="1.7.0" />
@@ -42,6 +46,11 @@
 		<PackageReference Include="System.Drawing.Common" Version="9.0.8" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
 		<PackageReference Include="System.Security.Permissions" Version="8.0.0" />
+	</ItemGroup>
+	<!-- Lyricify Lyrics Helper was authored expecting these as implicit/global usings -->
+	<ItemGroup>
+		<Using Include="System.Net.Http" />
+		<Using Include="System.IO" />
 	</ItemGroup>
 	<PropertyGroup>
 		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>

@@ -310,6 +310,24 @@
     "customBackground": "Video Background",
     "customBackgroundDescription": "Add a custom video background, stored on a per-song basis. YouTube videos are supported only if embedding is enabled."
   },
+  "lyricsFinder": {
+    "getMore": "Get More Lyrics",
+    "title": "Lyrics Finder",
+    "description": "Search multiple sources for synced lyrics and apply them to the current song.",
+    "search": "Search",
+    "searchingSources": "Searching {{sources}}…",
+    "searchPrompt": "Adjust the search details above, then search to find lyrics from multiple sources.",
+    "noneFound": "No lyrics found from any source. Try adjusting the search details.",
+    "apply": "Apply",
+    "applied": "Lyrics applied",
+    "applyFailed": "Couldn't apply lyrics",
+    "fields": {
+      "title": "Title",
+      "artist": "Artist",
+      "album": "Album",
+      "duration": "Duration (seconds)"
+    }
+  },
   "logout": {
     "dialog": {
       "title": "Sign out?",

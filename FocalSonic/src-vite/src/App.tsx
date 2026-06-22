@@ -1,3 +1,4 @@
+import { LyricsFinderDialog } from "@/app/components/lyrics/lyrics-finder-dialog";
 import { SettingsDialog } from "@/app/components/settings/dialog";
 import { LangObserver } from "@/app/observers/lang-observer";
 import { MediaSessionObserver } from "@/app/observers/media-session-observer";
@@ -24,6 +25,7 @@ function App() {
             <LangObserver />
             <ThemeObserver />
             <SettingsDialog />
+            <LyricsFinderDialog />
             <RouterProvider fallbackElement={<Loader />} router={router} />
             <ToastContainer />
         </>
