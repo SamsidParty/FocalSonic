@@ -1,23 +1,16 @@
 import { Button } from "@/app/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/app/components/ui/dialog";
 import { Input } from "@/app/components/ui/input";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/app/components/ui/popover";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
-import { Separator } from "@/app/components/ui/separator";
 import { Slider } from "@/app/components/ui/slider";
 import { Switch } from "@/app/components/ui/switch";
-import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/app.store";
 import { usePersongOverrides } from "@/store/persong.store";
 import { useDynamicColors } from "@/store/player.store";
 import { t } from "i18next";
-import { Pencil, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
-import React, { ComponentPropsWithoutRef, ReactNode, useEffect, useState } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { LyricSettings } from "../lyrics/lyric-settings";
+import { DropdownSettingOptions, DropdownSettingsPopover, DropdownSettingWrapper } from "../ui/dropdown-settings";
 
 export function FullscreenSettings(props) {
     return (
@@ -29,66 +22,41 @@ export function QueueSettings() {
     const { useDynamicColorsOnQueue } = useDynamicColors();
 
     return (
-        <DynamicSettingsPopover>
+        <DropdownSettingsPopover>
             <>
                 <QueueDynamicColorOption showSeparator={false} />
                 {!useDynamicColorsOnQueue && <ColorIntensityOption showSeparator={false} />}
                 <CustomBackgroundOption />
-                <AlternateLyricOption />
+                <LyricSettings />
             </>
-        </DynamicSettingsPopover>
+        </DropdownSettingsPopover>
     );
 }
 
-interface PopoverProps {
-    children: ReactNode
-}
-
-function DynamicSettingsPopover({ children }: PopoverProps) {
-    return (
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button
-                    data-webview-ignore={""}
-                    variant="ghost"
-                    size="icon"
-                    className="size-10 mr-auto rounded-full hover:bg-foreground/20 data-[state=open]:bg-foreground/20"
-                >
-                    <SlidersHorizontal className="size-4" strokeWidth={2.5} />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="start">
-                <div className="flex flex-col">{children}</div>
-            </PopoverContent>
-        </Popover>
-    );
-}
-
-type OptionProps = Omit<ComponentPropsWithoutRef<typeof SettingWrapper>, "text">
 
 
-function QueueDynamicColorOption(props: OptionProps) {
+function QueueDynamicColorOption(props: DropdownSettingOptions) {
     const { t } = useTranslation();
     const { useDynamicColorsOnQueue, setuseDynamicColorsOnQueue } = useDynamicColors();
 
     return (
-        <SettingWrapper text={t("settings.appearance.colors.group")} {...props}>
+        <DropdownSettingWrapper text={t("settings.appearance.colors.group")} {...props}>
             <Switch
                 checked={useDynamicColorsOnQueue}
                 onCheckedChange={() => setuseDynamicColorsOnQueue(!useDynamicColorsOnQueue)}
             />
-        </SettingWrapper>
+        </DropdownSettingWrapper>
     );
 }
 
-function ColorIntensityOption(props: OptionProps) {
+function ColorIntensityOption(props: DropdownSettingOptions) {
     const { t } = useTranslation();
     const { currentSongColorIntensity, setCurrentSongIntensity } = useDynamicColors();
 
     const intensityTooltip = `${Math.round(currentSongColorIntensity * 100)}%`;
 
     return (
-        <SettingWrapper
+        <DropdownSettingWrapper
             text={t("settings.appearance.colors.queue.intensity")}
             {...props}
         >
@@ -100,7 +68,7 @@ function ColorIntensityOption(props: OptionProps) {
                 tooltipValue={intensityTooltip}
                 onValueChange={([value]) => setCurrentSongIntensity(value)}
             />
-        </SettingWrapper>
+        </DropdownSettingWrapper>
     );
 }
 
@@ -114,7 +82,7 @@ function CustomBackgroundOption() {
     }, [open, data.videoBackgroundURL]);
 
     return (
-        <SettingWrapper showSeparator={false} text={t("fullscreen.customBackground")}>
+        <DropdownSettingWrapper showSeparator={false} text={t("fullscreen.customBackground")}>
             <>
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
@@ -150,67 +118,8 @@ function CustomBackgroundOption() {
                     </Button>
                 </>
             )}
-        </SettingWrapper>
+        </DropdownSettingWrapper>
     );
 }
 
-function AlternateLyricOption(props: OptionProps) {
-    const { t } = useTranslation();
-    const { altLyricsMode, setAltLyricsMode } = useAppStore().settings;
-    const lyricModes = ["off", "transliteration", "translation"];
 
-    return (
-        <SettingWrapper
-            text={t("settings.appearance.player.alternateLyric")}
-            {...props}
-        >
-            <Select value={altLyricsMode} onValueChange={(mode) => setAltLyricsMode(mode)}>
-                <SelectTrigger className="h-8 ring-offset-transparent focus:ring-0">
-                    <SelectValue>
-                        <span className="ml-1">{t("settings.audio.lyrics.altLyric." + altLyricsMode)}</span>
-                    </SelectValue>
-                </SelectTrigger>
-                <SelectContent align="end">
-                    <SelectGroup>
-                        {
-                            lyricModes.map((mode) => (
-                                <SelectItem
-                                    key={mode}
-                                    value={mode}
-                                >
-                                    <span className="ml-1">{t("settings.audio.lyrics.altLyric." + mode)}</span>
-                                </SelectItem>
-                            ))
-                        }
-                    </SelectGroup>
-                </SelectContent>
-            </Select>
-        </SettingWrapper>
-    );
-}
-
-type SettingWrapperProps = ComponentPropsWithoutRef<"div"> & {
-    text: string
-    showSeparator?: boolean
-}
-
-function SettingWrapper({
-    text,
-    className,
-    children,
-    showSeparator = true,
-    ...props
-}: SettingWrapperProps) {
-    return (
-        <>
-            {showSeparator && <Separator />}
-            <div
-                className={cn("flex items-center justify-between p-3", className)}
-                {...props}
-            >
-                <span className="text-sm flex-1 text-balance">{text}</span>
-                <div className="w-1/2 flex items-center justify-end">{children}</div>
-            </div>
-        </>
-    );
-}
