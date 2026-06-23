@@ -335,7 +335,7 @@
             // AirPlay: mute to ~1e-6 (after the curve) so the PC stays silent; the host
             // captures this and restores it x1e6 before streaming.
             if (window.outputDevice === "airplay") {
-                outputVolume *= 1e-6;
+                outputVolume *= 5e-7;
             }
 
             this.rawSource.volume = outputVolume;

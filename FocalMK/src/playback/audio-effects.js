@@ -316,10 +316,10 @@ class AudioEffectController {
         let mergedVolume = this.baseVolume * this.fadeGain * muteVolume;
         let outputVolume = Math.pow(mergedVolume, 2); // Exponential volume
 
-        // AirPlay: mute to ~1e-6 (after the curve) so the PC stays silent; the host
-        // captures this and restores it x1e6 before streaming.
+        // AirPlay: mute to ~1e-6 (after the curve) so the PC stays silent; the host captures this and restores it x1e6 before streaming.
+        // Airplay seems to half the volume, so to compensate we multiply by 5e-7 which is half of 1e-6
         if (window.outputDevice === "airplay") {
-            outputVolume *= 1e-6;
+            outputVolume *= 5e-7;
         }
 
         this.rawSource.volume = outputVolume;
