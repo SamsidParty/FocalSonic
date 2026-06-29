@@ -12,6 +12,7 @@ export interface Playlist {
     created: string
     changed: string
     coverArt: string
+    isFavorites?: boolean
 }
 
 export interface Playlists {

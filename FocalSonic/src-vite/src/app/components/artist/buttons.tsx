@@ -1,13 +1,13 @@
 import { Actions } from "@/app/components/actions";
+import { useLibraryVersion } from "@/app/hooks/use-library-sync";
 import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
-import { service } from "@/service/service";
+import * as localLibrary from "@/lib/localLibrary";
+import { toggleFavorite } from "@/lib/sync/favorites";
 import { useAppPages } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
 import { IArtist } from "@/types/responses/artist";
-import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ArtistButtonsProps {
@@ -27,25 +27,15 @@ export function ArtistButtons({
     const { playArtistRadio } = usePlayArtistRadio();
     const { isAppleMusic } = checkServerType();
 
-    const isArtistStarred = artist.starred !== undefined;
-
-    const queryClient = useQueryClient();
-
-    const starMutation = useMutation({
-        mutationFn: service.star.handleStarItem,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: [queryKeys.artist.single, artist.id],
-            });
-        },
-    });
+    const libraryVersion = useLibraryVersion();
+    const isArtistStarred = useMemo(
+        () => localLibrary.isFavorite("artist", artist.id) || artist.starred !== undefined,
+        [artist.id, artist.starred, libraryVersion],
+    );
 
     function handleLikeButton() {
         if (!artist) return;
-        starMutation.mutate({
-            id: artist.id,
-            starred: isArtistStarred,
-        });
+        toggleFavorite("artist", artist.id, isArtistStarred);
     }
 
 

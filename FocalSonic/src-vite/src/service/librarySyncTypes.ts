@@ -17,6 +17,18 @@ export interface LibraryAlbumsPage {
     total: number | null
 }
 
+export interface FavoriteItem {
+    id: string
+    starred?: string
+}
+
+/** Starred items pulled in one pass (Subsonic getStarred2). */
+export interface FavoritesPage {
+    songs: FavoriteItem[]
+    albums: FavoriteItem[]
+    artists: FavoriteItem[]
+}
+
 /**
  * Provider-agnostic library source consumed by the sync engine. Apple Music
  * carries album metadata on the song request (`include=albums`), so it derives
@@ -31,4 +43,7 @@ export interface LibrarySyncSource {
     hasAlbumPass: boolean
     albumPageSize?: number
     fetchAlbumsPage?(offset: number, limit: number): Promise<LibraryAlbumsPage>
+
+    /** Bulk starred fetch (Subsonic). Apple derives song favorites from synced songs. */
+    fetchFavorites?(): Promise<FavoritesPage>
 }

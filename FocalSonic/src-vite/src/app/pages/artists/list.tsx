@@ -6,14 +6,17 @@ import { HeaderTitle } from "@/app/components/header-title";
 import ListDisplayModePicker from "@/app/components/list-mode-picker";
 import ListWrapper from "@/app/components/list-wrapper";
 import { DataTable } from "@/app/components/ui/data-table";
+import { useLibraryVersion } from "@/app/hooks/use-library-sync";
 import usePlayArtistRadio from "@/app/hooks/use-play-artist-radio";
 import { artistsColumns } from "@/app/tables/artists-columns";
+import * as localLibrary from "@/lib/localLibrary";
 import { service } from "@/service/service";
 import { useListDisplayMode } from "@/types/listDisplayMode";
 import { ISimilarArtist } from "@/types/responses/artist";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import { useTranslation } from "react-i18next";
 
@@ -22,12 +25,23 @@ export default function ArtistsList() {
 
     const { displayMode, setDisplayMode } = useListDisplayMode("primary_artists");
 
+    // Artists are derived from the indexed library songs; fall back to the live
+    // server list only while the library hasn't synced yet.
+    const libraryVersion = useLibraryVersion();
+    const libraryHasSongs = useMemo(
+        () => localLibrary.getLibrarySongCount() > 0,
+        [libraryVersion],
+    );
+    const derivedArtists = useMemo(() => localLibrary.getDerivedArtists(), [libraryVersion]);
 
-    const { data: artists, isLoading } = useQuery({
+    const { data: serverArtists, isLoading: serverIsLoading } = useQuery({
         queryKey: [queryKeys.artist.all],
         queryFn: service.artists.getAll,
+        enabled: !libraryHasSongs,
     });
 
+    const artists = libraryHasSongs ? derivedArtists : serverArtists;
+    const isLoading = libraryHasSongs ? false : serverIsLoading;
 
     let ListDisplay = ArtistsListStandard;
 

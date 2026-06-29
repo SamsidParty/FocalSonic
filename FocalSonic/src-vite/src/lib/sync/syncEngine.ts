@@ -4,6 +4,8 @@ import { service } from "@/service/service";
 import { LibrarySyncSource } from "@/service/librarySyncTypes";
 import { Albums } from "@/types/responses/album";
 import { useSyncStore } from "@/store/sync.store";
+import { flushPendingFavorites, syncFavorites } from "./favorites";
+import { flushPendingPlaylists, syncPlaylists } from "./playlists";
 
 // Apple's servers are slow (~500ms/round trip), so ranges are fetched in
 // parallel. Five concurrent requests keeps things fast without hammering the API.
@@ -183,18 +185,25 @@ async function run(): Promise<void> {
 
         const librarySongs: LibrarySong[] = collected.songs.map((song) => ({
             ...song,
-            transient: false,
+            inLibrary: true,
             syncedAt,
         }));
 
         const libraryAlbums: LibraryAlbum[] = albums.map((album) => ({
             ...album,
             albumKey: album.id,
-            transient: false,
+            inLibrary: true,
             syncedAt,
         }));
 
         await localLibrary.commitFullSync(librarySongs, libraryAlbums);
+
+        // Playlists + favorites are secondary; never fail the whole sync over them.
+        await flushPendingFavorites().catch(() => undefined);
+        await flushPendingPlaylists().catch(() => undefined);
+        await syncPlaylists().catch((error) => console.error("Playlist sync failed", error));
+        await syncFavorites().catch((error) => console.error("Favorites sync failed", error));
+
         finish(syncedAt);
     } catch (error) {
         console.error("Library sync failed", error);

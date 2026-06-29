@@ -14,8 +14,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/app/components/ui/alert-dialog";
+import { removePlaylist } from "@/lib/sync/playlists";
 import { ROUTES } from "@/routes/routesList";
-import { service } from "@/service/service";
 import { useRemovePlaylist } from "@/store/playlists.store";
 import { queryKeys } from "@/utils/queryKeys";
 
@@ -37,10 +37,10 @@ export function RemovePlaylistDialog() {
     const queryClient = useQueryClient();
 
     const removeMutation = useMutation({
-        mutationFn: service.playlists.remove,
+        mutationFn: removePlaylist,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: [queryKeys.playlist.all],
+                queryKey: [queryKeys.playlist.display],
             });
             toast.success(t("playlist.form.delete.toast.success"));
             setConfirmDialogState(false);

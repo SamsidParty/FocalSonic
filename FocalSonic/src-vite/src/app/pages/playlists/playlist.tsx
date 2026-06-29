@@ -5,15 +5,18 @@ import ListWrapper from "@/app/components/list-wrapper";
 import { PlaylistButtons } from "@/app/components/playlist/buttons";
 import { RemoveSongFromPlaylistDialog } from "@/app/components/playlist/remove-song-dialog";
 import { DataTable } from "@/app/components/ui/data-table";
+import { useLibraryVersion } from "@/app/hooks/use-library-sync";
 import ErrorPage from "@/app/pages/error-page";
 import { songsColumns } from "@/app/tables/songs-columns";
-import { service } from "@/service/service";
+import * as localLibrary from "@/lib/localLibrary";
+import { loadPlaylistEntries } from "@/lib/sync/playlists";
 import { usePlayerActions } from "@/store/player.store";
 import { ColumnFilter } from "@/types/columnFilter";
 import { convertSecondsToHumanRead } from "@/utils/convertSecondsToTime";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
@@ -24,16 +27,35 @@ export default function Playlist() {
     const { isAppleMusic } = checkServerType();
     const { setSongList } = usePlayerActions();
 
-    const {
-        data: playlist,
-        isLoading,
-    } = useQuery({
+    // The local index is the source of truth (instant + offline). Cover URLs are
+    // resolved stably in the store (resolveStableCover: keep valid presigned, refresh
+    // expired), so re-rendering these entries doesn't reload thumbnails. The server
+    // refine writes back real metadata (cover + count) and the ordered tracks.
+    const libraryVersion = useLibraryVersion();
+    const localPlaylist = useMemo(
+        () => localLibrary.getPlaylistById(playlistId),
+        [libraryVersion, playlistId],
+    );
+    const entries = useMemo(
+        () => localLibrary.getPlaylistEntries(playlistId),
+        [libraryVersion, playlistId],
+    );
+
+    // Refine + cache from the server. libraryVersion is deliberately NOT in the key:
+    // the cache write bumps the version, which would otherwise refetch in a loop.
+    const { isLoading } = useQuery({
         queryKey: [queryKeys.playlist.single, playlistId],
-        queryFn: () => service.playlists.getOne(playlistId),
+        queryFn: async () => {
+            await loadPlaylistEntries(playlistId);
+            return true;
+        },
     });
 
-    if (isLoading) return <PlaylistFallback />;
-    if (!playlist) return <ErrorPage status={404} statusText="Not Found" />;
+    const hasLocalEntries = (localPlaylist?.entriesLoaded ?? false) || entries.length > 0;
+    if (isLoading && !hasLocalEntries) return <PlaylistFallback />;
+    if (!localPlaylist) return <ErrorPage status={404} statusText="Not Found" />;
+
+    const playlist = { ...localPlaylist, entry: entries };
 
     const columnsToShow: ColumnFilter[] = [
         "index",
@@ -85,8 +107,8 @@ export default function Playlist() {
 
                 <DataTable
                     columns={columns}
-                    data={playlist.entry ?? []}
-                    handlePlaySong={(row) => setSongList(playlist.entry, row.index)}
+                    data={entries}
+                    handlePlaySong={(row) => setSongList(entries, row.index)}
                     columnFilter={columnsToShow}
                     noRowsMessage={t("playlist.noSongList")}
                     variant="modern"

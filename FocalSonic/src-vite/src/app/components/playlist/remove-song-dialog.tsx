@@ -11,7 +11,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/app/components/ui/alert-dialog";
-import { service } from "@/service/service";
+import { removeSongsFromPlaylist } from "@/lib/sync/playlists";
 import { usePlaylistRemoveSong } from "@/store/playlists.store";
 import { queryKeys } from "@/utils/queryKeys";
 import { toast } from "react-toastify";
@@ -26,7 +26,8 @@ export function RemoveSongFromPlaylistDialog() {
     const queryClient = useQueryClient();
 
     const updateMutation = useMutation({
-        mutationFn: service.playlists.update,
+        mutationFn: (selectors: string[]) =>
+            removeSongsFromPlaylist(actionData.playlistId, selectors),
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [queryKeys.playlist.single, actionData.playlistId],
@@ -39,10 +40,7 @@ export function RemoveSongFromPlaylistDialog() {
     });
 
     async function handleRemoveFromPlaylist() {
-        await updateMutation.mutateAsync({
-            playlistId: actionData.playlistId,
-            songIndexToRemove: actionData.songIndexes,
-        });
+        await updateMutation.mutateAsync(actionData.songIndexes);
     }
 
     return (

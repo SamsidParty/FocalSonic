@@ -1,13 +1,14 @@
-export function getTextSizeClass(text: string) {
+export function getTextSizeClass(text?: string) {
     const base = (value: string) => `${value} text-balance align-baseline`;
+    const length = text?.length ?? 0;
 
-    if (text.length < 15) {
+    if (length < 15) {
         return base(
             "text-6xl 2xl:text-7xl leading-[4.75rem] 2xl:leading-[5.625rem]",
         );
     }
 
-    if (text.length > 40) {
+    if (length > 40) {
         return base("text-3xl 2xl:text-5xl leading-[2.65rem] 2xl:leading-[4rem]");
     }
 

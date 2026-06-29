@@ -1,5 +1,5 @@
 import { getDownloadUrl } from "@/api/httpClient";
-import { service } from "@/service/service";
+import { addSongsToPlaylist, createPlaylist } from "@/lib/sync/playlists";
 import { usePlayerActions } from "@/store/player.store";
 import { usePlaylistRemoveSong } from "@/store/playlists.store";
 import { useItemInfo } from "@/store/ui.store";
@@ -50,28 +50,15 @@ export function useOptions() {
     }
 
     const updateMutation = useMutation({
-        mutationFn: service.playlists.update,
+        mutationFn: ({ playlistId: id, songIdToAdd }: { playlistId: string; songIdToAdd: SongIdToAdd }) =>
+            addSongsToPlaylist(id, songIdToAdd ?? []),
         onSuccess: async (_data, variables) => {
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.all],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.display],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.single],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.single, variables.playlistId],
-                }),
-            ]);
-
-            if (isOnPlaylistPage && playlistId) {
-                await queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.single, playlistId],
-                });
-            }
+            await queryClient.invalidateQueries({
+                queryKey: [queryKeys.playlist.display],
+            });
+            await queryClient.invalidateQueries({
+                queryKey: [queryKeys.playlist.single, variables.playlistId],
+            });
         },
         onError: () => {
             toast.error(t("playlist.form.edit.toast.error"));
@@ -86,19 +73,11 @@ export function useOptions() {
     }
 
     const createMutation = useMutation({
-        mutationFn: service.playlists.createWithDetails,
+        mutationFn: createPlaylist,
         onSuccess: async () => {
-            await Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.all],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.display],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.single],
-                }),
-            ]);
+            await queryClient.invalidateQueries({
+                queryKey: [queryKeys.playlist.display],
+            });
         },
     });
 

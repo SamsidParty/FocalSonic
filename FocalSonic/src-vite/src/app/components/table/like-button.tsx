@@ -2,7 +2,7 @@ import { clsx } from "clsx";
 import React, { useEffect, useState } from "react";
 
 import { Button } from "@/app/components/ui/button";
-import { service } from "@/service/service";
+import { toggleFavorite } from "@/lib/sync/favorites";
 import {
     usePlayerActions,
     usePlayerMediaType,
@@ -38,17 +38,21 @@ export function TableLikeButton({
     }, [currentSong, entityId, isSongStarred, isRadio, type]);
 
     async function handleStarred() {
-        const state = !isStarred;
+        const next = !isStarred;
+        setIsStarred(next);
 
-        await service.star.handleStarItem({
-            id: entityId,
-            starred: isStarred,
-        });
-        setIsStarred(state);
+        const isSongPlaying = type === "song" && isSong && currentSong.id === entityId;
+        if (isSongPlaying) {
+            await starCurrentSong();
+            return;
+        }
 
-        if (type === "song" && isSong) {
-            const isSongPlaying = currentSong.id === entityId;
-            isSongPlaying ? starCurrentSong() : starSongInQueue(entityId);
+        if (type === "song" && isSong) starSongInQueue(entityId);
+
+        try {
+            await toggleFavorite(type, entityId, isStarred);
+        } catch {
+            setIsStarred(!next);
         }
     }
 

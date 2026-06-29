@@ -24,7 +24,7 @@ import {
 import { Input } from "@/app/components/ui/input";
 import { Switch } from "@/app/components/ui/switch";
 import { Textarea } from "@/app/components/ui/textarea";
-import { service } from "@/service/service";
+import { createPlaylist, updatePlaylist } from "@/lib/sync/playlists";
 import { usePlaylists } from "@/store/playlists.store";
 import { PlaylistData } from "@/types/playlistsContext";
 import { queryKeys } from "@/utils/queryKeys";
@@ -72,10 +72,10 @@ export function CreatePlaylistDialog() {
     const queryClient = useQueryClient();
 
     const createMutation = useMutation({
-        mutationFn: service.playlists.createWithDetails,
+        mutationFn: createPlaylist,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: [queryKeys.playlist.all],
+                queryKey: [queryKeys.playlist.display],
             });
             toast.success(t("playlist.form.create.toast.success"));
         },
@@ -85,16 +85,11 @@ export function CreatePlaylistDialog() {
     });
 
     const updateMutation = useMutation({
-        mutationFn: service.playlists.update,
+        mutationFn: updatePlaylist,
         onSuccess: () => {
-            Promise.all([
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.all],
-                }),
-                queryClient.invalidateQueries({
-                    queryKey: [queryKeys.playlist.single, data.id],
-                }),
-            ]);
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.playlist.display],
+            });
             toast.success(t("playlist.form.edit.toast.success"));
         },
         onError: () => {

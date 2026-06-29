@@ -1,4 +1,5 @@
 import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
+import { toggleFavorite } from "@/lib/sync/favorites";
 import { getNextSong as getAppleMusicRadioNextSong } from "@/service/applemusic/radios";
 import { service } from "@/service/service";
 import { getSharedVolume, useSharedStore } from "@/store/shared.store";
@@ -721,20 +722,27 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
 
                             const { id, starred } = get().songlist.currentSong;
                             const isSongStarred = typeof starred === "string";
-                            await service.star.handleStarItem({
-                                id,
-                                starred: isSongStarred,
-                            });
 
+                            // Optimistically update the queue (drives the heart via the
+                            // currentList subscription), then sync local + server.
                             const songList = [...currentList];
                             songList[currentSongIndex] = {
                                 ...songList[currentSongIndex],
                                 starred: isSongStarred ? undefined : new Date().toISOString(),
                             };
-
                             set((state) => {
                                 state.songlist.currentList = songList;
                             });
+
+                            try {
+                                await toggleFavorite("song", id, isSongStarred);
+                            } catch {
+                                const reverted = [...get().songlist.currentList];
+                                reverted[currentSongIndex] = { ...reverted[currentSongIndex], starred };
+                                set((state) => {
+                                    state.songlist.currentList = reverted;
+                                });
+                            }
                         },
                         setAudioPlayerRef: (audioPlayer) => {
                             set(

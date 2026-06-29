@@ -2,7 +2,9 @@ import {
     LIBRARY_DB_NAME,
     LIBRARY_DB_VERSION,
     STORE_ALBUMS,
+    STORE_FAVORITES,
     STORE_META,
+    STORE_PLAYLISTS,
     STORE_SONGS,
 } from "./types";
 
@@ -30,6 +32,12 @@ function openDatabase(): Promise<IDBDatabase> {
             }
             if (!db.objectStoreNames.contains(STORE_ALBUMS)) {
                 db.createObjectStore(STORE_ALBUMS, { keyPath: "id" });
+            }
+            if (!db.objectStoreNames.contains(STORE_PLAYLISTS)) {
+                db.createObjectStore(STORE_PLAYLISTS, { keyPath: "id" });
+            }
+            if (!db.objectStoreNames.contains(STORE_FAVORITES)) {
+                db.createObjectStore(STORE_FAVORITES, { keyPath: "key" });
             }
             if (!db.objectStoreNames.contains(STORE_META)) {
                 db.createObjectStore(STORE_META, { keyPath: "key" });
@@ -93,6 +101,14 @@ export async function replaceAll<T>(storeName: string, records: T[]): Promise<vo
     return txComplete(tx);
 }
 
+/** Remove a single record by key. */
+export async function deleteValue(storeName: string, key: IDBValidKey): Promise<void> {
+    const db = await getDb();
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).delete(key);
+    return txComplete(tx);
+}
+
 /** Upsert records into a store without touching the rest of its contents. */
 export async function putAll<T>(storeName: string, records: T[]): Promise<void> {
     if (records.length === 0) return;
@@ -123,9 +139,8 @@ export async function getMeta<T>(key: string): Promise<T | undefined> {
 /** Wipe every library store (used when switching server identities). */
 export async function clearAllStores(): Promise<void> {
     const db = await getDb();
-    const tx = db.transaction([STORE_SONGS, STORE_ALBUMS, STORE_META], "readwrite");
-    tx.objectStore(STORE_SONGS).clear();
-    tx.objectStore(STORE_ALBUMS).clear();
-    tx.objectStore(STORE_META).clear();
+    const stores = [STORE_SONGS, STORE_ALBUMS, STORE_PLAYLISTS, STORE_FAVORITES, STORE_META];
+    const tx = db.transaction(stores, "readwrite");
+    stores.forEach((store) => tx.objectStore(store).clear());
     return txComplete(tx);
 }

@@ -1,4 +1,7 @@
 import { Actions } from "@/app/components/actions";
+import { useLibraryVersion } from "@/app/hooks/use-library-sync";
+import * as localLibrary from "@/lib/localLibrary";
+import { toggleFavorite } from "@/lib/sync/favorites";
 import { service } from "@/service/service";
 import { useAppPages } from "@/store/app.store";
 import { usePlayerActions } from "@/store/player.store";
@@ -6,7 +9,7 @@ import { SingleAlbum } from "@/types/responses/album";
 import { queryKeys } from "@/utils/queryKeys";
 import { checkServerType } from "@/utils/servers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlbumOptions } from "./options";
 
@@ -22,7 +25,14 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
     const [isLikeLoading, setIsLikeLoading] = useState(false);
     const { isAppleMusic } = checkServerType();
 
-    const isAlbumStarred = album.starred !== undefined;
+    // Subsonic album favorites live in the local index; Apple stays server-driven.
+    const libraryVersion = useLibraryVersion();
+    const isAlbumStarred = useMemo(
+        () => (isAppleMusic
+            ? album.starred !== undefined
+            : localLibrary.isFavorite("album", album.id) || album.starred !== undefined),
+        [isAppleMusic, album.id, album.starred, libraryVersion],
+    );
 
     const queryClient = useQueryClient();
 
@@ -39,13 +49,13 @@ export function AlbumButtons({ album, showInfoButton }: AlbumButtonsProps) {
     function handleLikeButton() {
         if (!album) return;
 
-        setIsLikeLoading(true);
+        if (isAppleMusic) {
+            setIsLikeLoading(true);
+            starMutation.mutate({ id: album.id, starred: isAlbumStarred, type: "album" });
+            return;
+        }
 
-        starMutation.mutate({
-            id: album.id,
-            starred: isAlbumStarred,
-            type: "album",
-        });
+        toggleFavorite("album", album.id, isAlbumStarred);
     }
 
     const buttonsTooltips = {
