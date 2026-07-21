@@ -167,16 +167,28 @@ function SyncedLyrics(props: LyricProps) {
     const needTransliteration = !!baseLyrics && selectedChannels.includes("transliteration") && channelNeedsFetch(baseLyrics, "transliteration");
     const needTranslation = !!baseLyrics && selectedChannels.includes("translation") && channelNeedsFetch(baseLyrics, "translation");
 
+    // An alt channel for a given lyrics string never changes, so keep results
+    // permanently fresh. Otherwise a cached result gets background-refetched on
+    // mount, returning a new object each time and rebuilding the renderer (which
+    // resets the wipe animations).
     const transliterationQuery = useQuery({
         queryKey: ["alt-lyric-channel", "transliteration", baseLyrics],
         enabled: needTransliteration,
         queryFn: () => fetchAltChannel(baseLyrics!, "transliteration"),
+        staleTime: Infinity,
+        gcTime: 1000 * 60 * 60, // keep for an hour so revisiting a song doesn't refetch
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
     });
 
     const translationQuery = useQuery({
         queryKey: ["alt-lyric-channel", "translation", baseLyrics],
         enabled: needTranslation,
         queryFn: () => fetchAltChannel(baseLyrics!, "translation"),
+        staleTime: Infinity,
+        gcTime: 1000 * 60 * 60, // keep for an hour so revisiting a song doesn't refetch
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
     });
 
     // Channels that are actively fetching - the renderer shows skeletons for these.
