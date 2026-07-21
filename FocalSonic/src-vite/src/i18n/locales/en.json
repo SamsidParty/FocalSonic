@@ -689,6 +689,7 @@
           "info": "When enabled, synced lyrics will be prioritized over unsynced lyrics."
         },
         "altLyric": {
+          "original": "Original",
           "translation": "Translation",
           "transliteration": "Pronunciation",
           "off": "None"

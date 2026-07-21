@@ -3,7 +3,9 @@
  * Updates DOM directly without React rerenders for optimal performance
  */
 
-import { ParsedLyricLine, ParsedLyrics, findActiveLine } from "./lrcParser";
+import { LyricChannel } from "@/types/serverConfig";
+import { hasNonLatin } from "./lyricEligibility";
+import { ParsedLyricLine, ParsedLyrics, ParsedLyricWord, findActiveLine } from "./lrcParser";
 
 export interface LyricsRendererOptions {
     leftAlign?: boolean;
@@ -12,13 +14,24 @@ export interface LyricsRendererOptions {
     enableBlur?: boolean;
     enableGlow?: boolean;
     onSeek?: (timeMs: number) => void;
+    // Ordered channels to display. Index 0 = large slot, 1..2 = small slots.
+    selectedChannels?: LyricChannel[];
+    // Channels currently being fetched from an external API - shown as skeletons.
+    loadingChannels?: Set<LyricChannel>;
+}
+
+// One rendered channel within a line (the large slot or a small sub-slot).
+interface SlotElement {
+    channel: LyricChannel;
+    container: HTMLElement;
+    wordSpans: HTMLSpanElement[];
+    isLarge: boolean;
+    isSkeleton: boolean;
 }
 
 interface LineElement {
     container: HTMLElement;
-    wordSpans: HTMLSpanElement[];
-    subLyricContainer: HTMLElement | null;
-    subLyricWordSpans: HTMLSpanElement[];
+    slots: SlotElement[];
     line: ParsedLyricLine;
 }
 
@@ -133,7 +146,67 @@ export class LyricsRenderer {
     }
 
     /**
-     * Create DOM elements for a single lyric line
+     * Resolve the word-level data for a given channel on a line.
+     */
+    private getChannelWords(line: ParsedLyricLine, channel: LyricChannel): ParsedLyricWord[] {
+        switch (channel) {
+            case "transliteration": return line.transliterationWords;
+            case "translation": return line.translationWords;
+            case "original":
+            default: return line.words;
+        }
+    }
+
+    /**
+     * Whether a line should show a loading skeleton for a channel that has no
+     * data yet. Transliteration only applies to non-Latin lines; translation to
+     * any non-empty line; original never loads.
+     */
+    private lineExpectsChannel(line: ParsedLyricLine, channel: LyricChannel): boolean {
+        if (channel === "transliteration") return hasNonLatin(line.content);
+        if (channel === "translation") return line.content.trim().length > 0;
+        return false;
+    }
+
+    /**
+     * Build a skeleton placeholder span sized from the line so it roughly
+     * matches the eventual text width.
+     */
+    private createSkeletonSpan(line: ParsedLyricLine): HTMLSpanElement {
+        const span = document.createElement("span");
+        span.className = "lyric-skeleton";
+        const chars = Math.max(4, line.content.replace(/\s+/g, " ").trim().length);
+        span.style.width = `${Math.min(90, 18 + chars * 1.2)}%`;
+        return span;
+    }
+
+    /**
+     * Normalized text of a channel's words for duplicate detection - whitespace
+     * and case are ignored so word-synced and line-level copies of the same line
+     * compare equal despite different tokenization.
+     */
+    private normalizeLineText(words: ParsedLyricWord[]): string {
+        return words.map((w) => w.text).join("").replace(/\s+/g, "").toLowerCase();
+    }
+
+    private createWordSpan(word: ParsedLyricWord): HTMLSpanElement {
+        const span = document.createElement("span");
+        span.className = this.buildWordClasses(false);
+        span.dataset.time = String(word.time);
+        span.dataset.duration = String(word.duration);
+        span.textContent = word.text;
+        return span;
+    }
+
+    /**
+     * Create DOM elements for a single lyric line.
+     *
+     * Channels are placed by selection order, but only channels that actually
+     * have content for this line are shown. The first channel *with content*
+     * becomes the large slot (the line `<p>` itself) - so if the preferred
+     * primary channel is blank on this line, the next one is promoted rather
+     * than leaving a large empty slot above the small ones. Remaining channels
+     * become small sub-lyric `<p>` children.
      */
     private createLineElement(line: ParsedLyricLine): LineElement {
         const p = document.createElement("p");
@@ -149,50 +222,88 @@ export class LyricsRenderer {
             });
         }
 
-        const wordSpans: HTMLSpanElement[] = [];
+        const channels = this.options.selectedChannels?.length ? this.options.selectedChannels : ["original" as LyricChannel];
 
-        // Create word spans for main lyrics (ELRC)
-        for (let i = 0; i < line.words.length; i++) {
-            const word = line.words[i];
-            const span = document.createElement("span");
-            span.className = this.buildWordClasses(false);
-            span.dataset.time = String(word.time);
-            span.dataset.duration = String(word.duration);
-            span.textContent = word.text;
-            wordSpans.push(span);
-            p.appendChild(span);
-        }
+        // Keep only channels that have something to render on this line
+        // (real words, or a skeleton for a channel that's still loading).
+        const renderable = channels
+            .map((channel) => {
+                const words = this.getChannelWords(line, channel);
+                const hasWords = words.length > 0;
+                const isLoading = this.options.loadingChannels?.has(channel) ?? false;
+                const showSkeleton = !hasWords && isLoading && this.lineExpectsChannel(line, channel);
+                return { channel, words, hasWords, showSkeleton };
+            })
+            .filter((entry) => entry.hasWords || entry.showSkeleton);
 
-        // Create sub-lyrics as a child element if present
-        let subLyricContainer: HTMLElement | null = null;
-        const subLyricWordSpans: HTMLSpanElement[] = [];
+        // Timing-aware duplicate removal: when two channels carry the same text
+        // for this line, keep only the copy with the most word-level timing (so a
+        // word-synced version wins over a line-level one), regardless of channel
+        // priority. Ties keep the higher-priority (earlier) channel.
+        const bestByText = new Map<string, number>();
+        renderable.forEach((entry, i) => {
+            if (!entry.hasWords) return;
+            const key = this.normalizeLineText(entry.words);
+            if (!key) return;
+            const best = bestByText.get(key);
+            if (best === undefined || entry.words.length > renderable[best].words.length) {
+                bestByText.set(key, i);
+            }
+        });
 
-        if (line.altContent && line.altWords.length > 0) {
-            subLyricContainer = document.createElement("p");
-            subLyricContainer.className = this.buildLineClasses(line, false, true);
+        const visible = renderable.filter((entry, i) => {
+            if (!entry.hasWords) return true; // skeletons never dedupe
+            const key = this.normalizeLineText(entry.words);
+            if (!key) return true;
+            return bestByText.get(key) === i;
+        });
 
-            for (let i = 0; i < line.altWords.length; i++) {
-                const word = line.altWords[i];
-                const span = document.createElement("span");
-                span.className = this.buildWordClasses(false);
-                span.dataset.time = String(word.time);
-                span.dataset.duration = String(word.duration);
-                span.textContent = word.text;
-                subLyricWordSpans.push(span);
-                subLyricContainer.appendChild(span);
+        const slots: SlotElement[] = [];
+
+        visible.forEach((entry, index) => {
+            const isLarge = index === 0; // first channel WITH content becomes the large slot
+            const slotContainer = isLarge ? p : document.createElement("p");
+
+            const wordSpans: HTMLSpanElement[] = [];
+            if (entry.hasWords) {
+                for (const word of entry.words) {
+                    const span = this.createWordSpan(word);
+                    wordSpans.push(span);
+                    slotContainer.appendChild(span);
+                }
+            } else if (entry.showSkeleton) {
+                slotContainer.appendChild(this.createSkeletonSpan(line));
             }
 
-            // Append sub-lyric as child of parent line
-            p.appendChild(subLyricContainer);
-        }
+            if (!isLarge) {
+                p.appendChild(slotContainer);
+            }
 
-        return { container: p, wordSpans, subLyricContainer, subLyricWordSpans, line };
+            slots.push({ channel: entry.channel, container: slotContainer, wordSpans, isLarge, isSkeleton: entry.showSkeleton });
+        });
+
+        // Assign classes once the final slot count is known (only the last slot
+        // gets the block-separating bottom margin).
+        this.applySlotClasses(slots, line, false);
+
+        return { container: p, slots, line };
+    }
+
+    /**
+     * (Re)apply line/slot CSS classes, marking the last slot so only it carries
+     * the large inter-line bottom margin.
+     */
+    private applySlotClasses(slots: SlotElement[], line: ParsedLyricLine, active: boolean): void {
+        const lastIndex = slots.length - 1;
+        slots.forEach((slot, i) => {
+            slot.container.className = this.buildLineClasses(line, active, !slot.isLarge, i === lastIndex);
+        });
     }
 
     /**
      * Build CSS classes for a lyric line
      */
-    private buildLineClasses(line: ParsedLyricLine, active: boolean, isSubLyric: boolean = false): string {
+    private buildLineClasses(line: ParsedLyricLine, active: boolean, isSubLyric: boolean = false, isLastSlot: boolean = true): string {
         const classes = [
             "lyric-line",
             "drop-shadow-lg",
@@ -230,15 +341,18 @@ export class LyricsRenderer {
             classes.push("opacity-60");
         }
 
-        // Margin classes based on line type
+        // Margin classes based on line type. Only the LAST slot of a line carries
+        // the large bottom margin that separates whole line-blocks; inner sub-slots
+        // (a second/third stacked alternate) stay tight against each other.
         if (!isSubLyric && !this.options.small) {
             classes.push("my-10", "!2xl:my-30", "!xxs:my-5", "xxs:text-[18px]", "2xl:my-20", "!xxs:my-0");
         } else if (!isSubLyric && this.options.small) {
             classes.push("text-[18px]", "!my-0", "!mt-8", "leading-normal");
         } else if (isSubLyric && !this.options.small) {
-            classes.push("text-xl", "2xl:text-3xl", "xxs:text-xs", "opacity-100", "mt-0", "mb-10", "!2xl:mb-30", "xxs:mb-2");
+            classes.push("text-xl", "2xl:text-3xl", "xxs:text-xs", "opacity-100", "mt-0");
+            classes.push(...(isLastSlot ? ["mb-10", "!2xl:mb-30", "xxs:mb-2"] : ["mb-1", "xxs:mb-0.5"]));
         } else if (isSubLyric && this.options.small) {
-            classes.push("!text-[12px]", "!mb-2", "leading-normal");
+            classes.push("!text-[12px]", "leading-normal", isLastSlot ? "!mb-2" : "!mb-0.5");
         }
 
         return classes.join(" ");
@@ -277,31 +391,24 @@ export class LyricsRenderer {
 
         // Update line states
         for (let i = 0; i < this.lineElements.length; i++) {
-            const { container, wordSpans, subLyricContainer, subLyricWordSpans, line } = this.lineElements[i];
+            const { container, slots, line } = this.lineElements[i];
             const isActive = i === newActiveIndex;
 
-            // Update line classes if active state changed
+            // Update line/slot classes if active state changed
             if (i === newActiveIndex && this.currentActiveIndex !== newActiveIndex) {
-                container.className = this.buildLineClasses(line, true, false);
-                if (subLyricContainer) {
-                    subLyricContainer.className = this.buildLineClasses(line, true, true);
-                }
+                this.applySlotClasses(slots, line, true);
             } else if (i === this.currentActiveIndex && this.currentActiveIndex !== newActiveIndex) {
-                container.className = this.buildLineClasses(line, false, false);
-                if (subLyricContainer) {
-                    subLyricContainer.className = this.buildLineClasses(line, false, true);
-                }
+                this.applySlotClasses(slots, line, false);
             }
 
             // Update blur based on distance from active line
             this.updateLineBlur(container, line, i, newActiveIndex, isActive);
 
-            // Update word highlights for main lyrics
-            this.updateWordHighlights(wordSpans, timestampSec, isActive);
-
-            // Update word highlights for sub-lyrics
-            if (subLyricWordSpans.length > 0) {
-                this.updateWordHighlights(subLyricWordSpans, timestampSec, isActive);
+            // Update word highlights for every slot (skeleton slots have no spans)
+            for (const slot of slots) {
+                if (slot.wordSpans.length > 0) {
+                    this.updateWordHighlights(slot.wordSpans, timestampSec, isActive);
+                }
             }
         }
 
@@ -382,22 +489,18 @@ export class LyricsRenderer {
      */
     private updateOneLineMode(activeIndex: number, timestampSec: number): void {
         for (let i = 0; i < this.lineElements.length; i++) {
-            const { container, wordSpans, subLyricContainer, subLyricWordSpans, line } = this.lineElements[i];
+            const { container, slots, line } = this.lineElements[i];
             const isActive = i === activeIndex;
 
             // Show/hide based on active state
             container.style.display = isActive ? "" : "none";
 
             if (isActive) {
-                container.className = this.buildLineClasses(line, true, false);
-                this.updateWordHighlights(wordSpans, timestampSec, true);
-
-                // Update sub-lyrics too
-                if (subLyricContainer) {
-                    subLyricContainer.className = this.buildLineClasses(line, true, true);
-                }
-                if (subLyricWordSpans.length > 0) {
-                    this.updateWordHighlights(subLyricWordSpans, timestampSec, true);
+                this.applySlotClasses(slots, line, true);
+                for (const slot of slots) {
+                    if (slot.wordSpans.length > 0) {
+                        this.updateWordHighlights(slot.wordSpans, timestampSec, true);
+                    }
                 }
             }
         }
@@ -479,20 +582,14 @@ export class LyricsRenderer {
         this.isUserScrolling = false;
 
         // Reset all line states to inactive
-        for (const { container, wordSpans, subLyricContainer, subLyricWordSpans, line } of this.lineElements) {
-            container.className = this.buildLineClasses(line, false, false);
+        for (const { container, slots, line } of this.lineElements) {
             container.style.filter = "";
+            this.applySlotClasses(slots, line, false);
 
-            for (const span of wordSpans) {
-                span.classList.remove("lyric-wipe-active");
-            }
-
-            if (subLyricContainer) {
-                subLyricContainer.className = this.buildLineClasses(line, false, true);
-            }
-
-            for (const span of subLyricWordSpans) {
-                span.classList.remove("lyric-wipe-active");
+            for (const slot of slots) {
+                for (const span of slot.wordSpans) {
+                    span.classList.remove("lyric-wipe-active");
+                }
             }
         }
 

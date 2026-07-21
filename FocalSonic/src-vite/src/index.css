@@ -455,6 +455,22 @@ svg#bars .eq-bar--4 {
   margin-bottom: 0 !important;
 }
 
+/* Placeholder shown in an alternate-lyric slot while its channel is still
+   loading (e.g. awaiting the Google Translate API). */
+.lyric-skeleton {
+  display: inline-block;
+  height: 0.62em;
+  vertical-align: middle;
+  border-radius: 0.3em;
+  background: color-mix(in srgb, var(--lyric-color) 35%, transparent);
+  animation: lyric-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes lyric-skeleton-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+
 .default-gradient {
   background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.212) 100%);
 }

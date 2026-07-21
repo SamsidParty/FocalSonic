@@ -104,10 +104,11 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
                                 state.settings.enableLRCLib = value;
                             });
                         },
-                        altLyricsMode: "off",
-                        setAltLyricsMode: (value) => {
+                        altLyricChannels: ["original"],
+                        setAltLyricChannels: (value) => {
                             set((state) => {
-                                state.settings.altLyricsMode = value;
+                                // Never allow an empty selection - fall back to original only.
+                                state.settings.altLyricChannels = value.length > 0 ? value : ["original"];
                             });
                         },
                         sidebarOpen: true,
@@ -255,7 +256,20 @@ export const useAppStore = createWithEqualityFn<IAppContext>()(
             ),
             {
                 name: "app_store",
-                version: 1,
+                version: 2,
+                migrate: (persistedState: any, version) => {
+                    // v1 -> v2: alternate lyrics went from a single-choice string
+                    // (altLyricsMode) to an ordered multi-select (altLyricChannels).
+                    if (version < 2 && persistedState?.settings) {
+                        const legacy = persistedState.settings.altLyricsMode;
+                        if (legacy && !persistedState.settings.altLyricChannels) {
+                            persistedState.settings.altLyricChannels =
+                                legacy === "off" ? ["original"] : ["original", legacy];
+                        }
+                        delete persistedState.settings.altLyricsMode;
+                    }
+                    return persistedState;
+                },
                 storage: createJSONStorage(() => !window.igniteView ? localStorage : igniteViewAppStore),
                 merge: (persistedState, currentState) => {
                     currentState.data.isHydrated = true;

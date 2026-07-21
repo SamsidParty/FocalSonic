@@ -7,8 +7,8 @@ export function stripLRCLine(lrcLine: string): string {
     // Remove ELRC timetags
     cleanLine = cleanLine.replace(/<\d+(?:[:.]\d+)*>/g, "");
 
-    if (cleanLine.includes("⏩")) {
-        cleanLine = cleanLine.split("⏩")[0]; // Remove alternate lyrics
-    }
+    // Remove any alternate channels (transliteration ⏩ / translation ⏭),
+    // keeping only the original text before the first channel marker.
+    cleanLine = cleanLine.split(/[⏩⏭]/)[0];
     return cleanLine.trim();
 }

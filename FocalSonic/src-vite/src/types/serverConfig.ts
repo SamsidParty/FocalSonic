@@ -63,11 +63,15 @@ export interface IAppRuntimeState {
     setLyricsFinderDialogState: (value: boolean) => void
 }
 
+// Alternate lyric channels the user can display. Order is meaningful: the first
+// selected channel occupies the large slot, the rest the small slots.
+export type LyricChannel = "original" | "transliteration" | "translation";
+
 export interface IAppSettings {
     enableLRCLib: boolean
     setEnableLRCLib: (value: boolean) => void
-    altLyricsMode: "off" | "transliteration" | "translation"
-    setAltLyricsMode: (value: "off" | "transliteration" | "translation") => void
+    altLyricChannels: LyricChannel[]
+    setAltLyricChannels: (value: LyricChannel[]) => void
     sidebarOpen: boolean
     setSidebarOpen: (value: boolean) => void
     extraBarContent: ExtraBarContent

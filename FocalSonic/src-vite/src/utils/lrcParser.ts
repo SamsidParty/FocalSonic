@@ -3,6 +3,8 @@
  * Replaces the react-lrc library for better performance
  */
 
+import { TRANSLATION_MARKER, TRANSLITERATION_MARKER } from "./lyricEligibility";
+
 // Regex patterns for parsing
 const LRC_LINE_REGEX = /^\[(\d{2}):(\d{2})\.(\d{2,3})\]\s*(.*)$/;
 const ELRC_TAG_REGEX = /<(\d{2}):(\d{2})\.(\d{2,3})>([^<]*)/g;
@@ -18,10 +20,12 @@ export interface ParsedLyricLine {
     id: string;
     lineNumber: number;
     startTime: number; // Start time in milliseconds
-    content: string; // Raw content (for display fallback)
-    words: ParsedLyricWord[]; // ELRC word-level data
-    altContent: string | null; // Alternate lyrics (translation/transliteration)
-    altWords: ParsedLyricWord[]; // Alternate lyrics word-level data
+    content: string; // Raw original content (for display fallback)
+    words: ParsedLyricWord[]; // ELRC word-level data (original)
+    transliterationContent: string | null; // Transliteration (pronunciation) channel
+    transliterationWords: ParsedLyricWord[];
+    translationContent: string | null; // Translation channel
+    translationWords: ParsedLyricWord[];
 }
 
 export interface ParsedLyrics {
@@ -112,19 +116,29 @@ function parseLrcLine(line: string, lineNumber: number): ParsedLyricLine | null 
     }
 
     const startTimeMs = parseTimeToMs(match[1], match[2], match[3]);
-    let content = match[4];
-    let altContent: string | null = null;
+    const rawContent = match[4];
+    let transliterationContent: string | null = null;
+    let translationContent: string | null = null;
 
-    // Check for alternate lyrics (separated by ⏩)
-    if (content.includes("⏩")) {
-        const parts = content.split("⏩");
-        content = parts[0];
-        altContent = parts[1] || null;
+    // Alternate channels are appended inline after the original, each behind its
+    // own marker (`original⏩transliteration⏭translation`). Tokenize on the markers
+    // so parsing is independent of the order the channels were appended in.
+    const segments = rawContent.split(/([⏩⏭])/);
+    let content = segments[0];
+    for (let k = 1; k < segments.length; k += 2) {
+        const marker = segments[k];
+        const text = segments[k + 1] ?? "";
+        if (marker === TRANSLITERATION_MARKER) {
+            transliterationContent = text || null;
+        } else if (marker === TRANSLATION_MARKER) {
+            translationContent = text || null;
+        }
     }
 
     // Parse word-level timing
     const words = parseElrcWords(content, startTimeMs);
-    const altWords = altContent ? parseElrcWords(altContent, startTimeMs) : [];
+    const transliterationWords = transliterationContent ? parseElrcWords(transliterationContent, startTimeMs) : [];
+    const translationWords = translationContent ? parseElrcWords(translationContent, startTimeMs) : [];
 
     return {
         id: `line-${lineNumber}-${startTimeMs}`,
@@ -132,8 +146,10 @@ function parseLrcLine(line: string, lineNumber: number): ParsedLyricLine | null 
         startTime: startTimeMs,
         content,
         words,
-        altContent,
-        altWords,
+        transliterationContent,
+        transliterationWords,
+        translationContent,
+        translationWords,
     };
 }
 
