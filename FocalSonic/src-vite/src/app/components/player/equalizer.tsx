@@ -1,5 +1,19 @@
 import { cn } from "@/lib/utils";
-import { usePlayerFilterData, usePlayerRef, usePlayerSpeed } from "@/store/player.store";
+import { usePlayerFilterData, usePlayerSpeed } from "@/store/player.store";
+import { getSharedFilterData, getSharedSpeed } from "@/store/shared.store";
+import {
+    AudioEffectConfig,
+    AudioEffectFilter,
+    buildExportPayload,
+    effectiveImpulse,
+    effectiveReverb,
+    effectiveSpeed,
+    isConfigDisplayable,
+    parseFilterData,
+    serializeFilterData,
+    UI_LIMITS,
+    validateImportedConfig
+} from "@/utils/audioEffects";
 import clsx from "clsx";
 import {
     CompositeCurve,
@@ -12,10 +26,12 @@ import {
     GraphThemeOverride
 } from "dsssp";
 import { t } from "i18next";
-import { ListX } from "lucide-react";
-import React, { useState } from "react";
+import { Import, ListX, Save } from "lucide-react";
+import { useMemo } from "react";
+import { toast } from "react-toastify";
 import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { SimpleTooltip } from "../ui/simple-tooltip";
 import { Slider } from "../ui/slider";
 import EffectSliders from "./effect-sliders";
 
@@ -476,12 +492,16 @@ const builtInPresets: AudioEffectPreset[] = [
     }
 ];
 
-const findMatchingPreset = (filters: GraphFilter[]): AudioEffectPreset | null => {
-    return builtInPresets.find(preset => 
+const findMatchingPreset = (config: AudioEffectConfig): AudioEffectPreset | null => {
+    return builtInPresets.find(preset =>
+        preset.filters.length === config.filters.length &&
+        effectiveSpeed(config.speed) === preset.speed &&
+        effectiveReverb(config.reverb) === preset.reverb &&
+        effectiveImpulse(config.impulse) === effectiveImpulse(preset.impulse) &&
         preset.filters.every((presetFilter, index) => {
-            const currentFilter = filters[index];
-            if (!currentFilter) return false;
+            const currentFilter = config.filters[index];
             return (
+                presetFilter.type === currentFilter.type &&
                 presetFilter.freq === currentFilter.freq &&
                 Math.abs(presetFilter.gain - currentFilter.gain) < 0.01
             );
@@ -498,55 +518,130 @@ const glowFilter = () => ({
 export default function Equalizer({ orientation = "vertical", small = true }: { orientation?: "horizontal" | "vertical", small?: boolean }) {
 
     const { filterData, setFilterData } = usePlayerFilterData();
-    const [filters, setFilters] = useState(filterData ? JSON.parse(filterData) : builtInPresets[0].filters);
     const { speed, setSpeed } = usePlayerSpeed();
-    const playerRef = usePlayerRef();
 
-    const reverb = filters[0]?.reverb || 0;
-    const setReverb = (value: number) => {
-        filters[0].reverb = value;
-        setFilterData(JSON.stringify(filters));
-        setFilters([...filters]);
+    const config = useMemo(() => parseFilterData(filterData, speed), [filterData, speed]);
+
+    // Imported configurations can go well beyond what the sliders are able to
+    // represent, in which case we say so rather than draw something misleading
+    const canDisplay = isConfigDisplayable(config);
+
+    // Read straight from the store rather than the render, so two edits landing in
+    // the same tick can't have the second one overwrite the first
+    const readConfig = () => parseFilterData(getSharedFilterData(), getSharedSpeed());
+
+    const applyConfig = (next: AudioEffectConfig) => {
+        setFilterData(serializeFilterData(next));
+
+        // Speed lives outside of the filter data, so it only gets written when it
+        // actually moved rather than on every slider tick
+        if (next.speed !== getSharedSpeed()) {
+            setSpeed(next.speed);
+        }
     };
 
-    const impulse = filters[0]?.impulse || "";
-    const setImpulse = (value: string) => {
-        filters[0].impulse = value;
-        setFilterData(JSON.stringify(filters));
-        setFilters([...filters]);
-    };
+    const setReverb = (value: number) => applyConfig({ ...readConfig(), reverb: value });
 
-    
+    // Choosing a bundled impulse response drops any custom wav that was in use
+    const setImpulse = (value: string) => applyConfig({ ...readConfig(), impulse: value, impulseFile: undefined });
+
     const handleFilterChange = (filterEvent: FilterChangeEvent) => {
         const { index, ...filter } = filterEvent;
+        const current = readConfig();
 
-        setFilters((prevFilters) => {
-            const newFilters = [...prevFilters];
-            newFilters[index] = { ...newFilters[index], ...filter };
-            setFilterData(JSON.stringify(newFilters));
-            return newFilters;
+        applyConfig({
+            ...current,
+            filters: current.filters.map((band, bandIndex) => bandIndex === index ? { ...band, ...filter } : band),
         });
     };
 
     const applyPreset = (preset: AudioEffectPreset) => {
-        setReverb(preset.reverb);
-        setSpeed(preset.speed);
-        setImpulse(preset.impulse);
-        setFilterData(JSON.stringify(preset.filters));
-        setFilters(preset.filters);
+        applyConfig({
+            // Cloned, otherwise editing a slider would edit the preset itself
+            filters: preset.filters.map((filter) => ({ ...filter })),
+            reverb: preset.reverb,
+            impulse: preset.impulse,
+            speed: preset.speed,
+        });
     };
 
-    const resetEffects = () => {
-        setReverb(0);
-        setSpeed(1);
-        setImpulse("");
-        setFilterData(JSON.stringify(builtInPresets[0].filters));
-        setFilters([...builtInPresets[0].filters]);
+    const resetEffects = () => applyPreset(builtInPresets[0]);
+
+    const handleExport = async () => {
+        const exporter = window.igniteView?.commandBridge?.exportAudioEffects;
+
+        if (!exporter) {
+            toast.error(t("player.effects.desktopOnly"));
+            return;
+        }
+
+        try {
+            const payload = JSON.stringify(buildExportPayload(readConfig()), null, 4);
+            const result = JSON.parse(await exporter(payload)) as { ok?: boolean, cancelled?: boolean, error?: string };
+
+            if (result?.cancelled) { return; }
+            if (!result?.ok) { throw new Error(result?.error || "the file could not be written"); }
+
+            toast.success(t("player.effects.exported"));
+        }
+        catch (error) {
+            console.error("[Audio Effects] Export failed", error);
+            toast.error(t("player.effects.exportFailed"));
+        }
     };
 
-    const EqualizerComponent = SliderBasedEqualizer;
+    const handleImport = async () => {
+        const importer = window.igniteView?.commandBridge?.importAudioEffects;
 
-    const currentPreset = findMatchingPreset(filters);
+        if (!importer) {
+            toast.error(t("player.effects.desktopOnly"));
+            return;
+        }
+
+        try {
+            // The native picker + file read happen in C#; it hands back the raw text
+            const result = JSON.parse(await importer()) as { ok?: boolean, cancelled?: boolean, error?: string, content?: string };
+
+            if (result?.cancelled) { return; }
+            if (!result?.ok || typeof result.content !== "string") {
+                throw new Error(result?.error || "the file could not be read");
+            }
+
+            let parsed: unknown;
+
+            try {
+                parsed = JSON.parse(result.content);
+            }
+            catch {
+                throw new Error("the file is not valid JSON");
+            }
+
+            const validated = validateImportedConfig(parsed);
+
+            if (!validated.ok || !validated.config) {
+                throw new Error(validated.error || "the configuration could not be read");
+            }
+
+            const imported = validated.config;
+
+            // A wav path wins over any impulse id in the file, since the id can only
+            // ever refer to something that was imported on this machine
+            if (imported.impulseFile) {
+                imported.impulse = await importImpulseFile(imported.impulseFile);
+            }
+
+            applyConfig(imported);
+            toast.success(t("player.effects.imported"));
+        }
+        catch (error) {
+            console.error("[Audio Effects] Import failed", error);
+            toast.error(t("player.effects.importFailed", {
+                reason: error instanceof Error ? error.message : String(error),
+            }));
+        }
+    };
+
+    const currentPreset = findMatchingPreset(config);
     const currentPresetId = currentPreset?.id || "custom";
 
     const handlePresetChange = (presetId: string) => {
@@ -571,26 +666,102 @@ export default function Equalizer({ orientation = "vertical", small = true }: { 
                     </div>
                 </span>
                 <div className={clsx("w-full mt-2", small ? "px-2" : "px-32")}>
-                    <Select value={currentPresetId} onValueChange={handlePresetChange}>
-                        <SelectTrigger className="w-full h-9">
-                            <SelectValue>
-                                {currentPreset ? currentPreset.name : "Custom"}
-                            </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                            {builtInPresets.map((preset) => (
-                                <SelectItem key={preset.id} value={preset.id}>
-                                    {preset.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <div className="relative w-full">
+                        <Select value={currentPresetId} onValueChange={handlePresetChange}>
+                            {/* pr leaves room for the overlaid buttons; the built-in chevron
+                                is hidden ([&>svg]) since those buttons now sit in its place */}
+                            <SelectTrigger className="w-full h-9 pr-[4.25rem] [&>svg]:hidden">
+                                <SelectValue>
+                                    {currentPreset ? currentPreset.name : "Custom"}
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {builtInPresets.map((preset) => (
+                                    <SelectItem key={preset.id} value={preset.id}>
+                                        {preset.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        {/* Overlaid on the bar, sibling to the trigger (nested buttons are
+                            invalid). Stops pointer events so a click can't fall through to Flat. */}
+                        <div
+                            className="absolute inset-y-0 right-1.5 z-10 flex items-center gap-0.5"
+                            onPointerDown={(event) => event.stopPropagation()}
+                        >
+                            <SimpleTooltip text={t("player.effects.import")}>
+                                <Button
+                                    type="button"
+                                    className="h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+                                    size="icon"
+                                    variant="ghost"
+                                    aria-label={t("player.effects.import")}
+                                    onPointerDown={(event) => event.stopPropagation()}
+                                    onClick={(event) => { event.stopPropagation(); handleImport(); }}
+                                >
+                                    <Import size={15} />
+                                </Button>
+                            </SimpleTooltip>
+                            <SimpleTooltip text={t("player.effects.export")}>
+                                <Button
+                                    type="button"
+                                    className="h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+                                    size="icon"
+                                    variant="ghost"
+                                    aria-label={t("player.effects.export")}
+                                    onPointerDown={(event) => event.stopPropagation()}
+                                    onClick={(event) => { event.stopPropagation(); handleExport(); }}
+                                >
+                                    {/* Slightly smaller than the other icon so that it looks better */}
+                                    <Save size={14} />
+                                </Button>
+                            </SimpleTooltip>
+                        </div>
+                    </div>
                 </div>
-                <EqualizerComponent handleFilterChange={handleFilterChange} filters={filters} />
-                <EffectSliders reverb={reverb} setReverb={setReverb} impulse={impulse} setImpulse={setImpulse} orientation={orientation} />
+                {canDisplay ? (
+                    <>
+                        <SliderBasedEqualizer handleFilterChange={handleFilterChange} filters={config.filters} />
+                        <EffectSliders reverb={config.reverb} setReverb={setReverb} impulse={config.impulse} setImpulse={setImpulse} orientation={orientation} />
+                    </>
+                ) : (
+                    <div className={clsx("w-full my-4", small ? "px-2" : "px-32")}>
+                        <p className="rounded-md border border-border bg-secondary/40 p-4 text-center text-sm font-normal text-muted-foreground">
+                            {t("player.effects.tooComplex")}
+                        </p>
+                    </div>
+                )}
             </div>
         </>
     );
+}
+
+/**
+ * Hands a wav path to the desktop backend, which validates it and copies it into
+ * the overrides folder. Returns the impulse id to store against the config.
+ */
+async function importImpulseFile(path: string): Promise<string> {
+    const bridge = window.igniteView?.commandBridge;
+
+    if (!bridge?.importImpulseOverride) {
+        throw new Error("custom impulse responses are only supported in the desktop app");
+    }
+
+    let response: { ok?: boolean, id?: string, error?: string };
+
+    try {
+        response = JSON.parse(await bridge.importImpulseOverride(path));
+    }
+    catch {
+        throw new Error("the impulse response could not be imported");
+    }
+
+    if (!response?.ok || !response.id) {
+        throw new Error(response?.error || "the impulse response could not be imported");
+    }
+
+    return response.id;
 }
 
 function SliderBasedEqualizer({
@@ -598,10 +769,10 @@ function SliderBasedEqualizer({
     filters,
 }: {
     handleFilterChange: (event: FilterChangeEvent) => void;
-    filters: GraphFilter[];
+    filters: AudioEffectFilter[];
 }) {
 
-    const maxDB = 16;
+    const maxDB = UI_LIMITS.maxGain;
 
     const formatHz = (freq: number) => {
         if (freq >= 1000) {

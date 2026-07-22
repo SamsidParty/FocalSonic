@@ -8,17 +8,24 @@ import {
 import { immer } from "zustand/middleware/immer";
 import { shallow } from "zustand/shallow";
 import { createWithEqualityFn } from "zustand/traditional";
+import { sanitizeStoredFilterData, sanitizeStoredSpeed } from "@/utils/audioEffects";
 
 interface ISharedStoreState {
     enableDiscordPresence: boolean
     enableAtmos: boolean
     volume: number
+    /** Playback speed. A negative value means "disabled, but remember this level". */
+    speed: number
+    /** Serialized EQ bands, with reverb and the impulse response on band 0. */
+    filterData: string
 }
 
 interface ISharedStoreActions {
     setEnableDiscordPresence: (value: boolean) => void
     setEnableAtmos: (value: boolean) => void
     setVolume: (value: number) => void
+    setSpeed: (value: number) => void
+    setFilterData: (value: string) => void
     handleVolumeWheel: (isScrollingDown: boolean) => void
 }
 
@@ -53,6 +60,8 @@ const sharedStoreDefaults: ISharedStoreState = {
     enableDiscordPresence: false,
     enableAtmos: false,
     volume: 100,
+    speed: 1,
+    filterData: "",
 };
 
 const sharedVolumeSettings = {
@@ -76,10 +85,14 @@ function parseJSON<T>(value: string | null | undefined) {
 }
 
 function sanitizeSharedState(state?: Partial<ISharedStoreState>) {
+    const speed = sanitizeStoredSpeed(state?.speed);
+
     return {
         enableDiscordPresence: Boolean(state?.enableDiscordPresence),
         enableAtmos: Boolean(state?.enableAtmos),
         volume: clamp(Number(state?.volume ?? sharedStoreDefaults.volume), sharedVolumeSettings.min, sharedVolumeSettings.max),
+        speed,
+        filterData: sanitizeStoredFilterData(state?.filterData, speed),
     } satisfies ISharedStoreState;
 }
 
@@ -176,6 +189,18 @@ export const useSharedStore = createWithEqualityFn<ISharedStore>()(
                                 state.volume = finalVolume;
                             });
                         },
+                        setSpeed: (value) => {
+                            const finalSpeed = sanitizeStoredSpeed(value);
+
+                            set((state) => {
+                                state.speed = finalSpeed;
+                            });
+                        },
+                        setFilterData: (value) => {
+                            set((state) => {
+                                state.filterData = sanitizeStoredFilterData(value, state.speed);
+                            });
+                        },
                         handleVolumeWheel: (isScrollingDown) => {
                             const volumeAdjustment = isScrollingDown ? -sharedVolumeSettings.wheelStep : sharedVolumeSettings.wheelStep;
                             const nextVolume = clamp(get().volume + volumeAdjustment, sharedVolumeSettings.min, sharedVolumeSettings.max);
@@ -215,6 +240,8 @@ export const useSharedStore = createWithEqualityFn<ISharedStore>()(
                     enableDiscordPresence: state.enableDiscordPresence,
                     enableAtmos: state.enableAtmos,
                     volume: state.volume,
+                    speed: state.speed,
+                    filterData: state.filterData,
                 }),
             },
         ),
@@ -250,3 +277,5 @@ export const useSharedVolume = () => ({
 });
 
 export const getSharedVolume = () => useSharedStore.getState().volume;
+export const getSharedSpeed = () => useSharedStore.getState().speed;
+export const getSharedFilterData = () => useSharedStore.getState().filterData;

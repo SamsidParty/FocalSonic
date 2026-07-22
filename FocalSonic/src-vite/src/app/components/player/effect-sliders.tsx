@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { usePlayerSpeed } from "@/store/player.store";
+import { effectiveImpulse, impulsePresets, UI_LIMITS } from "@/utils/audioEffects";
 import clsx from "clsx";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -16,12 +17,13 @@ export interface EffectSliderControls {
     orientation?: "horizontal" | "vertical"
 }
 
-const impulsePresets = new Array(36).fill(null).map((_, i) => ({ id: `spatial${i}`, name: `Spatial ${i}` }));
-
 export default function EffectSliders(props: EffectSliderControls) {
 
-    const { speed, setSpeed } = usePlayerSpeed();
+    const { speed: rawSpeed, setSpeed } = usePlayerSpeed();
     const { t } = useTranslation();
+
+    // Fall back if speed is briefly undefined during rehydration
+    const speed = typeof rawSpeed === "number" ? rawSpeed : 1;
 
     // Preserve the sign of speed when setting
     const setSpeedWrapper = (value: number) => {
@@ -52,8 +54,8 @@ export default function EffectSliders(props: EffectSliderControls) {
                         )}
                         tooltipValue={speed.toString()}
                         value={[Math.abs(speed)]}
-                        min={0.6}
-                        max={2}
+                        min={UI_LIMITS.minSpeed}
+                        max={UI_LIMITS.maxSpeed}
                         step={0.01}
                         orientation="vertical"  
                         handleStyle="large"  
@@ -78,11 +80,11 @@ export default function EffectSliders(props: EffectSliderControls) {
                 </EffectControlContainerVertical>          
             </div>
             <EffectControlContainer label={t("player.effects.impulse")}>
-                <Select value={props.impulse || "spatial0"} onValueChange={props.setImpulse}>
+                <Select value={effectiveImpulse(props.impulse)} onValueChange={props.setImpulse}>
                     <SelectTrigger className="h-8 mt-1 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
                         <SelectValue>
                             <span className="text-sm text-foreground">
-                                {impulsePresets.find(preset => preset.id === (props.impulse || "spatial0"))?.name || impulsePresets[0].name}
+                                {impulsePresets.find(preset => preset.id === effectiveImpulse(props.impulse))?.name || impulsePresets[0].name}
                             </span>
                         </SelectValue>
                     </SelectTrigger>

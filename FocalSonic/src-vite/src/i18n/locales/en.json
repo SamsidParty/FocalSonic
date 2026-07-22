@@ -417,7 +417,15 @@
       "title": "Audio Effects",
       "speed": "Speed",
       "reverb": "Reverb",
-      "impulse": "Impulse Response"
+      "impulse": "Impulse Response",
+      "import": "Import configuration",
+      "export": "Export configuration",
+      "imported": "Audio effects configuration imported",
+      "exported": "Audio effects configuration exported",
+      "importFailed": "Couldn't import the audio effects configuration: {{reason}}",
+      "exportFailed": "Couldn't export the audio effects configuration",
+      "desktopOnly": "Importing and exporting is only available in the desktop app",
+      "tooComplex": "The audio effects configuration you have imported is too complex to display, but it will still apply correctly to the audio."
     }
   },
   "options": {

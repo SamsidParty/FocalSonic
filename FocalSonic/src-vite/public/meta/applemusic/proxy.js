@@ -120,22 +120,53 @@
             this._lastImpulseUrl = impulseUrl;
 
             if (impulseUrl) {
-                const realURL = window.igniteView?.resolverURL.replace("/dynamic", `/meta/impulse/${impulseUrl}.wav`);
-                const response = await fetch(realURL);
-                const arrayBuffer = await response.arrayBuffer();
-                this.convolver.buffer = await this.audioCtx.decodeAudioData(arrayBuffer);
-            } else {
-                // Synthetic IR
-                const length = this.audioCtx.sampleRate * 3;
-                const impulse = this.audioCtx.createBuffer(2, length, this.audioCtx.sampleRate);
-                for (let ch = 0; ch < impulse.numberOfChannels; ch++) {
-                    const data = impulse.getChannelData(ch);
-                    for (let i = 0; i < length; i++) {
-                        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2);
-                    }
+                try {
+                    const response = await fetch(this._resolveImpulseURL(impulseUrl));
+                    if (!response.ok) { throw new Error(`Request failed with status ${response.status}`); }
+
+                    const decoded = await this.audioCtx.decodeAudioData(await response.arrayBuffer());
+
+                    // The controller can be disposed while we're awaiting the network
+                    if (!this.convolver) return;
+
+                    this.convolver.buffer = decoded;
+                    return;
                 }
-                this.convolver.buffer = impulse;
+                catch (e) {
+                    console.warn(`[FocalSonic] Failed to load impulse response "${impulseUrl}", falling back to a synthetic one`, e);
+                    // Clear it so a later call gets to retry rather than assuming this took
+                    this._lastImpulseUrl = null;
+                }
             }
+
+            this._loadSyntheticImpulseResponse();
+        }
+
+        _resolveImpulseURL(impulseUrl) {
+            const resolverURL = window.igniteView?.resolverURL;
+            if (!resolverURL) { throw new Error("No resolver URL is available"); }
+
+            // Impulse responses imported by the user live in the app data folder, outside
+            // of the bundled assets, so they need the dedicated route to reach them
+            if (String(impulseUrl).startsWith("custom-")) {
+                return `${resolverURL}/impulse?${encodeURIComponent(impulseUrl)}`;
+            }
+
+            return resolverURL.replace("/dynamic", `/meta/impulse/${encodeURIComponent(impulseUrl)}.wav`);
+        }
+
+        _loadSyntheticImpulseResponse() {
+            if (!this.audioCtx || !this.convolver) return;
+
+            const length = this.audioCtx.sampleRate * 3;
+            const impulse = this.audioCtx.createBuffer(2, length, this.audioCtx.sampleRate);
+            for (let ch = 0; ch < impulse.numberOfChannels; ch++) {
+                const data = impulse.getChannelData(ch);
+                for (let i = 0; i < length; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2);
+                }
+            }
+            this.convolver.buffer = impulse;
         }
 
         _buildAudioGraph() {
@@ -332,8 +363,8 @@
             let mergedVolume = this.baseVolume * this.fadeGain * muteVolume;
             let outputVolume = Math.pow(mergedVolume, 2); // Exponential volume
 
-            // AirPlay: mute to ~1e-6 (after the curve) so the PC stays silent; the host
-            // captures this and restores it x1e6 before streaming.
+            // AirPlay: mute to ~1e-6 (after the curve) so the PC stays silent; the host captures this and restores it x1e6 before streaming.
+            // Airplay seems to half the volume, so to compensate we multiply by 5e-7 which is half of 1e-6
             if (window.outputDevice === "airplay") {
                 outputVolume *= 5e-7;
             }

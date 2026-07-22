@@ -61,6 +61,7 @@ public class Program
 
         // Proxies for assets and streaming
         App.RegisterDynamicFileRoute("/s3imageproxy", S3ImageProxy.S3ImageProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
+        App.RegisterDynamicFileRoute("/impulse", ImpulseOverrides.ImpulseOverrideRoute, WatsonWebserver.Core.HttpMethod.GET);
         App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.POST);
         App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
         App.RegisterDynamicFileRoute("/streaming-atmos-v1", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.GET);

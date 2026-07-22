@@ -16,6 +16,7 @@ import {
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
 import { LoopState } from "@/types/playerContext";
+import { effectiveSpeed } from "@/utils/audioEffects";
 import { hasPiPSupport, isFullscreen } from "@/utils/browser";
 import { ReplayGainParams } from "@/utils/replayGain";
 import { checkServerType } from "@/utils/servers";
@@ -78,7 +79,9 @@ export function Player() {
 
     useEffect(() => {
         if (!audioRef.current) return;
-        audioRef.current.playbackRate = speed;
+        // A negative speed means the effect is switched off. A real <audio> element
+        // throws on negative rates, so it never sees the raw value.
+        audioRef.current.playbackRate = effectiveSpeed(speed);
         audioRef.current.preservesPitch = false;
     }, [speed]);
 

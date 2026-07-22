@@ -2,7 +2,7 @@ import { getCoverArtUrl, getSongStreamUrl } from "@/api/httpClient";
 import { toggleFavorite } from "@/lib/sync/favorites";
 import { getNextSong as getAppleMusicRadioNextSong } from "@/service/applemusic/radios";
 import { service } from "@/service/service";
-import { getSharedVolume, useSharedStore } from "@/store/shared.store";
+import { getSharedFilterData, getSharedSpeed, getSharedVolume, useSharedStore } from "@/store/shared.store";
 import { AppleMusicStation, AppleMusicStationDisplay } from "@/types/applemusic/common";
 import { IPlayerContext, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
@@ -217,8 +217,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                         isShuffleActive: false,
                         isSongStarred: false,
                         volume: getSharedVolume(),
-                        speed: 1,
-                        filterData: "",
+                        speed: getSharedSpeed(),
+                        filterData: getSharedFilterData(),
                         currentDuration: 0,
                         mediaType: "song",
                         audioPlayerRef: null,
@@ -624,14 +624,10 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             useSharedStore.getState().actions.setVolume(volume);
                         },
                         setSpeed: (speed) => {
-                            set((state) => {
-                                state.playerState.speed = speed;
-                            });
+                            useSharedStore.getState().actions.setSpeed(speed);
                         },
                         setFilterData: (data) => {
-                            set((state) => {
-                                state.playerState.filterData = data;
-                            });
+                            useSharedStore.getState().actions.setFilterData(data);
                         },
                         handleVolumeWheel: (isScrollingDown) => {
                             useSharedStore.getState().actions.handleVolumeWheel(isScrollingDown);
@@ -973,7 +969,14 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 merge: (persistedState, currentState) => {
                     // Merge into a fresh object — immer freezes the state, so
                     // mutating currentState directly would drop the persisted data.
-                    return merge({}, currentState, persistedState);
+                    const merged = merge({}, currentState, persistedState) as IPlayerContext;
+
+                    // shared_store owns speed/filterData (it survives restarts), so
+                    // never let a stale player_store payload override them.
+                    merged.playerState.speed = getSharedSpeed();
+                    merged.playerState.filterData = getSharedFilterData();
+
+                    return merged;
                 },
                 onRehydrateStorage(state) {
                     return () => {
@@ -990,6 +993,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     ]) as any;
 
                     delete playerStore.playerState.volume;
+                    delete playerStore.playerState.speed;
+                    delete playerStore.playerState.filterData;
 
                     return playerStore;
                 },
@@ -1030,6 +1035,10 @@ window.rehydratePlayerStore = async (newState: string) => {
             playerState: {
                 volume: stateToSet.playerState?.volume ?? current.playerState?.volume,
                 ...stateToSet.playerState,
+                // speed/filterData live in shared_store now; re-assert them or
+                // this full replace would leave them undefined.
+                speed: getSharedSpeed(),
+                filterData: getSharedFilterData(),
                 audioPlayerRef: current.playerState?.audioPlayerRef,
             },
         },
@@ -1110,6 +1119,29 @@ useSharedStore.subscribe(
                 volume,
             },
         }));
+    },
+);
+
+useSharedStore.subscribe(
+    (state) => ({ speed: state.speed, filterData: state.filterData }),
+    ({ speed, filterData }) => {
+        const { playerState } = usePlayerStore.getState();
+
+        if (playerState.speed === speed && playerState.filterData === filterData) {
+            return;
+        }
+
+        usePlayerStore.setState((state) => ({
+            ...state,
+            playerState: {
+                ...state.playerState,
+                speed,
+                filterData,
+            },
+        }));
+    },
+    {
+        equalityFn: shallow,
     },
 );
 

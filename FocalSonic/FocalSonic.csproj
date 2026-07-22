@@ -37,6 +37,8 @@
 		<!-- KRC/QRC lyric decompression in Lyricify Lyrics Helper -->
 		<PackageReference Include="SharpZipLib" Version="1.4.2" />
 		<PackageReference Include="IgniteView.Core" Version="*" />
+		<!-- Native OS file pickers for audio effects import/export -->
+		<PackageReference Include="IgniteView.FileDialogs" Version="2.2.9" />
 		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="GoogleCast" Version="1.7.0" />
 		<!-- Already a transitive dep of GoogleCast; referenced explicitly so we can

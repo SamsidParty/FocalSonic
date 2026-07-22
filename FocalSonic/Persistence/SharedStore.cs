@@ -12,6 +12,11 @@ namespace FocalSonic.Persistence
 {
     public class SharedStoreState
     {
+        // Matches EFFECT_LIMITS in src-vite/src/utils/audioEffects.ts
+        public const double MinSpeed = 0.0625;
+        public const double MaxSpeed = 16;
+        public const int MaxFilterDataLength = 64 * 1024;
+
         [JsonProperty("enableDiscordPresence")]
         public bool EnableDiscordPresence = false;
 
@@ -21,6 +26,18 @@ namespace FocalSonic.Persistence
         [JsonProperty("volume")]
         public double Volume = 100;
 
+        /// <summary>
+        /// Playback speed. A negative value means "disabled, but remember this level".
+        /// </summary>
+        [JsonProperty("speed")]
+        public double Speed = 1;
+
+        /// <summary>
+        /// Serialized EQ bands, with reverb and the impulse response riding on band 0.
+        /// </summary>
+        [JsonProperty("filterData")]
+        public string FilterData = string.Empty;
+
         public void Normalize()
         {
             if (double.IsNaN(Volume) || double.IsInfinity(Volume))
@@ -29,6 +46,36 @@ namespace FocalSonic.Persistence
             }
 
             Volume = Math.Clamp(Volume, 0, 100);
+
+            if (double.IsNaN(Speed) || double.IsInfinity(Speed) || Speed == 0)
+            {
+                Speed = 1;
+            }
+            else
+            {
+                Speed = Math.Sign(Speed) * Math.Clamp(Math.Abs(Speed), MinSpeed, MaxSpeed);
+            }
+
+            FilterData = NormalizeFilterData(FilterData);
+        }
+
+        /// <summary>
+        /// Effects are edited entirely on the JS side, so all this has to guarantee is
+        /// that a corrupt or oversized payload never makes it back out of storage.
+        /// </summary>
+        static string NormalizeFilterData(string? filterData)
+        {
+            if (string.IsNullOrWhiteSpace(filterData)) { return string.Empty; }
+            if (filterData.Length > MaxFilterDataLength) { return string.Empty; }
+
+            try
+            {
+                return JToken.Parse(filterData) is JArray ? filterData : string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
     }
 
