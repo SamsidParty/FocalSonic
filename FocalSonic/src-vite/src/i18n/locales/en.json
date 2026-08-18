@@ -419,14 +419,14 @@
       "reverb": "Reverb",
       "impulse": "Impulse Response",
       "impulses": {
-        "preset1": "Velvet",
-        "preset2": "Halo",
-        "preset3": "Chapel",
-        "preset4": "Aurora",
-        "preset5": "Cathedral",
-        "preset6": "Nebula",
-        "preset7": "Ascension",
-        "preset8": "Firmament"
+        "preset1": "Preset 1",
+        "preset2": "Preset 2",
+        "preset3": "Preset 3",
+        "preset4": "Preset 4",
+        "preset5": "Preset 5",
+        "preset6": "Preset 6",
+        "preset7": "Preset 7",
+        "preset8": "Preset 8"
       },
       "import": "Import configuration",
       "export": "Export configuration",
