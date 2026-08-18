@@ -35,7 +35,13 @@ namespace FocalSonic.AudioPlayer
         public AudioPlayer(string id)
         {
             ID = id;
-            Volume = (float)(SharedStore.GetCurrentState().Volume / 100.0);
+
+            var sharedState = SharedStore.GetCurrentState();
+            Volume = (float)(sharedState.Volume / 100.0);
+            // A negative speed means "off, but remember the level" (see SharedStoreState)
+            Speed = sharedState.Speed > 0 ? (float)sharedState.Speed : 1.0f;
+            FilterData = sharedState.FilterData;
+
             ActivePlayers.TryAdd(id, this);
         }
 

@@ -77,20 +77,26 @@ export function Player() {
         }
     }, [audioPlayerRef, isSong, setAudioPlayerRef, song]);
 
+    // The audio element only mounts once there is a song, which is often after
+    // shared_store has rehydrated. Without this in the dependencies the restored
+    // speed and effects go into a ref that is still null, and nothing re-applies
+    // them, so they stay dormant until something else changes them.
+    const hasAudioElement = isSong && Boolean(song);
+
     useEffect(() => {
         if (!audioRef.current) return;
         // A negative speed means the effect is switched off. A real <audio> element
         // throws on negative rates, so it never sees the raw value.
         audioRef.current.playbackRate = effectiveSpeed(speed);
         audioRef.current.preservesPitch = false;
-    }, [speed]);
+    }, [hasAudioElement, speed]);
 
     useEffect(() => {
         if (!audioRef.current) return;
         if (audioRef.current.filterData !== undefined) {
             audioRef.current.filterData = filterData;
         }
-    }, [filterData]);
+    }, [filterData, hasAudioElement]);
 
     const setupDuration = useCallback(() => {
         const audio = getAudioRef().current;
