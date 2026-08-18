@@ -418,6 +418,16 @@
       "speed": "Speed",
       "reverb": "Reverb",
       "impulse": "Impulse Response",
+      "impulses": {
+        "preset1": "Velvet",
+        "preset2": "Halo",
+        "preset3": "Chapel",
+        "preset4": "Aurora",
+        "preset5": "Cathedral",
+        "preset6": "Nebula",
+        "preset7": "Ascension",
+        "preset8": "Firmament"
+      },
       "import": "Import configuration",
       "export": "Export configuration",
       "imported": "Audio effects configuration imported",

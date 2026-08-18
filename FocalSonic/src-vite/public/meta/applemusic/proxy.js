@@ -35,7 +35,8 @@
             return _effectInstances.get(source);
         }
 
-        const reverb = new AudioEffectController(source, "spatial0");
+        // Matches impulsePresets[0] in FocalSonic's src-vite/src/utils/audioEffects.ts
+        const reverb = new AudioEffectController(source, "preset1");
         _effectInstances.set(source, reverb);
         return reverb;
     }

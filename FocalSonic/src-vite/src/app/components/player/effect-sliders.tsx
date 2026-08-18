@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { usePlayerSpeed } from "@/store/player.store";
-import { effectiveImpulse, impulsePresets, UI_LIMITS } from "@/utils/audioEffects";
+import { effectiveImpulse, impulseLabelKey, impulsePresets, UI_LIMITS } from "@/utils/audioEffects";
 import clsx from "clsx";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,11 @@ export default function EffectSliders(props: EffectSliderControls) {
 
     // Fall back if speed is briefly undefined during rehydration
     const speed = typeof rawSpeed === "number" ? rawSpeed : 1;
+
+    // A custom impulse response has no name of its own, so the trigger shows the default one
+    const selectedImpulse = impulsePresets.includes(effectiveImpulse(props.impulse))
+        ? effectiveImpulse(props.impulse)
+        : impulsePresets[0];
 
     // Preserve the sign of speed when setting
     const setSpeedWrapper = (value: number) => {
@@ -84,7 +89,7 @@ export default function EffectSliders(props: EffectSliderControls) {
                     <SelectTrigger className="h-8 mt-1 ring-offset-transparent focus:ring-0 focus:ring-transparent text-left">
                         <SelectValue>
                             <span className="text-sm text-foreground">
-                                {impulsePresets.find(preset => preset.id === effectiveImpulse(props.impulse))?.name || impulsePresets[0].name}
+                                {t(impulseLabelKey(selectedImpulse))}
                             </span>
                         </SelectValue>
                     </SelectTrigger>
@@ -92,11 +97,11 @@ export default function EffectSliders(props: EffectSliderControls) {
                         <SelectGroup>
                             {impulsePresets.map((preset) => (
                                 <SelectItem
-                                    key={preset.id}
-                                    value={preset.id}
+                                    key={preset}
+                                    value={preset}
                                 >
                                     <span className="text-sm text-foreground">
-                                        {preset.name}
+                                        {t(impulseLabelKey(preset))}
                                     </span>
                                 </SelectItem>
                             ))}
