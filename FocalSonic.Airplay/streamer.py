@@ -1,8 +1,13 @@
 """
 AirPlay (RAOP) streaming via pyatv, fed from a live PCM queue.
 
-Pipeline: ProcessLoopbackCapture (float32) -> restore gain (undo 1e-6 mute) ->
-int16 -> resample to 44.1k -> drop-oldest queue -> LivePCMSource -> RAOP -> device.
+Pipeline: platform capture (float32) -> restore gain (undo 1e-6 mute) -> int16 ->
+resample to 44.1k if needed -> drop-oldest queue -> LivePCMSource -> RAOP -> device.
+
+The capture backend is chosen by `audio_capture` (WASAPI process loopback on
+Windows, a PipeWire/PulseAudio stream tap on Linux); both deliver float32 frames,
+so everything from here down is platform-independent. Linux captures at 44.1k
+directly, which makes the resample step a no-op there.
 
 pyatv's live-streaming source paths are broken on Windows (miniaudio), but its
 RAOP sender is solid — so we monkey-patch `raop.open_source` to feed raw PCM
@@ -13,7 +18,6 @@ from __future__ import annotations
 
 import array
 import asyncio
-import audioop
 import logging
 
 import pyatv.protocols.raop as raop_mod
@@ -22,9 +26,9 @@ from pyatv.protocols.raop.audio_source import AudioSource, _to_audio_samples
 from pyatv.interface import MediaMetadata
 from pyatv.support.rtsp import RtspSession
 
+from audio_capture import create_capture
 from connection import local_sender_name
-from process_capture import ProcessLoopbackCapture
-from process_finder import find_webview2_target
+from resample import ratecv
 
 log = logging.getLogger("focalsonic.airplay.streamer")
 
@@ -144,11 +148,10 @@ class AirPlayStreamer:
         self.capture_rate = capture_rate
         self.gain_restore = gain_restore
 
-        # Audio plays in WebView2, not FocalSonic.exe — capture the WebView2 tree.
-        target_pid = find_webview2_target(host_pid) or host_pid
         self._queue: asyncio.Queue = asyncio.Queue(maxsize=QUEUE_MAXSIZE)
-        self._capture = ProcessLoopbackCapture(target_pid, sample_rate=capture_rate,
-                                               channels=RAOP_CHANNELS)
+        # Which process the audio comes out of, and how to tap it, is platform-specific.
+        self._capture = create_capture(host_pid, sample_rate=capture_rate,
+                                       channels=RAOP_CHANNELS)
         self._ratecv_state = None
         self._atv = None
         self._listener = None  # strong ref; pyatv stores listeners weakly
@@ -164,9 +167,9 @@ class AirPlayStreamer:
         """float32 -> restore gain -> int16 -> resample to 44.1k.
 
         Pure stdlib (no numpy): the ``array`` module parses the float32 capture
-        buffer and we fold gain + clip + int16 cast into a single pass. Windows is
-        always little-endian, so ``array``'s native byte order matches the capture's
-        ``<f4`` floats and the ``<i2`` output pyatv expects.
+        buffer and we fold gain + clip + int16 cast into a single pass. Every
+        platform we capture on is little-endian, so ``array``'s native byte order
+        matches the capture's ``<f4`` floats and the ``<i2`` output pyatv expects.
         """
         samples = array.array("f")
         samples.frombytes(float_bytes)
@@ -192,7 +195,7 @@ class AirPlayStreamer:
         self._log_levels(raw_peak, out_peak)
 
         if self.capture_rate != RAOP_RATE:
-            i16, self._ratecv_state = audioop.ratecv(
+            i16, self._ratecv_state = ratecv(
                 i16, RAOP_SAMPLE_SIZE, RAOP_CHANNELS,
                 self.capture_rate, RAOP_RATE, self._ratecv_state,
             )

@@ -67,10 +67,10 @@
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="$(PostBuildCommand) &quot;$(OutputPath.Replace('\', '\\'))&quot;" />
 	</Target>
-	<!-- The IgniteView native runtime, plus the self-contained AirPlay module exe
-	     committed under iv2runtime\win-<arch>\native\ (built + signed by the manual
-	     "Build AirPlay Module" workflow). Whatever architectures are present get
-	     bundled; if none are, AirPlay is unavailable in Release. -->
+	<!-- The IgniteView native runtime, plus the self-contained AirPlay module binaries
+	     committed under iv2runtime\<platform>-<arch>\native\ (built + signed by the
+	     manual "Build AirPlay Module" workflow). Whatever platforms/architectures are
+	     present get bundled; if none are, AirPlay is unavailable in Release. -->
 	<ItemGroup>
 		<Content Include="iv2runtime\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -81,12 +81,14 @@
 	     (a snapshot that silently goes stale — a reverted experiment once kept running
 	     from a stale copy and broke pairing), embed the absolute path to the source
 	     module dir. AirPlaySession.ResolveModule runs airplay.py straight from there
-	     with the system Python, so edits take effect with no rebuild and there's never
-	     a stale copy. Release omits this attribute and runs the bundled Nuitka exe. -->
-	<ItemGroup Condition="'$(Configuration)'=='Debug' And '$(IsWindows)'=='true'">
+	     with a Python that has its dependencies, so edits take effect with no rebuild
+	     and there's never a stale copy. Release omits this attribute and runs the
+	     bundled Nuitka binary. NormalizePath keeps the separators native so the path
+	     is usable on Linux as well as Windows. -->
+	<ItemGroup Condition="'$(Configuration)'=='Debug' And ('$(IsWindows)'=='true' Or '$(IsLinux)'=='true')">
 		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
 			<_Parameter1>FocalSonicAirPlayModuleDir</_Parameter1>
-			<_Parameter2>$(MSBuildProjectDirectory)\..\FocalSonic.Airplay</_Parameter2>
+			<_Parameter2>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', 'FocalSonic.Airplay'))</_Parameter2>
 		</AssemblyAttribute>
 	</ItemGroup>
 	<ItemGroup Condition="'$(IsLinux)'=='true'">

@@ -2,7 +2,12 @@
 # Pin versions: the streamer monkey-patches pyatv internals (see GUIDANCE.md §4),
 # so a pyatv bump must be re-validated against streamer.verify_pyatv_symbols().
 pyatv==0.17.0
-comtypes>=1.4.8
+
+# Windows-only: comtypes drives the raw COM calls behind WASAPI process loopback
+# (process_capture.py). Linux captures through the audio server's own helpers —
+# parec / pw-record, which are system binaries, not pip packages — so it needs
+# nothing extra here.
+comtypes>=1.4.8; sys_platform == "win32"
 
 # cryptography is a transitive dep of pyatv (pyatv requires >=44.0.1). It must be
 # pinned EXACTLY because of a narrow Windows-ARM64 wheel window: cryptography only
@@ -19,5 +24,12 @@ cryptography==46.0.3
 # stdlib (`array`), which drops a ~50 MB dependency (incl. a 20 MB OpenBLAS DLL)
 # from the bundled exe.
 
-# Python 3.12 only — `audioop` (used for resampling) was removed in 3.13.
-# For 3.13+, vendor a ratecv replacement or switch to soxr/samplerate resampling.
+# Python version:
+#   Windows - 3.12. Capture runs at the 48 kHz engine rate and is resampled to
+#             44.1 kHz, and `audioop` (removed in 3.13) is by far the fastest way
+#             to do that. resample.py falls back to a pure-Python implementation
+#             if it's missing, so newer interpreters work, just with more CPU in
+#             the audio path.
+#   Linux   - anything pyatv supports. The capture helpers resample to 44.1 kHz on
+#             the way out, so no resampling happens here and `audioop` is never
+#             touched.

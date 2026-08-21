@@ -6,9 +6,13 @@ with ``--pin-dialog "Device Name"`` (airplay.main dispatches here).
 
 ``run_dialog`` writes the entered PIN to stdout and returns 0, or returns 1 if the
 dialog was cancelled.
+
+Runs on Windows and Linux; the palette follows the desktop's light/dark setting on
+both, and the fonts are resolved against what's actually installed.
 """
 
 import os
+import shutil
 import sys
 
 
@@ -45,7 +49,15 @@ _DARK = {
 
 
 def _is_dark_mode() -> bool:
-    """True if Windows is in dark (apps) mode. Best-effort; False on error/non-Windows."""
+    """True if the desktop is in dark mode. Best-effort; False when unknown."""
+    if sys.platform == "win32":
+        return _is_dark_mode_windows()
+    if sys.platform.startswith("linux"):
+        return _is_dark_mode_linux()
+    return False
+
+
+def _is_dark_mode_windows() -> bool:
     try:
         import winreg
 
@@ -56,6 +68,93 @@ def _is_dark_mode() -> bool:
             return winreg.QueryValueEx(key, "AppsUseLightTheme")[0] == 0
     except Exception:
         return False
+
+
+def _is_dark_mode_linux() -> bool:
+    """Linux has no single dark-mode switch, so try the common ones in turn:
+    the XDG desktop portal (works across desktops), GNOME's gsettings, KDE's
+    window colour, then the GTK_THEME override."""
+    for probe in (_dark_from_portal, _dark_from_gsettings, _dark_from_kdeglobals,
+                  _dark_from_gtk_env):
+        try:
+            result = probe()
+        except Exception:
+            continue
+        if result is not None:
+            return result
+    return False
+
+
+def _dark_from_portal():
+    """org.freedesktop.appearance color-scheme: 1 = prefer dark, 2 = prefer light."""
+    import subprocess
+
+    if shutil.which("gdbus") is None:
+        return None
+    done = subprocess.run(
+        ["gdbus", "call", "--session", "--dest", "org.freedesktop.portal.Desktop",
+         "--object-path", "/org/freedesktop/portal/desktop",
+         "--method", "org.freedesktop.portal.Settings.Read",
+         "org.freedesktop.appearance", "color-scheme"],
+        capture_output=True, timeout=3, check=False,
+    )
+    if done.returncode != 0:
+        return None
+    out = done.stdout.decode("utf-8", "replace")
+    if "uint32 1" in out:
+        return True
+    if "uint32 2" in out:
+        return False
+    return None
+
+
+def _dark_from_gsettings():
+    import subprocess
+
+    if shutil.which("gsettings") is None:
+        return None
+    done = subprocess.run(
+        ["gsettings", "get", "org.gnome.desktop.interface", "color-scheme"],
+        capture_output=True, timeout=3, check=False,
+    )
+    if done.returncode != 0:
+        return None
+    value = done.stdout.decode("utf-8", "replace").strip().strip("'").lower()
+    if not value or value == "default":
+        return None
+    return "dark" in value
+
+
+def _dark_from_kdeglobals():
+    """Plasma writes the active palette into kdeglobals; judge by how bright the
+    normal window background is rather than by trusting the scheme's name."""
+    config = os.environ.get("XDG_CONFIG_HOME") or os.path.join(
+        os.path.expanduser("~"), ".config")
+    path = os.path.join(config, "kdeglobals")
+    if not os.path.isfile(path):
+        return None
+
+    section = ""
+    with open(path, "r", encoding="utf-8", errors="replace") as handle:
+        for line in handle:
+            line = line.strip()
+            if line.startswith("[") and line.endswith("]"):
+                section = line[1:-1]
+            elif section == "Colors:Window" and line.startswith("BackgroundNormal="):
+                parts = line.split("=", 1)[1].split(",")
+                if len(parts) < 3:
+                    return None
+                r, g, b = (int(p) for p in parts[:3])
+                # Rec. 601 luma; below mid-grey means a dark palette.
+                return (0.299 * r + 0.587 * g + 0.114 * b) < 128
+    return None
+
+
+def _dark_from_gtk_env():
+    theme = os.environ.get("GTK_THEME", "").lower()
+    if not theme:
+        return None
+    return "dark" in theme
 
 
 def _apply_dark_titlebar(root) -> None:
@@ -73,6 +172,52 @@ def _apply_dark_titlebar(root) -> None:
             windll.dwmapi.DwmSetWindowAttribute(hwnd, attr, byref(c_int(1)), sizeof(c_int))
     except Exception:
         pass
+
+
+# The Segoe UI stack only exists on Windows; on Linux we pick whichever of the
+# common desktop UI faces is actually installed.
+_LINUX_UI_FAMILIES = ("Inter", "Cantarell", "Noto Sans", "Ubuntu", "Roboto",
+                      "DejaVu Sans", "Liberation Sans")
+
+
+def _resolve_fonts(root):
+    """Font specs for the dialog, resolved against the installed families.
+
+    Falling through to Tk's own default family (rather than naming a font that
+    isn't there) is what keeps the dialog looking deliberate on Linux instead of
+    dropping to Tk's ancient bitmap fallback.
+    """
+    import tkinter.font as tkfont
+
+    try:
+        available = {name.lower() for name in tkfont.families(root)}
+    except Exception:
+        available = set()
+    try:
+        fallback = tkfont.nametofont("TkDefaultFont").actual("family")
+    except Exception:
+        fallback = "Helvetica"
+
+    def pick(candidates):
+        for name in candidates:
+            if name.lower() in available:
+                return name
+        return fallback
+
+    if sys.platform == "win32":
+        body = pick(("Segoe UI",))
+        # Semibold is its own family on Windows, not a weight of Segoe UI.
+        heading = (pick(("Segoe UI Semibold", "Segoe UI")), 16)
+    else:
+        body = pick(_LINUX_UI_FAMILIES)
+        heading = (body, 16, "bold")
+
+    return {
+        "heading": heading,
+        "subtitle": (body, 10),
+        "entry": (body, 24),
+        "button": (body, 11),
+    }
 
 
 def _load_icon(tk):
@@ -107,6 +252,8 @@ def run_dialog(device_name: str = "AirPlay device") -> int:
     root.resizable(False, False)
     root.configure(bg=c["bg"])
     root.attributes("-topmost", True)
+
+    fonts = _resolve_fonts(root)
 
     icon, logo = _load_icon(tk)
     if icon is not None:
@@ -148,7 +295,7 @@ def run_dialog(device_name: str = "AirPlay device") -> int:
         text="AirPlay Pairing",
         bg=c["bg"],
         fg=c["heading"],
-        font=("Segoe UI Semibold", 16),
+        font=fonts["heading"],
     ).grid(column=0, row=grid_row, pady=(0, 4))
     grid_row += 1
 
@@ -157,7 +304,7 @@ def run_dialog(device_name: str = "AirPlay device") -> int:
         text=f"Enter the code shown on “{device_name}”",
         bg=c["bg"],
         fg=c["subtitle"],
-        font=("Segoe UI", 10),
+        font=fonts["subtitle"],
         justify="center",
         wraplength=300,
     ).grid(column=0, row=grid_row, pady=(0, 18))
@@ -168,7 +315,7 @@ def run_dialog(device_name: str = "AirPlay device") -> int:
         frame,
         textvariable=pin_var,
         justify="center",
-        font=("Segoe UI", 24),
+        font=fonts["entry"],
         bg=c["entry_bg"],
         fg=c["entry_fg"],
         insertbackground=c["entry_fg"],
@@ -193,7 +340,7 @@ def run_dialog(device_name: str = "AirPlay device") -> int:
             relief="flat",
             bd=0,
             highlightthickness=0,
-            font=("Segoe UI", 11),
+            font=fonts["button"],
             pady=9,
             cursor="hand2",
         )

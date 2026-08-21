@@ -2,10 +2,15 @@
 """
 FocalSonic AirPlay module — single-executable entry point.
 
-In production this file is compiled by Nuitka into ``focalsonic-airplay.exe``
-(see ``build-airplay.bat``). The FocalSonic C# host spawns it once the user picks
-an Apple TV / HomePod; the only input is command-line arguments and the host
-treats process exit (any reason) as a disconnect.
+In production this file is compiled by Nuitka into a single self-contained binary
+(``focalsonic-airplay.exe`` via ``build-airplay.bat`` on Windows,
+``focalsonic-airplay`` via ``build-airplay.sh`` on Linux). The FocalSonic C# host
+spawns it once the user picks an Apple TV / HomePod; the only input is
+command-line arguments and the host treats process exit (any reason) as a
+disconnect.
+
+Windows and Linux are both supported and differ only in how the app's audio is
+captured (see ``audio_capture``); macOS does AirPlay natively and never runs this.
 
 One binary, two modes:
   * (default)              scan, pair (PIN dialog if needed), capture + stream.
@@ -23,8 +28,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import os
+import shutil
 import signal
 import socket
+import subprocess
 import sys
 
 import credentials
@@ -55,8 +63,8 @@ def _open_product_page() -> None:
         pass
 
 
-def _host_process_alive(pid: int) -> bool:
-    """True while the given PID is running (Windows).
+def _host_process_alive_windows(pid: int) -> bool:
+    """True while the given PID is running.
 
     Opens a SYNCHRONIZE handle and does a zero-timeout wait: WAIT_TIMEOUT (0x102)
     means still running; a signalled handle (WAIT_OBJECT_0) means it has exited.
@@ -84,6 +92,42 @@ def _host_process_alive(pid: int) -> bool:
         k.CloseHandle(handle)
 
 
+def _host_process_alive_linux(pid: int) -> bool:
+    """True while the given PID is running.
+
+    /proc rather than ``kill(pid, 0)``: the host isn't our parent, so nobody here
+    reaps it, and a zombie entry would keep answering "alive" forever. Reading the
+    state field lets us treat a zombie as gone.
+    """
+    try:
+        with open(f"/proc/{pid}/stat", "rb") as handle:
+            stat = handle.read()
+    except OSError:
+        return False
+
+    # `pid (comm) state ...` — comm may contain spaces/parens, so split after ')'.
+    close = stat.rfind(b")")
+    if close < 0:
+        return True  # unparseable but present: assume alive rather than bail out
+    fields = stat[close + 1:].split()
+    return not (fields and fields[0] == b"Z")
+
+
+def _host_process_alive(pid: int) -> bool:
+    """True while the FocalSonic host process is still running."""
+    if sys.platform == "win32":
+        return _host_process_alive_windows(pid)
+    if sys.platform.startswith("linux"):
+        return _host_process_alive_linux(pid)
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True  # exists, just not ours to signal
+    return True
+
+
 async def _watch_host(host_pid: int, main_task: "asyncio.Task", interval: float = 2.0) -> None:
     """Cancel the session when the FocalSonic host process exits.
 
@@ -99,6 +143,34 @@ async def _watch_host(host_pid: int, main_task: "asyncio.Task", interval: float 
         await asyncio.sleep(interval)
 
 
+def _warn_if_linux_firewall_active() -> None:
+    """Log a hint when a host firewall is likely to block RAOP's inbound UDP.
+
+    Linux has no per-program firewall prompt to trigger (see ``_nudge_firewall``),
+    and distros that enable firewalld/ufw by default drop the inbound timing and
+    control packets the receiver sends back — which shows up as a stream SETUP that
+    just times out. We can't open ports without privileges, so the useful thing is
+    to say so in the log. Best-effort: never let this delay streaming.
+    """
+    checks = (
+        (["firewall-cmd", "--state"], "firewalld", lambda out: "running" in out),
+        (["ufw", "status"], "ufw", lambda out: "status: active" in out),
+    )
+    for cmd, name, is_active in checks:
+        if shutil.which(cmd[0]) is None:
+            continue
+        try:
+            done = subprocess.run(cmd, capture_output=True, timeout=3, check=False)
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if is_active(done.stdout.decode("utf-8", "replace").strip().lower()):
+            log.info(
+                "%s is active — if the device never starts playing, allow inbound "
+                "UDP from it (AirPlay/RAOP timing + control ports)", name,
+            )
+            return
+
+
 def _nudge_firewall() -> "socket.socket | None":
     """Open a throwaway TCP listener so Windows shows its friendly *firewall*
     prompt ("…has blocked some features… Allow access") for this exe on first run.
@@ -111,9 +183,17 @@ def _nudge_firewall() -> "socket.socket | None":
     covers our UDP ports. (This is the friendly firewall prompt, NOT a UAC
     elevation.) Bound to all interfaces — a loopback-only listener wouldn't prompt.
 
+    Windows-only: this is about that specific prompt, and no other platform has
+    one. On Linux we warn about an active firewall instead.
+
     Returns the socket, which the caller must keep referenced for the process
     lifetime. Best-effort: never let this block streaming.
     """
+    if sys.platform != "win32":
+        if sys.platform.startswith("linux"):
+            _warn_if_linux_firewall_active()
+        return None
+
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(("0.0.0.0", 0))
@@ -128,15 +208,18 @@ def _nudge_firewall() -> "socket.socket | None":
 def parse_args(argv) -> argparse.Namespace:
     p = argparse.ArgumentParser(prog="focalsonic-airplay", description="Stream FocalSonic audio to AirPlay")
     p.add_argument("--host-pid", type=int, required=True,
-                   help="PID of FocalSonic.exe — its process tree is captured")
+                   help="PID of the FocalSonic host — the browser audio below it "
+                        "is what gets captured")
     p.add_argument("--identifier", default=None,
                    help="AirPlay device identifier (deviceid/MAC) used for creds + verification")
     p.add_argument("--address", default=None,
                    help="Device IP address for a targeted scan")
     p.add_argument("--name", default="AirPlay device",
                    help="Friendly device name (shown in the pairing dialog)")
-    p.add_argument("--capture-rate", type=int, default=48000,
-                   help="WASAPI capture sample rate (resampled to 44100 for RAOP)")
+    p.add_argument("--capture-rate", type=int, default=None,
+                   help="Capture sample rate; resampled to 44100 for RAOP if it "
+                        "differs. Defaults to whatever suits this platform's "
+                        "capture backend (48000 on Windows, 44100 on Linux).")
     p.add_argument("--gain-restore", type=float, default=1_000_000.0,
                    help="Multiplier that undoes FocalSonic's 1e-6 AirPlay mute (default 1e6)")
     p.add_argument("--repair", action="store_true",
@@ -180,10 +263,16 @@ async def _try_connect(loop, args, config, creds):
 
 async def run(args: argparse.Namespace) -> int:
     import connection
+    from audio_capture import default_capture_rate, is_supported
     from pairing import pair_device
     from streamer import AirPlayStreamer, StartupSymbolError, verify_pyatv_symbols
 
     loop = asyncio.get_running_loop()
+
+    if not is_supported():
+        log.error("Audio capture is not implemented on %s", sys.platform)
+        return 5
+    capture_rate = args.capture_rate or default_capture_rate()
 
     try:
         verify_pyatv_symbols()
@@ -233,11 +322,12 @@ async def run(args: argparse.Namespace) -> int:
         streamer = AirPlayStreamer(
             loop,
             host_pid=args.host_pid,
-            capture_rate=args.capture_rate,
+            capture_rate=capture_rate,
             gain_restore=args.gain_restore,
         )
         try:
-            log.info("Streaming (capturing WebView2 audio of host PID %s)", args.host_pid)
+            log.info("Streaming (capturing browser audio of host PID %s at %s Hz)",
+                     args.host_pid, capture_rate)
             await streamer.stream(atv)
             log.info("Stream ended (device closed the connection)")
             return 0

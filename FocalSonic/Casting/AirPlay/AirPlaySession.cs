@@ -8,12 +8,17 @@ using IgniteView.Core;
 namespace FocalSonic.Casting.AirPlay
 {
     // Spawns and supervises the AirPlay module (args-only, no IPC); its exit is treated
-    // as a disconnect. Debug builds run airplay.py straight from the source tree with the
-    // system Python (the source dir is embedded as assembly metadata by the csproj) so it
-    // can be iterated without recompiling and never runs a stale copy; Release builds run
-    // the self-contained Nuitka exe shipped per-architecture under the IgniteView native
-    // runtime folder (see FocalSonic.Airplay/build-airplay.bat). If neither is available,
-    // AirPlay is simply unavailable.
+    // as a disconnect. Debug builds run airplay.py straight from the source tree with a
+    // Python that has its dependencies (the source dir is embedded as assembly metadata by
+    // the csproj) so it can be iterated without recompiling and never runs a stale copy;
+    // Release builds run the self-contained Nuitka binary shipped per-platform-and-
+    // architecture under the IgniteView native runtime folder (see the build-airplay
+    // scripts in FocalSonic.Airplay). If neither is available, AirPlay is simply
+    // unavailable.
+    //
+    // Windows and Linux both work the same way here — the module itself deals with the
+    // per-platform difference in how the browser's audio gets captured. macOS is excluded
+    // because it does AirPlay natively.
     public class AirPlaySession
     {
         Process? _process;
@@ -51,7 +56,8 @@ namespace FocalSonic.Casting.AirPlay
             psi.ArgumentList.Add(device.Name ?? "AirPlay device");
 
             // Store pairing credentials + logs under the app's existing data folder
-            // (e.g. %LOCALAPPDATA%\IgniteViewApp\focalsonic\Airplay).
+            // (e.g. %LOCALAPPDATA%\IgniteViewApp\focalsonic\Airplay on Windows,
+            // ~/.local/share/IgniteViewApp/focalsonic/Airplay on Linux).
             try
             {
                 var dataDir = AppManager.Instance?.CurrentIdentity?.AppDataPath;
@@ -161,34 +167,41 @@ namespace FocalSonic.Casting.AirPlay
 
         struct ModuleCommand
         {
-            public string FileName;     // python.exe (dev) or the bundled exe (prod)
+            public string FileName;     // a Python interpreter (dev) or the bundled binary (prod)
             public string ScriptPath;   // airplay.py (dev) or "" (prod)
         }
 
         static ModuleCommand? _cached;
         static bool _resolved;
 
+        // The module's file name inside the native runtime folder.
+        static string ModuleFileName =>
+            OperatingSystem.IsWindows() ? "focalsonic-airplay.exe" : "focalsonic-airplay";
+
         static ModuleCommand? ResolveModule()
         {
-#if !WINDOWS
-            // Only Windows is supported for now (Linux planned, macOS is native).
-            return null;
-#else
             if (_resolved) return _cached;
             _resolved = true;
 
+            // macOS does AirPlay natively, so the module is Windows + Linux only.
+            if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
+            {
+                _cached = null;
+                return null;
+            }
+
             // Development: Debug builds embed the source module dir as assembly metadata
-            // (see the csproj). Run airplay.py straight from there with the system Python
-            // so edits take effect without a ~15-min Nuitka recompile — and so a stale
-            // copied snapshot can never run. Release builds don't embed it, so this is
-            // skipped and the bundled exe is used. Set FOCALSONIC_PYTHON to override.
+            // (see the csproj). Run airplay.py straight from there with a Python that has
+            // the module's dependencies, so edits take effect without a ~15-min Nuitka
+            // recompile — and so a stale copied snapshot can never run. Release builds
+            // don't embed it, so this is skipped and the bundled binary is used.
             var sourceDir = SourceModuleDir();
             if (sourceDir != null)
             {
                 var script = Path.Combine(sourceDir, "airplay.py");
                 if (File.Exists(script))
                 {
-                    var python = FindPython();
+                    var python = FindPython(sourceDir);
                     if (python != null)
                     {
                         _cached = new ModuleCommand { FileName = python, ScriptPath = script };
@@ -197,21 +210,21 @@ namespace FocalSonic.Casting.AirPlay
                 }
             }
 
-            // Production: the bundled, signed, self-contained exe, shipped in the
-            // module's own folder inside IgniteView's native runtime —
-            // iv2runtime\win-<arch>\native\airplay\focalsonic-airplay.exe.
-            var exe = Path.Combine(
+            // Production: the bundled, self-contained binary, shipped in the module's own
+            // folder inside IgniteView's native runtime —
+            // iv2runtime/<platform>-<arch>/native/airplay/focalsonic-airplay[.exe].
+            var bundled = Path.Combine(
                 AppContext.BaseDirectory, "iv2runtime", NativeRuntimeFolder(), "native", "airplay",
-                "focalsonic-airplay.exe");
-            if (File.Exists(exe))
+                ModuleFileName);
+            if (File.Exists(bundled))
             {
-                _cached = new ModuleCommand { FileName = exe, ScriptPath = "" };
+                EnsureExecutable(bundled);
+                _cached = new ModuleCommand { FileName = bundled, ScriptPath = "" };
                 return _cached;
             }
 
             _cached = null;
             return null;
-#endif
         }
 
         // Absolute path to the AirPlay source module dir, embedded as assembly metadata
@@ -233,34 +246,87 @@ namespace FocalSonic.Casting.AirPlay
             return null;
         }
 
-        // The IgniteView native-runtime folder for the current process architecture.
-        static string NativeRuntimeFolder() => RuntimeInformation.ProcessArchitecture switch
+        // The IgniteView native-runtime folder for the current OS + process architecture.
+        static string NativeRuntimeFolder()
         {
-            Architecture.Arm64 => "win-arm64",
-            _ => "win-x64",
-        };
+            var arch = RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.Arm64 => "arm64",
+                _ => "x64",
+            };
+            return (OperatingSystem.IsLinux() ? "linux-" : "win-") + arch;
+        }
 
-        static string? FindPython()
+        // Git doesn't always preserve the executable bit, and neither do some archive
+        // formats, so make sure the bundled Linux binary can actually be launched.
+        static void EnsureExecutable(string path)
         {
+            if (OperatingSystem.IsWindows()) return;
+
+            try
+            {
+                var mode = File.GetUnixFileMode(path);
+                var wanted = mode | UnixFileMode.UserExecute | UnixFileMode.GroupExecute
+                             | UnixFileMode.OtherExecute;
+                if (mode != wanted) File.SetUnixFileMode(path, wanted);
+            }
+            catch { }
+        }
+
+        static string? FindPython(string sourceDir)
+        {
+            // A virtualenv inside the module dir wins. Distro Pythons are increasingly
+            // "externally managed" (PEP 668) so pip refuses to install into them, which
+            // makes `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
+            // the normal way to get pyatv in place for a Linux dev build.
+            var venv = Path.Combine(sourceDir, ".venv",
+                                    OperatingSystem.IsWindows() ? "Scripts" : "bin",
+                                    OperatingSystem.IsWindows() ? "python.exe" : "python");
+            if (File.Exists(venv) && HasModuleDependencies(venv)) return venv;
+
             // Allow an explicit override for unusual dev setups.
             var overridePath = Environment.GetEnvironmentVariable("FOCALSONIC_PYTHON");
-            if (!string.IsNullOrEmpty(overridePath) && File.Exists(overridePath)) return overridePath;
-
-            foreach (var candidate in new[] { "python", "python3", "py" })
+            if (!string.IsNullOrEmpty(overridePath) && File.Exists(overridePath)
+                && HasModuleDependencies(overridePath))
             {
-                if (CanRun(candidate)) return candidate;
+                return overridePath;
+            }
+
+            var candidates = OperatingSystem.IsWindows()
+                ? new[] { "python", "python3", "py" }
+                : new[] { "python3", "python" };
+
+            foreach (var candidate in candidates)
+            {
+                if (CanRun(candidate, "--version", 4000) && HasModuleDependencies(candidate))
+                {
+                    return candidate;
+                }
             }
             return null;
         }
 
-        static bool CanRun(string fileName)
+        // An interpreter is only usable if the module's dependencies are installed for
+        // it. Checking here (once — the result is cached) is what keeps Casting from
+        // advertising an AirPlay device that would fail the moment it's picked, on a dev
+        // machine where they never were.
+        //
+        // find_spec locates pyatv without importing it: actually importing costs ~8s the
+        // first time (it pulls in aiohttp, cryptography, protobuf, zeroconf...), and this
+        // check sits in front of the device picker.
+        static bool HasModuleDependencies(string python)
+            => CanRun(python,
+                      "-c \"import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('pyatv') else 1)\"",
+                      10000);
+
+        static bool CanRun(string fileName, string arguments, int timeoutMs)
         {
             try
             {
                 var psi = new ProcessStartInfo
                 {
                     FileName = fileName,
-                    Arguments = "--version",
+                    Arguments = arguments,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
@@ -268,8 +334,12 @@ namespace FocalSonic.Casting.AirPlay
                 };
                 using var p = Process.Start(psi);
                 if (p == null) return false;
-                p.WaitForExit(4000);
-                return p.HasExited && p.ExitCode == 0;
+                if (!p.WaitForExit(timeoutMs))
+                {
+                    try { p.Kill(entireProcessTree: true); } catch { }
+                    return false;
+                }
+                return p.ExitCode == 0;
             }
             catch
             {

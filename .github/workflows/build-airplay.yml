@@ -3,9 +3,13 @@ name: Build AirPlay Module
 # Manual only. The AirPlay engine rarely changes, and a Nuitka compile takes ~15
 # min per architecture, so we don't rebuild it on every push. Instead, run this
 # workflow by hand (Actions tab → "Build AirPlay Module" → Run workflow, on the
-# branch you want). It compiles the module for x64 + arm64, Authenticode-signs both
-# as SamsidParty, and commits the executables into the iv2runtime tree on that
-# branch. The MSIX build then just bundles the committed, signed exes.
+# branch you want). It compiles the module for Windows x64 + arm64 and Linux x64,
+# Authenticode-signs the Windows exes as SamsidParty (Linux has no equivalent), and
+# commits the binaries into the iv2runtime tree on that branch. The MSIX build then
+# just bundles the committed, signed exes.
+#
+# To also ship Linux arm64, add a second entry to build-linux's matrix on an arm
+# runner and download its artifact in the commit job alongside the x64 one.
 on:
   workflow_dispatch:
 
@@ -58,10 +62,49 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # ── Sign both exes and commit them to the branch ──────────────
+  # ── Compile for Linux ─────────────────────────────────────────
+  build-linux:
+    name: Build module (linux-x64)
+    if: github.repository == 'SamsidParty/FocalSonic'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          # Linux doesn't strictly need 3.12 (it never resamples, so it never
+          # touches audioop) but matching the Windows build keeps them comparable.
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: FocalSonic.Airplay/requirements.txt
+
+      - name: Install build prerequisites
+        # python3-tk: the PIN dialog. patchelf: Nuitka needs it for onefile builds.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk patchelf
+
+      - name: Build the module binary (Nuitka)
+        working-directory: FocalSonic.Airplay
+        run: ./build-airplay.sh
+
+      - name: Upload module artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: airplay-linux-x64
+          # The module's whole folder: the binary plus favicon.png (loaded at
+          # runtime by the PIN dialog).
+          path: FocalSonic/iv2runtime/linux-x64/native/airplay/
+          if-no-files-found: error
+          retention-days: 1
+
+  # ── Sign the Windows exes and commit everything to the branch ──
   commit:
-    name: Sign and commit module exes
-    needs: build
+    name: Sign and commit module binaries
+    needs: [build, build-linux]
     if: github.repository == 'SamsidParty/FocalSonic'
     runs-on: windows-latest
     permissions:
@@ -84,6 +127,12 @@ jobs:
         with:
           name: airplay-arm64
           path: FocalSonic/iv2runtime/win-arm64/native/airplay
+
+      - name: Download module (linux-x64)
+        uses: actions/download-artifact@v4
+        with:
+          name: airplay-linux-x64
+          path: FocalSonic/iv2runtime/linux-x64/native/airplay
 
       - name: Locate SignTool
         id: sdk-tools
@@ -135,14 +184,19 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # Stage each module folder: the signed exe plus its favicon.png.
+          # Stage each module folder: the binary plus its favicon.png.
           git add FocalSonic/iv2runtime/win-x64/native/airplay `
-                  FocalSonic/iv2runtime/win-arm64/native/airplay
+                  FocalSonic/iv2runtime/win-arm64/native/airplay `
+                  FocalSonic/iv2runtime/linux-x64/native/airplay
+          # The artifact download loses the executable bit (and this runner is
+          # Windows, which has none), so set it in the index explicitly — otherwise
+          # the committed Linux binary can't be launched from a fresh clone.
+          git update-index --chmod=+x FocalSonic/iv2runtime/linux-x64/native/airplay/focalsonic-airplay
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 0) {
             Write-Host "Module unchanged — nothing to commit."
           } else {
-            git commit -m "ci: rebuild signed AirPlay module exes [skip ci]"
+            git commit -m "ci: rebuild AirPlay module binaries [skip ci]"
             git push origin "HEAD:${{ github.ref_name }}"
-            Write-Host "Committed updated module exes to ${{ github.ref_name }}."
+            Write-Host "Committed updated module binaries to ${{ github.ref_name }}."
           }
