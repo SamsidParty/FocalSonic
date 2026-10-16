@@ -272,7 +272,7 @@ function SyncedLyrics(props: LyricProps) {
 
     // Animation loop - updates renderer without React rerenders
     useEffect(() => {
-        if (!props.visible || !rendererRef.current) {
+        if (!props.visible) {
             if (rafRef.current) {
                 cancelAnimationFrame(rafRef.current);
                 rafRef.current = null;
@@ -280,21 +280,20 @@ function SyncedLyrics(props: LyricProps) {
             return;
         }
 
-        // Force an immediate update to sync with current playback position
-        const timestampMs = (playerRef?.currentTime || 0) * 1000;
-        rendererRef.current.update(timestampMs);
-
+        // Not gated on rendererRef.current: the renderer effect nulls it whenever it
+        // rebuilds, and re-running here during that gap killed the loop for good.
         const updateFrame = () => {
             const timestampMs = (playerRef?.currentTime || 0) * 1000;
             rendererRef.current?.update(timestampMs);
             rafRef.current = requestAnimationFrame(updateFrame);
         };
 
-        rafRef.current = requestAnimationFrame(updateFrame);
+        updateFrame();
 
         return () => {
             if (rafRef.current) {
                 cancelAnimationFrame(rafRef.current);
+                rafRef.current = null;
             }
         };
     }, [props.visible, playerRef, parsedLyrics]);

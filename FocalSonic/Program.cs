@@ -50,6 +50,13 @@ public class Program
         App.BrowserFlags.Add("--no-user-gesture-required");
         App.BrowserFlags.Add("--disable-features=HardwareMediaKeyHandling");
 
+    #if LINUX
+        // Qt WebEngine never settles PublicKeyCredential's availability promises, and Apple's
+        // sign-in widget awaits them, leaving it half-rendered and stuck. Without WebAuthn the
+        // widget falls back to password sign-in, which is all Qt WebEngine can do anyway.
+        App.BrowserFlags.Add("--disable-blink-features=WebAuth");
+    #endif
+
         App.RegisterDynamicFileRoute("/show-window", async (HttpContextBase ctx) => { CreateMainWindow(); }, WatsonWebserver.Core.HttpMethod.GET);
 
         // Allows communication with the apple music API from javascript

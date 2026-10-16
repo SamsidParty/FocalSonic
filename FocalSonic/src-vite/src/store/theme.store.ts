@@ -110,6 +110,9 @@ export const usePlayerStyle = () => {
 
     useEffect(() => {
         const handleResize = () => {
+            // A minimized window measures 0px and matches the mini player breakpoint.
+            if (window.innerWidth <= 0) return;
+
             setIsMiniPlayer(window.matchMedia("(max-width: 780px)").matches);
         };
 

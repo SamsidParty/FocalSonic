@@ -86,6 +86,8 @@ class AudioEffectController {
 
         this.eqNodes.forEach(node => this._disconnectNodeOutputs(node));
         this.eqNodes = [];
+        this._connectedTopology = null;
+        this._appliedFilterSignature = null;
 
         if (this.isAudioElement) {
             this.audioCtx.close();
@@ -169,6 +171,12 @@ class AudioEffectController {
     }
 
     _rebuildConnections() {
+        // Rewiring detaches the source from the destination for an instant, which is
+        // audible. Only the node count affects wiring; param changes reuse the nodes.
+        const topology = (this.eqNodes && this.eqNodes.length) || 0;
+        if (this._connectedTopology === topology) return;
+        this._connectedTopology = topology;
+
         // Disconnect source outputs first to avoid duplicate connections
         this._disconnectNodeOutputs(this.sourceNode);
 
@@ -225,6 +233,12 @@ class AudioEffectController {
         // Accepts an array of filter objects and updates the EQ chain.
         // Reuses existing nodes where possible and smoothly ramps params.
         if (!Array.isArray(filterData) || !this.audioCtx) return;
+
+        // The host re-pushes identical effects on every loaded event; re-applying
+        // them rebuilds the live graph below and drops audio.
+        const signature = JSON.stringify(filterData);
+        if (signature === this._appliedFilterSignature) return;
+        this._appliedFilterSignature = signature;
 
         const mapType = (t) => {
             if (!t) return 'peaking';

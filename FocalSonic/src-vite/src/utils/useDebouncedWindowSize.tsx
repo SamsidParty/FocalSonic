@@ -1,52 +1,49 @@
 import { useEffect, useState } from "react";
 
-function useDebouncedWindowSize(delay = 250) {
-    const [windowSize, setWindowSize] = useState({
+// A minimized window reports innerWidth/innerHeight of 0. Reacting to that flips every
+// breakpoint and rebuilds anything keyed on viewport size, twice per minimize/restore.
+function isMeasurableViewport() {
+    return typeof window !== "undefined" && window.innerWidth > 0 && window.innerHeight > 0;
+}
+
+function readWindowSize(isResizing: boolean) {
+    return {
         width: typeof window !== "undefined" ? window.innerWidth : 0,
         height: typeof window !== "undefined" ? window.innerHeight : 0,
-        isResizing: false,
-    });
+        isResizing,
+    };
+}
+
+function useDebouncedWindowSize(delay = 250) {
+    const [windowSize, setWindowSize] = useState(() => readWindowSize(false));
 
     useEffect(() => {
-    // Handler to update window size on resize
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
         const handleResize = (isResizing: boolean) => {
-            setWindowSize({
-                width: window.innerWidth,
-                height: window.innerHeight,
-                isResizing,
-            });
+            if (!isMeasurableViewport()) return;
+            setWindowSize(readWindowSize(isResizing));
         };
 
-        // Debounce function
-        let timeoutId;
-        const debouncedHandleResize = () => {
-            // Clear the previous timeout if the function is called again
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
-            // Set a new timeout to call handleResize after the delay
+        const onResize = () => {
+            if (!isMeasurableViewport()) return;
+
+            handleResize(true);
+
+            if (timeoutId) clearTimeout(timeoutId);
             timeoutId = setTimeout(() => handleResize(false), delay);
         };
 
-        // Add event listener
-        window.addEventListener("resize", () => {
-            handleResize(true);
-            debouncedHandleResize();
-        });
+        window.addEventListener("resize", onResize);
+        handleResize(false);
 
-        // Call once to set initial size in client side for SSR compatibility
-        if (typeof window !== "undefined") {
-            handleResize(false);
-        }
-
-        // Cleanup function to remove event listener on component unmount
         return () => {
-            window.removeEventListener("resize", debouncedHandleResize);
-            if (timeoutId) { // Also clear timeout on unmount
-                clearTimeout(timeoutId);
-            }
+            // Previously removed a different function than it added, leaking a
+            // listener per mount that kept firing after unmount.
+            window.removeEventListener("resize", onResize);
+            if (timeoutId) clearTimeout(timeoutId);
         };
-    }, [delay]); // Re-run effect if the delay changes
+    }, [delay]);
 
     return windowSize;
 }

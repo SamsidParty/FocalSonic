@@ -3,15 +3,25 @@ import { LibraryAlbum, LibrarySong } from "@/lib/localLibrary";
 import { service } from "@/service/service";
 import { LibrarySyncSource } from "@/service/librarySyncTypes";
 import { Albums } from "@/types/responses/album";
+import { isPlaybackActive } from "@/store/player.store";
 import { useSyncStore } from "@/store/sync.store";
 import { flushPendingFavorites, syncFavorites } from "./favorites";
 import { flushPendingPlaylists, syncPlaylists } from "./playlists";
 
-// Apple's servers are slow (~500ms/round trip), so ranges are fetched in
-// parallel. Five concurrent requests keeps things fast without hammering the API.
-const MAX_CONCURRENCY = 5;
+// Apple's servers are slow (~500ms/round trip), so ranges are fetched in parallel.
+// Kept under the 6-connections-per-origin cap: these share one local server with the
+// command bridge, the streaming proxy and the image proxy.
+const MAX_CONCURRENCY = 3;
+
+// Pause between pages while audio plays so segment fetches keep a free connection.
+const PLAYBACK_PACING_MS = 250;
 
 let inFlight: Promise<void> | null = null;
+
+async function yieldToPlayback(): Promise<void> {
+    if (!isPlaybackActive()) { return; }
+    await new Promise((resolve) => setTimeout(resolve, PLAYBACK_PACING_MS));
+}
 
 /** Run async tasks with a bounded number in flight at once. */
 async function mapPool<T, R>(
@@ -25,6 +35,7 @@ async function mapPool<T, R>(
     async function run() {
         while (cursor < items.length) {
             const index = cursor++;
+            await yieldToPlayback();
             results[index] = await worker(items[index], index);
         }
     }
@@ -71,17 +82,28 @@ async function fetchSongsUntilEmpty(source: LibrarySyncSource): Promise<Collecte
     let base = 0;
     let done = false;
 
+    const seenIds = new Set<string>();
+
     while (!done) {
+        await yieldToPlayback();
         const offsets = Array.from({ length: MAX_CONCURRENCY }, (_, i) => base + i * pageSize);
         const pages = await Promise.all(offsets.map((offset) => source.fetchSongsPage(offset, pageSize)));
 
+        let addedThisWave = 0;
+
         for (const page of pages) {
-            accumulateSongs(collected, page.songs, page.albums);
-            addSynced(page.songs.length);
+            // A server that ignores songOffset returns a full page forever, so dedup
+            // gives a second stop condition instead of an unbounded request loop.
+            const fresh = (page.songs as LibrarySong[]).filter((song) => song?.id && !seenIds.has(song.id));
+            fresh.forEach((song) => seenIds.add(song.id));
+
+            accumulateSongs(collected, fresh, page.albums);
+            addSynced(fresh.length);
+            addedThisWave += fresh.length;
         }
 
         // Any page shorter than a full page means we've reached the end.
-        if (pages.some((page) => page.songs.length < pageSize)) {
+        if (pages.some((page) => page.songs.length < pageSize) || addedThisWave === 0) {
             done = true;
         }
 

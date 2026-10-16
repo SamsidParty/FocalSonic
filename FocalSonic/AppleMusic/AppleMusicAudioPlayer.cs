@@ -309,6 +309,9 @@ namespace FocalSonic.AppleMusic
         [Command("appleMusicSignInRecieveToken")]
         public static async Task AppleMusicSignInRecieveToken(string mediaUserToken, string developerToken)
         {
+            // The page can't close itself on every platform (Qt WebEngine ignores window.close())
+            Program.App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("AppleMusicSignIn")).FirstOrDefault()?.Close();
+
             var creds = ServerCredential.GetCurrent();
             creds.ServerType = "applemusic";
             creds.AuthType = "token";

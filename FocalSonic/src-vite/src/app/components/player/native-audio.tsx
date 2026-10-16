@@ -1,5 +1,6 @@
 import { logger } from "@/utils/logger";
 import { checkServerType } from "@/utils/servers";
+import { useEffect } from "react";
 import { AudioPlayerProps } from "./audio";
 
 
@@ -14,14 +15,35 @@ class NativeVirtualAudioPlayer {
     _loop: boolean = false;
     _src?: string;
     _state = "idle";
+    _creation: Promise<void> | null = null;
     id?: string;
     paused: boolean = true;
     volumeTimeout: ReturnType<typeof setTimeout> | undefined;
 
-    initialize() {
-        if (this._state === "created" || this._state === "creating") return;
+    // Assigned from the <AudioPlayer> props below.
+    onEnded?: () => void;
+    onLoadedMetadata?: () => void;
+    onLoadedData?: () => void;
+    onTimeUpdate?: () => void;
+    onLoadStart?: () => void;
+    onPlay?: () => void;
+    onPause?: () => void;
+
+    initialize(): Promise<void> {
+        if (this._state === "created") return Promise.resolve();
+        if (this._state === "creating" && this._creation) return this._creation;
+
         this._state = "creating";
-        setTimeout(async () => {
+        this._creation = this.createOnHost();
+        this._creation.catch(() => undefined);
+
+        return this._creation;
+    }
+
+    private async createOnHost(): Promise<void> {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        try {
             this.id = (checkServerType().isAppleMusic) ? "appleMusicPlayer" : "defaultPlayer";
             logger.info("NativeVirtualAudioPlayer created with id:", this.id);
       
@@ -54,7 +76,15 @@ class NativeVirtualAudioPlayer {
             await window.igniteView?.commandBridge.createAudioPlayer(this.id);
             this._state = "created";
             this.onLoadStart?.();
-        }, 0);
+        }
+        catch (error) {
+            // Must stay creatable: a throw used to pin _state at "creating" forever,
+            // and waitForCreation() then spun on a condition that never came true.
+            logger.error("NativeVirtualAudioPlayer creation failed", error);
+            this._state = "idle";
+            this._creation = null;
+            throw error;
+        }
     }
 
     // "this" is undefined in the dispose function, so we pass it as an argument
@@ -161,9 +191,15 @@ class NativeVirtualAudioPlayer {
     }
 
     async waitForCreation() {
-        while (this._state !== "created") {
-            await new Promise(resolve => setTimeout(resolve, 100));
+        if (this._state === "created") return;
+
+        // "idle" and "disposed" used to spin here forever; drive creation instead.
+        if (this._state !== "creating" || !this._creation) {
+            await this.initialize();
+            return;
         }
+
+        await this._creation;
     }
 
     async applySource() {
@@ -176,9 +212,12 @@ class NativeVirtualAudioPlayer {
     }
 
     async play() {
+        // Staying paused matters: readyState reports 0 for an unpaused player with no
+        // position, which pins the progress bar in its blinking "loading" state.
+        if (!this.src) { this.paused = true; return; }
+
         this.paused = false;
         await this.waitForCreation();
-        if (!this.src) { return; }
         await this.applySource();
         await window.igniteView?.commandBridge.playAudio(this.id!);
         this.onPlay?.();
@@ -187,7 +226,10 @@ class NativeVirtualAudioPlayer {
     async pause() {
         this.paused = true;
         this._currentTimeOffset = 0;
-        await this.waitForCreation();
+
+        // Nothing to pause if the host player was never created.
+        if (this._state !== "created") { this.onPause?.(); return; }
+
         await window.igniteView?.commandBridge.pauseAudio(this.id!);
         this.onPause?.();
     }
@@ -207,8 +249,18 @@ class NativeVirtualAudioPlayer {
 const virtualPlayer = new NativeVirtualAudioPlayer();
 
 export function NativeAudioPlayer({ audioRef, onError, ...props }: AudioPlayerProps) {
-    Object.keys(props).forEach(k => virtualPlayer[k] = props[k]);
     audioRef.current = virtualPlayer;
+
+    // In an effect, not in render: assigning src fires handlers that write to the
+    // player store, and doing that mid-render tears the tree being built.
+    // src goes last so the setter sees this render's callbacks, not the last one's.
+    useEffect(() => {
+        const { src, ...rest } = props as typeof props & { src?: string };
+
+        Object.keys(rest).forEach((key) => { virtualPlayer[key] = rest[key]; });
+
+        if (src !== undefined) { virtualPlayer.src = src; }
+    });
 
     return (<></>);
 }

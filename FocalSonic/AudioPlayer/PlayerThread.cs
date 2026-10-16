@@ -34,7 +34,9 @@ namespace FocalSonic.AudioPlayer
 
                     while (ActionQueue.TryDequeue(out var action))
                     {
-                        action.Invoke();
+                        // Per-action, so one failure doesn't abandon the rest of the tick.
+                        try { action.Invoke(); }
+                        catch (Exception actionEx) { Console.Error.WriteLine("Player action failed: " + actionEx); }
                     }
 
                     await Task.Delay((int)QueueInterval);

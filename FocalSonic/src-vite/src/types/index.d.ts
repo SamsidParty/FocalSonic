@@ -16,6 +16,7 @@ declare global {
         SERVER_TYPE: string | undefined
         igniteView?: IgniteViewWindow
         rehydratePlayerStore?: (newState: string) => Promise<void> | void
+        rehydratePlayerCallbackData?: (newData: string) => Promise<void> | void
         rehydrateSharedStore?: (newState: string) => Promise<void> | void
     }
 }

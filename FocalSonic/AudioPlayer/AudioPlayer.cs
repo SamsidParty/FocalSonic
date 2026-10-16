@@ -48,19 +48,33 @@ namespace FocalSonic.AudioPlayer
         // We need to run all functions on the player thread for the following reasons:
         // 1. Prevents freezing and stuttering the UI
         // 2. Ensures that the WebWindow is properly garbage collected while the player is still running
-        public static async Task RunOnPlayerThread(Action f)
+        /// <summary>Completes once the work has actually run, not just been queued.</summary>
+        public static Task RunOnPlayerThread(Action f)
         {
-            PlayerThread.ActionQueue.Enqueue(f);
+            var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            PlayerThread.ActionQueue.Enqueue(() =>
+            {
+                try { f.Invoke(); completion.TrySetResult(); }
+                catch (Exception ex) { completion.TrySetException(ex); }
+            });
+
+            return completion.Task;
         }
 
         public static async Task RunOnPlayer(string id, Action<AudioPlayer> f)
         {
-            if (!ActivePlayers.ContainsKey(id)) return;
-            await RunOnPlayerThread(async () =>
+            // No ContainsKey pre-check: the player may still be queued for construction,
+            // and bailing here silently discarded source/play commands.
+            await RunOnPlayerThread(() =>
             {
                 if (ActivePlayers.TryGetValue(id, out var player))
                 {
                     f.Invoke(player);
+                }
+                else
+                {
+                    Console.Error.WriteLine($"Dropped audio command for unknown player \"{id}\"");
                 }
             });
         }

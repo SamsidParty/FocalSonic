@@ -11,7 +11,7 @@ import { areSongListsEqual } from "@/utils/compareSongLists";
 import { checkServerType } from "@/utils/servers";
 import { addNextSongList, moveArrayItem, shuffleSongList } from "@/utils/songListFunctions";
 import { produce } from "immer";
-import merge from "lodash/merge";
+import mergeWith from "lodash/mergeWith";
 import omit from "lodash/omit";
 import { createJSONStorage, devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -30,6 +30,27 @@ let lastSongList: string | null = null;
 
 // True once hydration from C# is done. Before that we drop empty writes (setItem).
 let playerStoreHydrated = false;
+
+// Set when getPlayerStore never answered. Hydration still completes, but with empty
+// defaults rather than the real queue, so that state must not be written back.
+let playerStoreHydrationFailed = false;
+let hydrationRetryTimer: ReturnType<typeof setTimeout> | null = null;
+let hydrationRetries = 0;
+
+// Only an explicit clear may push an empty queue to C#.
+let queueClearedIntentionally = false;
+
+function scheduleHydrationRetry() {
+    if (hydrationRetryTimer || hydrationRetries >= 10) { return; }
+
+    const delay = Math.min(1000 * 2 ** hydrationRetries, 30000);
+    hydrationRetries++;
+
+    hydrationRetryTimer = setTimeout(() => {
+        hydrationRetryTimer = null;
+        void usePlayerStore.persist.rehydrate();
+    }, delay);
+}
 
 function isAppleMusicStationDisplay(
     station: AppleMusicStation | AppleMusicStationDisplay | null | undefined,
@@ -113,7 +134,11 @@ const igniteViewPlayerStore = {
         // The bridge isn't always ready when hydration runs. Returning undefined
         // would make zustand JSON.parse(undefined) and abort hydration, so retry
         // and never return undefined (null = "nothing stored").
-        for (let attempt = 0; attempt < 20; attempt++) {
+        // 20x50ms was too short: at boot the bridge shares a server with the library
+        // sync and the proxies. Giving up hydrated empty defaults over a live queue.
+        const deadline = Date.now() + 15000;
+
+        for (let attempt = 0; Date.now() < deadline; attempt++) {
             try {
                 const bridge = window.igniteView?.commandBridge;
 
@@ -122,6 +147,8 @@ const igniteViewPlayerStore = {
 
                     // Any non-empty string ("{}" included) is a valid answer.
                     if (typeof result === "string" && result.trim()) {
+                        playerStoreHydrationFailed = false;
+                        hydrationRetries = 0;
                         return result;
                     }
                 }
@@ -130,10 +157,12 @@ const igniteViewPlayerStore = {
                 console.warn("[Player Bridge] getPlayerStore failed, retrying", error);
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, Math.min(50 * (attempt + 1), 500)));
         }
 
-        console.warn("[Player Bridge] getPlayerStore did not respond; skipping rehydration");
+        // Couldn't read the queue - that is not the same as it being empty.
+        playerStoreHydrationFailed = true;
+        console.warn("[Player Bridge] getPlayerStore did not respond; keeping the C# queue");
         return null;
     },
     setItem: async (key: string, value: string) => {
@@ -145,23 +174,22 @@ const igniteViewPlayerStore = {
             }
         };
 
-        // Before hydration finishes, drop empty-default writes so a set() racing
-        // ahead of hydration can't wipe the real queue in C#. Non-empty writes
-        // always go through, so playback/queue changes are never blocked.
-        if (!playerStoreHydrated) {
-            const songlist = nextValue.state?.songlist as {
-                currentList?: unknown[]
-                radioList?: unknown[]
-                currentSong?: { id?: string }
-            } | undefined;
+        // An empty songlist only reaches C# when the queue was emptied on purpose.
+        // Otherwise it is a set() racing hydration, or a hydration that failed - and
+        // writing it replaces the real process-wide queue with nothing.
+        const songlist = nextValue.state?.songlist as {
+            currentList?: unknown[]
+            radioList?: unknown[]
+            currentSong?: { id?: string }
+        } | undefined;
 
-            const isEmptyDefault =
-                (songlist?.currentList?.length ?? 0) === 0 &&
-                (songlist?.radioList?.length ?? 0) === 0 &&
-                !songlist?.currentSong?.id;
+        const isEmptyDefault =
+            (songlist?.currentList?.length ?? 0) === 0 &&
+            (songlist?.radioList?.length ?? 0) === 0 &&
+            !songlist?.currentSong?.id;
 
-            if (isEmptyDefault) { return; }
-        }
+        if (isEmptyDefault && !queueClearedIntentionally) { return; }
+        if (!isEmptyDefault) { queueClearedIntentionally = false; }
 
         // Insert extra properties to allow C# to have extra context
         const { isAppleMusic } = checkServerType();
@@ -583,6 +611,8 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                             }
                         },
                         clearPlayerState: () => {
+                            queueClearedIntentionally = true;
+
                             set((state) => {
                                 state.playerState?.audioPlayerRef && (state.playerState.audioPlayerRef.src = "");
                                 state.playerState?.audioPlayerRef?.pause();
@@ -969,7 +999,11 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                 merge: (persistedState, currentState) => {
                     // Merge into a fresh object — immer freezes the state, so
                     // mutating currentState directly would drop the persisted data.
-                    const merged = merge({}, currentState, persistedState) as IPlayerContext;
+                    // mergeWith: lodash merges arrays element-wise, so a queue restored
+                    // after any pre-hydration write came back spliced from both lists.
+                    const merged = mergeWith({}, currentState, persistedState, (_target, source) => {
+                        if (Array.isArray(source)) { return source; }
+                    }) as IPlayerContext;
 
                     // shared_store owns speed/filterData (it survives restarts), so
                     // never let a stale player_store payload override them.
@@ -979,7 +1013,14 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                     return merged;
                 },
                 onRehydrateStorage(state) {
-                    return () => {
+                    return (_hydratedState, error) => {
+                        // Empty defaults that didn't come from C#: don't let them stick.
+                        if (error || playerStoreHydrationFailed) {
+                            scheduleHydrationRetry();
+                            state.actions.setIsLoading(false);
+                            return;
+                        }
+
                         playerStoreHydrated = true;
                         // Recalculate the current song incase the index changed
                         state.actions.setCurrentSong();
@@ -1005,38 +1046,75 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
 );
 
 window.rehydratePlayerStore = async (newState: string) => {
-    const stateToSet = JSON.parse(newState).state;
     const current = usePlayerStore.getState();
-    const isLegacyPodcastState = stateToSet?.playerState?.mediaType === "podcast";
+
+    let parsed: { state?: Record<string, any> } | null = null;
+
+    try { parsed = JSON.parse(newState); }
+    catch { return; }
+
+    // C# serializes with NullValueHandling.Ignore and answers "{}" before it has a
+    // store, so state (or any slice) can be missing. Replacing ours with that leaves
+    // songlist.currentList undefined and takes down everything reading its length.
+    const stateToSet = parsed?.state;
+    if (!stateToSet || typeof stateToSet !== "object") { return; }
+
+    const incomingSonglist = stateToSet.songlist ?? {};
+
+    // No queue in the payload means a mini-sync artefact, not "the queue is empty".
+    const hasIncomingQueue =
+        Array.isArray(incomingSonglist.currentList) ||
+        Array.isArray(incomingSonglist.radioList);
+
+    const mergedSonglist = hasIncomingQueue
+        ? {
+            ...current.songlist,
+            ...incomingSonglist,
+            currentRadioStation:
+                incomingSonglist.currentRadioStation
+                ?? current.songlist?.currentRadioStation
+                ?? null,
+        }
+        : { ...current.songlist };
+
+    const isLegacyPodcastState = stateToSet.playerState?.mediaType === "podcast";
+
+    // Fresh object: current.songlist is frozen by immer.
+    const songlist = isLegacyPodcastState
+        ? {
+            ...mergedSonglist,
+            currentList: [],
+            currentSong: {} as ISong,
+            currentSongIndex: 0,
+            originalList: [],
+            shuffledList: [],
+            radioList: [],
+            currentRadioID: null,
+            currentRadioStation: null,
+        }
+        : mergedSonglist;
 
     if (isLegacyPodcastState) {
         stateToSet.playerState.mediaType = "song";
         stateToSet.playerState.isPlaying = false;
         stateToSet.playerState.currentDuration = 0;
-        stateToSet.songlist.currentList = [];
-        stateToSet.songlist.currentSong = {};
-        stateToSet.songlist.currentSongIndex = 0;
-        stateToSet.songlist.originalList = [];
-        stateToSet.songlist.shuffledList = [];
-        stateToSet.songlist.radioList = [];
-        stateToSet.songlist.currentRadioID = null;
-        stateToSet.songlist.currentRadioStation = null;
-        stateToSet.playerProgress.progress = 0;
     }
 
     usePlayerStore.setState(
         {
+            // Slices C# doesn't model must survive the replace.
+            ...current,
             ...stateToSet,
-            songlist: {
-                currentRadioStation: stateToSet.songlist?.currentRadioStation ?? current.songlist?.currentRadioStation ?? null,
-                ...stateToSet.songlist,
-            },
+            songlist,
+            playerProgress: isLegacyPodcastState
+                ? { ...current.playerProgress, ...stateToSet.playerProgress, progress: 0 }
+                : { ...current.playerProgress, ...stateToSet.playerProgress },
             actions: current.actions,
             playerState: {
-                volume: stateToSet.playerState?.volume ?? current.playerState?.volume,
+                ...current.playerState,
                 ...stateToSet.playerState,
-                // speed/filterData live in shared_store now; re-assert them or
-                // this full replace would leave them undefined.
+                // These live in shared_store now.
+                volume: getSharedVolume(),
                 speed: getSharedSpeed(),
                 filterData: getSharedFilterData(),
                 audioPlayerRef: current.playerState?.audioPlayerRef,
@@ -1044,6 +1122,19 @@ window.rehydratePlayerStore = async (newState: string) => {
         },
         true
     );
+};
+
+// Targeted update so an unrelated callback-data change can't replace player state.
+window.rehydratePlayerCallbackData = async (newData: string) => {
+    let parsed: Record<string, string> | null = null;
+
+    try { parsed = JSON.parse(newData); }
+    catch { return; }
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) { return; }
+    if (shallow(usePlayerStore.getState().playerCallbackData, parsed)) { return; }
+
+    usePlayerStore.setState((state) => ({ ...state, playerCallbackData: parsed }));
 };
 
 usePlayerStore.subscribe(
@@ -1144,6 +1235,28 @@ useSharedStore.subscribe(
         equalityFn: shallow,
     },
 );
+
+/** Resolves when hydration finishes, or after timeoutMs if the bridge never answers. */
+export function waitForPlayerStoreHydration(timeoutMs = 20000): Promise<void> {
+    if (usePlayerStore.persist.hasHydrated()) { return Promise.resolve(); }
+
+    return new Promise((resolve) => {
+        let settled = false;
+
+        function finish() {
+            if (settled) { return; }
+            settled = true;
+            clearTimeout(timer);
+            unsubscribe();
+            resolve();
+        }
+
+        const timer = setTimeout(finish, timeoutMs);
+        const unsubscribe = usePlayerStore.persist.onFinishHydration(finish);
+    });
+}
+
+export const isPlaybackActive = () => usePlayerStore.getState().playerState.isPlaying;
 
 export const usePlayerActions = () => usePlayerStore((state) => state.actions);
 export const usePlayerCallbackData = (key: string) => usePlayerStore((state) => state.playerCallbackData[key] || undefined);

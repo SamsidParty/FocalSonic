@@ -57,6 +57,12 @@ export function AudioPlayer({
 
         toast.error(t("warnings.songError"));
 
+        // Reloading only ever recovers replay gain by dropping crossOrigin. The native
+        // player never sets it, so on desktop this just tore down the app - and wiped
+        // the console with it. It also fires from the play() catch, which rejects for
+        // routine reasons.
+        if (useNativeAudio) return;
+
         if (replayGainEnabled || !replayGainError) {
             setReplayGainEnabled(false);
             setReplayGainError(true);
@@ -69,6 +75,7 @@ export function AudioPlayer({
         setReplayGainEnabled,
         setReplayGainError,
         t,
+        useNativeAudio,
     ]);
 
     const handleRadioError = useCallback(() => {

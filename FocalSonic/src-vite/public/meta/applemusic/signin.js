@@ -13,9 +13,12 @@ function setupTitlebar() {
 }
 
 async function checkAuthState() {
-    const music = MusicKit?.getInstance();
+    const music = window.MusicKit?.getInstance();
 
     if (music && music.isAuthorized && music.musicUserToken) {
+        // Send the token once. window.close() is ignored on some platforms (Qt WebEngine on Linux),
+        // so the host closes this window after receiving it instead.
+        clearInterval(window.checkAuthStateInterval);
         window.igniteView?.commandBridge.appleMusicSignInRecieveToken(music.musicUserToken, music.developerToken);
         window.close();
     }
@@ -23,4 +26,4 @@ async function checkAuthState() {
 
 addEventListener("beforeunload", window.close); // Closes the window if the user tries to navigate away
 setupTitlebar();
-setInterval(checkAuthState, 500);
+window.checkAuthStateInterval = setInterval(checkAuthState, 500);

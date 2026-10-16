@@ -1,6 +1,7 @@
 import * as localLibrary from "@/lib/localLibrary";
 import { syncLibrary } from "@/lib/sync/syncEngine";
 import { useAppData, useAppStore } from "@/store/app.store";
+import { waitForPlayerStoreHydration } from "@/store/player.store";
 import { useEffect, useSyncExternalStore } from "react";
 
 // Re-sync on boot if the last successful sync is older than this.
@@ -46,6 +47,10 @@ export function useLibrarySyncBootstrap(): void {
             const isStale = !lastSyncedAt || Date.now() - lastSyncedAt > STALE_AFTER_MS;
 
             if (isStale || localLibrary.getLibrarySongCount() === 0) {
+                // Don't starve player store hydration; they share the same bridge.
+                await waitForPlayerStoreHydration();
+                if (cancelled) return;
+
                 refreshLibrary();
             }
         })();
