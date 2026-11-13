@@ -472,3 +472,6 @@ DesktopClient/Properties/launchSettings.json
 # the manually-triggered "Build AirPlay Module" workflow and checked in, so the
 # MSIX build doesn't have to compile them on every push. Build locally for testing
 # with FocalSonic.Airplay/build-airplay.bat.
+
+# Native macOS helper build output
+FocalSonic.MacHelper/build/

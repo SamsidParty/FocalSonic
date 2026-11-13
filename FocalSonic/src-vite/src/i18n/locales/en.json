@@ -678,6 +678,7 @@
         "toggle": "Enable Dolby Atmos",
         "changes": "Changes will take effect when you play a new track.",
         "unsupported": "Dolby Atmos is not supported with your current configuration, toggling this option will have no effect.",
+        "macos": "On macOS, FocalSonic plays Dolby Atmos and lossless audio whenever the Music app is set to. Change it in Music > Settings > Playback.",
         "description": "(EXPERIMENTAL) Enables spatial audio playback for supported tracks on Atmos-enabled devices. Some Atmos tracks are exclusive to Apple's DRM and will not work with FocalSonic."
       },
       "replayGain": {

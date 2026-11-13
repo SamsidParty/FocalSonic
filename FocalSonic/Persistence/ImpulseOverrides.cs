@@ -129,6 +129,61 @@ namespace FocalSonic.OverrideSystem
             await ctx.Response.Send(await File.ReadAllBytesAsync(path));
         }
 
+        /// <summary>Matches impulsePresets[0] in src-vite/src/utils/audioEffects.ts.</summary>
+        const string DefaultBundledImpulse = "preset1";
+
+        static string BundledImpulseCacheDirectory => Path.Join(Path.GetTempPath(), "FocalSonic", "Impulse");
+
+        /// <summary>Re-extracted once per run, since a newer build may ship different wavs under the same id.</summary>
+        static readonly HashSet<string> ExtractedThisRun = new();
+
+        /// <summary>
+        /// A file path for an impulse id, for native audio engines that can't fetch it through
+        /// the web server: imported ones live in the overrides folder, bundled ones are copied
+        /// out of the app's assets. An empty id means the default, like FocalMK.
+        /// </summary>
+        public static string? GetImpulseFilePath(string? id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) { id = DefaultBundledImpulse; }
+
+            if (id.StartsWith(IdPrefix, StringComparison.Ordinal))
+            {
+                var custom = ResolveOverridePath(id);
+                return custom != null && File.Exists(custom) ? custom : null;
+            }
+
+            if (!id.All(c => char.IsAsciiLetterOrDigit(c) || c == '-' || c == '_')) { return null; }
+
+            var cached = Path.Join(BundledImpulseCacheDirectory, id + ".wav");
+            lock (ExtractedThisRun)
+            {
+                if (ExtractedThisRun.Contains(id) && File.Exists(cached)) { return cached; }
+            }
+
+            try
+            {
+                var asset = $"/meta/impulse/{id}.wav";
+                var resolver = Program.App.CurrentServerManager.Resolver;
+                if (!resolver.DoesFileExist(asset)) { return null; }
+
+                Directory.CreateDirectory(BundledImpulseCacheDirectory);
+                var partial = cached + ".partial";
+                using (var source = resolver.OpenFileStream(asset))
+                using (var destination = File.Create(partial))
+                {
+                    source.CopyTo(destination);
+                }
+                File.Move(partial, cached, true);
+                lock (ExtractedThisRun) { ExtractedThisRun.Add(id); }
+                return cached;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Couldn't extract impulse response {id}: {ex.Message}");
+                return null;
+            }
+        }
+
         /// <summary>
         /// Turns an impulse id into a path inside the overrides folder, or null if it
         /// isn't one of ours or tries to climb out of the folder.

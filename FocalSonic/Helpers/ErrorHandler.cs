@@ -23,8 +23,9 @@ namespace FocalSonic.Helpers
             #if WINDOWS
             // Display message box
             MessageBox(IntPtr.Zero, message, title, 0);
+            #elif MACOS
+            MacOS.MacAppLifetime.ShowAlert(title, message);
             #endif
-            //TODO: Other platforms
         }
     }
 }

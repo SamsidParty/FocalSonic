@@ -31,6 +31,7 @@ import {
 import { Input } from "@/app/components/ui/input";
 import { Password } from "@/app/components/ui/password";
 import { useAppActions } from "@/store/app.store";
+import { isMac } from "@/utils/osType";
 import { removeSlashFromUrl } from "@/utils/removeSlashFromUrl";
 import { isTauri } from "@/utils/tauriTools";
 import isWidevineSupported from "@/utils/widevine";
@@ -110,6 +111,19 @@ export function LoginForm() {
     }
 
     async function signInToAppleMusic() {
+        // macOS plays through native MusicKit, which doesn't need Widevine. Its sign in
+        // happens in the background (plus a system permission prompt), so show progress.
+        if (isMac) {
+            setLoading(true);
+            try {
+                await window.igniteView?.commandBridge.signInToAppleMusic();
+            }
+            finally {
+                setLoading(false);
+            }
+            return;
+        }
+
         if (!(await isWidevineSupported())) {
             setWidevineDialogOpen(true);
             return;

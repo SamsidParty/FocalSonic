@@ -12,6 +12,7 @@ import {
 } from "@/app/components/settings/section";
 import { Switch } from "@/app/components/ui/switch";
 import { useSharedSettings } from "@/store/shared.store";
+import { isMac } from "@/utils/osType";
 import { checkServerType } from "@/utils/servers";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -30,6 +31,21 @@ export function AtmosSettings() {
     const [hasChanged, setHasChanged] = useState(false);
 
     if (!isAppleMusic) return;
+
+    // Native MusicKit plays Atmos according to the Music app's own setting.
+    if (isMac) {
+        return (
+            <Root>
+                <Header>
+                    <HeaderTitle><DolbyIconLarge/></HeaderTitle>
+                    <HeaderDescription>
+                        {t("settings.audio.atmos.macos")}
+                    </HeaderDescription>
+                </Header>
+                <ContentSeparator />
+            </Root>
+        );
+    }
 
     function setEnableAtmos(value: boolean) {
         setHasChanged(true);

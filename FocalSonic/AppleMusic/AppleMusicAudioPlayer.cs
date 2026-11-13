@@ -9,7 +9,14 @@ using System.Web;
 
 namespace FocalSonic.AppleMusic
 {
-    public class AppleMusicAudioPlayer : AudioPlayer.AudioPlayer
+    /// <summary>An Apple Music playback engine: the web player window, or native MusicKit on macOS.</summary>
+    public interface IAppleMusicPlayer
+    {
+        /// <summary>"loading" until the engine is ready, then "success" or a failure reason.</summary>
+        string LoadStatus { get; }
+    }
+
+    public class AppleMusicAudioPlayer : AudioPlayer.AudioPlayer, IAppleMusicPlayer
     {
         /// <summary>
         /// Due to DRM, we need a webwindow with url https://music.apple.com to play audio from apple music.
@@ -25,7 +32,7 @@ namespace FocalSonic.AppleMusic
         public bool IsPlaying = false;
         public bool IsTransitioning = false;
         public bool IsNextSourcePreloaded = false;
-        public string LoadStatus = "loading";
+        public string LoadStatus { get; set; } = "loading";
 
         public override string ChromecastCredential =>  AppleMusicKeys.MediaUserToken;
 
@@ -290,6 +297,10 @@ namespace FocalSonic.AppleMusic
         [Command("signInToAppleMusic")]
         public static async Task SignInToAppleMusic(WebWindow ctx)
         {
+            #if MACOS
+            // WebKit doesn't expose MusicKit JS's tokens, so macOS signs in natively.
+            await MacOS.MusicKitSession.SignIn();
+            #else
             // Close any existing sign in windows
             Program.App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("AppleMusicSignIn")).FirstOrDefault()?.Close();
 
@@ -304,6 +315,7 @@ namespace FocalSonic.AppleMusic
 
                 signInWindow.ExecuteJavaScript(Program.App.CurrentServerManager.Resolver.ReadFileAsText("/meta/applemusic/signin.js"));
             });
+            #endif
         }
 
         [Command("appleMusicSignInRecieveToken")]
@@ -406,9 +418,9 @@ namespace FocalSonic.AppleMusic
         public static async Task<string> WaitUntilAppleMusicLoads(WebWindow ctx)
         {
             
-            if (ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer).Any())
+            if (ActivePlayers.Where((p) => p.Value is IAppleMusicPlayer).Any())
             {
-                var activePlayer = ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer).FirstOrDefault().Value as AppleMusicAudioPlayer;
+                var activePlayer = ActivePlayers.Where((p) => p.Value is IAppleMusicPlayer).FirstOrDefault().Value as IAppleMusicPlayer;
 
                 // Wait until the proxy window is loaded
                 while (activePlayer.LoadStatus == "loading")
@@ -423,7 +435,7 @@ namespace FocalSonic.AppleMusic
                 // If no player exists, create one
                 await CreateAudioPlayer("appleMusicPlayer", ctx);
 
-                while (!ActivePlayers.Where((p) => p.Value is AppleMusicAudioPlayer).Any())
+                while (!ActivePlayers.Where((p) => p.Value is IAppleMusicPlayer).Any())
                 {
                     await Task.Delay(100);
                 }

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    Embedded into the helper binary as a __TEXT,__info_plist section (see build.sh).
+    MusicKit's playback daemons identify their client through this section of the
+    code signature, so a bare executable can't play catalog audio without it.
+-->
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.samsidparty.focalsonic.helper</string>
+    <key>CFBundleName</key>
+    <string>FocalSonic</string>
+    <key>CFBundleDisplayName</key>
+    <string>FocalSonic</string>
+    <key>CFBundleExecutable</key>
+    <string>FocalSonicHelper</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.4</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSAppleMusicUsageDescription</key>
+    <string>FocalSonic plays music from your Apple Music subscription.</string>
+    <key>NSAudioCaptureUsageDescription</key>
+    <string>FocalSonic processes Apple Music playback to apply the equalizer, reverb, volume and speed effects you choose.</string>
+</dict>
+</plist>

@@ -29,6 +29,7 @@
 		<DefineConstants>LINUX</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(IsMac)'=='true'">
+		<TargetFramework>net10.0</TargetFramework>
 		<DefineConstants>MACOS</DefineConstants>
 	</PropertyGroup>
 	
@@ -91,6 +92,21 @@
 			<_Parameter2>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', 'FocalSonic.Airplay'))</_Parameter2>
 		</AssemblyAttribute>
 	</ItemGroup>
+	<!-- macOS plays Apple Music through native MusicKit in FocalSonicHelper (FocalSonic.MacHelper),
+	     a small Swift executable built here and copied next to FocalSonic. Release builds are
+	     universal (arm64 + x86_64). -->
+	<PropertyGroup Condition="'$(IsMac)'=='true'">
+		<MacHelperDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '..', 'FocalSonic.MacHelper'))</MacHelperDir>
+		<MacHelperBuildDir>$(MacHelperDir)build</MacHelperBuildDir>
+		<MacHelperUniversal Condition="'$(Configuration)'=='Release'">1</MacHelperUniversal>
+		<MacHelperUniversal Condition="'$(Configuration)'!='Release'">0</MacHelperUniversal>
+	</PropertyGroup>
+	<Target Name="BuildMacHelper" BeforeTargets="AssignTargetPaths" Condition="'$(IsMac)'=='true'">
+		<Exec Command="UNIVERSAL=$(MacHelperUniversal) bash &quot;$(MacHelperDir)build.sh&quot; &quot;$(MacHelperBuildDir)&quot;" />
+		<ItemGroup>
+			<None Include="$(MacHelperBuildDir)/FocalSonicHelper" Link="FocalSonicHelper" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+		</ItemGroup>
+	</Target>
 	<ItemGroup Condition="'$(IsLinux)'=='true'">
 		<Content Include="src-vite\public\favicons\favicon-32x32.png" Link="iv2runtime\focalsonic-tray.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -89,7 +89,11 @@ namespace FocalSonic.AudioPlayer
                 if (ActivePlayers.TryGetValue(id, out player)) { }
                 else if (id.StartsWith("appleMusicPlayer"))
                 {
+                    #if MACOS
+                    player = new MacOS.MusicKitAudioPlayer(id);
+                    #else
                     player = new AppleMusicAudioPlayer(id);
+                    #endif
                 }
                 else
                 {

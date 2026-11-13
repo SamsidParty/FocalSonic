@@ -21,6 +21,8 @@ namespace FocalSonic.Presence
             Instance = new Presence();
             #if WINDOWS
             Instance.RegisterProvider(new WindowsPresenceProvider());
+            #elif MACOS
+            Instance.RegisterProvider(new MacOS.MacNowPlayingProvider());
             #endif
             Instance.RegisterProvider(new DiscordPresenceProvider());
             Instance.RegisterProvider(new AppleMusicPresenceProvider());

@@ -1,6 +1,6 @@
 # FocalSonic 
 
-Free and open source Apple Music client for Windows 11
+Free and open source Apple Music client for Windows 11 and macOS
 
 ![FocalSonic Screenshots](./Docs/Images/Hero.webp)
 
@@ -26,9 +26,6 @@ Free and open source Apple Music client for Windows 11
  - ❌ AutoMix / Sing / Apple Intelligence features  
  Reason: Windows PCs don't support Apple Intelligence
 
- - ❌ macOS support  
- Reason: A lot of work to put in with little demand, the official client for macOS is quite good already.
- 
 
 Please do not open issues regarding these features.
 
@@ -46,3 +43,14 @@ After that, running from source is simple:
 3. `npm install --force`
 4. `cd ..`
 5. `dotnet run`
+
+### macOS
+
+On macOS, Apple Music plays through native MusicKit instead of a web player window, via a small Swift helper ([FocalSonic.MacHelper](FocalSonic.MacHelper/README.md)) that the build compiles automatically. You'll additionally need:
+- .NET 10 SDK
+- Xcode or the Xcode Command Line Tools (for `swiftc`)
+- macOS 14.4 or later, signed into an Apple Account with an Apple Music subscription
+
+`dotnet run` works the same way. To build a standalone `FocalSonic.app`, run `FocalSonic/MacApp/build-app.sh` (output in `FocalSonic/bin/production/osx-<arch>/`). Set `CODESIGN_IDENTITY` to a Developer ID identity to sign it with the hardened runtime for distribution.
+
+When run from a terminal, macOS asks the terminal app for Apple Music and audio recording access; the `.app` asks on its own behalf.
