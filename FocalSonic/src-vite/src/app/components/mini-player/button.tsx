@@ -1,32 +1,15 @@
 import { Button } from "@/app/components/ui/button";
 import { SimpleTooltip } from "@/app/components/ui/simple-tooltip";
-import { useLyricsState, useMainDrawerState, usePlayerCurrentList, useQueueState } from "@/store/player.store";
-import { usePlayerStyle } from "@/store/theme.store";
-import { enterMiniPlayer, exitMiniPlayer } from "@/utils/browser";
+import { usePlayerCurrentList } from "@/store/player.store";
+import { useWindowMode } from "@/store/window.store";
 import clsx from "clsx";
 import { PictureInPicture2Icon } from "lucide-react";
-import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 export function MiniPlayerButton() {
     const { t } = useTranslation();
     const currentList = usePlayerCurrentList();
-    const { isMiniPlayer } = usePlayerStyle();
-    const { setMainDrawerState } = useMainDrawerState();
-    const { queueState, setQueueState } = useQueueState();
-    const { lyricsState, setLyricsState } = useLyricsState();
-
-    const handleClick = useCallback(async () => {
-        if (isMiniPlayer) {
-            exitMiniPlayer();
-        } else {
-            enterMiniPlayer();
-            setQueueState(false);
-            setLyricsState(true);
-            setMainDrawerState(true);
-        }
-    }, [isMiniPlayer]);
-
+    const { isMiniPlayer, toggleMiniPlayer } = useWindowMode();
 
     const disabled = currentList.length === 0;
 
@@ -35,22 +18,20 @@ export function MiniPlayerButton() {
         : t("player.tooltips.miniPlayer.open");
 
     return (
-        <>
-            <SimpleTooltip text={buttonTooltip}>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleClick}
-                    className={clsx(
-                        "relative rounded-full hide-in-fullscreen",
-                        isMiniPlayer && "text-primary hover:text-primary player-button-active",
-                    )}
-                    onFocus={(e) => e.preventDefault()}
-                    disabled={disabled}
-                >
-                    <PictureInPicture2Icon className="w-4 h-4" />
-                </Button>
-            </SimpleTooltip>
-        </>
+        <SimpleTooltip text={buttonTooltip}>
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleMiniPlayer}
+                className={clsx(
+                    "relative rounded-full hide-in-fullscreen",
+                    isMiniPlayer && "text-primary hover:text-primary player-button-active",
+                )}
+                onFocus={(e) => e.preventDefault()}
+                disabled={disabled}
+            >
+                <PictureInPicture2Icon className="w-4 h-4" />
+            </Button>
+        </SimpleTooltip>
     );
 }

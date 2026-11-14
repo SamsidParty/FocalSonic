@@ -2,46 +2,19 @@ import { Windows } from "@/app/components/controls/windows";
 import { HeaderSongInfo } from "@/app/components/header-song";
 import { NavigationButtons } from "@/app/components/header/navigation-buttons";
 import { UserDropdown } from "@/app/components/header/user-dropdown";
-import { useMainDrawerState } from "@/store/player.store";
-import { enterFullscreen, exitFullscreen, isFullscreen } from "@/utils/browser";
+import { useWindowMode } from "@/store/window.store";
 import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
-import { isLinux, isMac, isWindows } from "@/utils/osType";
+import { isMac, isWindows } from "@/utils/osType";
 import { checkServerType } from "@/utils/servers";
 import clsx from "clsx";
-import React, { useEffect } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
 import { Cast } from "../components/header/cast";
 import { LibrarySyncIndicator } from "../components/header/library-sync-indicator";
 import { LicenseDialog } from "../components/license";
 import { Separator } from "../components/ui/separator";
 
 export function Header() {
-
-    const { setMainDrawerState } = useMainDrawerState();
     const { isAppleMusic } = checkServerType();
-
-    const setAppFullscreen = (fullscreen: boolean) => {
-        if (fullscreen) {
-            enterFullscreen();
-        }
-        else {
-            exitFullscreen();
-        }
-        setMainDrawerState(fullscreen);
-    };
-
-    useHotkeys("f11", () => {
-        if (window.igniteView) {
-            setAppFullscreen(!isFullscreen());
-        }
-    });
-
-    // macOS: the green traffic light toggles fullscreen natively, so follow it like F11
-    useEffect(() => {
-        window.onNativeFullscreenChange = setAppFullscreen;
-        return () => { delete window.onNativeFullscreenChange; };
-    }, []);
-
+    const { isFullscreen } = useWindowMode();
 
     return (
         <header
@@ -50,7 +23,7 @@ export function Header() {
             )}
         >
             <div {...igniteViewDragRegion} className="flex items-center">
-                {isMac && !isFullscreen() && <div className="w-[70px]" />}
+                {isMac && !isFullscreen && <div className="w-[70px]" />}
                 <NavigationButtons />
             </div>
             <HeaderSongInfo />

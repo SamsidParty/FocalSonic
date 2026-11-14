@@ -6,7 +6,7 @@ import { service } from "@/service/service";
 import { LyricChannel } from "@/types/serverConfig";
 import { useAppStore } from "@/store/app.store";
 import { usePlayerRef, usePlayerSonglist } from "@/store/player.store";
-import { usePlayerStyle, useTheme } from "@/store/theme.store";
+import { useTheme } from "@/store/theme.store";
 import { hasNonLatin, TRANSLATION_MARKER, TRANSLITERATION_MARKER } from "@/utils/lyricEligibility";
 import { parseLrc } from "@/utils/lrcParser";
 import { LyricsRenderer } from "@/utils/LyricsRenderer";
@@ -145,7 +145,6 @@ function SyncedLyrics(props: LyricProps) {
     const playerRef = usePlayerRef();
     const { altLyricChannels } = useAppStore().settings;
     const selectedChannels: LyricChannel[] = props.disableAltLyrics ? ["original"] : altLyricChannels;
-    const { isMiniPlayer } = usePlayerStyle();
     const { width, height, isResizing } = useDebouncedWindowSize(100);
     const { enableLyricBlur, enableLyricGlow } = useTheme();
 

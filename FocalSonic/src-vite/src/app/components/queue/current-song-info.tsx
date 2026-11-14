@@ -4,7 +4,6 @@ import { AspectRatio } from "@/app/components/ui/aspect-ratio";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/routes/routesList";
 import { useMainDrawerState, usePlayerSonglist } from "@/store/player.store";
-import { usePlayerStyle } from "@/store/theme.store";
 import { ISong } from "@/types/responses/song";
 import { ALBUM_ARTISTS_MAX_NUMBER } from "@/utils/multipleArtists";
 import clsx from "clsx";
@@ -15,7 +14,6 @@ import CoverArtImage from "../cover-art";
 export function CurrentSongInfo({ fillWidth }: { fillWidth?: boolean }) {
     const { currentSong } = usePlayerSonglist();
     const { closeDrawer } = useMainDrawerState();
-    const { isMiniPlayer } = usePlayerStyle();
 
     const imageUrl = getCoverArtUrl(currentSong.coverArt, "song", "1200");
 

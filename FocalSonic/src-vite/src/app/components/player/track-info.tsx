@@ -30,7 +30,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
         return document.getElementById("track-song-image") as HTMLImageElement;
     }
 
-    function openFullscreen() {
+    function toggleMainDrawer() {
         setMainDrawerState(!mainDrawerState);
     }
 
@@ -105,7 +105,7 @@ export function TrackInfo({ song }: { song: ISong | undefined }) {
                     size="icon"
                     className="cursor-pointer w-8 h-8 shadow-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity ease-in-out absolute top-1 right-1 focus-visible:opacity-100"
                     data-testid="track-fullscreen-button"
-                    onClick={() => openFullscreen()}
+                    onClick={toggleMainDrawer}
                 >
                     <SimpleTooltip text={t("fullscreen.switchButton")} align="start">
                         <div className="w-full h-full flex items-center justify-center">

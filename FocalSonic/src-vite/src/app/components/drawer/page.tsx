@@ -13,21 +13,23 @@ import {
     useQueueState
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
-import { enterFullscreen, exitFullscreen, isFullscreen } from "@/utils/browser";
+import { useWindowLayout, useWindowMode } from "@/store/window.store";
 import "@/utils/idle"; // for idle detection
+import { isMac } from "@/utils/osType";
 import clsx from "clsx";
 import { ChevronDownIcon, Maximize2Icon } from "lucide-react";
 import { ComponentPropsWithoutRef } from "react";
 import { useFullscreenBackdrop } from "../fullscreen/backdrop";
 import Equalizer from "../player/equalizer";
-import { isMac } from "@/utils/osType";
 
 export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
     const { queueState } = useQueueState();
     const { extraBarContent } = useAppSettings();
     const { lyricsState } = useLyricsState();
-    const { isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
+    const { isPlayerAtTop } = usePlayerStyle();
+    const { isFullscreen, isMiniPlayer, toggleFullscreen } = useWindowMode();
+    const { isCompact, isLandscape } = useWindowLayout();
     const { hideAlbumArt } = useCustomFullscreenBackground();
     const hasExtraContent = extraBarContent != "none";
     const FullscreenBackdrop = useFullscreenBackdrop({ lightenBackground: extraBarContent == "queue" || extraBarContent == "effects" });
@@ -53,29 +55,34 @@ export function MainDrawerPage() {
                 {FullscreenBackdrop}
                 <div
                     className={clsx(
-                        "flex flex-col w-full transition-[margin]",
-                        "transition-[background-image,background-color] ease-long duration-1000",
-                        (isFullscreen() || isMiniPlayer) ? "h-content" : "h-[calc(var(--drawer-height)-var(--fs-player-height))] ",
-                        isPlayerAtTop ? "mt-vertical-shift" : "mb-vertical-shift"
+                        "flex flex-col w-full transition-[height,margin] ease-long duration-1000",
+                        // In fullscreen, --vertical-shift is the room the player bar needs, and 0px while
+                        // it's hidden for idling (index.css). The height takes it off directly: leaving
+                        // flexbox to squeeze a full height box only works in Chromium, not WebKit.
+                        (isFullscreen || isCompact)
+                            ? "h-[calc(var(--content-height)-var(--vertical-shift,0px))]"
+                            : "h-[calc(var(--drawer-height)-var(--fs-player-height))]",
+                        isPlayerAtTop && "mt-vertical-shift"
                     )}
                 >
-                    <div 
+                    {/* The compact layout has no header, so this bar stands in as the drag region */}
+                    <div
                         className={clsx(
                             "absolute text-white hide-in-fullscreen-idle transition-opacity duration-600 ease-long flex w-full h-14 min-h-14 items-center justify-end gap-2",
                             "px-2 z-[60]",
-                            isMiniPlayer && "hide-on-idle"
+                            isCompact && "hide-on-idle"
                         )}
-                        {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }
+                        {...(isCompact ? { "data-webview-drag": "true" } : {}) }
                     >
-                        { !isMiniPlayer && <QueueSettings className={(isMac && !isFullscreen()) ? "ml-14 -mt-2" : ""} /> }
+                        { !isCompact && <QueueSettings className={(isMac && !isFullscreen) ? "ml-14 -mt-2" : ""} /> }
 
                         {
-                            !isMiniPlayer && (
+                            !isCompact && (
                                 <Button
                                     variant="ghost"
                                     data-webview-ignore={""}
                                     className="w-10 h-10 rounded-full p-0 hover:bg-foreground/20"
-                                    onClick={() => { isFullscreen() ? exitFullscreen() : enterFullscreen(); }}
+                                    onClick={toggleFullscreen}
                                 >
                                     {
                                         <Maximize2Icon />
@@ -106,7 +113,8 @@ export function MainDrawerPage() {
                             <ActiveContent active={queueState}>
                                 <QueueSongList />
                             </ActiveContent>
-                            <ActiveContent active={lyricsState && (!isMiniPlayer || (document.documentElement.clientWidth > document.documentElement.clientHeight))}>
+                            {/* A compact portrait window only has room for the album art */}
+                            <ActiveContent active={lyricsState && (!isCompact || isLandscape)}>
                                 <LyricsTab
                                     leftAlign={!hideAlbumArt}
                                     oneLine={hideAlbumArt} 

@@ -6,7 +6,6 @@ import { getSharedFilterData, getSharedSpeed, getSharedVolume, useSharedStore } 
 import { AppleMusicStation, AppleMusicStationDisplay } from "@/types/applemusic/common";
 import { IPlayerContext, LoopState } from "@/types/playerContext";
 import { ISong } from "@/types/responses/song";
-import { exitFullscreen, exitMiniPlayer } from "@/utils/browser";
 import { areSongListsEqual } from "@/utils/compareSongLists";
 import { checkServerType } from "@/utils/servers";
 import { addNextSongList, moveArrayItem, shuffleSongList } from "@/utils/songListFunctions";
@@ -895,22 +894,13 @@ export const usePlayerStore = createWithEqualityFn<IPlayerContext>()(
                                 state.songlist.originalSongIndex = updatedOriginalIndex;
                             });
                         },
+                        // Closing the drawer also leaves fullscreen and the mini player, see window.store.ts.
                         setMainDrawerState: (status) => {
-
-                            if (!status) {
-                                exitMiniPlayer();
-                                exitFullscreen();
-                            }
-
                             set((state) => {
                                 state.playerState.mainDrawerState = status;
                             });
                         },
                         closeDrawer: () => {
-
-                            exitMiniPlayer();
-                            exitFullscreen();
-
                             set((state) => {
                                 state.playerState.mainDrawerState = false;
                             });

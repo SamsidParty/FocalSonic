@@ -1,6 +1,6 @@
+import { useWindowStore } from "@/store/window.store";
 import { IThemeContext, SongPageStyle, Theme } from "@/types/themeContext";
 import merge from "lodash/merge";
-import { useEffect, useState } from "react";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createWithEqualityFn } from "zustand/traditional";
@@ -104,33 +104,14 @@ export const useThemeStore = createWithEqualityFn<IThemeContext>()(
 export const useTheme = () => useThemeStore((state) => state);
 
 export const usePlayerStyle = () => {
+    const playerStyle = useThemeStore((state) => state.playerStyle);
+    const isPlayerAtTop = useThemeStore((state) => state.isPlayerAtTop);
+    const isCompact = useWindowStore((state) => state.isCompact);
 
-    const { playerStyle, isPlayerAtTop } = useTheme();
-    const [isMiniPlayer, setIsMiniPlayer] = useState(window.matchMedia("(max-width: 780px)").matches);
-
-    useEffect(() => {
-        const handleResize = () => {
-            // A minimized window measures 0px and matches the mini player breakpoint.
-            if (window.innerWidth <= 0) return;
-
-            setIsMiniPlayer(window.matchMedia("(max-width: 780px)").matches);
-        };
-
-        // Add event listener when the component mounts
-        window.addEventListener("resize", handleResize);
-
-        // Clean up the event listener when the component unmounts
-        return () => {
-            window.removeEventListener("resize", handleResize);
-        };
-    }, []);
-
-
-
-    // Force slim style in mini player
-    if (isMiniPlayer) {
-        return { playerStyle: "slim", isPlayerAtTop: false, isMiniPlayer, useSlimButtons: true };
+    // The compact layout (which the mini player always uses) only has room for the slim player
+    if (isCompact) {
+        return { playerStyle: "slim" as const, isPlayerAtTop: false, useSlimButtons: true };
     }
 
-    return { playerStyle, isPlayerAtTop, isMiniPlayer, useSlimButtons: playerStyle === "slim" || playerStyle === "floating" };
+    return { playerStyle, isPlayerAtTop, useSlimButtons: playerStyle === "slim" || playerStyle === "floating" };
 };

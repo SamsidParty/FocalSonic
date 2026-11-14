@@ -15,9 +15,9 @@ import {
     useReplayGainState,
 } from "@/store/player.store";
 import { usePlayerStyle } from "@/store/theme.store";
+import { hasMiniPlayerSupport, useWindowLayout, useWindowMode } from "@/store/window.store";
 import { LoopState } from "@/types/playerContext";
 import { effectiveSpeed } from "@/utils/audioEffects";
-import { hasPiPSupport, isFullscreen } from "@/utils/browser";
 import { ReplayGainParams } from "@/utils/replayGain";
 import { checkServerType } from "@/utils/servers";
 import clsx from "clsx";
@@ -61,7 +61,9 @@ export function Player() {
 
     const song = currentList[currentSongIndex];
     const radio = radioList[currentSongIndex];
-    const { playerStyle, isPlayerAtTop, isMiniPlayer } = usePlayerStyle();
+    const { playerStyle, isPlayerAtTop } = usePlayerStyle();
+    const { isFullscreen } = useWindowMode();
+    const { isCompact } = useWindowLayout();
 
     const getAudioRef = useCallback(() => {
         if (isRadio) return radioRef;
@@ -162,7 +164,7 @@ export function Player() {
                     playerStyle === "floating" && "[--player-height:64px] bottom-0 left-[--sidebar-width] right-[--sidebar-width] mb-8 ml-5 mr-7 mt-8 h-[64px] rounded-full bg-secondary shadow-lg",
                     playerStyle !== "floating" && "left-0 right-0 h-[--player-height] w-full bg-bar",
                     isPlayerAtTop ? "top-header" : "bottom-0",
-                    (isFullscreen() || isMiniPlayer) && "player-idle-hide",
+                    (isFullscreen || isCompact) && "player-idle-hide",
                 )}
             >
                 <div
@@ -222,7 +224,7 @@ export function Player() {
                                 />
                             )}
 
-                            {isSong && hasPiPSupport && <MiniPlayerButton />}
+                            {isSong && hasMiniPlayerSupport && <MiniPlayerButton />}
                         </div>
                     </div>
                 </div>

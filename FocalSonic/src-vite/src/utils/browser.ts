@@ -9,9 +9,6 @@ export enum MouseButton {
 
 export const isChromeOrFirefox = ["Blink", "Gecko"].includes(engineName);
 
-// Enable only if enterMiniPlayer is defined
-export const hasPiPSupport = (window.igniteView && window.igniteView.commandBridge?.enterMiniPlayer);
-
 function preventContextMenu() {
     document.addEventListener("contextmenu", (e) => {
         if (
@@ -58,54 +55,6 @@ function preventAltBehaviour() {
             e.preventDefault();
         }
     });
-}
-
-export function isFullscreen() {
-    return document.body.classList.contains("fullscreen");
-}
-
-export function enterFullscreen() {
-    document.body.classList.add("fullscreen");
-    if (window.igniteView?.commandBridge?.enterFullScreen) {
-        window.igniteView.commandBridge.enterFullScreen();
-        return;
-    }
-
-    const element = document.documentElement;
-    if (element.requestFullscreen) {
-        element.requestFullscreen();
-    }
-    if ("webkitRequestFullscreen" in element) {
-    // @ts-expect-error no types for webkit
-        element.webkitRequestFullscreen();
-    }
-}
-
-export function exitFullscreen() {
-
-    document.body.classList.remove("fullscreen");
-    if (window.igniteView?.commandBridge?.exitFullScreen) {
-        window.igniteView.commandBridge.exitFullScreen();
-        return;
-    }
-
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    }
-    if ("webkitExitFullscreen" in document) {
-    // @ts-expect-error no types for webkit
-        document.webkitExitFullscreen();
-    }
-}
-
-export function enterMiniPlayer() {
-    document.body.classList.add("miniplayer");
-    window.igniteView?.commandBridge?.enterMiniPlayer?.();
-}
-
-export function exitMiniPlayer() {
-    document.body.classList.remove("miniplayer");
-    window.igniteView?.commandBridge?.exitMiniPlayer?.();
 }
 
 function setFontSmoothing() {
