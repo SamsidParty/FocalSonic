@@ -12,14 +12,22 @@ export function ThemeSettingsPicker() {
     const { t } = useTranslation();
     const { theme: currentTheme, setTheme } = useTheme();
 
+    const canCustomizePrimaryColor = window.igniteView && (window.igniteView.platformHints.includes("win32") || window.igniteView.platformHints.includes("macos"));
+    const canCustomizeVibrancy = window.igniteView && window.igniteView.platformHints.includes("win32");
 
     return (
         <div className="h-full space-y-4">
             {
-                (currentTheme == Theme.System && window.igniteView && window.igniteView.platformHints.includes("win32")) && (
+                (currentTheme == Theme.System && canCustomizeVibrancy) && (
                     <>
-                        <VibrancySelector/>
-                        <AccentColorPicker/>
+                        <VibrancySelector />
+                    </>
+                )
+            }
+            {
+                (currentTheme == Theme.System && canCustomizePrimaryColor) && (
+                    <>
+                        <AccentColorPicker />
                     </>
                 )
             }
