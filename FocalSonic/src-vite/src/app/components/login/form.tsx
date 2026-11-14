@@ -165,7 +165,7 @@ export function LoginForm() {
                             <Button
                                 type="button"
                                 onClick={signInToAppleMusic}
-                                className="w-full bg-[#ff0436]"
+                                className="w-full bg-black"
                                 style={{ "--foreground": "white" } as React.CSSProperties}
                                 disabled={loading}
                             >

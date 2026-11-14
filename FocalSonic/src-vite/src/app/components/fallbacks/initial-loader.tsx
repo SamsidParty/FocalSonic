@@ -1,6 +1,8 @@
 import { useSignOut } from "@/store/app.store";
 import { t } from "i18next";
 import { useEffect, useState } from "react";
+import LensRipple from "../ui/Backgrounds/LensRipple";
+import { AppleMusicIconLarge } from "../icons/apple";
 
 export default function InitialLoader() {
 
@@ -21,16 +23,31 @@ export default function InitialLoader() {
 
     return (
         <>
-            <img className="w-60 mb-4" src="/icons/applemusic.svg"/>
+
+            <div className="absolute inset-0 -z-10">
+                <LensRipple
+                    strength={120}
+                    glass={1}
+                    speed={0.15}
+                    rings={1}
+                    width={150}
+                    className="w-full h-full"
+                >
+                    <AppleMusicIconLarge className="w-[50vh]"/>
+                </LensRipple>
+            </div>
+
+            <div className="h-80"></div>
+
             <h2 className="font-semibold text-lg">{t("login.appleMusic.loading")}</h2>
 
             {
                 loadingIsStuck ? (
                     <p className="text-md">{t("login.appleMusic.loadingStuck")} <a onClick={resolveSignInIssues} className="inline cursor-pointer text-[#FF0436]">{t("login.appleMusic.resolveIssues")}</a></p>
-                ) 
+                )
                     : (<p className="text-md">{t("login.appleMusic.loadingDescription")}</p>)
             }
-            
+
         </>
     );
 }
