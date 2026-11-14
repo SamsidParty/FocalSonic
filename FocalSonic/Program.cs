@@ -99,6 +99,7 @@ public class Program
     #elif MACOS
         FocalSonic.MacOS.MacAppLifetime.Setup();
         FocalSonic.MacOS.MacWindowManagement.Setup();
+        FocalSonic.MacOS.MacAirPlay.Setup();
     #endif
 
     #if MACOS

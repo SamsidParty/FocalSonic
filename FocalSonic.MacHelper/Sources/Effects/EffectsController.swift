@@ -1,8 +1,9 @@
 import Foundation
 
 /// Decides when audio has to be captured and keeps the DSP chain in sync with FocalSonic's
-/// settings. Capture only runs while something would audibly change the sound, so ordinary
-/// playback stays on MusicKit's untouched path (full quality, Dolby Atmos intact).
+/// settings. Capture only runs while something would audibly change the sound, or while
+/// FocalSonic plays to AirPlay speakers, so ordinary playback stays on MusicKit's untouched path
+/// (full quality, Dolby Atmos intact).
 @MainActor
 final class EffectsController {
     static let shared = EffectsController()
@@ -25,6 +26,9 @@ final class EffectsController {
     private(set) var settings = Settings()
     private let chain = DSPChain()
     private var tap: ProcessTap?
+    /// While AirPlay is on: where the capture plays, kept across rebuilds of the tap.
+    private var airPlayTarget: AirPlayTarget?
+    private var airPlay: AirPlayStream?
     private var reverb: ConvolutionReverb?
     private var reverbPath: String?
     private var lastError: String?
@@ -40,9 +44,13 @@ final class EffectsController {
     private var captureBlocked = false
 
     var isActive: Bool { tap != nil }
+    var isAirPlaying: Bool { airPlayTarget != nil }
 
-    /// Capturing while nothing is loaded would only keep the audio hardware awake.
-    private var wantsCapture: Bool { settings.needsCapture && PlaybackController.shared.hasTrack }
+    /// Capturing while nothing is loaded would only keep the audio hardware awake. AirPlay
+    /// always needs it, for music from other servers too.
+    private var wantsCapture: Bool {
+        isAirPlaying || (settings.needsCapture && PlaybackController.shared.hasTrack)
+    }
 
     private init() {}
 
@@ -89,8 +97,9 @@ final class EffectsController {
                 try activate()
             } catch {
                 // Stay off until the user changes something, rather than retrying every track.
+                // (AirPlay reports its own failure.)
                 captureBlocked = true
-                lastError = error.localizedDescription
+                if !isAirPlaying { lastError = error.localizedDescription }
                 throw error
             }
         }
@@ -112,11 +121,51 @@ final class EffectsController {
         deactivate()
     }
 
+    // MARK: AirPlay
+
+    /// Plays the capture on AirPlay speakers instead of the Mac's output device.
+    func startAirPlay(_ target: AirPlayTarget) throws {
+        stopAirPlay()
+
+        let stream = try AirPlayStream(context: target.context)
+        stream.onFailure = { message in MainActor.assumeIsolated { AirPlayController.shared.fail(message) } }
+        airPlayTarget = target
+        airPlay = stream
+        captureBlocked = false
+
+        // AirPlay captures more and plays elsewhere, so the capture is set up afresh.
+        deactivate()
+        do {
+            try apply()
+        } catch {
+            airPlayTarget = nil
+            airPlay = nil
+            stream.stop()
+            throw error
+        }
+    }
+
+    /// Back to the Mac's output device (with effects capture only if effects still need it).
+    func stopAirPlay() {
+        guard let stream = airPlay else { return }
+        airPlayTarget = nil
+        airPlay = nil
+
+        deactivate() // The IO proc stops writing to the stream before it's stopped.
+        stream.stop()
+
+        do {
+            try apply()
+        } catch {
+            log("Couldn't restart effects capture: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: Capture lifecycle
 
     private func activate() throws {
         chain.fade(to: 1, seconds: 0)
-        let tap = try ProcessTap(chain: chain)
+        let tap = try ProcessTap(chain: chain, airPlay: airPlay, hostPID: airPlayTarget?.hostPID)
         tap.onInvalidated = { [weak self] in self?.rebuild() }
         self.tap = tap
         lastError = nil
@@ -170,7 +219,7 @@ final class EffectsController {
     }
 
     private func checkCapture() {
-        if chain.takePeak() > 0.000001 {
+        if max(chain.takePeak(), tap?.takeHostPeak() ?? 0) > 0.000001 {
             heardAudio = true
             watchdog?.invalidate()
             watchdog = nil
@@ -178,10 +227,21 @@ final class EffectsController {
             return
         }
 
-        guard PlaybackController.shared.isPlaying else { return }
+        // With AirPlay, music from other servers (published by NowPlayingController) counts too.
+        let playing = PlaybackController.shared.isPlaying || (isAirPlaying && NowPlayingController.shared.isPlaying)
+        guard playing else { return }
         silentPlayingSeconds += 1
 
-        if silentPlayingSeconds >= 6 {
+        // AirPlay is often the first thing to need capture, so allow time to answer the
+        // permission prompt. Giving up stops AirPlay, putting the music back on the Mac.
+        if isAirPlaying, silentPlayingSeconds >= 15 {
+            log("AirPlay capture is silent while music plays; assuming audio capture isn't allowed")
+            captureBlocked = true
+            AirPlayController.shared.fail("FocalSonic needs permission to capture its own audio to play it on AirPlay speakers. Allow it under System Settings > Privacy & Security > Screen & System Audio Recording, then try again.")
+            return
+        }
+
+        if !isAirPlaying, silentPlayingSeconds >= 6 {
             log("Effects capture is silent while Apple Music plays; assuming audio capture isn't allowed")
             captureBlocked = true
             lastError = "FocalSonic needs permission to capture Apple Music's audio for effects. Allow it under System Settings > Privacy & Security > Screen & System Audio Recording."

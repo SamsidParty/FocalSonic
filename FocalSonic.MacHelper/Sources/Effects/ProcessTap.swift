@@ -2,6 +2,7 @@ import Accelerate
 import AudioToolbox
 import CoreAudio
 import Foundation
+import os
 
 /// Catalog audio is FairPlay protected and decoded outside this process, so there's no
 /// stream to insert effects into. Instead the rendered audio is captured with a Core Audio
@@ -9,63 +10,101 @@ import Foundation
 /// the default output device, all inside one private aggregate device's IO proc:
 ///
 ///   MusicKit renderer --(tap, muted)--> aggregate [tap in | output device out] --> DSPChain
+///
+/// With AirPlay on, the result goes to the AirPlay route instead and the output device is
+/// left silent. FocalSonic itself is tapped too then, for music from servers other than Apple
+/// Music (which it plays in-process, with its own volume), and is mixed in unprocessed:
+///
+///   MusicKit renderer --(tap)--> DSPChain --+--> AirPlayStream
+///   FocalSonic host -----(tap)--------------+
 final class ProcessTap {
     /// MusicKit renders ApplicationMusicPlayer audio in this per-client XPC service. Only our
     /// instance of it is tapped, so nothing else on the system is touched. (This process must
     /// never be tapped: it's the one playing the processed audio.)
     static let rendererBundleIDs: Set<String> = ["com.apple.MediaPlayer.RemotePlayerService"]
 
-    let sampleRate: Double
+    private(set) var sampleRate: Double = 48000
     /// Called on the main queue when the output device or tapped processes change and the
     /// capture has to be rebuilt.
     var onInvalidated: (() -> Void)?
 
+    /// One process tap and the layout of its stream in the aggregate's input.
+    private struct Capture {
+        let tap: AudioObjectID
+        let uid: String
+        let processes: Set<AudioObjectID>
+        let sampleRate: Double
+        let channels: Int
+        let interleaved: Bool
+        /// Where its first buffer is, counted back from the end of the aggregate's input
+        /// buffers (the taps' streams follow any input streams of the output device itself).
+        var fromEnd = 0
+        var bufferCount: Int { interleaved ? 1 : channels }
+    }
+
     private let chain: DSPChain
-    private var tap = AudioObjectID(kAudioObjectUnknown)
+    private let airPlay: AirPlayStream?
+    private let hostPID: pid_t?
+    private var renderer: Capture?
+    private var host: Capture?
     private var aggregate = AudioObjectID(kAudioObjectUnknown)
     private var ioProc: AudioDeviceIOProcID?
     private var listeners: [AudioObjects.PropertyListener] = []
-    private var tappedProcesses: Set<AudioObjectID> = []
 
-    private let tapInterleaved: Bool
-    private let tapChannels: Int
-    private let tapBufferCount: Int
-    private let outputInterleaved: Bool
+    private var outputInterleaved = true
+    private let hostLeft: UnsafeMutablePointer<Float>
+    private let hostRight: UnsafeMutablePointer<Float>
+    private let hostPeak = OSAllocatedUnfairLock(initialState: Float(0))
     private let ioQueue = DispatchQueue(label: "com.samsidparty.focalsonic.effects", qos: .userInteractive)
 
-    init(chain: DSPChain) throws {
+    /// With `airPlay`, plays there rather than on the output device, and also captures `hostPID`.
+    init(chain: DSPChain, airPlay: AirPlayStream? = nil, hostPID: pid_t? = nil) throws {
         self.chain = chain
+        self.airPlay = airPlay
+        self.hostPID = hostPID
+        hostLeft = .allocate(capacity: chain.maxFrames)
+        hostLeft.initialize(repeating: 0, count: chain.maxFrames)
+        hostRight = .allocate(capacity: chain.maxFrames)
+        hostRight.initialize(repeating: 0, count: chain.maxFrames)
 
-        // 1. The tap. If the renderer is relaunched later, `watchForChanges` rebuilds this.
-        let processes = AudioObjects.ownProcessObjects(bundleIDs: Self.rendererBundleIDs)
-        tappedProcesses = Set(processes)
-        let description = CATapDescription(stereoMixdownOfProcesses: processes)
-        description.name = "FocalSonic Effects"
-        description.isPrivate = true
-        description.muteBehavior = .muted
-
-        var tap = AudioObjectID(kAudioObjectUnknown)
-        let tapStatus = AudioHardwareCreateProcessTap(description, &tap)
-        guard tapStatus == noErr, tap != AudioObjectID(kAudioObjectUnknown) else {
-            throw HelperError("macOS refused to capture Apple Music's audio (\(tapStatus)). Allow FocalSonic to record system audio in System Settings > Privacy & Security.")
+        do {
+            try start()
+        } catch {
+            destroy()
+            throw error
         }
-        self.tap = tap
+    }
 
-        guard let tapFormat = AudioObjects.value(tap, kAudioTapPropertyFormat, initial: AudioStreamBasicDescription()),
-              tapFormat.mFormatID == kAudioFormatLinearPCM, tapFormat.mFormatFlags & kAudioFormatFlagIsFloat != 0,
-              tapFormat.mBitsPerChannel == 32 else {
-            AudioHardwareDestroyProcessTap(tap)
-            throw HelperError("Apple Music's audio is in a format the effects engine can't process")
+    deinit {
+        destroy()
+        hostLeft.deallocate()
+        hostRight.deallocate()
+    }
+
+    private func start() throws {
+        // 1. The taps. A process that starts (or restarts) later is picked up by `watchForChanges`.
+        let renderer = try Self.makeCapture(
+            name: "FocalSonic Effects",
+            processes: AudioObjects.ownProcessObjects(bundleIDs: Self.rendererBundleIDs),
+            subject: "Apple Music's audio")
+        self.renderer = renderer
+        sampleRate = renderer.sampleRate
+
+        if airPlay != nil {
+            host = try Self.makeCapture(name: "FocalSonic AirPlay", processes: hostProcesses(), subject: "FocalSonic's audio")
         }
-        sampleRate = tapFormat.mSampleRate
-        tapChannels = max(1, Int(tapFormat.mChannelsPerFrame))
-        tapInterleaved = tapFormat.mFormatFlags & kAudioFormatFlagIsNonInterleaved == 0
-        tapBufferCount = tapInterleaved ? 1 : tapChannels
+        let hostBuffers = host?.bufferCount ?? 0
+        self.renderer?.fromEnd = renderer.bufferCount + hostBuffers
+        host?.fromEnd = hostBuffers
 
-        // 2. A private aggregate device clocked by the output device, with the tap as input.
+        // 2. A private aggregate device clocked by the output device, with the taps as input.
         guard let outputDevice = AudioObjects.defaultOutputDevice, let outputUID = AudioObjects.deviceUID(outputDevice) else {
-            AudioHardwareDestroyProcessTap(tap)
             throw HelperError("There's no audio output device")
+        }
+
+        // In this order, which is also the order of their streams in the aggregate's input.
+        let taps: [[String: Any]] = [renderer, host].compactMap { $0 }.map {
+            [kAudioSubTapUIDKey: $0.uid, kAudioSubTapDriftCompensationKey: true]
         }
 
         let configuration: [String: Any] = [
@@ -76,54 +115,75 @@ final class ProcessTap {
             kAudioAggregateDeviceTapAutoStartKey: true,
             kAudioAggregateDeviceMainSubDeviceKey: outputUID,
             kAudioAggregateDeviceSubDeviceListKey: [[kAudioSubDeviceUIDKey: outputUID]],
-            kAudioAggregateDeviceTapListKey: [[
-                kAudioSubTapUIDKey: description.uuid.uuidString,
-                kAudioSubTapDriftCompensationKey: true,
-            ]],
+            kAudioAggregateDeviceTapListKey: taps,
         ]
 
         var aggregate = AudioObjectID(kAudioObjectUnknown)
         let aggregateStatus = AudioHardwareCreateAggregateDevice(configuration as CFDictionary, &aggregate)
         guard aggregateStatus == noErr, aggregate != AudioObjectID(kAudioObjectUnknown) else {
-            AudioHardwareDestroyProcessTap(tap)
             throw HelperError("Couldn't set up audio routing for effects (\(aggregateStatus))")
         }
         self.aggregate = aggregate
 
         guard let outputFormat = AudioObjects.streamFormat(aggregate, scope: kAudioObjectPropertyScopeOutput),
               outputFormat.mFormatFlags & kAudioFormatFlagIsFloat != 0, outputFormat.mBitsPerChannel == 32 else {
-            AudioHardwareDestroyAggregateDevice(aggregate)
-            AudioHardwareDestroyProcessTap(tap)
             throw HelperError("The output device uses a format the effects engine can't write")
         }
         outputInterleaved = outputFormat.mFormatFlags & kAudioFormatFlagIsNonInterleaved == 0
 
         // 3. Start processing.
         chain.prepare(sampleRate: sampleRate)
+        airPlay?.prepare(sampleRate: sampleRate)
 
         var procID: AudioDeviceIOProcID?
         let procStatus = AudioDeviceCreateIOProcIDWithBlock(&procID, aggregate, ioQueue) { [unowned self] _, input, _, output, _ in
             self.render(input: input, output: output)
         }
         guard procStatus == noErr, let procID else {
-            destroy()
             throw HelperError("Couldn't start effects processing (\(procStatus))")
         }
         ioProc = procID
 
         let startStatus = AudioDeviceStart(aggregate, procID)
         guard startStatus == noErr else {
-            destroy()
             throw HelperError("Couldn't start effects processing (\(startStatus))")
         }
 
         watchForChanges()
-        log("Effects capture started at \(Int(sampleRate)) Hz on \(outputUID)")
+        log("\(airPlay == nil ? "Effects capture" : "AirPlay capture") started at \(Int(sampleRate)) Hz on \(outputUID)")
     }
 
-    deinit { destroy() }
+    private static func makeCapture(name: String, processes: [AudioObjectID], subject: String) throws -> Capture {
+        let description = CATapDescription(stereoMixdownOfProcesses: processes)
+        description.name = name
+        description.isPrivate = true
+        description.muteBehavior = .muted
 
-    /// Stops processing and releases the tap, which un-mutes the original audio.
+        var tap = AudioObjectID(kAudioObjectUnknown)
+        let status = AudioHardwareCreateProcessTap(description, &tap)
+        guard status == noErr, tap != AudioObjectID(kAudioObjectUnknown) else {
+            throw HelperError("macOS refused to capture \(subject) (\(status)). Allow FocalSonic to record system audio in System Settings > Privacy & Security.")
+        }
+
+        guard let format = AudioObjects.value(tap, kAudioTapPropertyFormat, initial: AudioStreamBasicDescription()),
+              format.mFormatID == kAudioFormatLinearPCM, format.mFormatFlags & kAudioFormatFlagIsFloat != 0,
+              format.mBitsPerChannel == 32 else {
+            AudioHardwareDestroyProcessTap(tap)
+            throw HelperError("\(subject.prefix(1).uppercased() + subject.dropFirst()) is in a format the effects engine can't process")
+        }
+
+        return Capture(tap: tap, uid: description.uuid.uuidString, processes: Set(processes), sampleRate: format.mSampleRate,
+                       channels: max(1, Int(format.mChannelsPerFrame)),
+                       interleaved: format.mFormatFlags & kAudioFormatFlagIsNonInterleaved == 0)
+    }
+
+    /// FocalSonic's own process object, once it has one (it gets it by playing audio).
+    private func hostProcesses() -> [AudioObjectID] {
+        guard let hostPID, let process = AudioObjects.processObject(pid: hostPID) else { return [] }
+        return [process]
+    }
+
+    /// Stops processing and releases the taps, which un-mutes the original audio.
     func destroy() {
         listeners.forEach { $0.remove() }
         listeners = []
@@ -138,9 +198,18 @@ final class ProcessTap {
             AudioHardwareDestroyAggregateDevice(aggregate)
             aggregate = AudioObjectID(kAudioObjectUnknown)
         }
-        if tap != AudioObjectID(kAudioObjectUnknown) {
-            AudioHardwareDestroyProcessTap(tap)
-            tap = AudioObjectID(kAudioObjectUnknown)
+        for capture in [renderer, host].compactMap({ $0 }) {
+            AudioHardwareDestroyProcessTap(capture.tap)
+        }
+        renderer = nil
+        host = nil
+    }
+
+    /// The loudest sample of FocalSonic's own audio (AirPlay only) since the last call.
+    func takeHostPeak() -> Float {
+        hostPeak.withLock { peak in
+            defer { peak = 0 }
+            return peak
         }
     }
 
@@ -155,11 +224,13 @@ final class ProcessTap {
             listeners.append(listener)
         }
 
-        // A renderer that starts (or restarts) after the tap was made has to be tapped anew.
+        // A process that starts (or restarts) after the taps were made has to be tapped anew.
         let listener = AudioObjects.addListener(AudioObjects.system, kAudioHardwarePropertyProcessObjectList) { [weak self] in
             guard let self else { return }
-            let current = Set(AudioObjects.ownProcessObjects(bundleIDs: Self.rendererBundleIDs))
-            if !current.isSubset(of: self.tappedProcesses) { self.onInvalidated?() }
+            let renderers = Set(AudioObjects.ownProcessObjects(bundleIDs: Self.rendererBundleIDs))
+            let rendererChanged = !renderers.isSubset(of: self.renderer?.processes ?? [])
+            let hostChanged = self.host.map { !Set(self.hostProcesses()).isSubset(of: $0.processes) } ?? false
+            if rendererChanged || hostChanged { self.onInvalidated?() }
         }
         if let listener { listeners.append(listener) }
     }
@@ -175,52 +246,83 @@ final class ProcessTap {
         let outputChannels = max(1, Int(first.mNumberChannels))
         let frames = Int(first.mDataByteSize) / (MemoryLayout<Float>.size * (outputInterleaved ? outputChannels : 1))
 
-        // The tap's stream follows any input streams of the output device itself.
-        let tapStart = inputs.count - tapBufferCount
+        if airPlay != nil {
+            // The music plays on the AirPlay speakers; the Mac's own output stays silent.
+            for index in 0..<outputs.count where outputs[index].mData != nil {
+                memset(outputs[index].mData, 0, Int(outputs[index].mDataByteSize))
+            }
+        }
 
         var offset = 0
         while offset < frames {
             let count = min(frames - offset, chain.maxFrames)
-            readTap(inputs, from: tapStart, offset: offset, count: count)
+            read(renderer, inputs, offset: offset, count: count, left: chain.left, right: chain.right)
             chain.process(frames: count)
-            writeOutput(outputs, offset: offset, count: count)
+
+            if let airPlay {
+                mixHost(inputs, offset: offset, count: count)
+                airPlay.write(left: chain.left, right: chain.right, count: count)
+            } else {
+                writeOutput(outputs, offset: offset, count: count)
+            }
             offset += count
         }
 
         // Any further output buffers (extra channels or streams) stay silent.
+        guard airPlay == nil else { return }
         let used = outputInterleaved ? 1 : min(2, outputs.count)
         for index in used..<outputs.count where outputs[index].mData != nil {
             memset(outputs[index].mData, 0, Int(outputs[index].mDataByteSize))
         }
     }
 
-    private func readTap(_ inputs: UnsafeMutableAudioBufferListPointer, from tapStart: Int, offset: Int, count: Int) {
-        let left = chain.left, right = chain.right
+    private func read(_ capture: Capture?, _ inputs: UnsafeMutableAudioBufferListPointer, offset: Int, count: Int,
+                      left: UnsafeMutablePointer<Float>, right: UnsafeMutablePointer<Float>) {
+        let start = capture.map { inputs.count - $0.fromEnd } ?? -1
 
-        guard tapStart >= 0, let data = inputs[tapStart].mData?.assumingMemoryBound(to: Float.self) else {
+        guard let capture, start >= 0, start < inputs.count,
+              let data = inputs[start].mData?.assumingMemoryBound(to: Float.self) else {
             left.update(repeating: 0, count: count)
             right.update(repeating: 0, count: count)
             return
         }
 
-        if tapInterleaved {
-            let available = Int(inputs[tapStart].mDataByteSize) / (MemoryLayout<Float>.size * tapChannels) - offset
+        if capture.interleaved {
+            let channels = capture.channels
+            let available = Int(inputs[start].mDataByteSize) / (MemoryLayout<Float>.size * channels) - offset
             let usable = max(0, min(count, available))
             for frame in 0..<usable {
-                let base = (offset + frame) * tapChannels
+                let base = (offset + frame) * channels
                 left[frame] = data[base]
-                right[frame] = tapChannels > 1 ? data[base + 1] : data[base]
+                right[frame] = channels > 1 ? data[base + 1] : data[base]
             }
             if usable < count {
                 (left + usable).update(repeating: 0, count: count - usable)
                 (right + usable).update(repeating: 0, count: count - usable)
             }
         } else {
-            let secondIndex = tapChannels > 1 ? tapStart + 1 : tapStart
+            let secondIndex = capture.channels > 1 && start + 1 < inputs.count ? start + 1 : start
             let second = inputs[secondIndex].mData?.assumingMemoryBound(to: Float.self) ?? data
             left.update(from: data + offset, count: count)
             right.update(from: second + offset, count: count)
         }
+    }
+
+    /// Adds FocalSonic's own audio, untouched, to the processed music.
+    private func mixHost(_ inputs: UnsafeMutableAudioBufferListPointer, offset: Int, count: Int) {
+        guard host != nil else { return }
+        read(host, inputs, offset: offset, count: count, left: hostLeft, right: hostRight)
+
+        let length = vDSP_Length(count)
+        var leftPeak: Float = 0
+        var rightPeak: Float = 0
+        vDSP_maxmgv(hostLeft, 1, &leftPeak, length)
+        vDSP_maxmgv(hostRight, 1, &rightPeak, length)
+        let peak = max(leftPeak, rightPeak)
+        if peak > 0 { _ = hostPeak.withLockIfAvailable { $0 = max($0, peak) } }
+
+        vDSP_vadd(chain.left, 1, hostLeft, 1, chain.left, 1, length)
+        vDSP_vadd(chain.right, 1, hostRight, 1, chain.right, 1, length)
     }
 
     private func writeOutput(_ outputs: UnsafeMutableAudioBufferListPointer, offset: Int, count: Int) {

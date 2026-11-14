@@ -54,6 +54,8 @@ namespace FocalSonic.MacOS
         public static event Action<string, string>? VariantChanged;
         public static event Action<string, double?>? RemoteCommand;
         public static event Action<bool, string?>? EffectsChanged;
+        /// <summary>FocalSonic's AirPlay route started or ended: active, the speakers' names, and why it failed (if it did).</summary>
+        public static event Action<bool, string[], string?>? AirPlayChanged;
 
         /// <summary>Changes every time the helper is relaunched; state it held must be resent.</summary>
         public int Generation { get; }
@@ -64,6 +66,7 @@ namespace FocalSonic.MacOS
         readonly TaskCompletionSource Ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
         readonly object WriteLock = new();
         int NextID;
+        bool AirPlayActive;
 
         MacHelper(int generation)
         {
@@ -84,7 +87,17 @@ namespace FocalSonic.MacOS
             };
 
             Process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
-            Process.Exited += (_, _) => FailPending("FocalSonicHelper exited unexpectedly");
+            Process.Exited += (_, _) =>
+            {
+                FailPending("FocalSonicHelper exited unexpectedly");
+
+                // Its AirPlay route went with it.
+                if (AirPlayActive)
+                {
+                    AirPlayActive = false;
+                    AirPlayChanged?.Invoke(false, [], null);
+                }
+            };
             Process.Start();
 
             _ = Task.Run(ReadMessagesAsync);
@@ -225,6 +238,11 @@ namespace FocalSonic.MacOS
                     break;
                 case "effects":
                     EffectsChanged?.Invoke(message.Value<bool?>("active") == true, message.Value<string>("error"));
+                    break;
+                case "airplay":
+                    AirPlayActive = message.Value<bool?>("active") == true;
+                    var speakers = message["speakers"]?.Values<string>().OfType<string>().ToArray() ?? [];
+                    AirPlayChanged?.Invoke(AirPlayActive, speakers, message.Value<string>("error"));
                     break;
             }
         }

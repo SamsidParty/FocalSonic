@@ -30,6 +30,6 @@
     <key>NSAppleMusicUsageDescription</key>
     <string>FocalSonic plays music from your Apple Music subscription.</string>
     <key>NSAudioCaptureUsageDescription</key>
-    <string>FocalSonic processes Apple Music playback to apply the equalizer, reverb, volume and speed effects you choose.</string>
+    <string>FocalSonic captures its own playback to apply the equalizer, reverb, volume and speed effects you choose, and to play it on AirPlay speakers.</string>
 </dict>
 </plist>

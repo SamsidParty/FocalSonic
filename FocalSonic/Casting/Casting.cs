@@ -59,6 +59,9 @@ namespace FocalSonic.Casting
             // AirPlay teardown
             try { CurrentAirPlay?.Stop(); } catch { }
             CurrentAirPlay = null;
+#if MACOS
+            if (CurrentDeviceType == "airplay") MacOS.MacAirPlay.Stop();
+#endif
 
             // Back to "local" restores the playback gain (un-mutes the PC speakers).
             AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("local");
@@ -126,6 +129,11 @@ namespace FocalSonic.Casting
         {
             var devices = new List<CastDeviceReference>();
 
+#if MACOS
+            // macOS doesn't let apps list AirPlay speakers, so this one entry opens Apple's picker.
+            devices.Add(MacOS.MacAirPlay.Device);
+#endif
+
             try { devices.AddRange(await GetChromecastDevices()); } catch { }
 
             // Only advertise AirPlay if the streaming module is actually available
@@ -181,6 +189,7 @@ namespace FocalSonic.Casting
 
             var device = CastDeviceReference.GetByID(referenceID);
             if (device == null) return "device-not-found";
+            if (device.Type == "airplay-picker") return "use-picker"; // showAirPlayPicker opens it
 
             if (device.Type == "airplay")
             {
@@ -189,6 +198,31 @@ namespace FocalSonic.Casting
 
             return await StartChromecast(device);
         }
+
+#if MACOS
+        /// <summary>
+        /// FocalSonicHelper's AirPlay route started or ended. The user picks (and changes, or drops)
+        /// speakers in Apple's own picker, so this follows the route rather than starting it.
+        /// </summary>
+        public static void NativeAirPlayChanged(bool active)
+        {
+            if (active)
+            {
+                if (CurrentDeviceType == "airplay") return;
+                if (Client != null) HandleDisconnect(); // Chosen over the Chromecast that was playing.
+
+                CurrentDeviceID = MacOS.MacAirPlay.DeviceID;
+                CurrentDeviceType = "airplay";
+                LastSongID = "";
+                // Playback stays local (and is captured), like AirPlay on the other platforms.
+                _ = AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("airplay");
+            }
+            else if (CurrentDeviceType == "airplay")
+            {
+                HandleDisconnect();
+            }
+        }
+#endif
 
         static async Task<string> StartAirPlay(CastDeviceReference device)
         {

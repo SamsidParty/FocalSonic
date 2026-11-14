@@ -146,8 +146,9 @@ namespace FocalSonic.AudioPlayer
             }
         }
 
-        // When airplaying, make the volume so small it's inaudible on the local PC (the airplay module will multiply it again)
-        float EffectiveVolume() => (float)(Volume * (OutputDevice == "airplay" ? 1e-6 : 1.0));
+        // When airplaying, make the volume so small it's inaudible on the local PC (the airplay module will multiply it again).
+        // macOS needn't: its capture mutes FocalSonic's own output instead.
+        float EffectiveVolume() => (float)(Volume * (OutputDevice == "airplay" && !OperatingSystem.IsMacOS() ? 1e-6 : 1.0));
 
         public override async Task SetVolume(double volume)
         {

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds FocalSonicHelper, the native macOS companion process (MusicKit playback,
-# audio effects and system Now Playing). FocalSonic.csproj runs this on macOS builds.
+# audio effects, AirPlay and system Now Playing). FocalSonic.csproj runs this on macOS builds.
 #
 # Usage: ./build.sh [output-dir]           (default: ./build)
 # Env:   UNIVERSAL=1                        build an arm64 + x86_64 binary
@@ -51,6 +51,7 @@ for arch in "${ARCHS[@]}"; do
         -framework MusicKit \
         -framework MediaPlayer \
         -framework AVFoundation \
+        -framework CoreMedia \
         -framework CoreAudio \
         -framework AudioToolbox \
         -framework Accelerate \

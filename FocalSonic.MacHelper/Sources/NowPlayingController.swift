@@ -18,6 +18,9 @@ final class NowPlayingController {
     private var artworkTask: Task<Void, Never>?
     private var lastInfo: [String: Any] = [:]
 
+    /// Whether the host says music from another server is playing (Apple Music reports its own).
+    private(set) var isPlaying = false
+
     private init() {}
 
     func update(_ command: Command) {
@@ -29,6 +32,7 @@ final class NowPlayingController {
         }
 
         let playing = command.bool("playing") ?? false
+        isPlaying = playing
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: command.string("title") ?? "",
             MPMediaItemPropertyArtist: command.string("artist") ?? "",
@@ -53,6 +57,7 @@ final class NowPlayingController {
     }
 
     func clear() {
+        isPlaying = false
         artworkTask?.cancel()
         artworkURL = nil
         artwork = nil

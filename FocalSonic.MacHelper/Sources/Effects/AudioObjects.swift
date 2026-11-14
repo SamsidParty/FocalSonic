@@ -68,6 +68,16 @@ enum AudioObjects {
         }
     }
 
+    /// The Core Audio process object for `pid`, if it has one.
+    static func processObject(pid: pid_t) -> AudioObjectID? {
+        var address = address(kAudioHardwarePropertyTranslatePIDToProcessObject)
+        var pid = pid
+        var process = AudioObjectID(kAudioObjectUnknown)
+        var size = UInt32(MemoryLayout<AudioObjectID>.size)
+        let status = AudioObjectGetPropertyData(system, &address, UInt32(MemoryLayout<pid_t>.size), &pid, &size, &process)
+        return status == noErr && process != AudioObjectID(kAudioObjectUnknown) ? process : nil
+    }
+
     /// Runs `handler` on the main queue whenever the property changes. Keep the returned
     /// token and pass it to `removeListener` to stop.
     static func addListener(_ object: AudioObjectID, _ selector: AudioObjectPropertySelector,

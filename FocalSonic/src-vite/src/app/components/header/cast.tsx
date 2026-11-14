@@ -1,5 +1,5 @@
 import { AirplayIcon, LaptopIcon, MonitorIcon, RefreshCwIcon, ServerIcon, SpeakerIcon, TvMinimalPlayIcon, UnplugIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
 
@@ -19,7 +19,8 @@ import clsx from "clsx";
 interface DeviceReference {
     Name: string;
     ReferenceID: string;
-    // "chromecast" (remote playback) or "airplay" (direct local capture).
+    // "chromecast" (remote playback), "airplay" (direct local capture), or "airplay-picker"
+    // (macOS: opens Apple's AirPlay picker, since macOS doesn't let apps list the speakers).
     Type?: string;
     Icon?: string;
 }
@@ -61,6 +62,7 @@ export function Cast() {
     const [isScanning, setIsScanning] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const { castStatus, setCastStatus } = useCastStatus();
+    const triggerRef = useRef<HTMLButtonElement>(null);
 
     const { t } = useTranslation();
     const alignPosition = isMac ? "end" : "center";
@@ -88,6 +90,13 @@ export function Cast() {
         await window.igniteView?.commandBridge?.startCasting?.(deviceReferenceID);
     };
 
+    // The picker is anchored to the cast button, where the menu was.
+    const openAirPlayPicker = async () => {
+        const rect = triggerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        await window.igniteView?.commandBridge?.showAirPlayPicker?.(rect.left, rect.top, rect.width, rect.height);
+    };
+
     const stopCasting = async () => {
         setCastStatus(null);
         await window.igniteView?.commandBridge?.disconnectCast?.();
@@ -98,7 +107,7 @@ export function Cast() {
             <LogoutObserver />
 
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-                <DropdownMenuTrigger className="user-dropdown-trigger">
+                <DropdownMenuTrigger ref={triggerRef} className="user-dropdown-trigger">
                     <Avatar className="w-8 h-8 rounded-md cursor-pointer">
                         <AvatarFallback className="text-sm bg-transparent hover:bg-accent rounded-md">
                             <AirplayIcon className={clsx("w-4 h-4", !!castStatus && "text-primary")} />
@@ -119,9 +128,16 @@ export function Cast() {
                     {
                         deviceList.map((device) => {
                             const DeviceIcon = DEVICE_ICONS[device.Icon as keyof typeof DEVICE_ICONS]
-                                ?? (device.Type === "airplay" ? AirplayIcon : SpeakerIcon);
+                                ?? (device.Type?.startsWith("airplay") ? AirplayIcon : SpeakerIcon);
+                            // The picker stays available while it's in use, to change speakers.
+                            const isPicker = device.Type === "airplay-picker";
+                            const disabled = !!castStatus && !(isPicker && castStatus == device.ReferenceID);
                             return (
-                                <DropdownMenuItem disabled={!!castStatus} onClick={() => castToDevice(device.ReferenceID)} key={device.ReferenceID}>
+                                <DropdownMenuItem
+                                    disabled={disabled}
+                                    onClick={() => isPicker ? openAirPlayPicker() : castToDevice(device.ReferenceID)}
+                                    key={device.ReferenceID}
+                                >
                                     <DeviceIcon className={clsx("mr-2 h-4 w-4", !!(castStatus == device.ReferenceID) && "text-primary")} />
                                     <span className={clsx(!!(castStatus == device.ReferenceID) && "text-primary")}>{device.Name}</span>
                                 </DropdownMenuItem>

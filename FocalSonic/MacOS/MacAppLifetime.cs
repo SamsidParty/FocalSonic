@@ -119,6 +119,10 @@ namespace FocalSonic.MacOS
         internal static bool IsMainWindow(IntPtr nsWindow) =>
             MainWindows.TryGetValue(nsWindow, out var window) && ReferenceEquals(window, Program.MainWindow);
 
+        /// <summary>The NSWindow of a main window that's still open, or zero. Main thread only.</summary>
+        internal static IntPtr NativeWindow(WebWindow window) =>
+            MainWindows.FirstOrDefault((entry) => ReferenceEquals(entry.Value, window)).Key;
+
         /// <summary>Brings the main window to the front, opening it again if it was closed. From any thread.</summary>
         public static void ShowMainWindow()
         {

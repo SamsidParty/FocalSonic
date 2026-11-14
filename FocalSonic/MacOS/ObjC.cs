@@ -32,7 +32,16 @@ namespace FocalSonic.MacOS
 
         // A BOOL comes back in the low byte only; the rest of the register is undefined on arm64.
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] static extern byte SendByte(IntPtr receiver, IntPtr selector);
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] static extern byte SendByte(IntPtr receiver, IntPtr selector, IntPtr argument);
         public static bool SendBool(IntPtr receiver, string selector) => SendByte(receiver, Selector(selector)) != 0;
+        public static bool SendBool(IntPtr receiver, string selector, IntPtr argument) => SendByte(receiver, Selector(selector), argument) != 0;
+
+        // A double comes back in a floating point register through plain objc_msgSend on both architectures.
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] static extern double SendDouble(IntPtr receiver, IntPtr selector);
+        public static double SendDouble(IntPtr receiver, string selector) => SendDouble(receiver, Selector(selector));
+
+        public static bool RespondsTo(IntPtr receiver, string selector) =>
+            receiver != IntPtr.Zero && SendBool(receiver, "respondsToSelector:", Selector(selector));
 
         // Methods returning an NSRect: Apple silicon returns it in registers through objc_msgSend,
         // Intel needs objc_msgSend_stret (which doesn't exist on arm64; P/Invoke binds lazily).

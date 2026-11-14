@@ -1,7 +1,8 @@
 # FocalSonic.MacHelper
 
 `FocalSonicHelper` is FocalSonic's native companion process on macOS. It plays Apple Music
-through MusicKit, runs the audio effects engine, and publishes the system Now Playing entry.
+through MusicKit, runs the audio effects engine, plays to AirPlay speakers, and publishes the
+system Now Playing entry.
 The .NET side talks to it through `FocalSonic/MacOS/MacHelper.cs`.
 
 On Windows and Linux, Apple Music plays in a hidden music.apple.com window driven by FocalMK.
@@ -64,9 +65,34 @@ The processing reproduces FocalMK's Web Audio graph so presets sound the same ev
 | Reverb | Partitioned FFT convolution with FocalSonic's impulse responses and `ConvolverNode` normalisation |
 | Volume | The same squared curve as the web player, plus the pause/resume fade |
 
-Capture needs the "Screen & System Audio Recording" permission. If it's granted but no audio
+Capture needs the "Screen & System Audio Recording" permission (AirPlay too). If it's granted but no audio
 arrives while playing (consent denied), capture is abandoned so Apple Music is never left
 muted, and FocalSonic shows an error.
+
+## AirPlay
+
+Windows and Linux stream to AirPlay with a Python module (FocalSonic.Airplay). macOS does it
+natively, through the same capture as the effects, so only FocalSonic's audio goes to the
+speakers and the rest of the Mac stays on its output device.
+
+macOS has no public API for this. AVFoundation's route discovery is filtered for apps other than
+Apple's (the system finds the speakers but doesn't hand them over), and the Core Audio "AirPlay"
+device only exists for the system-wide route. What works is what Music does:
+
+- The helper makes an `AVOutputContext` of its own (`iTunesAudioContext`: app-owned, audio,
+  multi-room). See [OutputContext.swift](Sources/AirPlay/OutputContext.swift).
+- The host shows Apple's AirPlay picker for it: an `AVRoutePickerView` pointed at the context's
+  ID (`setOutputContextID:`), invisible over the cast button and pressed for the user, so the menu
+  is Apple's own (`FocalSonic/MacOS/MacAirPlay.cs`). The cast menu has one "AirPlay" entry for it.
+- Once speakers are picked, capture runs whether or not effects are on. The aggregate's output
+  stays silent, and the processed audio goes into an `AVSampleBufferAudioRenderer` bound to the
+  context ([AirPlayStream.swift](Sources/AirPlay/AirPlayStream.swift)). FocalSonic itself is
+  tapped too, for other servers' music, and mixed in without effects (it applies its own volume).
+
+The capture and the speakers run on different clocks, so the queued audio is kept between
+bounds, with a skip or a short gap (faded in) when it drifts out of them. Expect the usual AirPlay
+delay of a couple of seconds. `AVOutputContext` and the picker's `setOutputContextID:` are private
+API, looked up at runtime; if a future macOS changes them, AirPlay reports that it's unavailable.
 
 ## Protocol
 
@@ -86,13 +112,16 @@ One JSON object per line on stdin/stdout; stderr carries logs.
 {"id": 10, "cmd": "setVolume", "gain": 0.36}             // linear gain
 {"id": 11, "cmd": "setEffects", "bands": [{"type": "PEAK", "freq": 31, "gain": 4, "q": 1.41}], "reverb": 0.3, "impulse": "/path/to.wav"}
 {"id": 12, "cmd": "nowPlaying", "active": true, "title": "…", "artist": "…", "playing": true, …}
+{"id": 13, "cmd": "airplayPrepare", "hostPID": 4242}       // {"contextID": "…", "active": false}
+{"id": 14, "cmd": "airplayStop"}
 
 // helper -> host
 {"reply": 4, "ok": true, "duration": 262.1}
 {"reply": 5, "ok": false, "error": "…"}
 {"event": "state", "id": "1785614776", "status": "playing", "time": 12.3, "duration": 262.1}
 {"event": "advanced" | "ended" | "remote" | "variant" | "effects", …}
+{"event": "airplay", "active": true, "speakers": ["Bedroom"]}  // and "error" when it had to stop
 ```
 
 Playback commands run strictly in order (a pause sent during a slow load lands after it);
-`setVolume`, `setEffects` and `nowPlaying` don't wait behind them.
+`setVolume`, `setEffects`, `nowPlaying` and the AirPlay commands don't wait behind them.

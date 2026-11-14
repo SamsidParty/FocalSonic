@@ -21,7 +21,7 @@ final class Dispatcher {
     func receive(_ command: Command) {
         switch command.name {
         // These don't touch MusicKit's player, so they never wait behind a slow load.
-        case "nowPlaying", "setVolume", "setEffects", "ping":
+        case "nowPlaying", "setVolume", "setEffects", "airplayPrepare", "airplayStop", "ping":
             runImmediately(command)
         case "shutdown":
             command.succeed()
@@ -60,6 +60,13 @@ final class Dispatcher {
                     settings.impulsePath = command.string("impulse")
                 }
                 command.succeed(["effectsActive": EffectsController.shared.isActive])
+            case "airplayPrepare":
+                let hostPID = command.number("hostPID").map { pid_t($0) }
+                let contextID = try AirPlayController.shared.prepare(hostPID: hostPID)
+                command.succeed(["contextID": contextID, "active": AirPlayController.shared.isActive])
+            case "airplayStop":
+                AirPlayController.shared.stop()
+                command.succeed()
             default:
                 command.succeed()
             }
@@ -170,6 +177,7 @@ enum Helper {
     @MainActor
     static func exit() -> Never {
         PlaybackController.shared.shutdown()
+        AirPlayController.shared.shutdown()
         EffectsController.shared.shutdown()
         NowPlayingController.shared.clear()
         Darwin.exit(0)
