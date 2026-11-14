@@ -8,7 +8,7 @@ import { igniteViewDragRegion } from "@/utils/igniteViewDragRegion";
 import { isLinux, isMac, isWindows } from "@/utils/osType";
 import { checkServerType } from "@/utils/servers";
 import clsx from "clsx";
-import React from "react";
+import React, { useEffect } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Cast } from "../components/header/cast";
 import { LibrarySyncIndicator } from "../components/header/library-sync-indicator";
@@ -20,25 +20,33 @@ export function Header() {
     const { setMainDrawerState } = useMainDrawerState();
     const { isAppleMusic } = checkServerType();
 
+    const setAppFullscreen = (fullscreen: boolean) => {
+        if (fullscreen) {
+            enterFullscreen();
+        }
+        else {
+            exitFullscreen();
+        }
+        setMainDrawerState(fullscreen);
+    };
+
     useHotkeys("f11", () => {
         if (window.igniteView) {
-            if (isFullscreen()) {
-                exitFullscreen();
-                setMainDrawerState(false);
-            }
-            else {
-                enterFullscreen();
-                setMainDrawerState(true); 
-            }
+            setAppFullscreen(!isFullscreen());
         }
     });
+
+    // macOS: the green traffic light toggles fullscreen natively, so follow it like F11
+    useEffect(() => {
+        window.onNativeFullscreenChange = setAppFullscreen;
+        return () => { delete window.onNativeFullscreenChange; };
+    }, []);
 
 
     return (
         <header
             className={clsx(
-                "w-full grid grid-cols-header app-header h-header px-1 fixed top-0 right-0 left-0 z-20 bg-bar xxs:hidden",
-                (isWindows || isLinux) && "pr-0"
+                "w-full grid grid-cols-header app-header h-header px-1 fixed top-0 right-0 left-0 z-20 bg-bar xxs:hidden pr-0",
             )}
         >
             <div {...igniteViewDragRegion} className="flex items-center">

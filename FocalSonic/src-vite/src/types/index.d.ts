@@ -18,5 +18,6 @@ declare global {
         rehydratePlayerStore?: (newState: string) => Promise<void> | void
         rehydratePlayerCallbackData?: (newData: string) => Promise<void> | void
         rehydrateSharedStore?: (newState: string) => Promise<void> | void
+        onNativeFullscreenChange?: (fullscreen: boolean) => void
     }
 }

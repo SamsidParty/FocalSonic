@@ -87,6 +87,18 @@ namespace FocalSonic.MacOS
             Layout(window);
         }
 
+        /// <summary>
+        /// Call after changing a set-up window's bounds. IgniteView (saucer) then resets the style mask
+        /// from its own copy, which lacks FullSizeContentView, putting a native title bar above the header.
+        /// </summary>
+        public static void Restore(IntPtr window)
+        {
+            if (!Observed.ContainsKey(window)) return;
+
+            ObjC.Send(window, "setStyleMask:", StyleMask(window) | FullSizeContentView);
+            Layout(window);
+        }
+
         /// <summary>Makes the title bar as tall as the header and centres the traffic lights in it.</summary>
         static void Layout(IntPtr window)
         {

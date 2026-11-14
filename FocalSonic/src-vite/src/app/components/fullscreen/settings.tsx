@@ -18,11 +18,11 @@ export function FullscreenSettings(props) {
     );
 }
 
-export function QueueSettings() {
+export function QueueSettings({ className } : { className : string }) {
     const { useDynamicColorsOnQueue } = useDynamicColors();
 
     return (
-        <DropdownSettingsPopover>
+        <DropdownSettingsPopover className={className}>
             <>
                 <QueueDynamicColorOption showSeparator={false} />
                 {!useDynamicColorsOnQueue && <ColorIntensityOption showSeparator={false} />}

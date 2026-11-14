@@ -20,6 +20,7 @@ import { ChevronDownIcon, Maximize2Icon } from "lucide-react";
 import { ComponentPropsWithoutRef } from "react";
 import { useFullscreenBackdrop } from "../fullscreen/backdrop";
 import Equalizer from "../player/equalizer";
+import { isMac } from "@/utils/osType";
 
 export function MainDrawerPage() {
     const { mainDrawerState, closeDrawer } = useMainDrawerState();
@@ -66,7 +67,7 @@ export function MainDrawerPage() {
                         )}
                         {...(isMiniPlayer ? { "data-webview-drag": "true" } : {}) }
                     >
-                        { !isMiniPlayer && <QueueSettings /> }
+                        { !isMiniPlayer && <QueueSettings className={(isMac && !isFullscreen()) ? "ml-14 -mt-2" : ""} /> }
 
                         {
                             !isMiniPlayer && (

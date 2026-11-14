@@ -94,6 +94,7 @@ public class Program
         LinuxTrayIcon.Setup();
     #elif MACOS
         FocalSonic.MacOS.MacAppLifetime.Setup();
+        FocalSonic.MacOS.MacWindowManagement.Setup();
     #endif
 
         CreateMainWindow();
