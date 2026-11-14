@@ -33,7 +33,7 @@ export default function InitialLoader() {
                     width={150}
                     className="w-full h-full"
                 >
-                    <AppleMusicIconLarge className="w-[50vh]"/>
+                    <AppleMusicIconLarge className="w-[50vh] fill-foreground"/>
                 </LensRipple>
             </div>
 
