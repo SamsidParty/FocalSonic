@@ -41,26 +41,28 @@ export function MainRoutes() {
             }
             tabIndex={-1}
         >
-            <div className={
-                clsx(
-                    "absolute flex inset-0 transition-[margin-left,transform,margin-right] bg-bar z-[-100] duration-500 ease-long",
-                    sidebarOpen ? "ml-sidebar" : "ml-mini-sidebar",
-                    (extraBarContent != "none") ? "mr-sidebar" : "mr-0",
-                    isPlayerAtTop ? "mt-[calc(var(--player-height)+var(--header-height))]" : "mb-player mt-header"
-                )}
-            />
-            <div className="relative overflow-hidden flex h-full w-full rounded-md mr-3 app-inner">
-                <ScrollArea
-                    id="main-scroll-area"
-                    className={clsx(
-                        "w-full bg-body main-page",
-                        (playerStyle === "floating" && !isPlayerAtTop) && "pb-[90px]",
-                    )}
-                    ref={animationRef}
-                    onAnimationEnd={(event: React.AnimationEvent<HTMLDivElement>) => event.currentTarget.style.animation = ""}
-                >
-                    <Outlet />
-                </ScrollArea>
+            {/*
+                The bar backdrop and the page share one compositing layer (transform-gpu), like the
+                fixed sidebar and extrabar. Painted into WebKit's root layer instead, these
+                translucent colours flicker on macOS.
+            */}
+            <div className="flex h-full w-full bg-bar transform-gpu">
+                <div className="relative overflow-hidden flex h-full w-full rounded-md mr-3 app-inner">
+                    <ScrollArea
+                        id="main-scroll-area"
+                        className={clsx(
+                            "w-full bg-body main-page",
+                            (playerStyle === "floating" && !isPlayerAtTop) && "pb-[90px]",
+                        )}
+                        ref={animationRef}
+                        onAnimationEnd={(event: React.AnimationEvent<HTMLDivElement>) => {
+                            // animationend bubbles up from the page's own animations; only clear the page-in one.
+                            if (event.target === event.currentTarget) event.currentTarget.style.animation = "";
+                        }}
+                    >
+                        <Outlet />
+                    </ScrollArea>
+                </div>
             </div>
         </main>
     );
