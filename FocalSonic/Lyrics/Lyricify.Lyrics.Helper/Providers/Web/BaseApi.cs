@@ -5,7 +5,7 @@ namespace Lyricify.Lyrics.Providers.Web
 {
     public abstract class BaseApi
     {
-        public static HttpClient HttpClient = new();
+        public static HttpClient HttpClient = FocalSonic.Helpers.DualStackHttp.CreateClient();
 
         public const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36";
 

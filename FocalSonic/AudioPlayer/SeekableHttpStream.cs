@@ -34,7 +34,7 @@ public class SeekableHttpStream : Stream
     public SeekableHttpStream(string url)
     {
         _url = url ?? throw new ArgumentNullException(nameof(url));
-        _httpClient = new HttpClient();
+        _httpClient = FocalSonic.Helpers.DualStackHttp.CreateClient();
 
         try
         {

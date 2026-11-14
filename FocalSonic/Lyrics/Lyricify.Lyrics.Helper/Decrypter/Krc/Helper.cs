@@ -4,7 +4,7 @@ namespace Lyricify.Lyrics.Decrypter.Krc
 {
     public class Helper
     {
-        public readonly static HttpClient Client = new();
+        public readonly static HttpClient Client = FocalSonic.Helpers.DualStackHttp.CreateClient();
 
         /// <summary>
         /// 通过 ID 和 AccessKey 获取解密后的歌词

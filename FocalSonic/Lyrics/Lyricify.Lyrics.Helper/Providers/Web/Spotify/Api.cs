@@ -29,7 +29,7 @@ namespace Lyricify.Lyrics.Providers.Web.Spotify
         }
 
         private static readonly object _lock = new();
-        private static readonly HttpClient _httpClient = new();
+        private static readonly HttpClient _httpClient = FocalSonic.Helpers.DualStackHttp.CreateClient();
         private const string TokenUrl = "https://open.spotify.com/api/token";
         private const string SearchUrl = "https://api.spotify.com/v1/search";
         private const string PathfinderSearchUrl = "https://api-partner.spotify.com/pathfinder/v1/query";

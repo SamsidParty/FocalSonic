@@ -89,8 +89,9 @@ namespace FocalSonic.Helpers
                 }
 
                 // Fetch + cache
-                using (var handler = new HttpClientHandler()
+                using (var handler = new SocketsHttpHandler()
                 {
+                    ConnectCallback = DualStackHttp.ConnectAsync,
                     AutomaticDecompression = System.Net.DecompressionMethods.GZip
                                             | System.Net.DecompressionMethods.Deflate
                                             | System.Net.DecompressionMethods.Brotli

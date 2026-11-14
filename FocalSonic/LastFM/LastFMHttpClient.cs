@@ -15,7 +15,7 @@ namespace FocalSonic.LastFM
     {
         public static LastFMHttpClient Instance = new LastFMHttpClient();
 
-        public LastFMHttpClient()
+        public LastFMHttpClient() : base(Helpers.DualStackHttp.CreateHandler())
         {
             this.BaseAddress = new Uri("https://ws.audioscrobbler.com/2.0/");
         }

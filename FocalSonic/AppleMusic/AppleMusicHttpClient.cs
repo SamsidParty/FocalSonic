@@ -7,7 +7,7 @@ namespace FocalSonic.AppleMusic
     {
         public static AppleMusicHttpClient Instance = new AppleMusicHttpClient();
 
-        public AppleMusicHttpClient()
+        public AppleMusicHttpClient() : base(Helpers.DualStackHttp.CreateHandler())
         {
             this.BaseAddress = new Uri("https://amp-api.music.apple.com/v1/");
         }

@@ -41,7 +41,7 @@ namespace Lyricify.Lyrics.Providers.Web
         /// </summary>
         public static void ClearProxy()
         {
-            BaseApi.HttpClient = new();
+            BaseApi.HttpClient = FocalSonic.Helpers.DualStackHttp.CreateClient();
         }
     }
 }

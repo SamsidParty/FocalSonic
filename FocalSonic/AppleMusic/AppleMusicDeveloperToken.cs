@@ -22,7 +22,7 @@ namespace FocalSonic.AppleMusic
 
         static HttpClient CreateClient()
         {
-            var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            var client = new HttpClient(Helpers.DualStackHttp.CreateHandler()) { Timeout = TimeSpan.FromSeconds(30) };
             // The site serves its app bundle to browsers.
             client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15");
             return client;

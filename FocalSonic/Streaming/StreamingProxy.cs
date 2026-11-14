@@ -13,7 +13,7 @@ namespace FocalSonic.Streaming
 {
     public class StreamingProxy
     {
-        public static HttpClient StreamingClient = new HttpClient();
+        public static HttpClient StreamingClient = Helpers.DualStackHttp.CreateClient();
 
         public static Dictionary<WatsonWebserver.Core.HttpMethod, System.Net.Http.HttpMethod> MethodMapping = new()
         {
