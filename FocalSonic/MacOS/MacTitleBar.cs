@@ -152,7 +152,7 @@ namespace FocalSonic.MacOS
 
         static long StyleMask(IntPtr window) => ObjC.SendLong(window, ObjC.Selector("styleMask"));
 
-        static IEnumerable<IntPtr> WindowsTitled(string? title)
+        internal static IEnumerable<IntPtr> WindowsTitled(string? title)
         {
             var windows = ObjC.Send(ObjC.Send(ObjC.Class("NSApplication"), "sharedApplication"), "windows");
             var count = ObjC.SendLong(windows, ObjC.Selector("count"));

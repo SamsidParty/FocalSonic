@@ -57,7 +57,11 @@ public class Program
         App.BrowserFlags.Add("--disable-blink-features=WebAuth");
     #endif
 
+    #if MACOS
+        App.RegisterDynamicFileRoute("/show-window", async (HttpContextBase ctx) => { FocalSonic.MacOS.MacAppLifetime.ShowMainWindow(); }, WatsonWebserver.Core.HttpMethod.GET);
+    #else
         App.RegisterDynamicFileRoute("/show-window", async (HttpContextBase ctx) => { CreateMainWindow(); }, WatsonWebserver.Core.HttpMethod.GET);
+    #endif
 
         // Allows communication with the apple music API from javascript
         App.RegisterDynamicFileRoute("/applemusic", AppleMusicHttpProxy.AppleMusicHttpProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
@@ -97,13 +101,24 @@ public class Program
         FocalSonic.MacOS.MacWindowManagement.Setup();
     #endif
 
-        CreateMainWindow();
+    #if MACOS
+        // The run loop isn't draining autorelease pools yet. Without one, references WebKit and
+        // AppKit autorelease while the window opens are never released, so once closed the window
+        // and its web view (with its web content process) would live on.
+        FocalSonic.MacOS.ObjC.WithAutoreleasePool(CreateMainWindow);
 
+        // AppKit's run loop only ends if something stops it, and saucer can't start it again:
+        // calling Run again would spin, leaving the app hung, so quit instead.
+        App.Run();
+        FocalSonic.MacOS.MacAppLifetime.Quit();
+    #else
+        CreateMainWindow();
 
         while (true)
         {
             App.Run();
         }
+    #endif
     }
 
     // Run before entering background mode to make sure the UI is not still running
@@ -138,6 +153,8 @@ public class Program
         #if WINDOWS
         Licensing.Context = StoreContext.GetDefault();
         WinRT.Interop.InitializeWithWindow.Initialize(Licensing.Context, App.MainWindow.NativeHandle);
+        #elif MACOS
+        FocalSonic.MacOS.MacAppLifetime.MainWindowShown(App.MainWindow);
         #endif
     }
 

@@ -188,11 +188,9 @@ namespace FocalSonic.MacOS
             catch (Exception ex) { Console.Error.WriteLine("Fullscreen sync failed: " + ex); }
         }
 
-        static bool IsMainWindow(IntPtr window)
-        {
-            var title = Program.MainWindow?.Title;
-            return title != null && ObjC.ToString(ObjC.Send(window, "title")) == title;
-        }
+        // Not by title: closing the window from fullscreen takes it out of fullscreen after IgniteView
+        // has let go of it, and IgniteView crashes reading a closed window's title.
+        static bool IsMainWindow(IntPtr window) => MacAppLifetime.IsMainWindow(window);
 
         /// <summary>IgniteView doesn't expose the NSWindow on macOS, so look it up by title.</summary>
         static IntPtr FindWindow(string? title)

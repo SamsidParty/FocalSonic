@@ -22,10 +22,17 @@ namespace FocalSonic.MacOS
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr argument);
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, long argument);
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, [MarshalAs(UnmanagedType.LPUTF8Str)] string argument);
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr a, IntPtr b);
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr a, IntPtr b, IntPtr c);
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr a, IntPtr b, IntPtr c, IntPtr d);
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, double argument);
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern void Send(IntPtr receiver, IntPtr selector, NSRect argument);
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern void Send(IntPtr receiver, IntPtr selector, NSSize argument);
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern long SendLong(IntPtr receiver, IntPtr selector);
+
+        // A BOOL comes back in the low byte only; the rest of the register is undefined on arm64.
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] static extern byte SendByte(IntPtr receiver, IntPtr selector);
+        public static bool SendBool(IntPtr receiver, string selector) => SendByte(receiver, Selector(selector)) != 0;
 
         // Methods returning an NSRect: Apple silicon returns it in registers through objc_msgSend,
         // Intel needs objc_msgSend_stret (which doesn't exist on arm64; P/Invoke binds lazily).
@@ -37,6 +44,20 @@ namespace FocalSonic.MacOS
             if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64) return SendRectArm64(receiver, Selector(selector));
             SendRectStret(out var rect, receiver, Selector(selector));
             return rect;
+        }
+
+        [DllImport(Runtime)] static extern IntPtr objc_autoreleasePoolPush();
+        [DllImport(Runtime)] static extern void objc_autoreleasePoolPop(IntPtr pool);
+
+        /// <summary>
+        /// Runs AppKit work in an autorelease pool, for the main thread before the run loop has
+        /// started (which drains one per turn): with no pool, what's autoreleased is never released.
+        /// </summary>
+        public static void WithAutoreleasePool(Action work)
+        {
+            var pool = objc_autoreleasePoolPush();
+            try { work(); }
+            finally { objc_autoreleasePoolPop(pool); }
         }
 
         public static IntPtr Class(string name) => objc_getClass(name);
@@ -91,6 +112,12 @@ namespace FocalSonic.MacOS
         public double X, Y, Width, Height;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    struct NSSize
+    {
+        public double Width, Height;
+    }
+
     /// <summary>
     /// Runs work on the AppKit main thread through libdispatch. Unlike IgniteView's
     /// InvokeOnMainThread this also works while no window is open (playing in the background).
@@ -100,6 +127,9 @@ namespace FocalSonic.MacOS
         const string LibSystem = "/usr/lib/libSystem.dylib";
 
         [DllImport(LibSystem)] static extern void dispatch_async_f(IntPtr queue, IntPtr context, delegate* unmanaged<IntPtr, void> work);
+        [DllImport(LibSystem)] static extern int pthread_main_np();
+
+        public static bool IsCurrent => pthread_main_np() != 0;
 
         // dispatch_get_main_queue() is a macro for the address of this symbol.
         static readonly IntPtr MainQueue = NativeLibrary.GetExport(NativeLibrary.Load(LibSystem), "_dispatch_main_q");

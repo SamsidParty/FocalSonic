@@ -352,7 +352,8 @@ namespace FocalSonic.AppleMusic
             }
             catch
             {
-                // The token is probably invalid
+                // The token is probably invalid (an expired web session hands back its dead token)
+                ErrorHandler.DisplayError("Apple Music", "Apple Music didn't accept this sign in. Please try signing in again.");
             }
         }
 

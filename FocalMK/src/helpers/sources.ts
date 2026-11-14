@@ -45,7 +45,13 @@ export async function getContentSources(catalogID: string | null, libraryID: str
             method: "POST",
             headers: { ...await getFetchHeaders(), "Content-Type": "application/json" },
             body: JSON.stringify(body),
-        }).then(res => res.json())
+        }).then(res => {
+            if (res.status === 401 || res.status === 403) {
+                handleSignInExpired();
+                throw new Error(`[FocalMK] Apple Music rejected the sign in (HTTP ${res.status})`);
+            }
+            return res.json();
+        })
     ]);
 
     // Merge enhanced HLS assets into the response if available
@@ -76,11 +82,22 @@ export async function getContentSources(catalogID: string | null, libraryID: str
             console.error("[FocalMK] No preview source found, playback will fail");
         }
 
+        const errorName = ERROR_CODES[webPlaybackResponse?.failureType as string];
+        if (errorName === errorNames.TOKEN_EXPIRED || errorName === errorNames.AUTHORIZATION_ERROR) {
+            handleSignInExpired();
+        }
+
         const message = webPlaybackResponse?.dialog?.message;
         throw new Error(message);
     }
     
     return webPlaybackResponse?.songList || null;
+}
+
+// The music user token expires (about six months after sign in) and can't be renewed. Callers
+// swallow loading errors, so without this playback just sits at 00:00 with no explanation.
+function handleSignInExpired() {
+    handleError("Your Apple Music sign in has expired. Sign out of FocalSonic, then sign in to Apple Music again.", false);
 }
 
 export async function tryGetEnhancedHLS(contentID: string): Promise<PlaybackAsset[]> {
