@@ -22,7 +22,22 @@ namespace FocalSonic.MacOS
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr argument);
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, long argument);
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, [MarshalAs(UnmanagedType.LPUTF8Str)] string argument);
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr a, IntPtr b, IntPtr c);
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr a, IntPtr b, IntPtr c, IntPtr d);
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern void Send(IntPtr receiver, IntPtr selector, NSRect argument);
         [DllImport(Runtime, EntryPoint = "objc_msgSend")] public static extern long SendLong(IntPtr receiver, IntPtr selector);
+
+        // Methods returning an NSRect: Apple silicon returns it in registers through objc_msgSend,
+        // Intel needs objc_msgSend_stret (which doesn't exist on arm64; P/Invoke binds lazily).
+        [DllImport(Runtime, EntryPoint = "objc_msgSend")] static extern NSRect SendRectArm64(IntPtr receiver, IntPtr selector);
+        [DllImport(Runtime, EntryPoint = "objc_msgSend_stret")] static extern void SendRectStret(out NSRect result, IntPtr receiver, IntPtr selector);
+
+        public static NSRect SendRect(IntPtr receiver, string selector)
+        {
+            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64) return SendRectArm64(receiver, Selector(selector));
+            SendRectStret(out var rect, receiver, Selector(selector));
+            return rect;
+        }
 
         public static IntPtr Class(string name) => objc_getClass(name);
         public static IntPtr Selector(string name) => sel_registerName(name);
@@ -67,6 +82,13 @@ namespace FocalSonic.MacOS
 
         /// <summary>BOOL is a signed char on Intel but a C bool on Apple silicon.</summary>
         public static string Bool => RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "B" : "c";
+    }
+
+    /// <summary>NSRect/CGRect on 64-bit: flat, so the runtime treats it as four doubles (an HFA on arm64).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    struct NSRect
+    {
+        public double X, Y, Width, Height;
     }
 
     /// <summary>

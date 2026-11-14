@@ -41,6 +41,9 @@ namespace FocalSonic.Helpers
             return window
                 .With((w) => { if (w is DesktopWebWindow) SetOptionalProperty(w, "AcrylicBackground", true); })
                 .With((w) => { if (PlatformManager.HasPlatformHint("win32")) w.WithoutTitleBar(); })
+#if MACOS
+                .With((w) => FocalSonic.MacOS.MacTitleBar.Apply(w))
+#endif
                 .With((w) => { if (w is Win32WebWindow) (w as Win32WebWindow)!.BackgroundMode = mode; });
         }
 
