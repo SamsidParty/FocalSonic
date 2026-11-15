@@ -132,7 +132,10 @@ namespace FocalSonic.AudioPlayer
             }
 
 
-            MediaPlaybackInfo.Instance.IsPlaying = isPlaying;
+            // Not MediaPlaybackInfo.IsPlaying: that is the player store's "should be playing",
+            // shared with the UI, and a reopened window restores its play/pause state from it.
+            // Writing the momentary engine status there (paused for a moment between tracks,
+            // for instance) handed a fresh window a paused state over live playback.
             MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(currentPlaybackDuration);
             MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(currentPlaybackTime);
         }

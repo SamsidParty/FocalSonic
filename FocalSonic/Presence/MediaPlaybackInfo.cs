@@ -105,7 +105,18 @@ namespace FocalSonic.Presence
                 return;
             }
 
-            await PlaySong(await ResolveNextSong(), NextSongIndex);
+            var nextSong = await ResolveNextSong();
+
+            if (nextSong == null)
+            {
+                // The queue ran out. Without this the store (so the UI, and a reopened
+                // window) kept saying "playing", and the next play command restarted the
+                // finished track.
+                if (!fromUserAction) await Pause();
+                return;
+            }
+
+            await PlaySong(nextSong, NextSongIndex);
         }
 
         // Similar to NextQueueItem, but supports radio stations
@@ -157,20 +168,23 @@ namespace FocalSonic.Presence
             }
 
 
-            // Modify the player store to reflect these changes
+            // One update for the new track and "playing": as two, the UI saw the new track
+            // with the old (often paused, mid transition) state first and sent a pause for it.
             await PlayerStore.Mutate(async (s) =>
             {
                 s.State.SongList.CurrentSongIndex = index ?? 0;
                 s.State.SongList.CurrentSong = song;
+                s.State.PlayerState.IsPlaying = true;
             });
 
             var playbackURL = Store.ExtraProperties.GetStreamURLForSong(song);
+            var player = AssociatedPlayer;
+            if (player == null) return;
 
-
-            await AssociatedPlayer.ResetSource();
-            await AssociatedPlayer.SetSource(playbackURL, null);
-            await AssociatedPlayer.UpdatePlaybackParameters();
-            await Play();
+            await player.ResetSource();
+            await player.SetSource(playbackURL, null);
+            await player.UpdatePlaybackParameters();
+            await player.PlayAudio();
         }
 
         public async Task Play()

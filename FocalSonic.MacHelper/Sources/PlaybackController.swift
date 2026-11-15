@@ -73,23 +73,37 @@ final class PlaybackController {
 
         var replaced = false
         if playbackID == currentID {
-            // MusicKit already moved here by itself (a track ended or a media key skipped).
+            // MusicKit already moved here by itself (a track ended or a media key skipped), or
+            // it's the same track again (repeating a one-song queue). Either way its end has
+            // to be reported afresh, and not from the transition that's already been reported.
+            endReported = false
+            leftPlaying = nil
         } else if playbackID == nextID, hasQueuedNext {
             // Stepping onto the queued track is a skip, which keeps the change seamless.
-            try await player.skipToNextEntry()
+            do { try await player.skipToNextEntry() }
+            catch { throw HelperError("Couldn't skip to the queued track: \(describeError(error))") }
             adoptCurrentEntry()
         } else {
             try await replaceQueue(current: playbackID, next: next)
             replaced = true
         }
-        try await setNext(next)
 
-        if autoplay {
-            // A new queue only takes over once it's played, even if the old one still is.
-            if replaced || player.state.playbackStatus != .playing { try await player.play() }
-            applyRate()
-        } else {
-            try await player.prepareToPlay()
+        // Best effort: the track is loaded either way, and without a queued next track the
+        // host just loads it when this one ends. Failing the whole load here reported an
+        // error over a track that was playing fine.
+        do { try await setNext(next) }
+        catch { log("Couldn't queue \(next ?? "-") after \(playbackID): \(describeError(error))") }
+
+        do {
+            if autoplay {
+                // A new queue only takes over once it's played, even if the old one still is.
+                if replaced || player.state.playbackStatus != .playing { try await player.play() }
+                applyRate()
+            } else {
+                try await player.prepareToPlay()
+            }
+        } catch {
+            throw HelperError("Couldn't start playback: \(describeError(error))")
         }
 
         // Loading can take a while; what it changed is still ours, not the user's.
@@ -104,10 +118,35 @@ final class PlaybackController {
         guard next != nextID else { return }
         nextID = nil
 
-        guard let next, player.queue.currentEntry != nil, let song = await SongResolver.neighbour(next) else { return }
+        guard let next, let current = player.queue.currentEntry, let song = await SongResolver.neighbour(next) else { return }
+
+        let entries = Array(player.queue.entries)
+        if let currentIndex = entries.firstIndex(where: { $0.id == current.id }) {
+            // Already right after this one: MusicKit stepped back onto an earlier entry, and the
+            // track it came from is the next one again.
+            if currentIndex + 1 < entries.count, Self.songID(of: entries[currentIndex + 1]) == song.id {
+                playbackIDs[song.id] = next
+                nextID = next
+                return
+            }
+
+            // A second entry for a song this queue has already played (the first track again
+            // when repeating the queue, or a playlist listing a song twice) is where loading
+            // broke. Leave the gap: when this track ends the host loads that song afresh.
+            if entries[...currentIndex].contains(where: { Self.songID(of: $0) == song.id }) {
+                log("Not queueing \(next): it already has an earlier entry in MusicKit's queue")
+                return
+            }
+        }
+
         try await player.queue.insert(song, position: .afterCurrentEntry)
         playbackIDs[song.id] = next
         nextID = next
+    }
+
+    private static func songID(of entry: ApplicationMusicPlayer.Queue.Entry) -> MusicItemID? {
+        guard case .song(let song)? = entry.item else { return nil }
+        return song.id
     }
 
     private var hasQueuedNext: Bool {
@@ -117,7 +156,9 @@ final class PlaybackController {
 
     private func replaceQueue(current playbackID: String, next: String?) async throws {
         async let nextSong = SongResolver.neighbour(next)
-        let song = try await SongResolver.resolve(playbackID)
+        let song: Song
+        do { song = try await SongResolver.resolve(playbackID) }
+        catch { throw HelperError("Couldn't look up \(playbackID): \(describeError(error))") }
         let after = await nextSong
 
         playbackIDs = [song.id: playbackID]
@@ -187,9 +228,12 @@ final class PlaybackController {
         // Writing a non-zero rate while paused would start playback.
         guard player.state.playbackStatus == .playing else { return }
         if abs(player.state.playbackRate - desiredRate) > 0.001 {
+            lastRateApplied = Date()
             player.state.playbackRate = desiredRate
         }
     }
+
+    private var lastRateApplied = Date.distantPast
 
     /// What MusicKit actually holds, for diagnosing queue problems.
     func describe() -> [String: Any] {
@@ -223,6 +267,13 @@ final class PlaybackController {
 
         detectQueueMove()
         detectOutsideControl()
+
+        // MusicKit drops back to 1x by itself at times (a new item does, see adoptCurrentEntry),
+        // and only the moments we set the rate re-applied it, so a track could carry on at 1x
+        // while the UI showed another speed (and the effects engine kept its pitch shift).
+        // Throttled, in case some item refuses the rate.
+        if Date().timeIntervalSince(lastRateApplied) > 1 { applyRate() }
+
         emitState()
     }
 

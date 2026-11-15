@@ -1,9 +1,26 @@
+import { isSharedStoreReady, onSharedStoreReady } from "@/store/shared.store";
 import { logger } from "@/utils/logger";
 import { checkServerType } from "@/utils/servers";
 import { useEffect } from "react";
 import { AudioPlayerProps } from "./audio";
 
+interface HostParameters {
+    volume: number
+    playbackRate: number
+    filterData: string
+    loop: boolean
+}
 
+const hostParameterCommands: Record<keyof HostParameters, string> = {
+    volume: "setAudioPlayerVolume",
+    playbackRate: "setAudioPlayerSpeed",
+    filterData: "setAudioPlayerFilterData",
+    loop: "setAudioPlayerLoopMode",
+};
+
+// Derived from shared_store, which hydrates asynchronously. Sending them earlier would push
+// its defaults (full volume, no effects) over the values the host player was created with.
+const sharedStoreParameters = new Set<keyof HostParameters>(["volume", "playbackRate", "filterData"]);
 
 class NativeVirtualAudioPlayer {
     duration = NaN;
@@ -18,7 +35,18 @@ class NativeVirtualAudioPlayer {
     _creation: Promise<void> | null = null;
     id?: string;
     paused: boolean = true;
-    volumeTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    // What the app asked for, and what the current host player has actually been sent.
+    // Comparing against "sent" rather than our own last value means a host player that is
+    // new (window reopened, player recreated) or was changed behind our back still gets
+    // everything, even values that happen to equal our defaults.
+    private desired: Partial<HostParameters> = {};
+    private sent: Partial<HostParameters> = {};
+    private flushScheduled = false;
+
+    // play() and pause() go out strictly in order. play() awaits a round trip before it
+    // sends playAudio, so a pause() issued meanwhile used to land first and get undone.
+    private commandChain: Promise<void> = Promise.resolve();
 
     // Assigned from the <AudioPlayer> props below.
     onEnded?: () => void;
@@ -46,7 +74,7 @@ class NativeVirtualAudioPlayer {
         try {
             this.id = (checkServerType().isAppleMusic) ? "appleMusicPlayer" : "defaultPlayer";
             logger.info("NativeVirtualAudioPlayer created with id:", this.id);
-      
+
             window["handleAudioEvent_" + this.id] = (e: string, param: any) => {
                 if (e == "ended") {
                     this.onEnded?.();
@@ -75,6 +103,12 @@ class NativeVirtualAudioPlayer {
 
             await window.igniteView?.commandBridge.createAudioPlayer(this.id);
             this._state = "created";
+
+            // The host player may predate this page (it outlives the window) or be brand
+            // new; either way it hasn't been sent anything by us yet.
+            this.sent = {};
+            this.flushParameters();
+
             this.onLoadStart?.();
         }
         catch (error) {
@@ -92,8 +126,41 @@ class NativeVirtualAudioPlayer {
         if (self._state !== "created") return;
         self._state = "disposed";
         self._src = undefined;
+        self.sent = {};
         logger.info("NativeVirtualAudioPlayer disposed with id:", self.id);
         window.igniteView?.commandBridge.disposeAudioPlayer(self.id!);
+    }
+
+    private setParameter<K extends keyof HostParameters>(key: K, value: HostParameters[K]) {
+        this.desired[key] = value;
+        this.scheduleFlush();
+    }
+
+    scheduleFlush() {
+        if (this.flushScheduled) return;
+        this.flushScheduled = true;
+
+        setTimeout(() => {
+            this.flushScheduled = false;
+            this.flushParameters();
+        }, 0);
+    }
+
+    /** Sends whatever the host player doesn't have yet. Waits for the host player to exist. */
+    private flushParameters() {
+        if (this._state !== "created" || !this.id) return;
+
+        const bridge = window.igniteView?.commandBridge;
+        if (!bridge) return;
+
+        (Object.keys(this.desired) as (keyof HostParameters)[]).forEach((key) => {
+            const value = this.desired[key];
+            if (value === undefined || this.sent[key] === value) return;
+            if (sharedStoreParameters.has(key) && !isSharedStoreReady()) return;
+
+            this.sent[key] = value as never;
+            bridge[hostParameterCommands[key]]?.(this.id!, value);
+        });
     }
 
     get src() {
@@ -117,7 +184,7 @@ class NativeVirtualAudioPlayer {
         if (this.paused || this._currentTimeOffset < 1) { return this._currentTime; }
         return Math.min((((Date.now() - this._currentTimeOffset) / 1000) * this._playbackRate) + this._currentTime, this._currentTime + this._playbackRate);
     }
-  
+
     set currentTime(value: number) {
         this.seek(value);
     }
@@ -127,12 +194,8 @@ class NativeVirtualAudioPlayer {
     }
 
     set loop(value: boolean) {
-        if (this._loop === value) return;
         this._loop = value;
-        setTimeout(async () => {
-            await this.waitForCreation();
-            window.igniteView?.commandBridge.setAudioPlayerLoopMode(this.id!, this._loop);
-        }, 0);
+        this.setParameter("loop", value);
     }
 
     get filterData() {
@@ -140,12 +203,8 @@ class NativeVirtualAudioPlayer {
     }
 
     set filterData(value: string) {
-        if (this._filterData === value) return;
         this._filterData = value;
-        setTimeout(async () => {
-            await this.waitForCreation();
-            window.igniteView?.commandBridge.setAudioPlayerFilterData(this.id!, this._filterData);
-        }, 0);
+        this.setParameter("filterData", value);
     }
 
     get volume() {
@@ -153,28 +212,16 @@ class NativeVirtualAudioPlayer {
     }
 
     set volume(value: number) {
-        if (this._volume === value) return;
         this._volume = value;
-
-        clearTimeout(this.volumeTimeout);
-        this.volumeTimeout = setTimeout(async () => {
-            await this.waitForCreation();
-            window.igniteView?.commandBridge.setAudioPlayerVolume(this.id!, this._volume);
-        }, 0);
+        this.setParameter("volume", value);
     }
 
     set playbackRate(value: number) {
-        if (this._playbackRate === value) return;
-        
-        if (value <= 0) {
+        if (!(value > 0)) {
             value = 1;
         }
         this._playbackRate = value;
-
-        setTimeout(async () => {
-            await this.waitForCreation();
-            window.igniteView?.commandBridge.setAudioPlayerSpeed(this.id!, this._playbackRate);
-        }, 0);
+        this.setParameter("playbackRate", value);
     }
 
     get playbackRate() {
@@ -182,7 +229,7 @@ class NativeVirtualAudioPlayer {
     }
 
     get readyState() {
-        
+
         if (!this.paused && (this._state !== "created" || this._currentTime === 0 || !this.duration)) {
             return 0;
         }
@@ -202,6 +249,12 @@ class NativeVirtualAudioPlayer {
         await this._creation;
     }
 
+    private enqueue(task: () => Promise<void>): Promise<void> {
+        const run = this.commandChain.then(task);
+        this.commandChain = run.catch(() => undefined);
+        return run;
+    }
+
     async applySource() {
         await this.waitForCreation();
         await window.igniteView?.commandBridge.setAudioPlayerSource(this.id!, this._src);
@@ -217,21 +270,34 @@ class NativeVirtualAudioPlayer {
         if (!this.src) { this.paused = true; return; }
 
         this.paused = false;
-        await this.waitForCreation();
-        await this.applySource();
-        await window.igniteView?.commandBridge.playAudio(this.id!);
-        this.onPlay?.();
+
+        return this.enqueue(async () => {
+            // Paused again before this ran; that pause is queued behind us and reports it.
+            if (this.paused || !this.src) return;
+
+            await this.waitForCreation();
+            await this.applySource();
+            if (this.paused) return;
+
+            await window.igniteView?.commandBridge.playAudio(this.id!);
+            this.onPlay?.();
+        });
     }
 
     async pause() {
         this.paused = true;
         this._currentTimeOffset = 0;
 
-        // Nothing to pause if the host player was never created.
-        if (this._state !== "created") { this.onPause?.(); return; }
+        return this.enqueue(async () => {
+            // Superseded by a later play(), which is queued behind us.
+            if (!this.paused) return;
 
-        await window.igniteView?.commandBridge.pauseAudio(this.id!);
-        this.onPause?.();
+            // Nothing to pause if the host player was never created.
+            if (this._state !== "created") { this.onPause?.(); return; }
+
+            await window.igniteView?.commandBridge.pauseAudio(this.id!);
+            this.onPause?.();
+        });
     }
 
     async seek(time: number) {
@@ -243,10 +309,13 @@ class NativeVirtualAudioPlayer {
         await window.igniteView?.commandBridge.seekAudio(this.id!, time);
         this.onTimeUpdate?.();
     }
-  
+
 }
 
 const virtualPlayer = new NativeVirtualAudioPlayer();
+
+// Volume, speed and effects set before shared_store hydrated were held back; send them now.
+onSharedStoreReady(() => virtualPlayer.scheduleFlush());
 
 export function NativeAudioPlayer({ audioRef, onError, ...props }: AudioPlayerProps) {
     audioRef.current = virtualPlayer;

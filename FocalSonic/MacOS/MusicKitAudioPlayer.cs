@@ -23,7 +23,9 @@ namespace FocalSonic.MacOS
 
         bool IsPlaying;
         bool IsLoaded;
+        bool Loading;
         bool LoadEventPending;
+        Task Reconfiguring = Task.CompletedTask;
         double Duration;
         string? QueuedNext;
         int LoadGeneration;
@@ -43,7 +45,7 @@ namespace FocalSonic.MacOS
                 {
                     // The helper was restarted (crashed); give it back our session and settings.
                     ConfiguredHelper = helper.Generation;
-                    _ = Reconfigure(helper);
+                    Reconfiguring = Reconfigure(helper);
                 }
                 return helper;
             }
@@ -121,32 +123,96 @@ namespace FocalSonic.MacOS
 
         async Task Load(string src, int generation)
         {
+            Loading = true;
+
             try
             {
+                // A restarted helper has no developer token until Reconfigure hands it one, so
+                // a load that overtook it failed ("MusicDataRequest.Error"), while the reload
+                // Reconfigure does right after played fine.
+                var helper = Helper;
+                await Reconfiguring;
+                if (generation != LoadGeneration || Source != src) return;
+
                 // When MusicKit already moved here by itself this just queues the next track.
                 var next = NextPlaybackID();
-                var result = await Helper.Send("load", new { playbackID = src, next, autoplay = !IsRemoteOutput });
+                var result = await helper.Send("load", new { playbackID = src, next, autoplay = !IsRemoteOutput });
                 if (generation != LoadGeneration) return; // A newer track took over meanwhile.
 
-                QueuedNext = next;
-                IsLoaded = true;
-                Duration = result.Value<double?>("duration") ?? 0;
-                LoadEventPending = true; // Sent with the first state update, see OnStateChanged.
-                await UpdatePlaybackParameters();
-
-                // Paused while it was loading.
-                if (!IsPlaying) Helper.Post("pause");
+                await Loaded(result.Value<double?>("duration") ?? 0, next);
             }
             catch (MacHelperException ex)
             {
                 if (generation != LoadGeneration) return;
+
+                // The helper died mid-load: touching Helper starts a new one, and Reconfigure
+                // picks this track back up (it needs IsPlaying left as it is).
+                if (MacHelper.RunningInstance?.Generation != ConfiguredHelper)
+                {
+                    _ = Helper;
+                    return;
+                }
+
+                // Part of the load can fail after MusicKit is already playing the track (queueing
+                // the one after it, say). That track is fine: treat it as loaded. Left unloaded,
+                // every state update was ignored and pause stopped working.
+                if (await IsHelperPlaying(src))
+                {
+                    Console.Error.WriteLine($"Apple Music load reported an error but is playing: {ex.Message}");
+                    if (generation == LoadGeneration) await Loaded(0, null);
+                    return;
+                }
+
+                // Really failed. Don't leave the UI saying "playing" over whatever MusicKit still
+                // holds; pressing play retries (see PlayAudio).
+                IsPlaying = false;
+                Helper.Post("pause");
+                _ = MediaPlaybackInfo.Instance.Pause();
                 ErrorHandler.DisplayError("Something went wrong with Apple Music", ex.Message);
+            }
+            finally
+            {
+                if (generation == LoadGeneration) Loading = false;
+            }
+        }
+
+        async Task Loaded(double duration, string? queuedNext)
+        {
+            QueuedNext = queuedNext;
+            IsLoaded = true;
+            Duration = duration;
+            LoadEventPending = true; // Sent with the first state update, see OnStateChanged.
+            await UpdatePlaybackParameters();
+
+            // Paused while it was loading.
+            if (!IsPlaying) Helper.Post("pause");
+        }
+
+        async Task<bool> IsHelperPlaying(string src)
+        {
+            try
+            {
+                var state = await Helper.Send("describe");
+                return state.Value<string>("currentID") == src && state.Value<string>("status") == "playing";
+            }
+            catch (MacHelperException)
+            {
+                return false;
             }
         }
 
         public override async Task PlayAudio()
         {
             await base.PlayAudio();
+
+            // The last load of this track failed: play is the retry.
+            if (!IsLoaded && !Loading && !string.IsNullOrEmpty(Source))
+            {
+                IsPlaying = true;
+                _ = Load(Source, ++LoadGeneration);
+                return;
+            }
+
             if (IsPlaying) return;
 
             IsPlaying = true;

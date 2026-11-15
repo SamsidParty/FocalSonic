@@ -123,29 +123,120 @@ function getLegacySharedStoreValue() {
     });
 }
 
+// True once the real stored state is in. Until then zustand still writes on every set(),
+// and those writes carry the defaults (volume 100, speed 1, no effects) over the saved ones.
+let sharedStoreReady = false;
+
+// Set when the stored state couldn't be read at all. The UI keeps working with defaults,
+// but they must never be written back.
+let sharedStoreHydrationFailed = false;
+let sharedHydrationRetryTimer: ReturnType<typeof setTimeout> | null = null;
+let sharedHydrationRetries = 0;
+const sharedStoreReadyListeners = new Set<() => void>();
+
+/** Whether volume, speed and effects hold the saved values rather than defaults. */
+export const isSharedStoreReady = () => sharedStoreReady;
+
+export function onSharedStoreReady(listener: () => void) {
+    if (sharedStoreReady) {
+        listener();
+        return () => undefined;
+    }
+
+    sharedStoreReadyListeners.add(listener);
+    return () => { sharedStoreReadyListeners.delete(listener); };
+}
+
+function scheduleSharedHydrationRetry() {
+    if (sharedHydrationRetryTimer || sharedHydrationRetries >= 10) {
+        return;
+    }
+
+    const delay = Math.min(1000 * 2 ** sharedHydrationRetries, 30000);
+    sharedHydrationRetries++;
+
+    sharedHydrationRetryTimer = setTimeout(() => {
+        sharedHydrationRetryTimer = null;
+        void useSharedStore.persist.rehydrate();
+    }, delay);
+}
+
+const isDesktop = () => Boolean(window.igniteView);
+
+/**
+ * IgniteView fills in commandBridge asynchronously (it has to ask the host for the command
+ * list first), so at module load getSharedStore often doesn't exist yet. Falling back to
+ * localStorage then read the wrong place (C# keeps this store in its own namespace) and
+ * hydrated defaults, which the next write saved over the real settings.
+ */
+async function waitForBridgeCommand(name: string, timeoutMs = 15000) {
+    const deadline = Date.now() + timeoutMs;
+
+    for (let attempt = 0; ; attempt++) {
+        const command = window.igniteView?.commandBridge?.[name];
+        if (typeof command === "function") {
+            return command as (...args: unknown[]) => Promise<unknown>;
+        }
+
+        if (Date.now() >= deadline) {
+            return null;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, Math.min(50 * (attempt + 1), 500)));
+    }
+}
+
 const sharedStoreStorage = {
     getItem: async (key: string) => {
         if (key !== "shared_store") {
             return null;
         }
 
-        const storedValue = window.igniteView?.commandBridge?.getSharedStore
-            ? await window.igniteView.commandBridge.getSharedStore()
-            : localStorage.getItem(key);
+        let storedValue: unknown;
 
-        if (typeof storedValue === "string" && storedValue.trim() && storedValue !== "{}") {
+        if (isDesktop()) {
+            const getSharedStore = await waitForBridgeCommand("getSharedStore");
+
+            try {
+                storedValue = getSharedStore ? await getSharedStore() : undefined;
+            }
+            catch (error) {
+                console.warn("[Shared Store] getSharedStore failed", error);
+            }
+
+            if (typeof storedValue !== "string") {
+                // Couldn't read it - which is not the same as nothing being saved.
+                sharedStoreHydrationFailed = true;
+                return null;
+            }
+        }
+        else {
+            storedValue = localStorage.getItem(key);
+        }
+
+        sharedStoreHydrationFailed = false;
+        sharedHydrationRetries = 0;
+
+        // Corrupt data counts as nothing saved, so the next write replaces it (rather than
+        // failing hydration, which would block saving for good).
+        if (typeof storedValue === "string" && storedValue.trim() && storedValue !== "{}" && parseJSON(storedValue)) {
             return storedValue;
         }
 
         return getLegacySharedStoreValue();
     },
     setItem: async (key: string, value: string) => {
-        if (key !== "shared_store") {
+        if (key !== "shared_store" || !sharedStoreReady) {
             return;
         }
 
-        if (window.igniteView?.commandBridge?.setSharedStore) {
-            await window.igniteView.commandBridge.setSharedStore(value);
+        if (isDesktop()) {
+            const setSharedStore = window.igniteView?.commandBridge?.setSharedStore;
+            // Never localStorage on desktop: C# wouldn't see it, and it would be read back
+            // as a "legacy" value later.
+            if (typeof setSharedStore === "function") {
+                await setSharedStore(value);
+            }
             return;
         }
 
@@ -156,8 +247,8 @@ const sharedStoreStorage = {
             return;
         }
 
-        if (window.igniteView?.commandBridge?.setSharedStore) {
-            await window.igniteView.commandBridge.setSharedStore("{}");
+        if (isDesktop()) {
+            await window.igniteView?.commandBridge?.setSharedStore?.("{}");
             return;
         }
 
@@ -231,11 +322,34 @@ export const useSharedStore = createWithEqualityFn<ISharedStore>()(
 
                     return sanitizeSharedState(persistedState as Partial<ISharedStoreState>);
                 },
-                merge: (persistedState, currentState) => ({
-                    ...currentState,
-                    ...sanitizeSharedState(persistedState as Partial<ISharedStoreState>),
-                    actions: currentState.actions,
-                }),
+                merge: (persistedState, currentState) => {
+                    // Nothing was read: keep what we have (defaults, or what the user has
+                    // changed meanwhile) rather than resetting it.
+                    if (sharedStoreHydrationFailed) {
+                        return currentState;
+                    }
+
+                    // Set before zustand applies the state, so a migration's own write
+                    // (which runs right after) is allowed through.
+                    sharedStoreReady = true;
+
+                    return {
+                        ...currentState,
+                        ...sanitizeSharedState(persistedState as Partial<ISharedStoreState>),
+                        actions: currentState.actions,
+                    };
+                },
+                onRehydrateStorage: () => (_state, error) => {
+                    if (error || sharedStoreHydrationFailed) {
+                        console.warn("[Shared Store] Hydration failed; not saving until it succeeds", error);
+                        scheduleSharedHydrationRetry();
+                        return;
+                    }
+
+                    const listeners = Array.from(sharedStoreReadyListeners);
+                    sharedStoreReadyListeners.clear();
+                    listeners.forEach((listener) => listener());
+                },
                 partialize: (state) => ({
                     enableDiscordPresence: state.enableDiscordPresence,
                     enableAtmos: state.enableAtmos,

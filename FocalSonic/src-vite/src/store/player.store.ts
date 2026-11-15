@@ -39,6 +39,11 @@ let hydrationRetries = 0;
 // Only an explicit clear may push an empty queue to C#.
 let queueClearedIntentionally = false;
 
+// True while state that came from C# is being applied. Writing it straight back is at best
+// redundant, and when C# has moved on meanwhile (PlaySong mutates several times in a row)
+// the echo replaced C#'s newer queue / isPlaying with the older copy.
+let applyingHostState = false;
+
 function scheduleHydrationRetry() {
     if (hydrationRetryTimer || hydrationRetries >= 10) { return; }
 
@@ -172,6 +177,13 @@ const igniteViewPlayerStore = {
                 songlist?: Record<string, unknown>
             }
         };
+
+        if (applyingHostState) {
+            // C# already has this; just remember it so the next real change compares
+            // against what C# holds.
+            lastSongList = JSON.stringify(nextValue.state?.songlist ?? {});
+            return;
+        }
 
         // An empty songlist only reaches C# when the queue was emptied on purpose.
         // Otherwise it is a set() racing hydration, or a hydration that failed - and
@@ -1090,28 +1102,35 @@ window.rehydratePlayerStore = async (newState: string) => {
         stateToSet.playerState.currentDuration = 0;
     }
 
-    usePlayerStore.setState(
-        {
-            // Slices C# doesn't model must survive the replace.
-            ...current,
-            ...stateToSet,
-            songlist,
-            playerProgress: isLegacyPodcastState
-                ? { ...current.playerProgress, ...stateToSet.playerProgress, progress: 0 }
-                : { ...current.playerProgress, ...stateToSet.playerProgress },
-            actions: current.actions,
-            playerState: {
-                ...current.playerState,
-                ...stateToSet.playerState,
-                // These live in shared_store now.
-                volume: getSharedVolume(),
-                speed: getSharedSpeed(),
-                filterData: getSharedFilterData(),
-                audioPlayerRef: current.playerState?.audioPlayerRef,
-            },
+    const nextState = {
+        // Slices C# doesn't model must survive the replace.
+        ...current,
+        ...stateToSet,
+        songlist,
+        playerProgress: isLegacyPodcastState
+            ? { ...current.playerProgress, ...stateToSet.playerProgress, progress: 0 }
+            : { ...current.playerProgress, ...stateToSet.playerProgress },
+        actions: current.actions,
+        playerState: {
+            ...current.playerState,
+            ...stateToSet.playerState,
+            // These live in shared_store now.
+            volume: getSharedVolume(),
+            speed: getSharedSpeed(),
+            filterData: getSharedFilterData(),
+            audioPlayerRef: current.playerState?.audioPlayerRef,
         },
-        true
-    );
+    } as IPlayerContext;
+
+    // The flag works because zustand calls setItem (and every subscriber's own set())
+    // synchronously inside setState.
+    applyingHostState = true;
+    try {
+        usePlayerStore.setState(nextState, true);
+    }
+    finally {
+        applyingHostState = false;
+    }
 };
 
 // Targeted update so an unrelated callback-data change can't replace player state.

@@ -1,4 +1,5 @@
 import Foundation
+import MusicKit
 
 // Host <-> helper protocol: one JSON object per line.
 //
@@ -35,6 +36,16 @@ enum IPC {
 
 func log(_ message: String) {
     FileHandle.standardError.write(Data("[FocalSonicHelper] \(message)\n".utf8))
+}
+
+/// What went wrong, in words. MusicKit's request errors only bridge to "The operation couldn't
+/// be completed. (MusicKit.MusicDataRequest.Error error 1.)", which says nothing about why.
+func describeError(_ error: Error) -> String {
+    if let error = error as? MusicDataRequest.Error {
+        let detail = error.detailText.isEmpty ? "" : ": \(error.detailText)"
+        return "\(error.title)\(detail) (HTTP \(error.status), \(error.code))"
+    }
+    return error.localizedDescription
 }
 
 struct HelperError: LocalizedError {
@@ -79,7 +90,7 @@ struct Command {
     }
 
     func fail(_ error: Error) {
-        var message: [String: Any] = ["ok": false, "error": error.localizedDescription]
+        var message: [String: Any] = ["ok": false, "error": describeError(error)]
         if let id { message["reply"] = id }
         IPC.send(message)
     }

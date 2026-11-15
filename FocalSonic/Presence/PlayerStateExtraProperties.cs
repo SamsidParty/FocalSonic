@@ -26,7 +26,9 @@ namespace FocalSonic.Presence
         public string GetStreamURLForSong(Song song)
         {
             if (string.IsNullOrEmpty(StreamBaseURL)) return string.Empty;
-            return StreamBaseURL.Replace("{id}", song.PlaybackID ?? song.Id);
+            // Same rule as the UI's `playbackId || id`: with ?? an empty playbackId gave C# a
+            // different source than the UI, so the same track got loaded twice.
+            return StreamBaseURL.Replace("{id}", string.IsNullOrEmpty(song.PlaybackID) ? song.Id : song.PlaybackID);
         }
 
         [JsonExtensionData]

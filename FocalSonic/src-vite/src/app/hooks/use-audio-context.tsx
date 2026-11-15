@@ -98,13 +98,18 @@ export function useAudioContext(audio: HTMLAudioElement | null) {
   }, [audio, setupAudioContext])
     */
 
+    // These must keep their identity between renders: audio.tsx lists resumeContext as an
+    // effect dependency, and a fresh function each render re-ran its play/pause effect on
+    // every re-render, re-sending whatever (possibly stale) isPlaying the store held.
     return {
         audioContextRef: useRef<IAudioContext | null>(null),
         sourceNodeRef: useRef<IAudioSource | null>(null),
         gainNodeRef: useRef<IGainNode<IAudioContext> | null>(null),
-        setupAudioContext: () => {},
-        resumeContext: () => {},
-        setupGain: () => {},
-        resetRefs: () => {},
+        setupAudioContext: noop,
+        resumeContext: noop,
+        setupGain: noop,
+        resetRefs: noop,
     };
 }
+
+function noop() {}

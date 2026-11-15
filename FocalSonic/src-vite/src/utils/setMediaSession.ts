@@ -61,13 +61,14 @@ function setHandlers() {
     if (!mediaSession) return;
 
     const state = usePlayerStore.getState();
-    const { togglePlayPause, playNextSong, playPrevSong } = state.actions;
+    const { setPlayingState, playNextSong, playPrevSong } = state.actions;
 
     mediaSession.setActionHandler("seekbackward", null);
     mediaSession.setActionHandler("seekforward", null);
 
-    mediaSession.setActionHandler("play", () => togglePlayPause());
-    mediaSession.setActionHandler("pause", () => togglePlayPause());
+    // Not a toggle: a "play" that arrives while already playing must not pause.
+    mediaSession.setActionHandler("play", () => setPlayingState(true));
+    mediaSession.setActionHandler("pause", () => setPlayingState(false));
     mediaSession.setActionHandler("previoustrack", () => playPrevSong());
     mediaSession.setActionHandler("nexttrack", () => playNextSong());
 }

@@ -43,6 +43,9 @@ export function AudioPlayer({
 
     const { resumeContext } = useAudioContext(audioRef.current);
 
+    // A new track while playing has to reach the native player too: nothing else asks
+    // it to load the source (an <audio> element would via autoPlay).
+    const { src } = props;
 
     const handleSongError = useCallback(() => {
         const audio = audioRef.current;
@@ -104,7 +107,7 @@ export function AudioPlayer({
             }
         }
         if (isSong) handleSong();
-    }, [audioRef, handleSongError, isPlaying, isSong, resumeContext]);
+    }, [audioRef, handleSongError, isPlaying, isSong, resumeContext, src]);
 
     useEffect(() => {
         async function handleRadio() {

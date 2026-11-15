@@ -65,6 +65,15 @@ namespace FocalSonic.Casting
 
             // Back to "local" restores the playback gain (un-mutes the PC speakers).
             AudioPlayer.AudioPlayer.Instance?.SetOutputDevice("local");
+
+            // Chromecast forced the speed to 1x (see StartChromecast). The UI never knew, so
+            // it kept showing the user's speed and never re-sent it: put it back.
+            if (CurrentDeviceType == "chromecast" && AudioPlayer.AudioPlayer.Instance is { } player)
+            {
+                var speed = Persistence.SharedStore.GetCurrentState().Speed;
+                _ = AudioPlayer.AudioPlayer.RunOnPlayer(player.ID, (p) => { _ = p.SetSpeed(speed > 0 ? speed : 1); });
+            }
+
             LastSongID = "";
             IsPlaying = false;
             CurrentDeviceID = "";
