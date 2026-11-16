@@ -7,8 +7,8 @@ namespace FocalSonic.MacOS
     /// <summary>
     /// The macOS counterpart of WindowsPresenceProvider: shows the current track in Control
     /// Center and routes media keys, AirPods and Touch Bar controls back into FocalSonic's queue.
-    /// For Apple Music the entry is MusicKit's own (see MusicKitAudioPlayer); for other servers
-    /// FocalSonicHelper publishes it.
+    /// FocalSonicHelper publishes it, for Apple Music too once it has switched off MusicKit's own
+    /// entry (see MusicKitAudioPlayer.OwnsNowPlaying); if it can't, MusicKit's entry stays.
     /// </summary>
     public class MacNowPlayingProvider : PresenceProvider
     {
@@ -29,9 +29,9 @@ namespace FocalSonic.MacOS
 
             UpdateWindowTitle(song?.Title);
 
-            // MusicKit publishes (and takes the controls for) Apple Music playback itself; a
-            // second entry would only compete with it.
-            if (song == null || string.IsNullOrEmpty(song.Title) || player is MusicKitAudioPlayer)
+            // MusicKit publishes (and takes the controls for) Apple Music playback itself unless
+            // the helper switched its entry off; a second entry would only compete with it.
+            if (song == null || string.IsNullOrEmpty(song.Title) || player is MusicKitAudioPlayer { OwnsNowPlaying: false })
             {
                 if (Published) MacHelper.RunningInstance?.Post("nowPlaying", new { active = false });
                 Published = false;

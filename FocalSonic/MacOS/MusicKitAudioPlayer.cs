@@ -12,13 +12,20 @@ namespace FocalSonic.MacOS
     /// <summary>
     /// Apple Music playback through native MusicKit, standing in for the hidden
     /// music.apple.com window <see cref="AppleMusicAudioPlayer"/> uses on Windows and Linux.
-    /// The queue stays in FocalSonic. MusicKit gets the current track plus the next one, so
-    /// track changes are gapless and the system's media controls (which MusicKit receives
-    /// itself) work; when MusicKit moves on by itself, FocalSonic's queue follows.
+    /// Like the web player, MusicKit only ever gets the current track: the queue stays in
+    /// FocalSonic, and when a track ends the helper says so and the next one is loaded.
+    /// The system's media controls are FocalSonic's own (see <see cref="MacNowPlayingProvider"/>)
+    /// whenever the helper manages to switch MusicKit's off (<see cref="OwnsNowPlaying"/>).
     /// </summary>
     public class MusicKitAudioPlayer : AudioPlayer.AudioPlayer, IAppleMusicPlayer
     {
         public string LoadStatus { get; private set; } = "loading";
+
+        /// <summary>
+        /// MusicKit's own Now Playing entry (and with it the media keys, Control Center and
+        /// AirPods) is switched off, so FocalSonic publishes its own, as on Windows.
+        /// </summary>
+        public bool OwnsNowPlaying { get; private set; }
         public override string ChromecastCredential => AppleMusicKeys.MediaUserToken ?? "";
 
         bool IsPlaying;
@@ -27,7 +34,6 @@ namespace FocalSonic.MacOS
         bool LoadEventPending;
         Task Reconfiguring = Task.CompletedTask;
         double Duration;
-        string? QueuedNext;
         int LoadGeneration;
         int ConfiguredHelper;
         int Recoveries;
@@ -55,7 +61,6 @@ namespace FocalSonic.MacOS
         {
             MacHelper.StateChanged += OnStateChanged;
             MacHelper.TrackEnded += OnTrackEnded;
-            MacHelper.TrackAdvanced += OnTrackAdvanced;
             MacHelper.VariantChanged += OnVariantChanged;
             MacHelper.EffectsChanged += OnEffectsChanged;
 
@@ -134,12 +139,11 @@ namespace FocalSonic.MacOS
                 await Reconfiguring;
                 if (generation != LoadGeneration || Source != src) return;
 
-                // When MusicKit already moved here by itself this just queues the next track.
-                var next = NextPlaybackID();
-                var result = await helper.Send("load", new { playbackID = src, next, autoplay = !IsRemoteOutput });
+                var result = await helper.Send("load", new { playbackID = src, autoplay = !IsRemoteOutput });
                 if (generation != LoadGeneration) return; // A newer track took over meanwhile.
 
-                await Loaded(result.Value<double?>("duration") ?? 0, next);
+                OwnsNowPlaying = result.Value<bool?>("ownNowPlaying") == true;
+                await Loaded(result.Value<double?>("duration") ?? 0);
             }
             catch (MacHelperException ex)
             {
@@ -153,13 +157,13 @@ namespace FocalSonic.MacOS
                     return;
                 }
 
-                // Part of the load can fail after MusicKit is already playing the track (queueing
-                // the one after it, say). That track is fine: treat it as loaded. Left unloaded,
-                // every state update was ignored and pause stopped working.
+                // Part of the load can fail after MusicKit is already playing the track. That
+                // track is fine: treat it as loaded. Left unloaded, every state update was
+                // ignored and pause stopped working.
                 if (await IsHelperPlaying(src))
                 {
                     Console.Error.WriteLine($"Apple Music load reported an error but is playing: {ex.Message}");
-                    if (generation == LoadGeneration) await Loaded(0, null);
+                    if (generation == LoadGeneration) await Loaded(0);
                     return;
                 }
 
@@ -176,9 +180,8 @@ namespace FocalSonic.MacOS
             }
         }
 
-        async Task Loaded(double duration, string? queuedNext)
+        async Task Loaded(double duration)
         {
-            QueuedNext = queuedNext;
             IsLoaded = true;
             Duration = duration;
             LoadEventPending = true; // Sent with the first state update, see OnStateChanged.
@@ -287,39 +290,6 @@ namespace FocalSonic.MacOS
             }
         }
 
-        public override async Task SendTimeUpdate(bool isAutomatic = true)
-        {
-            // Keep MusicKit's queued next track in step with FocalSonic's queue (shuffle,
-            // reordering and loop mode all change it).
-            if (IsLoaded)
-            {
-                var next = NextPlaybackID();
-                if (next != QueuedNext)
-                {
-                    QueuedNext = next;
-                    Helper.Post("setNext", new { next });
-                }
-            }
-
-            await base.SendTimeUpdate(isAutomatic);
-        }
-
-        /// <summary>The track FocalSonic will play after this one, if it already knows it.</summary>
-        static string? NextPlaybackID()
-        {
-            var info = MediaPlaybackInfo.Instance;
-            var queue = info?.Queue;
-            if (info?.Store == null || queue == null) return null;
-
-            // Repeat one is done by MusicKit, and radio only picks its next track when it gets there.
-            if (info.LoopState == AudioPlayer.PlayerLoopState.One) return null;
-            if (info.NextSongIndex is not int index || index < 0 || index >= queue.Count) return null;
-            if (info.LoopState == AudioPlayer.PlayerLoopState.InfiniteRadio && index == 0) return null;
-
-            var url = info.Store.ExtraProperties.GetStreamURLForSong(queue[index]);
-            return string.IsNullOrEmpty(url) ? null : url;
-        }
-
         // Atmos follows the "Dolby Atmos" setting of the Music app on macOS.
         public override async Task SetEnableAtmos(bool enabled) { }
 
@@ -327,7 +297,6 @@ namespace FocalSonic.MacOS
         {
             MacHelper.StateChanged -= OnStateChanged;
             MacHelper.TrackEnded -= OnTrackEnded;
-            MacHelper.TrackAdvanced -= OnTrackAdvanced;
             MacHelper.VariantChanged -= OnVariantChanged;
             MacHelper.EffectsChanged -= OnEffectsChanged;
 
@@ -366,20 +335,6 @@ namespace FocalSonic.MacOS
             // MusicKit is parked at the start now, so a later play() must actually resume it.
             IsPlaying = false;
             _ = RunOnPlayerThread(() => { _ = CallEndEvent(); });
-        }
-
-        /// <summary>MusicKit went on to the queued track (or back): move FocalSonic's queue the same way.</summary>
-        void OnTrackAdvanced(string playbackID, string direction, double duration)
-        {
-            if (!IsLoaded) return;
-
-            _ = RunOnPlayerThread(() =>
-            {
-                var info = MediaPlaybackInfo.Instance;
-                if (info == null) return;
-                // The new track's load finds MusicKit already on it and just carries on.
-                _ = direction == "previous" ? info.PreviousSong() : info.NextSong();
-            });
         }
 
         void OnVariantChanged(string playbackID, string variant)

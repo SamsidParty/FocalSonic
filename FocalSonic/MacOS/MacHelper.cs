@@ -49,8 +49,6 @@ namespace FocalSonic.MacOS
         // Events from whichever instance is current, so subscribers survive a restart.
         public static event Action<JObject>? StateChanged;
         public static event Action<string>? TrackEnded;
-        /// <summary>MusicKit moved to the queued next track (or back) by itself: playback id, "next"/"previous", duration.</summary>
-        public static event Action<string, string, double>? TrackAdvanced;
         public static event Action<string, string>? VariantChanged;
         public static event Action<string, double?>? RemoteCommand;
         public static event Action<bool, string?>? EffectsChanged;
@@ -226,9 +224,6 @@ namespace FocalSonic.MacOS
                     break;
                 case "ended":
                     TrackEnded?.Invoke(message.Value<string>("id") ?? "");
-                    break;
-                case "advanced":
-                    TrackAdvanced?.Invoke(message.Value<string>("id") ?? "", message.Value<string>("direction") ?? "next", message.Value<double?>("duration") ?? 0);
                     break;
                 case "variant":
                     VariantChanged?.Invoke(message.Value<string>("id") ?? "", message.Value<string>("variant") ?? "");

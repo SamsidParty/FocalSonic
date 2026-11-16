@@ -2,18 +2,18 @@ import Combine
 import Foundation
 import MusicKit
 
-/// Plays FocalSonic's queue through MusicKit's ApplicationMusicPlayer.
+/// Plays the host's current track through MusicKit's ApplicationMusicPlayer, one track at a
+/// time, the way FocalMK drives the web player on Windows and Linux.
 ///
-/// FocalSonic owns the queue (shuffle, loop and radio all live in the host), but MusicKit is
-/// what the system's media controls talk to: its renderer publishes the Now Playing entry
-/// and receives media keys, Control Center and AirPods commands itself. So MusicKit is also
-/// given the host's next track, and every move it makes on its own (a track ending, a skip
-/// or back from the keyboard) is reported to the host, which follows it and supplies the
-/// next track again. Natural track changes come out gapless as a bonus.
+/// FocalSonic owns the queue (shuffle, loop and radio all live in the host). MusicKit only ever
+/// holds the track that's playing, as the only entry of a fresh queue: when it runs out the
+/// host is told ("ended") and loads the next one. MusicKit used to be given the host's next
+/// track as well, for gapless changes and so its media controls had somewhere to skip to, but
+/// keeping its queue in step meant guessing what MusicKit had done from that queue, and every
+/// wrong guess replayed or skipped tracks.
 ///
-/// On macOS MusicKit can't start a queue part way through ("unexpected start item") and
-/// breaks if its entries are replaced, so the next track is only ever inserted after the
-/// current one. The newest insert always comes first, so a superseded one is never reached.
+/// The system's media controls are FocalSonic's own entry (NowPlayingController, fed by the
+/// host like the Windows SMTC integration), with MusicKit's switched off (NowPlayingTakeover).
 @MainActor
 final class PlaybackController {
     static let shared = PlaybackController()
@@ -22,16 +22,12 @@ final class PlaybackController {
     private var observers: [AnyCancellable] = []
     private var heartbeat: Timer?
 
-    // What MusicKit holds, as host playback ids.
+    /// The host playback id of the track MusicKit holds.
     private var currentID: String?
-    private var nextID: String?
-    /// Which host id each queued song stands for (an id can be "<catalog>/<library>").
-    private var playbackIDs: [MusicItemID: String] = [:]
-    private var currentEntryID: String?
-
     private var duration: TimeInterval = 0
     private var desiredRate: Float = 1
     private var repeatOne = false
+    private var ownNowPlaying = false
 
     // With nothing queued after it, a track that runs out (or is skipped past) leaves
     // MusicKit paused or stopped and rewound to zero, sometimes in two steps. That
@@ -67,32 +63,20 @@ final class PlaybackController {
 
     // MARK: Commands
 
-    /// Makes `playbackID` the current track, followed by `next` from the host's queue.
-    func load(_ playbackID: String, next: String?, autoplay: Bool) async throws -> [String: Any] {
+    /// Makes `playbackID` the current track: the only one in MusicKit's queue.
+    func load(_ playbackID: String, autoplay: Bool) async throws -> [String: Any] {
         hostCommand()
 
         var replaced = false
-        if playbackID == currentID {
-            // MusicKit already moved here by itself (a track ended or a media key skipped), or
-            // it's the same track again (repeating a one-song queue). Either way its end has
-            // to be reported afresh, and not from the transition that's already been reported.
-            endReported = false
-            leftPlaying = nil
-        } else if playbackID == nextID, hasQueuedNext {
-            // Stepping onto the queued track is a skip, which keeps the change seamless.
-            do { try await player.skipToNextEntry() }
-            catch { throw HelperError("Couldn't skip to the queued track: \(describeError(error))") }
-            adoptCurrentEntry()
+        if playbackID == currentID, !isOffTrack {
+            // The same track again (a one-song queue repeating, or the track picked again):
+            // MusicKit still holds it, so start it over rather than load it afresh.
+            if player.playbackTime > 1 { player.playbackTime = 0 }
+            restartEndDetection()
         } else {
-            try await replaceQueue(current: playbackID, next: next)
+            try await replaceQueue(with: playbackID)
             replaced = true
         }
-
-        // Best effort: the track is loaded either way, and without a queued next track the
-        // host just loads it when this one ends. Failing the whole load here reported an
-        // error over a track that was playing fine.
-        do { try await setNext(next) }
-        catch { log("Couldn't queue \(next ?? "-") after \(playbackID): \(describeError(error))") }
 
         do {
             if autoplay {
@@ -106,75 +90,42 @@ final class PlaybackController {
             throw HelperError("Couldn't start playback: \(describeError(error))")
         }
 
+        // Again now that the queue is live: the setting only reaches MusicKit over a connection.
+        ownNowPlaying = NowPlayingTakeover.apply()
+
         // Loading can take a while; what it changed is still ours, not the user's.
         hostCommand()
         tick()
         EffectsController.shared.playbackChanged()
-        return ["duration": duration, "id": currentID ?? playbackID]
+        return ["duration": duration, "id": currentID ?? playbackID, "ownNowPlaying": ownNowPlaying]
     }
 
-    /// Queues the host's next track straight after the current one, without interrupting it.
-    func setNext(_ next: String?) async throws {
-        guard next != nextID else { return }
-        nextID = nil
-
-        guard let next, let current = player.queue.currentEntry, let song = await SongResolver.neighbour(next) else { return }
-
-        let entries = Array(player.queue.entries)
-        if let currentIndex = entries.firstIndex(where: { $0.id == current.id }) {
-            // Already right after this one: MusicKit stepped back onto an earlier entry, and the
-            // track it came from is the next one again.
-            if currentIndex + 1 < entries.count, Self.songID(of: entries[currentIndex + 1]) == song.id {
-                playbackIDs[song.id] = next
-                nextID = next
-                return
-            }
-
-            // A second entry for a song this queue has already played (the first track again
-            // when repeating the queue, or a playlist listing a song twice) is where loading
-            // broke. Leave the gap: when this track ends the host loads that song afresh.
-            if entries[...currentIndex].contains(where: { Self.songID(of: $0) == song.id }) {
-                log("Not queueing \(next): it already has an earlier entry in MusicKit's queue")
-                return
-            }
-        }
-
-        try await player.queue.insert(song, position: .afterCurrentEntry)
-        playbackIDs[song.id] = next
-        nextID = next
-    }
-
-    private static func songID(of entry: ApplicationMusicPlayer.Queue.Entry) -> MusicItemID? {
-        guard case .song(let song)? = entry.item else { return nil }
-        return song.id
-    }
-
-    private var hasQueuedNext: Bool {
-        guard let current = player.queue.currentEntry else { return false }
-        return player.queue.entries.last?.id != current.id
-    }
-
-    private func replaceQueue(current playbackID: String, next: String?) async throws {
-        async let nextSong = SongResolver.neighbour(next)
+    private func replaceQueue(with playbackID: String) async throws {
         let song: Song
         do { song = try await SongResolver.resolve(playbackID) }
         catch { throw HelperError("Couldn't look up \(playbackID): \(describeError(error))") }
-        let after = await nextSong
 
-        playbackIDs = [song.id: playbackID]
-        if let after, let next { playbackIDs[after.id] = next }
-
-        // Built whole rather than inserted later, since a fresh queue has no current entry yet.
-        player.queue = ApplicationMusicPlayer.Queue(for: [song] + (after.map { [$0] } ?? []))
+        player.queue = ApplicationMusicPlayer.Queue(for: [song])
         player.state.repeatMode = repeatOne ? .one : MusicPlayer.RepeatMode.none
+        // Before it plays, so MusicKit's own Now Playing entry doesn't flash up first.
+        NowPlayingTakeover.apply()
 
-        nextID = after == nil ? nil : next
-        setCurrent(playbackID, duration: song.duration, entryID: nil)
+        currentID = playbackID
+        duration = song.duration ?? 0
+        restartEndDetection()
     }
 
     func play() async throws {
-        guard currentID != nil else { return }
+        guard let currentID else { return }
         hostCommand()
+
+        // MusicKit went on to an entry of its own (see detectStrayEntry): put the track back.
+        if isOffTrack { try await replaceQueue(with: currentID) }
+
+        // Played again after its end was reported, the track starts over and will end anew.
+        // Left set, that second end went unreported and playback sat paused at the end.
+        restartEndDetection()
+
         try await player.play()
         hostCommand()
         applyRate()
@@ -191,7 +142,6 @@ final class PlaybackController {
         hostCommand()
         player.stop()
         currentID = nil
-        nextID = nil
         duration = 0
         tick()
         EffectsController.shared.playbackChanged()
@@ -235,13 +185,13 @@ final class PlaybackController {
 
     private var lastRateApplied = Date.distantPast
 
-    /// What MusicKit actually holds, for diagnosing queue problems.
+    /// What MusicKit actually holds, for diagnosing playback problems.
     func describe() -> [String: Any] {
         [
             "currentID": currentID ?? "",
-            "nextID": nextID ?? "",
             "entries": player.queue.entries.map(\.title),
             "currentEntry": player.queue.currentEntry?.title ?? "",
+            "ownNowPlaying": ownNowPlaying,
             "status": Self.describe(player.state.playbackStatus),
             "time": player.playbackTime,
         ]
@@ -251,13 +201,16 @@ final class PlaybackController {
         lastHostCommand = Date()
     }
 
-    private func setCurrent(_ playbackID: String, duration: TimeInterval?, entryID: String?) {
-        currentID = playbackID
-        currentEntryID = entryID ?? player.queue.currentEntry?.id
-        self.duration = duration ?? 0
+    private func restartEndDetection() {
         endReported = false
-        lastPlayingTime = 0
         leftPlaying = nil
+        lastPlayingTime = 0
+    }
+
+    private func reportEnd() {
+        guard !endReported, let currentID else { return }
+        endReported = true
+        IPC.event("ended", ["id": currentID])
     }
 
     // MARK: State reporting
@@ -265,13 +218,13 @@ final class PlaybackController {
     private func tick() {
         guard currentID != nil else { return emitState() }
 
-        detectQueueMove()
+        detectStrayEntry()
         detectOutsideControl()
 
-        // MusicKit drops back to 1x by itself at times (a new item does, see adoptCurrentEntry),
-        // and only the moments we set the rate re-applied it, so a track could carry on at 1x
-        // while the UI showed another speed (and the effects engine kept its pitch shift).
-        // Throttled, in case some item refuses the rate.
+        // MusicKit drops back to 1x by itself at times (a new item does), and only the moments
+        // we set the rate re-applied it, so a track could carry on at 1x while the UI showed
+        // another speed (and the effects engine kept its pitch shift). Throttled, in case some
+        // item refuses the rate.
         if Date().timeIntervalSince(lastRateApplied) > 1 { applyRate() }
 
         emitState()
@@ -298,43 +251,24 @@ final class PlaybackController {
         ])
     }
 
-    /// MusicKit stepped to another entry of the window on its own: the track ended, or a
-    /// media key / Control Center skipped. Tell the host so it moves its queue the same way.
-    private func detectQueueMove() {
-        guard let entry = player.queue.currentEntry, entry.id != currentEntryID else { return }
-        adoptCurrentEntry()
+    /// The current track is always MusicKit's first and only entry. With more than one, MusicKit
+    /// added some itself (playing on once the queue ended, say), and being on one of those is
+    /// being on a track FocalSonic doesn't know.
+    private var isOffTrack: Bool {
+        let entries = player.queue.entries
+        guard entries.count > 1, let current = player.queue.currentEntry else { return false }
+        return entries.first?.id != current.id
     }
 
-    private func adoptCurrentEntry() {
-        guard let entry = player.queue.currentEntry, entry.id != currentEntryID else { return }
+    private func detectStrayEntry() {
+        guard isOffTrack, Date().timeIntervalSince(lastHostCommand) >= 1.5 else { return }
 
-        // MusicKit only creates the entry for a fresh queue's first track once it's prepared.
-        guard case .song(let song)? = entry.item, let playbackID = playbackIDs[song.id], playbackID != currentID else {
-            currentEntryID = entry.id
-            return
-        }
-
-        let entries = player.queue.entries
-        let newIndex = entries.firstIndex { $0.id == entry.id } ?? 0
-        let oldIndex = entries.firstIndex { $0.id == currentEntryID } ?? newIndex
-        let forward = newIndex > oldIndex
-        let expected = !forward || playbackID == nextID
-        let byHost = Date().timeIntervalSince(lastHostCommand) < 1.5
-        let previous = currentID
-
-        nextID = nil
-        setCurrent(playbackID, duration: song.duration, entryID: entry.id)
-        applyRate() // A new item can come up at normal speed.
-        guard !byHost else { return }
-
-        if expected {
-            IPC.event("advanced", ["id": playbackID, "direction": forward ? "next" : "previous", "duration": duration])
-        } else {
-            // A track the host has since dropped (it had nothing to follow with): stop
-            // there and let the host treat it as the end of the previous track.
+        // Stop there and let the host move on from the end of its track.
+        if player.state.playbackStatus == .playing {
+            hostCommand() // This pause isn't the user's.
             player.pause()
-            IPC.event("ended", ["id": previous ?? ""])
         }
+        reportEnd()
     }
 
     private func detectOutsideControl() {
@@ -357,13 +291,13 @@ final class PlaybackController {
             let rewound = time < 1 && left.time > 2
 
             if reachedEnd || rewound {
-                endReported = true
-                IPC.event("ended", ["id": currentID ?? ""])
+                reportEnd()
                 return
             }
         }
 
-        // Play/pause from outside FocalSonic (media keys, Control Center, AirPods).
+        // Play/pause from outside FocalSonic: MusicKit's own media controls when it keeps its
+        // Now Playing entry, and MusicKit pausing itself (headphones unplugged, say).
         guard !byHost, status != lastStatus else { return }
         if lastStatus == .playing, status == .paused, time >= 1 {
             IPC.event("remote", ["command": "pause"])
@@ -418,12 +352,6 @@ enum SongResolver {
         }
 
         throw HelperError("This song isn't available in your Apple Music storefront")
-    }
-
-    /// A neighbour that can't be found just leaves a gap in MusicKit's window.
-    static func neighbour(_ playbackID: String?) async -> Song? {
-        guard let playbackID else { return nil }
-        return try? await resolve(playbackID)
     }
 
     private static func isCatalogID(_ value: String) -> Bool {

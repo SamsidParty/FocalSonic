@@ -36,15 +36,22 @@ rest of FocalSonic uses for the Apple Music API, exactly as on Windows.
 
 ## Playback
 
-FocalSonic keeps the queue (shuffle, loop, radio). MusicKit's renderer, though, owns the
-Now Playing entry and receives media keys, Control Center and AirPods commands itself. So
-MusicKit is given the current track plus FocalSonic's next one, and whatever MusicKit does by
-itself is reported back: `advanced` (it moved to the next track, or back), `ended`, and
-`remote` play/pause. Natural track changes are gapless as a result.
+FocalSonic keeps the queue (shuffle, loop, radio) and, like FocalMK's web player on Windows
+and Linux, MusicKit only ever gets the current track, as the only entry of a fresh queue. When
+it runs out the helper reports `ended` and the host loads the next one. (MusicKit used to hold
+the next track too, for gapless changes, but keeping its queue in step with the host's took
+guessing what MusicKit had done, and wrong guesses replayed or skipped tracks.) A replaced
+queue only takes over once `play()` is called.
 
-macOS's MusicKit can't start a queue part way through ("unexpected start item") and breaks
-if `queue.entries` is replaced, so the next track is only ever inserted after the current one.
-A replaced queue only takes over once `play()` is called.
+The system's media controls are FocalSonic's own entry, published by `NowPlayingController`
+from what the host sends (`nowPlaying`), as on Windows. MusicKit's renderer would otherwise make
+itself the Now Playing app and take the media keys, Control Center and AirPods commands, so
+`NowPlayingTakeover` switches that off through a private MediaPlayer setting
+(`disableAutomaticCanBeNowPlaying` on the `MPMusicPlayerApplicationController` behind
+`ApplicationMusicPlayer`). `load` replies `ownNowPlaying: false` if that setting can't be found,
+and the host then leaves MusicKit's entry in charge. `FOCALSONIC_MUSICKIT_NOW_PLAYING=1` does
+the same on purpose. `remote` play/pause still reports MusicKit pausing by itself (headphones
+unplugged, say).
 
 ## Audio effects
 
@@ -103,8 +110,7 @@ One JSON object per line on stdin/stdout; stderr carries logs.
 {"id": 1, "cmd": "configure", "developerToken": "…"}
 {"id": 2, "cmd": "authorize", "request": true}          // {"status": "authorized" | "denied" | …}
 {"id": 3, "cmd": "userToken", "ignoreCache": false}     // {"token": "…"}
-{"id": 4, "cmd": "load", "playbackID": "1785614776", "next": "1785614777", "autoplay": true}
-{"id": 5, "cmd": "setNext", "next": "…"}
+{"id": 4, "cmd": "load", "playbackID": "1785614776", "autoplay": true}
 {"id": 6, "cmd": "play" | "pause" | "stop" | "describe" | "subscription"}
 {"id": 7, "cmd": "seek", "time": 42.5}
 {"id": 8, "cmd": "setRepeat", "one": true}
@@ -116,10 +122,10 @@ One JSON object per line on stdin/stdout; stderr carries logs.
 {"id": 14, "cmd": "airplayStop"}
 
 // helper -> host
-{"reply": 4, "ok": true, "duration": 262.1}
+{"reply": 4, "ok": true, "duration": 262.1, "ownNowPlaying": true}
 {"reply": 5, "ok": false, "error": "…"}
 {"event": "state", "id": "1785614776", "status": "playing", "time": 12.3, "duration": 262.1}
-{"event": "advanced" | "ended" | "remote" | "variant" | "effects", …}
+{"event": "ended" | "remote" | "variant" | "effects", …}
 {"event": "airplay", "active": true, "speakers": ["Bedroom"]}  // and "error" when it had to stop
 ```
 

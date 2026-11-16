@@ -104,13 +104,8 @@ final class Dispatcher {
                 playback.start()
                 effects.resetFade()
                 let result = try await playback.load(try command.requireString("playbackID"),
-                                                     next: command.string("next"),
                                                      autoplay: command.bool("autoplay") ?? true)
                 command.succeed(result)
-
-            case "setNext":
-                try await playback.setNext(command.string("next"))
-                command.succeed()
 
             case "play":
                 try await playback.play()
