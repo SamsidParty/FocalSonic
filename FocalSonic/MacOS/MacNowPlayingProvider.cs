@@ -22,6 +22,27 @@ namespace FocalSonic.MacOS
 
         public override async Task Scrobble(MediaPlaybackInfo playbackInfo) { }
 
+        /// <summary>
+        /// Publishes (or withdraws) the entry right away. Presence only updates when its hash
+        /// changes, and whether FocalSonic owns Now Playing isn't part of it: at a custom speed
+        /// nothing else changes until the next track, so the first one went unpublished.
+        /// </summary>
+        public static async Task Refresh()
+        {
+            var info = MediaPlaybackInfo.Instance;
+            var provider = Presence.Presence.Instance?.Providers.OfType<MacNowPlayingProvider>().FirstOrDefault();
+            if (info == null || provider == null) return;
+
+            try
+            {
+                await provider.UpdateMediaStatus(info);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Couldn't update Now Playing: " + ex.Message);
+            }
+        }
+
         public override async Task UpdateMediaStatus(MediaPlaybackInfo playbackInfo)
         {
             var song = playbackInfo.CurrentSong;

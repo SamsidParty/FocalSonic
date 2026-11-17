@@ -89,6 +89,7 @@ namespace FocalSonic.MacOS
             {
                 await MusicKitSession.Restore(helper);
                 IsLoaded = false;
+                OwnsNowPlaying = false; // The new helper has published nothing; the reload republishes.
                 await ResetSource();
                 await UpdatePlaybackParameters();
 
@@ -142,7 +143,12 @@ namespace FocalSonic.MacOS
                 var result = await helper.Send("load", new { playbackID = src, autoplay = !IsRemoteOutput });
                 if (generation != LoadGeneration) return; // A newer track took over meanwhile.
 
-                OwnsNowPlaying = result.Value<bool?>("ownNowPlaying") == true;
+                var ownsNowPlaying = result.Value<bool?>("ownNowPlaying") == true;
+                if (ownsNowPlaying != OwnsNowPlaying)
+                {
+                    OwnsNowPlaying = ownsNowPlaying;
+                    _ = RunOnPlayerThread(() => { _ = MacNowPlayingProvider.Refresh(); });
+                }
                 await Loaded(result.Value<double?>("duration") ?? 0);
             }
             catch (MacHelperException ex)

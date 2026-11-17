@@ -14,7 +14,8 @@ struct DSPSettings {
 }
 
 /// The processing graph FocalMK builds with Web Audio, on captured audio:
-///   capture -> pitch shift (varispeed) -> EQ bands -> dry + convolution reverb -> gain
+///   capture -> pitch shift (varispeed) -> EQ bands -> dry + convolution reverb -> gain -> limiter
+/// The limiter has no Web Audio counterpart: there, the browser and OS deal with overs.
 /// `process` runs on the real-time IO thread: it never allocates, blocks or logs.
 final class DSPChain {
     static let maxBands = 64
@@ -39,6 +40,7 @@ final class DSPChain {
     private var fadeSeconds: Float = 0
     private var sampleRate = 48000.0
     private var pitch: PitchShifter?
+    private var limiter: PeakLimiter?
 
     private struct Shared {
         var pending: DSPSettings?
@@ -75,6 +77,11 @@ final class DSPChain {
     func prepare(sampleRate: Double) {
         if pitch == nil || abs(self.sampleRate - sampleRate) > 0.5 {
             pitch = PitchShifter(sampleRate: sampleRate, maxFrames: maxFrames)
+        }
+        if let limiter, abs(self.sampleRate - sampleRate) <= 0.5 {
+            limiter.reset()
+        } else {
+            limiter = PeakLimiter(sampleRate: sampleRate)
         }
         self.sampleRate = sampleRate
         filterState.update(repeating: BiquadState(), count: 2 * Self.maxBands)
@@ -149,6 +156,7 @@ final class DSPChain {
         applyEQ(count)
         applyReverb(count)
         applyGain(count)
+        limiter?.process(left, right, count: count)
     }
 
     private struct Control: @unchecked Sendable {

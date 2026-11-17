@@ -71,6 +71,17 @@ The processing reproduces FocalMK's Web Audio graph so presets sound the same ev
 | EQ | Biquads with the Web Audio coefficient formulas and edge cases |
 | Reverb | Partitioned FFT convolution with FocalSonic's impulse responses and `ConvolverNode` normalisation |
 | Volume | The same squared curve as the web player, plus the pause/resume fade |
+| Limiter | A look-ahead peak limiter at 0 dBFS (no web counterpart, see below) |
+
+Catalog masters peak right at full scale, and EQ boosts, reverb and MusicKit's time stretching
+all push them over it. The browser and OS soften that on other platforms; on macOS the output
+device or the AirPlay encoder would hard clip it, so the limiter catches it first. Below full
+scale it passes audio through bit for bit, 3 ms late.
+
+Any speed other than 1x can't be transparent: MusicKit's player always uses AVFoundation's
+`spectral` time-pitch algorithm (`MPAVItem.preferredAudioTimePitchAlgorithm` returns a constant),
+a phase vocoder, and varispeed then adds NewTimePitch, a second one. Real resampling, as the web
+player does with `preservesPitch = false`, would need the audio faster than MusicKit plays it.
 
 Capture needs the "Screen & System Audio Recording" permission (AirPlay too). If it's granted but no audio
 arrives while playing (consent denied), capture is abandoned so Apple Music is never left

@@ -45,8 +45,9 @@ namespace FocalSonic.Presence
                 var timeHash = $"{(int)Position.TotalSeconds}-{(int)Duration.TotalSeconds}";
                 if (AssociatedPlayer?.Speed != 1)
                 {
-                    // Custom speed will mess up calculations for position and duration, so just override the hash
-                    timeHash = "speed-" + AssociatedPlayer?.Speed;
+                    // Custom speed will mess up calculations for position, so leave it out. The duration
+                    // stays in: it's only known once the track has loaded, after the first update.
+                    timeHash = $"speed-{AssociatedPlayer?.Speed}-{(int)Duration.TotalSeconds}";
                 }
 
                 return $"song-{CurrentSong.Title}-{CurrentSong.Artist}-{CurrentSong.Album}-{IsPlaying}-{timeHash}-{Store?.State?.PresenceNonce}";

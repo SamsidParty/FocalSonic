@@ -98,6 +98,40 @@ enum SelfTest {
             check("pitch shifter output", false, "couldn't create NewTimePitch")
         }
 
+        // The limiter: bit exact (only delayed) below full scale, never over it above, and back to
+        // bit exact once the loud part has passed.
+        do {
+            let limiter = PeakLimiter(sampleRate: rate)
+            let frames = Int(rate * 4)
+            let input = (0..<frames).map { frame -> Float in
+                let loud = frame >= Int(rate * 0.5) && frame < Int(rate * 1.5)
+                let x = Float(sin(2 * Double.pi * 55 * Double(frame) / rate)) * 0.7 + Float.random(in: -0.29...0.29)
+                return loud ? x * 4 : x // +12 dB in the middle
+            }
+            var left = input, right = input.map { -$0 * 0.5 }
+            var position = 0
+            for size in [512, 333, 1024, 7, 4096].cycled(until: frames) {
+                let count = min(size, frames - position)
+                guard count > 0 else { break }
+                left.withUnsafeMutableBufferPointer { l in
+                    right.withUnsafeMutableBufferPointer { r in
+                        limiter.process(l.baseAddress! + position, r.baseAddress! + position, count: count)
+                    }
+                }
+                position += count
+            }
+
+            let latency = limiter.latency
+            func exact(_ range: Range<Int>) -> Bool {
+                range.allSatisfy { left[$0 + latency] == input[$0] && right[$0 + latency] == -input[$0] * 0.5 }
+            }
+            let before = exact(0..<Int(rate * 0.5) - latency)
+            let after = exact(Int(rate * 3)..<frames - latency)
+            let peak = left.reduce(Float(0)) { max($0, abs($1)) }
+            check("limiter transparent below full scale", before && after, "untouched before: \(before), after: \(after)")
+            check("limiter holds full scale", peak <= PeakLimiter.ceiling * 1.00001, "peak \(peak) from \(input.reduce(Float(0)) { max($0, abs($1)) })")
+        }
+
         // The same through the whole chain, including the settings hand-off to the render side.
         let chain = DSPChain()
         chain.prepare(sampleRate: rate)
@@ -128,5 +162,19 @@ enum SelfTest {
               "\(Int(chainFrequency)) Hz, peak \(chainPeak)")
 
         return passed
+    }
+}
+
+private extension Array where Element == Int {
+    /// Repeats the sizes until they add up to at least `total`.
+    func cycled(until total: Int) -> [Int] {
+        var sizes: [Int] = []
+        var sum = 0
+        while sum < total, !isEmpty {
+            let size = self[sizes.count % count]
+            sizes.append(size)
+            sum += size
+        }
+        return sizes
     }
 }

@@ -335,20 +335,33 @@ final class PlaybackController {
 enum SongResolver {
     static func resolve(_ playbackID: String) async throws -> Song {
         let parts = playbackID.split(separator: "/").map(String.init)
+        let libraryID = parts.last.flatMap { isCatalogID($0) ? nil : $0 }
 
         if let catalogID = parts.first, isCatalogID(catalogID) {
-            let request = MusicCatalogResourceRequest<Song>(matching: \.id, equalTo: MusicItemID(catalogID))
-            if let song = try await request.response().items.first { return song }
+            // A single id is fetched as /catalog/{storefront}/songs/{id}, which answers 404 for
+            // songs your storefront doesn't carry (e.g. a Japanese single in India), even when
+            // they're in your library. So a failure here only means "try the library".
+            do {
+                let request = MusicCatalogResourceRequest<Song>(matching: \.id, equalTo: MusicItemID(catalogID))
+                if let song = try await request.response().items.first { return song }
+            } catch {
+                guard libraryID != nil else { throw error }
+            }
         }
 
-        // Library only tracks (uploads, or ones that left the catalog). MusicKit decodes
-        // Apple Music API resources directly, so fetch the library resource and play that.
-        if let libraryID = parts.last, !isCatalogID(libraryID),
+        // Library only tracks (uploads, or ones that left or aren't in your storefront's
+        // catalog). MusicKit decodes Apple Music API resources directly, so fetch the library
+        // resource and play that.
+        if let libraryID,
            let escaped = libraryID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
            let url = URL(string: "https://api.music.apple.com/v1/me/library/songs/\(escaped)") {
-            let response = try await MusicDataRequest(urlRequest: URLRequest(url: url)).response()
-            let songs = try JSONDecoder().decode(MusicItemCollection<Song>.self, from: response.data)
-            if let song = songs.first { return song }
+            do {
+                let response = try await MusicDataRequest(urlRequest: URLRequest(url: url)).response()
+                let songs = try JSONDecoder().decode(MusicItemCollection<Song>.self, from: response.data)
+                if let song = songs.first { return song }
+            } catch let error as MusicDataRequest.Error where error.status == 404 {
+                // Not in the library (any more) either.
+            }
         }
 
         throw HelperError("This song isn't available in your Apple Music storefront")
