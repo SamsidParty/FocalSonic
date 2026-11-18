@@ -59,6 +59,7 @@ namespace FocalSonic.ListenTogether.Session
         bool measureNextAfterCue;
         double playLeadSec = 0.08;
         double lastLoadedAt = -100_000;
+        string? loadedSource;
         double cooldownUntil;
         double lastPlayPauseAt;
         int pausedAlignedSeq = -1;
@@ -150,6 +151,7 @@ namespace FocalSonic.ListenTogether.Session
         public void OnLoaded()
         {
             lastLoadedAt = MonoClock.NowMs;
+            loadedSource = source;
             settleUntil = Math.Max(settleUntil, MonoClock.NowMs + 600);
             advancing = false;
             lastPosition = -1;
@@ -161,6 +163,17 @@ namespace FocalSonic.ListenTogether.Session
             var now = MonoClock.NowMs;
             if (anchor == null || blocked || source == null) return;
             if (app.EngineSource != source || !app.EngineLoaded) { advancing = false; lastPosition = -1; return; }
+
+            // Not every engine sends a load event; the first sign of this track playing counts as one.
+            if (loadedSource != source)
+            {
+                loadedSource = source;
+                if (now - lastLoadedAt > 3000)
+                {
+                    lastLoadedAt = now;
+                    settleUntil = Math.Max(settleUntil, now + 600);
+                }
+            }
 
             if (duration > 0 && anchor.Duration <= 0) anchor.Duration = duration;
 
@@ -283,7 +296,9 @@ namespace FocalSonic.ListenTogether.Session
                 return;
             }
 
-            if (now < cooldownUntil)
+            // The back-off is for small errors we keep failing to fix; a big one (a missed seek, a
+            // reconnect) is plainly real and gets fixed straight away.
+            if (now < cooldownUntil && Math.Abs(drift) < 1.0)
             {
                 State = "struggling";
                 return;

@@ -55,6 +55,12 @@ export class MusicKitInstance {
         this.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.playing, state: PlaybackStates.ended });
     }
 
+    // Like MusicKit's own: the proxy reports "loaded" to FocalSonic on this, and C# only
+    // trusts the engine's position for a new track once it has heard it.
+    handleSongPlaying() {
+        this.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.loading, state: PlaybackStates.playing });
+    }
+
     // Queue
     queue: QueueItem[] = [];
 

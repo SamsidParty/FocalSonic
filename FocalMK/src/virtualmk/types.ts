@@ -18,6 +18,7 @@ export class QueueItem  {
     
     // Bound event handler for proper cleanup
     private boundHandleEnded: () => void;
+    private boundHandlePlaying: () => void;
 
     constructor(param: QueueItemParam, parent: MusicKitInstance) {
         this.song = param.song;
@@ -25,6 +26,7 @@ export class QueueItem  {
         
         // Pre-bind the event handler so we can remove it later
         this.boundHandleEnded = this.handleEnded.bind(this);
+        this.boundHandlePlaying = this.handlePlaying.bind(this);
 
         this.audio = document.createElement('audio');
         this.audio.className = `focalmk-audio-${this.song}`;
@@ -43,6 +45,10 @@ export class QueueItem  {
 
     handleEnded() {
         this.parent.handleSongEnded();
+    }
+
+    handlePlaying() {
+        this.parent.handleSongPlaying();
     }
 
     ensureHLS() {
@@ -78,11 +84,13 @@ export class QueueItem  {
         // Set the current audio element to the main one
         this.audio.id = "apple-music-player";
         this.audio.addEventListener('ended', this.boundHandleEnded);
+        this.audio.addEventListener('playing', this.boundHandlePlaying);
     }
 
     setInactive() {
         console.log(`[FocalMK] Deactivating song: ${this.song}`);
         this.audio.removeEventListener('ended', this.boundHandleEnded);
+        this.audio.removeEventListener('playing', this.boundHandlePlaying);
         this.audio.src = "";
         this.audio.load();
         this.audio.removeAttribute("id");

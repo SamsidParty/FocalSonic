@@ -32,6 +32,15 @@ namespace FocalSonic.AudioPlayer
         /// (region-locked, someone else's library song): the source isn't loaded and play is ignored.
         /// </summary>
         public string? BlockedSource;
+
+        /// <summary>
+        /// The engine's own reports show <see cref="Source"/> playing and moving. Engines don't all
+        /// report "loaded" (the Windows web player never did), so this is the dependable signal.
+        /// </summary>
+        public bool IsAdvancing { get; private set; }
+        string? progressSource;
+        double progressSince;
+        double lastReportedTime = -1;
         internal int AssociatedWindowID;
         internal WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
 
@@ -144,6 +153,22 @@ namespace FocalSonic.AudioPlayer
             // for instance) handed a fresh window a paused state over live playback.
             MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(currentPlaybackDuration);
             MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(currentPlaybackTime);
+
+            // A report from just after a source change can still describe the old track, so
+            // only count movement seen a moment after the change.
+            var now = Environment.TickCount64;
+            if (Source != progressSource)
+            {
+                progressSource = Source;
+                progressSince = now;
+                lastReportedTime = -1;
+                IsAdvancing = false;
+            }
+            else if (isPlaying && lastReportedTime >= 0 && currentPlaybackTime > lastReportedTime && now - progressSince > 750)
+            {
+                IsAdvancing = true;
+            }
+            lastReportedTime = currentPlaybackTime;
 
             ListenTogether.ListenTogether.TimeUpdate(isPlaying, currentPlaybackTime, currentPlaybackDuration);
         }

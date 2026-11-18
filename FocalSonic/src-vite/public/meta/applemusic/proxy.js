@@ -39191,11 +39191,13 @@
         parent;
         // Bound event handler for proper cleanup
         boundHandleEnded;
+        boundHandlePlaying;
         constructor(param, parent) {
             this.song = param.song;
             this.parent = parent;
             // Pre-bind the event handler so we can remove it later
             this.boundHandleEnded = this.handleEnded.bind(this);
+            this.boundHandlePlaying = this.handlePlaying.bind(this);
             this.audio = document.createElement('audio');
             this.audio.className = `focalmk-audio-${this.song}`;
             this.audio.setAttribute('data-focalmk-id', this.song);
@@ -39210,6 +39212,9 @@
         }
         handleEnded() {
             this.parent.handleSongEnded();
+        }
+        handlePlaying() {
+            this.parent.handleSongPlaying();
         }
         ensureHLS() {
             if (this.hls)
@@ -39238,10 +39243,12 @@
             // Set the current audio element to the main one
             this.audio.id = "apple-music-player";
             this.audio.addEventListener('ended', this.boundHandleEnded);
+            this.audio.addEventListener('playing', this.boundHandlePlaying);
         }
         setInactive() {
             console.log(`[FocalMK] Deactivating song: ${this.song}`);
             this.audio.removeEventListener('ended', this.boundHandleEnded);
+            this.audio.removeEventListener('playing', this.boundHandlePlaying);
             this.audio.src = "";
             this.audio.load();
             this.audio.removeAttribute("id");
@@ -39313,6 +39320,11 @@
         }
         handleSongEnded() {
             this.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.playing, state: PlaybackStates.ended });
+        }
+        // Like MusicKit's own: the proxy reports "loaded" to FocalSonic on this, and C# only
+        // trusts the engine's position for a new track once it has heard it.
+        handleSongPlaying() {
+            this.fireEvent("playbackStateDidChange", { oldState: PlaybackStates.loading, state: PlaybackStates.playing });
         }
         // Queue
         queue = [];

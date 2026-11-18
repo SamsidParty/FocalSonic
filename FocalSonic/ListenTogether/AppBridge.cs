@@ -240,7 +240,8 @@ namespace FocalSonic.ListenTogether
         }
 
         public string? EngineSource => Engine?.Source;
-        public bool EngineLoaded => Engine?.HasLoaded ?? false;
+        // "Loaded" alone isn't enough: not every engine reports it (see AudioPlayer.IsAdvancing).
+        public bool EngineLoaded => Engine is { } engine && (engine.HasLoaded || engine.IsAdvancing);
         public double EnginePosition => MediaPlaybackInfo.Instance.Position.TotalSeconds;
 
         public async Task Load(string playbackId, bool play)
