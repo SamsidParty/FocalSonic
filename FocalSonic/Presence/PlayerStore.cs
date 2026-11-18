@@ -50,6 +50,8 @@ namespace FocalSonic.Presence
             {
                 Program.MainWindow?.CallFunction("window.rehydratePlayerStore", JsonConvert.SerializeObject(store));
             }
+
+            ListenTogether.ListenTogether.StoreChanged(full: true);
         }
 
         [Command("setPlayerStoreMini")]
@@ -83,6 +85,8 @@ namespace FocalSonic.Presence
             {
                 Program.MainWindow?.CallFunction("window.rehydratePlayerStore", JsonConvert.SerializeObject(store));
             }
+
+            ListenTogether.ListenTogether.StoreChanged(full: false);
         }
 
         [Command("setPlayerCallbackData")]

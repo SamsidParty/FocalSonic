@@ -1,4 +1,4 @@
-import { AirplayIcon, LaptopIcon, MonitorIcon, RefreshCwIcon, ServerIcon, SpeakerIcon, TvMinimalPlayIcon, UnplugIcon } from "lucide-react";
+import { AirplayIcon, HeadphonesIcon, LaptopIcon, MonitorIcon, RefreshCwIcon, ServerIcon, SpeakerIcon, TvMinimalPlayIcon, UnplugIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Fragment } from "react/jsx-runtime";
@@ -12,7 +12,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/app/components/ui/dropdown-menu";
+import { ListenTogetherDialog } from "@/app/components/listen-together/listen-together-dialog";
 import { LogoutObserver } from "@/app/observers/logout-observer";
+import { useListenTogetherStore } from "@/store/listen-together.store";
 import { isMac } from "@/utils/osType";
 import clsx from "clsx";
 
@@ -66,6 +68,10 @@ export function Cast() {
 
     const { t } = useTranslation();
     const alignPosition = isMac ? "end" : "center";
+    const listenTogetherStatus = useListenTogetherStore((state) => state.status);
+    const openListenTogether = useListenTogetherStore((state) => state.setDialogOpen);
+    const inListenTogether = listenTogetherStatus.active && listenTogetherStatus.phase !== "failed";
+    const listenerCount = listenTogetherStatus.participants?.length ?? 0;
 
     const scanForDevices = async () => {
         setIsScanning(true);
@@ -105,24 +111,41 @@ export function Cast() {
     return (
         <Fragment>
             <LogoutObserver />
+            <ListenTogetherDialog />
 
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                 <DropdownMenuTrigger ref={triggerRef} className="user-dropdown-trigger">
                     <Avatar className="w-8 h-8 rounded-md cursor-pointer">
-                        <AvatarFallback className="text-sm bg-transparent hover:bg-accent rounded-md">
-                            <AirplayIcon className={clsx("w-4 h-4", !!castStatus && "text-primary")} />
+                        <AvatarFallback className="relative text-sm bg-transparent hover:bg-accent rounded-md">
+                            <AirplayIcon className={clsx("w-4 h-4", (!!castStatus || inListenTogether) && "text-primary")} />
+                            {inListenTogether && (
+                                <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                            )}
                         </AvatarFallback>
                     </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={alignPosition} className="min-w-64">
                     <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-2">
-                            <p className="text-sm font-medium leading-none">{t("menu.cast")}</p>
+                            <p className="text-sm font-medium leading-none">{t("menu.castAndSharing")}</p>
                             <p className="text-xs leading-none text-muted-foreground">
                                 {t(deviceList.length > 0 ? "menu.castDescription" : "menu.castNoDevices")}
                             </p>
                         </div>
                     </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem onClick={() => openListenTogether(true)}>
+                        <HeadphonesIcon className={clsx("mr-2 h-4 w-4", inListenTogether && "text-primary")} />
+                        <span className={clsx("flex-1", inListenTogether && "text-primary")}>{t("listenTogether.menuItem")}</span>
+                        {inListenTogether && (
+                            <span className="ml-3 text-xs text-muted-foreground">
+                                {listenTogetherStatus.phase === "reconnecting"
+                                    ? t("listenTogether.menuReconnecting")
+                                    : t("listenTogether.menuLive", { count: listenerCount })}
+                            </span>
+                        )}
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
 
                     {

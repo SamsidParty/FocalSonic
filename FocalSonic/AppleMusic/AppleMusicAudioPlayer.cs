@@ -411,6 +411,8 @@ namespace FocalSonic.AppleMusic
         [Command("logOutOfAppleMusic")]
         public static async Task LogOutOfAppleMusic()
         {
+            // A session plays through this account; it can't go on without it.
+            await ListenTogether.ListenTogether.LeaveSession();
             await DisposeAudioPlayers();
             LoadKeys();
         }

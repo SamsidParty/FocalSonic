@@ -88,6 +88,7 @@ public class Program
         // Background setup
         PlayerThread.Start();
         Presence.Setup();
+        FocalSonic.ListenTogether.ListenTogether.Setup();
         OverrideManager.Setup();
 
     #if WINDOWS

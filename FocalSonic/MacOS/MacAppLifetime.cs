@@ -229,6 +229,7 @@ namespace FocalSonic.MacOS
 
         public static void Quit()
         {
+            try { ListenTogether.ListenTogether.Shutdown(); } catch { }
             try { MacHelper.Shutdown(); } catch { }
             try { Program.App?.ViteProcess?.Kill(true); } catch { }
             try { File.Delete(Program.LockFilePath); } catch { }

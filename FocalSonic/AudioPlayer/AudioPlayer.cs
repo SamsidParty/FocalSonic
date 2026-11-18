@@ -27,6 +27,11 @@ namespace FocalSonic.AudioPlayer
         public float Volume = 1.0f;
         public float Speed = 1.0f;
         public string FilterData = "";
+        /// <summary>
+        /// Set while Listen Together has this engine sit out a track the account can't play
+        /// (region-locked, someone else's library song): the source isn't loaded and play is ignored.
+        /// </summary>
+        public string? BlockedSource;
         internal int AssociatedWindowID;
         internal WebWindow? AssociatedWindow => AppManager.Instance.OpenWindows.Where((w) => w.ID == AssociatedWindowID).FirstOrDefault();
 
@@ -100,7 +105,8 @@ namespace FocalSonic.AudioPlayer
                     player = new SoundFlowAudioPlayer(id);
                 }
 
-                player.AssociatedWindowID = ctx.ID;
+                // No window when Listen Together needs an engine with the UI closed.
+                if (ctx != null) player.AssociatedWindowID = ctx.ID;
             });
         }
 
@@ -138,6 +144,8 @@ namespace FocalSonic.AudioPlayer
             // for instance) handed a fresh window a paused state over live playback.
             MediaPlaybackInfo.Instance.Duration = TimeSpan.FromSeconds(currentPlaybackDuration);
             MediaPlaybackInfo.Instance.Position = TimeSpan.FromSeconds(currentPlaybackTime);
+
+            ListenTogether.ListenTogether.TimeUpdate(isPlaying, currentPlaybackTime, currentPlaybackDuration);
         }
 
         public virtual async Task SetSource(string src, WebWindow ctx) 
@@ -182,12 +190,15 @@ namespace FocalSonic.AudioPlayer
 
         public async Task CallEndEvent()
         {
+            // In a listening session the host decides what plays next.
+            if (ListenTogether.ListenTogether.EngineEnded()) return;
             MediaPlaybackInfo.Instance?.NextSong(false);
         }
         
         public async Task CallLoadEvent(double duration)
         {
             HasLoaded = true;
+            ListenTogether.ListenTogether.Loaded();
 
             if (AssociatedWindow != null && Program.App.OpenWindows.Contains(AssociatedWindow))
             {
@@ -208,10 +219,44 @@ namespace FocalSonic.AudioPlayer
             await SetSpeed(Speed);
         }
 
-        [Command("setAudioPlayerSource")] public static async Task SetSourceOnPlayer(string id, string src, WebWindow ctx) => RunOnPlayer(id, (p) => p.SetSource(src, ctx));
-        [Command("playAudio")] public static async Task PlayAudioOnPlayer(string id) => RunOnPlayer(id, (p) => p.PlayAudio());
+        [Command("setAudioPlayerSource")] public static async Task SetSourceOnPlayer(string id, string src, WebWindow ctx) => RunOnPlayer(id, (p) => p.RequestSource(src, ctx));
+        [Command("playAudio")] public static async Task PlayAudioOnPlayer(string id) => RunOnPlayer(id, (p) => p.RequestPlay());
         [Command("pauseAudio")] public static async Task PauseAudioOnPlayer(string id) => RunOnPlayer(id, (p) => p.PauseAudio());
-        [Command("seekAudio")] public static async Task SeekAudioOnPlayer(string id, double time) => RunOnPlayer(id, (p) => p.SeekAudio(time));
+        [Command("seekAudio")] public static async Task SeekAudioOnPlayer(string id, double time) => RunOnPlayer(id, (p) => p.UserSeek(time));
+
+        /// <summary>
+        /// Sets the source the app asked for. In a listening session it may be swapped for the
+        /// same recording in this storefront, or held back if this account can't play it.
+        /// </summary>
+        public async Task RequestSource(string src, WebWindow? ctx)
+        {
+            var (mapped, blocked) = ListenTogether.ListenTogether.ResolveSource(src);
+            if (blocked)
+            {
+                if (BlockedSource == src) return;
+                BlockedSource = src;
+                await PauseAudio();
+                await ResetSource();
+                return;
+            }
+
+            BlockedSource = null;
+            await SetSource(mapped, ctx);
+        }
+
+        public async Task RequestPlay()
+        {
+            if (BlockedSource != null) return;
+            await PlayAudio();
+        }
+
+        /// <summary>A seek from the user (UI, media controls), as opposed to one made to stay in sync.</summary>
+        public async Task UserSeek(double time)
+        {
+            ListenTogether.ListenTogether.UserSeek(time);
+            if (BlockedSource != null) return;
+            await SeekAudio(time);
+        }
         [Command("setAudioPlayerLoopMode")] public static async Task SetLoopModeOnPlayer(string id, bool loop) => RunOnPlayer(id, (p) => p.SetLoopMode(loop));
         [Command("setAudioPlayerVolume")] public static async Task SetVolumeOnPlayer(string id, double volume) => RunOnPlayer(id, (p) => p.SetVolume(volume));
         [Command("setAudioPlayerSpeed")] public static async Task SetSpeedOnPlayer(string id, double speed) => RunOnPlayer(id, (p) => p.SetSpeed(speed));

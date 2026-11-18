@@ -19,5 +19,7 @@ declare global {
         rehydratePlayerCallbackData?: (newData: string) => Promise<void> | void
         rehydrateSharedStore?: (newState: string) => Promise<void> | void
         onNativeFullscreenChange?: (fullscreen: boolean) => void
+        listenTogetherStatusChanged?: (status: string) => void
+        listenTogetherNotify?: (level: string, message: string) => void
     }
 }

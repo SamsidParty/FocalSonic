@@ -99,6 +99,9 @@ namespace FocalSonic.Presence
 
         public async Task NextSong(bool fromUserAction = true)
         {
+            // A guest in a listening session asks the host instead.
+            if (fromUserAction && ListenTogether.ListenTogether.UserSkip(true)) return;
+
             if (!fromUserAction && LoopState == PlayerLoopState.One)
             {
                 // Loop
@@ -146,7 +149,11 @@ namespace FocalSonic.Presence
             return song;
         }
 
-        public async Task PreviousSong(bool fromUserAction = true) => await PlaySong(PreviousQueueItem, PreviousSongIndex);
+        public async Task PreviousSong(bool fromUserAction = true)
+        {
+            if (fromUserAction && ListenTogether.ListenTogether.UserSkip(false)) return;
+            await PlaySong(PreviousQueueItem, PreviousSongIndex);
+        }
 
         public async Task PlaySong(Song? song, int? index)
         {
@@ -183,15 +190,17 @@ namespace FocalSonic.Presence
             if (player == null) return;
 
             await player.ResetSource();
-            await player.SetSource(playbackURL, null);
+            await player.RequestSource(playbackURL, null);
             await player.UpdatePlaybackParameters();
-            await player.PlayAudio();
+            await player.RequestPlay();
+
+            ListenTogether.ListenTogether.TrackStarted();
         }
 
         public async Task Play()
         {
             await PlayerStore.Mutate(async (s) => s.State.PlayerState.IsPlaying = true);
-            if (AssociatedPlayer != null) await AssociatedPlayer.PlayAudio();
+            if (AssociatedPlayer != null) await AssociatedPlayer.RequestPlay();
         }
 
         public async Task Pause()

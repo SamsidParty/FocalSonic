@@ -164,6 +164,11 @@ namespace FocalSonic.Persistence
             {
                 Program.MainWindow?.CallFunction("window.rehydrateSharedStore", serializedSnapshot);
             }
+
+            if (previousState.Speed != snapshot.State.Speed || previousState.FilterData != snapshot.State.FilterData)
+            {
+                ListenTogether.ListenTogether.EffectsChanged();
+            }
         }
 
         static async Task ApplyState(SharedStoreState previousState, SharedStoreState nextState, bool shouldApplyVolume)

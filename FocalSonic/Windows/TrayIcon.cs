@@ -103,6 +103,7 @@ namespace FocalSonic.Windows
 
         public static void Quit()
         {
+            try { ListenTogether.ListenTogether.Shutdown(); } catch { }
             Environment.Exit(0);
         }
     }

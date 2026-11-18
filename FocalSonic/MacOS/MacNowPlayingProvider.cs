@@ -103,7 +103,7 @@ namespace FocalSonic.MacOS
                     case "next": await info.NextSong(); break;
                     case "previous": await info.PreviousSong(); break;
                     case "seek" when time != null && AudioPlayer.AudioPlayer.Instance is { } player:
-                        await AudioPlayer.AudioPlayer.RunOnPlayer(player.ID, (p) => { _ = p.SeekAudio(time.Value); });
+                        await AudioPlayer.AudioPlayer.RunOnPlayer(player.ID, (p) => { _ = p.UserSeek(time.Value); });
                         break;
                 }
             }

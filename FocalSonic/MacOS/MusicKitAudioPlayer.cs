@@ -177,6 +177,11 @@ namespace FocalSonic.MacOS
                 // holds; pressing play retries (see PlayAudio).
                 IsPlaying = false;
                 Helper.Post("pause");
+
+                // In a listening session one track that won't play here (region, account
+                // restrictions) mustn't pause everyone: the session sits this one out.
+                if (ListenTogether.ListenTogether.LoadFailed(src)) return;
+
                 _ = MediaPlaybackInfo.Instance.Pause();
                 ErrorHandler.DisplayError("Something went wrong with Apple Music", ex.Message);
             }

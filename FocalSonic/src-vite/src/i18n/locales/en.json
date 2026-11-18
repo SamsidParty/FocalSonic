@@ -49,7 +49,8 @@
     "about": "About",
     "serverLogout": "Sign out",
     "refreshLibrary": "Refresh library",
-    "devTools": "Developer Tools"
+    "devTools": "Developer Tools",
+    "castAndSharing": "Casting & Sharing"
   },
   "sync": {
     "inProgress": "Syncing library…",
@@ -762,6 +763,58 @@
       "MM": "%d months",
       "y": "1 year",
       "yy": "%d years"
+    }
+  },
+  "listenTogether": {
+    "menuItem": "Listen Together",
+    "menuLive": "Live · {{count}}",
+    "menuReconnecting": "Reconnecting…",
+    "title": "Listen Together",
+    "subtitle": "Listen in sync with friends, wherever they are.",
+    "hostingSubtitle": "You're hosting. Everyone can play, pause and add to the queue.",
+    "listeningWith": "You're listening along with {{name}}.",
+    "connecting": "Connecting…",
+    "reconnecting": "Reconnecting…",
+    "yourName": "Your name",
+    "namePlaceholder": "How others will see you",
+    "hostTitle": "Host a session",
+    "hostDescription": "Your queue becomes the shared queue. Share the code so others can join.",
+    "hostButton": "Start session",
+    "starting": "Starting…",
+    "or": "or",
+    "joinTitle": "Join a session",
+    "codeLabel": "Session code",
+    "joinButton": "Join",
+    "joining": "Joining…",
+    "joinDescription": "Paste the code the host shared with you. Your queue will be replaced by the session's.",
+    "codeProgress": "{{count}} of {{total}} characters",
+    "privacyNote": "Everyone plays music from their own Apple Music account. No audio is shared.",
+    "genericError": "Something went wrong. Try again.",
+    "shareCode": "Session code",
+    "shareHint": "Share this code with the people you want to listen with. It's only valid while this session is running.",
+    "copy": "Copy code",
+    "listeners_one": "{{count}} listener",
+    "listeners_other": "{{count}} listeners",
+    "direct": "Direct",
+    "relayed": "Relayed",
+    "waitingForPeople": "Waiting for the session…",
+    "nobodyYet": "Nobody else is here yet.",
+    "endSession": "End session",
+    "leaveSession": "Leave session",
+    "you": "you",
+    "host": "Host",
+    "reconnectingBanner": "Connection lost. Reconnecting… music keeps playing in the meantime.",
+    "unavailableBanner": "\"{{title}}\" isn't available on your account. You'll hear the next song.",
+    "substitutedBanner": "This song isn't in your region's catalog, so you're hearing the same recording from your region.",
+    "sync": {
+      "synced": "In sync",
+      "syncing": "Syncing",
+      "buffering": "Buffering",
+      "struggling": "Poor connection",
+      "unavailable": "Song unavailable",
+      "paused": "Paused",
+      "waiting": "Waiting",
+      "reconnecting": "Reconnecting"
     }
   }
 }
