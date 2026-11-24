@@ -788,7 +788,6 @@
     "joining": "Joining…",
     "joinDescription": "Paste the code the host shared with you. Your queue will be replaced by the session's.",
     "codeProgress": "{{count}} of {{total}} characters",
-    "privacyNote": "Everyone plays music from their own Apple Music account. No audio is shared.",
     "genericError": "Something went wrong. Try again.",
     "shareCode": "Session code",
     "shareHint": "Share this code with the people you want to listen with. It's only valid while this session is running.",

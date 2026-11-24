@@ -203,8 +203,6 @@ function StartView({ status }: { status: ListenTogetherStatus }) {
                     <span>{error}</span>
                 </div>
             )}
-
-            <p className="text-center text-[11px] text-muted-foreground">{t("listenTogether.privacyNote")}</p>
         </div>
     );
 }
@@ -342,10 +340,9 @@ function ParticipantRow({ participant }: { participant: ListenTogetherParticipan
                         label.tone === "good" && "bg-emerald-500",
                         label.tone === "busy" && "bg-amber-500",
                         label.tone === "bad" && "bg-red-500",
-                        label.tone === "idle" && "bg-muted-foreground/50",
+                        label.tone === "idle" && "bg-yellow-500",
                     )} />
                     {t(label.key)}
-                    {participant.sf ? <span className="uppercase">· {participant.sf}</span> : null}
                     {!participant.host && participant.route ? <span>· {participant.route === "direct" ? t("listenTogether.direct") : t("listenTogether.relayed")}</span> : null}
                 </p>
             </div>
