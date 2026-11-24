@@ -169,3 +169,15 @@ export const router = createHashRouter([
         ),
     },
 ]);
+
+// Tell C# which page the main window is on. Closing the window and opening it again while
+// FocalSonic keeps running then comes back on this page (see Program.CreateMainWindow).
+let reportedRoute: string | undefined;
+router.subscribe(({ location }) => {
+    const route = location.pathname + location.search + location.hash;
+    if (route === reportedRoute) return;
+    reportedRoute = route;
+
+    // invoke rather than the named command, which only exists once the bridge has listed its commands.
+    window.igniteView?.commandBridge.invoke?.("setMainWindowRoute", route);
+});

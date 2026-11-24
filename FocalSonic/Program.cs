@@ -27,6 +27,13 @@ public class Program
     public static WindowBounds DefaultBounds = new WindowBounds(1450, 900) { MinWidth = 1080, MinHeight = 750 };
     public static string LockFilePath => Path.Join(Path.GetDirectoryName(Path.GetTempPath()), "focalsonic.lock");
 
+    /// <summary>
+    /// The page the main window is on (its hash route, eg. "/library/albums/123"), so that a window
+    /// closed and opened again while FocalSonic keeps running comes back on the same page.
+    /// Only kept in memory: a cold start always opens on the home page.
+    /// </summary>
+    static volatile string? MainWindowRoute;
+
     [STAThread]
     static void Main(string[] args)
     {
@@ -137,9 +144,24 @@ public class Program
         }
     }
 
+    /// <summary>The frontend reports each page the main window navigates to.</summary>
+    [Command("setMainWindowRoute")]
+    public static void SetMainWindowRoute(string route, WebWindow ctx)
+    {
+        // Only the current main window: one that's just been replaced by a respawn may still be reporting.
+        if (ctx?.SharedContext.ContainsKey("MainWindow") != true) return;
+        if (string.IsNullOrEmpty(route) || !route.StartsWith("/")) return;
+
+        MainWindowRoute = route;
+    }
+
     public static void CreateMainWindow()
     {
         if (MainWindow != null) { CleanUpUI(); } // Respawn the main window
+
+        // Reopen on the page the last main window was on, if there was one since the app started.
+        var route = MainWindowRoute;
+        var baseURL = App.CurrentServerManager?.LocalBaseURL;
 
         Performance.IsRunningInForeground = true;
         App.MainWindow =
@@ -147,6 +169,9 @@ public class Program
             .WithTitle("FocalSonic")
             .WithBounds(DefaultBounds)
             .WithSharedContext("MainWindow", "")
+            // The default URL plus the route. Given whole, because IgniteView takes any relative URL
+            // with "://" in it (as a search query could have) for an absolute one.
+            .With((w) => { if (route != null && !string.IsNullOrEmpty(baseURL)) w.WithURL(baseURL + "/#" + route); })
             .WithPlatformBasedAdditions()
             .Show();
 
