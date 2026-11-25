@@ -121,6 +121,11 @@ export function getCoverArtUrl(
 
     const { isAppleMusic } = checkServerType();
 
+    // One of the app's own images (eg. the favorites playlist's cover)
+    if (id?.startsWith("/")) {
+        return id;
+    }
+
     // No point proxying apple music cover art URLs, let it get served through the CDN directly
     if (id?.startsWith("https://") || id?.startsWith("http://")) {
 

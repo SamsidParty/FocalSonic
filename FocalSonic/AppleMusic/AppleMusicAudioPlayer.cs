@@ -324,6 +324,9 @@ namespace FocalSonic.AppleMusic
             // The page can't close itself on every platform (Qt WebEngine ignores window.close())
             Program.App.OpenWindows.Where((a) => a.SharedContext.ContainsKey("AppleMusicSignIn")).FirstOrDefault()?.Close();
 
+            // Possibly another account: don't show it what the last one had loaded.
+            QueryCache.Clear();
+
             var creds = ServerCredential.GetCurrent();
             creds.ServerType = "applemusic";
             creds.AuthType = "token";
@@ -414,6 +417,7 @@ namespace FocalSonic.AppleMusic
             // A session plays through this account; it can't go on without it.
             await ListenTogether.ListenTogether.LeaveSession();
             await DisposeAudioPlayers();
+            QueryCache.Clear();
             LoadKeys();
         }
 

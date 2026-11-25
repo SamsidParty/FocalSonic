@@ -1,6 +1,6 @@
-// Caching still in broken state, can't figure out how to make it work well
+// The cache is persisted outside the web view by lib/queryCache.ts
 
-import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { isPresignedExpired, isPresignedUrl } from "@/utils/presignedUrl";
 import { QueryClient, useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { useEffect } from "react";
 
@@ -30,18 +30,19 @@ function preservePresignedUrls(oldObj: any, newObj: any): any {
         return oldObj;
     }
 
-    // Preserve AWS presigned URLs
+    // Preserve AWS presigned URLs: the same object (path) with a new signature keeps the old URL, so its
+    // <img> doesn't reload. Not when it's another object (the list changed order) or the old one expired
+    // (cached data restored from an earlier session).
     if (
         typeof oldObj === "string" &&
         typeof newObj === "string"
     ) {
-        const oldIsPresigned =
-            oldObj.includes("X-Amz-Credential=");
-
-        const newIsPresigned =
-            newObj.includes("X-Amz-Credential=");
-
-        if (oldIsPresigned && newIsPresigned) {
+        if (
+            isPresignedUrl(oldObj) &&
+            isPresignedUrl(newObj) &&
+            oldObj.split("?")[0] === newObj.split("?")[0] &&
+            !isPresignedExpired(oldObj)
+        ) {
             return oldObj;
         }
 
@@ -117,40 +118,6 @@ function preservePresignedUrls(oldObj: any, newObj: any): any {
 
     return newObj;
 }
-
-export const queryCacheStorage = {
-    getItem: async (key: string) => {
-        if (window.igniteView?.commandBridge?.getCustomOverride) {
-            return await window.igniteView?.commandBridge?.getCustomOverride("TQueryCache", key);
-        }
-
-        const data = localStorage.getItem(key);
-        return data;
-    },
-    setItem: async (key: string, value: string) => {
-        if (window.igniteView?.commandBridge?.saveCustomOverride) {
-            return await window.igniteView?.commandBridge?.saveCustomOverride("TQueryCache", key, value);
-        }
-
-        localStorage.setItem(key, value);
-    },
-    removeItem: async (key: string) => {
-        if (window.igniteView?.commandBridge?.saveCustomOverride) {
-            return await window.igniteView?.commandBridge?.saveCustomOverride("TQueryCache", key, null);
-        }
-
-        localStorage.removeItem(key);
-    },
-};
-
-const persister = createAsyncStoragePersister({
-    storage: sessionStorage,
-});
-
-export const persistOptions = {
-    persister,
-    maxAge: QUERY_CACHE_MAX_AGE,
-};
 
 export function useLibraryQuery<TData>(
     options: UseQueryOptions<TData>

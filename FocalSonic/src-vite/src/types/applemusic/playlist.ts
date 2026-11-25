@@ -43,7 +43,8 @@ export function convertAppleMusicPlaylistToSubsonic(playlist: AppleMusicPlaylist
         id: id,
         name: playlist.attributes?.name || "Playlist",
         comment: playlist.attributes?.description?.standard || "",
-        coverArt: isFavoritesPlaylist ? `${window.location.origin}/favorite_playlist.png` : (playlist.attributes?.artwork?.url || ""),
+        // Root relative: the origin's port changes every launch, and this outlives it in the query cache
+        coverArt: isFavoritesPlaylist ? "/favorite_playlist.png" : (playlist.attributes?.artwork?.url || ""),
         songCount: playlist.relationships?.tracks?.data.length || 0,
         duration: 0, // Duration is not provided in the Apple Music API
         public: playlist.attributes?.isChart || false,

@@ -43,16 +43,21 @@ export default function Playlist() {
 
     // Refine + cache from the server. libraryVersion is deliberately NOT in the key:
     // the cache write bumps the version, which would otherwise refetch in a loop.
-    const { isLoading } = useQuery({
+    const { isFetching } = useQuery({
         queryKey: [queryKeys.playlist.single, playlistId],
         queryFn: async () => {
             await loadPlaylistEntries(playlistId);
             return true;
         },
+        // Its result is the local library's copy, which doesn't outlive the launch (IndexedDB is per
+        // origin, and the port changes every launch), so a restored "done" would be a lie.
+        meta: { persist: false },
     });
 
+    // Not isLoading: that's false once the query has any earlier result, even while the local copy
+    // it stands for is missing (eg. replaced by a library sync since).
     const hasLocalEntries = (localPlaylist?.entriesLoaded ?? false) || entries.length > 0;
-    if (isLoading && !hasLocalEntries) return <PlaylistFallback />;
+    if (isFetching && !hasLocalEntries) return <PlaylistFallback />;
     if (!localPlaylist) return <ErrorPage status={404} statusText="Not Found" />;
 
     const playlist = { ...localPlaylist, entry: entries };

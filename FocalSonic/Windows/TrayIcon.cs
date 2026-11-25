@@ -104,6 +104,7 @@ namespace FocalSonic.Windows
         public static void Quit()
         {
             try { ListenTogether.ListenTogether.Shutdown(); } catch { }
+            try { Persistence.QueryCache.Flush(); } catch { }
             Environment.Exit(0);
         }
     }

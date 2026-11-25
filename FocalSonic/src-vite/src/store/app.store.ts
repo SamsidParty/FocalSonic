@@ -340,9 +340,11 @@ export function useSignOut() {
         clearPlayerState();
         resetConfig();
 
-        // Drop the cached local library so the next login starts fresh.
+        // Drop the cached local library and queries so the next login starts fresh.
         const localLibrary = await import("@/lib/localLibrary");
         await localLibrary.clear().catch(() => undefined);
+        const { clearQueryCache } = await import("@/lib/queryCache");
+        await clearQueryCache();
 
         if (window.igniteView?.commandBridge) {
             await window.igniteView?.commandBridge.logOutOfAppleMusic();

@@ -1,3 +1,4 @@
+import { restoreQueryCache } from "@/lib/queryCache";
 import { ROUTES } from "@/routes/routesList";
 import { service } from "@/service/service";
 import { useAppStore, waitForAppHydration } from "@/store/app.store";
@@ -6,7 +7,7 @@ import { redirect } from "react-router-dom";
 export async function protectedLoader() {
 
     await waitForAppHydration();
-    const { url, password, isServerConfigured, serverType } = useAppStore.getState().data;
+    const { url, username, password, isServerConfigured, serverType } = useAppStore.getState().data;
     const hasNoUrl = !url || url === "";
     const hasNoToken = !password || password === "";
 
@@ -24,6 +25,8 @@ export async function protectedLoader() {
         if (!isServerUp) return redirect(ROUTES.SERVER_CONFIG);
     }
 
+    // Before the pages render, so they paint from the cached queries. Bounded: it never holds them up for long.
+    await restoreQueryCache(`${serverType}:${url}:${username}`);
 
     return null;
 }

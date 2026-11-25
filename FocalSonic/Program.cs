@@ -84,6 +84,9 @@ public class Program
         App.RegisterDynamicFileRoute("/streaming", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
         App.RegisterDynamicFileRoute("/streaming-atmos-v1", StreamingProxy.StreamingProxyRoute, WatsonWebserver.Core.HttpMethod.GET);
 
+        // The page's query cache, kept here so windows opened again (and the next launch) paint straight away
+        FocalSonic.Persistence.QueryCache.Setup();
+
         // JSON Setup
         JsonConvert.DefaultSettings = () => new JsonSerializerSettings
         {

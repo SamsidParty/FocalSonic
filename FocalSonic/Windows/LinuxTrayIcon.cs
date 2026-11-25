@@ -215,6 +215,7 @@ namespace FocalSonic.Windows
         private static void OnQuitMenuItemActivated(IntPtr menuItem, IntPtr userData)
         {
             gtkMainQuit?.Invoke();
+            try { Persistence.QueryCache.Flush(); } catch { }
             Environment.Exit(0);
         }
 
