@@ -25,10 +25,12 @@ export function Extrabar() {
             >
                 {
                     (extraBarContent !== "none") && (
-                        <div className="bg-body rounded-md w-full h-full flex flex-col">
-                            {extraBarContent === "lyrics" && <ExtrabarLyrics />}
-                            {extraBarContent === "queue" && <ExtrabarQueue />}
-                            {extraBarContent === "effects" && <ExtrabarEffects />}
+                        <div className="bg-body rounded-md w-full h-full flex flex-col overflow-hidden">
+                            <div key={extraBarContent} className="flex flex-col w-sidebar pr-3 h-full animate-[mainPageAnimation_0.6s_cubic-bezier(0.16,1,0.3,1)_forwards]">
+                                {extraBarContent === "lyrics" && <ExtrabarLyrics />}
+                                {extraBarContent === "queue" && <ExtrabarQueue />}
+                                {extraBarContent === "effects" && <ExtrabarEffects />}
+                            </div>
                         </div>
                     )
                 }
