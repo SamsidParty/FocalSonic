@@ -83,23 +83,12 @@ function preservePresignedUrls(oldObj: any, newObj: any): any {
         !Array.isArray(oldObj) &&
         !Array.isArray(newObj)
     ) {
-        const oldKeys = Object.keys(oldObj);
         const newKeys = Object.keys(newObj);
 
-        if (oldKeys.length !== newKeys.length) {
-            const result: any = {};
-
-            for (const key of newKeys) {
-                result[key] = preservePresignedUrls(
-                    oldObj[key],
-                    newObj[key]
-                );
-            }
-
-            return result;
-        }
-
-        let changed = false;
+        // A key holding undefined counts as absent: data restored from the persisted cache went
+        // through JSON, which drops them, and is otherwise the same as freshly fetched data.
+        const definedKeyCount = (obj: any) => Object.keys(obj).filter((key) => obj[key] !== undefined).length;
+        let changed = definedKeyCount(oldObj) !== definedKeyCount(newObj);
         const result: any = {};
 
         for (const key of newKeys) {

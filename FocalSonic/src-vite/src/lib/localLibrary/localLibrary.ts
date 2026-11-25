@@ -422,8 +422,10 @@ export async function commitPlaylistsSync(synced: LibraryPlaylist[]): Promise<vo
         if (pendingById.has(playlist.id)) continue;
         const existing = playlistsById.get(playlist.id);
         const merged = { ...playlist, coverArt: resolveStableCover(existing?.coverArt, playlist.coverArt) };
+        // A loaded playlist keeps its tracks, and their count when the list has none (Apple Music's list
+        // endpoint reports 0): the page shows placeholder art for a playlist with no songs.
         next.push(existing?.entriesLoaded
-            ? { ...merged, entryIds: existing.entryIds, entriesLoaded: true }
+            ? { ...merged, entryIds: existing.entryIds, entriesLoaded: true, songCount: merged.songCount || existing.songCount }
             : merged);
     }
     for (const pending of Array.from(pendingById.values())) {

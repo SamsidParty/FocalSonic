@@ -15,7 +15,22 @@ import { ISong } from "@/types/responses/song";
 import { convertSecondsToTime } from "@/utils/convertSecondsToTime";
 import dateTime from "@/utils/dateTime";
 
+let cachedColumns: { language: string, columns: ColumnDefType<ISong>[] } | undefined;
+
+/**
+ * The same definitions for as long as the language stays the same. Each cell renderer is a React
+ * component to the table, so new definitions on every render made every cell a new component type:
+ * any re-render of a page (eg. fresh data replacing cached) remounted all its rows, reloading their covers.
+ */
 export function songsColumns(): ColumnDefType<ISong>[] {
+    if (cachedColumns?.language !== i18n.language) {
+        cachedColumns = { language: i18n.language, columns: createSongsColumns() };
+    }
+
+    return cachedColumns.columns;
+}
+
+function createSongsColumns(): ColumnDefType<ISong>[] {
     return [
         {
             id: "index",
